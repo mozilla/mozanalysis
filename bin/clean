@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Remove various cached files that are intended to improve performance
+# but can cause errors as the environment evolves.
+
+# Move to the root of the git repository.
+cd $(git rev-parse --show-toplevel)
+
+# Clean all python cache files.
+find src/ tests/ | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+
+# Remove any local tox environments.
+rm -rf .*tox/
+
+# Delete the docker volume we use for caching tox environment.
+docker volume rm mozanalysis-tox
