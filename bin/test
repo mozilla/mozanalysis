@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Abort immediately on any failure.
+set -e
+
+# Move to the root of the git repository.
+cd $(git rev-parse --show-toplevel)
+
+# Set default variables if not already present in the environment.
+: ${PYTHON_VERSION:=2.7}
+: ${TOXENV:="py${PYTHON_VERSION/./}"}
+
+# Set some derived variables.
+TOXENV="py${PYTHON_VERSION/./}"
+
+# Create a named volume to hold cached tox environment between runs;
+# this can cause errors with running tests after modifying setup.py, etc.,
+# so be prepared to run the bin/clean script.
+docker volume create moztelemetry-tox
+
+# If nothing has changed, this build step will hit cache and run quickly.
+docker build -t mozanalysis:"$TOXENV" --build-arg PYTHON_VERSION="$PYTHON_VERSION" .
+
+# We mount the current directory to the container and run tox inside it.
+docker run -it --rm \
+       --mount source=mozanalysis-tox,target=/mozanalysis/.tox \
+       --mount type=bind,source="$(pwd)"/.git,target=/mozanalysis/.git,readonly \
+       --workdir /mozanalysis \
+       mozanalysis:"$TOXENV" \
+       tox -e "$TOXENV" -- $@

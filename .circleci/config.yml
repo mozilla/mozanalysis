@@ -1,0 +1,107 @@
+####################
+# CircleCI configuration reference:
+#   https://circleci.com/docs/2.0/configuration-reference
+####################
+# CircleCI built-in environment variables:
+#   https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
+####################
+
+test_settings: &test_settings
+  steps:
+    - checkout
+    - run:
+        name: Install system packages
+        command: |
+          # pyspark needs to run Java, so we install openjdk.
+          apt-get update
+          apt-get install -y openjdk-8-jre-headless
+    - run:
+        name: Run tests
+        command: |
+          pip install tox
+          tox -e $CIRCLE_JOB
+    - run:
+        name: Submit code coverage data
+        command: |
+          # Skip this step if running via the CircleCI local CLI.
+          [ -z "$CIRCLE_BUILD_NUM" ] && exit 0
+          # Activate the virtualenv so that codecov can find the 'coverage' executable.
+          source .tox/$CIRCLE_JOB/bin/activate
+          # Upload to codecov and flag (-F) with the name of the job.
+          bash <(curl -s https://codecov.io/bash) -F $CIRCLE_JOB
+
+
+
+####################
+# Jobs: see https://circleci.com/docs/2.0/jobs-steps/
+####################
+
+version: 2
+jobs:
+
+  py27:
+    <<: *test_settings
+    docker:
+      - image: python:2.7
+
+  py37:
+    <<: *test_settings
+    docker:
+      - image: python:3.7
+
+  lint:
+    docker:
+      - image: python:2.7
+    steps:
+    - checkout
+    - run:
+        name: Run linting
+        command: |
+          pip install flake8
+          flake8 moztelemetry/ tests/
+
+  # Only runs when a tag starting with 'v' is place on the repository;
+  # see the workflows section below for trigger logic.
+  deploy:
+    docker:
+      - image: python:2.7
+    steps:
+      - checkout
+      - run:
+          name: Install deployment tools
+          command: |
+            pip install --upgrade setuptools wheel twine
+      - run:
+          name: Create the distribution files
+          command: |
+            python setup.py sdist bdist_wheel
+      - run:
+          name: Upload to PyPI
+          command: |
+            # Relies on the TWINE_USERNAME and TWINE_PASSWORD environment variables configured at:
+            #   https://circleci.com/gh/mozilla/python_moztelemetry/edit#env-vars
+            # For more on twine, see:
+            #   https://twine.readthedocs.io/en/latest/
+            twine upload dist/*
+
+
+####################
+# Workflows: see https://circleci.com/docs/2.0/workflows/
+####################
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - py27
+      - py37
+      - lint
+  tagged-deploy:
+    jobs:
+      - deploy:
+          filters:
+            branches:
+              # Ignore all branches; this workflow should only run for tags.
+              ignore: /.*/
+            tags:
+              only: /^v.*/
