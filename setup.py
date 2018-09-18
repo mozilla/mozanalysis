@@ -6,7 +6,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from setuptools import setup, find_packages
 
-tests_require = ['pyspark', 'pytest', 'pytest-cov', 'pytest-timeout']
+tests_require = ['mock', 'pyspark', 'pytest', 'pytest-cov', 'pytest-timeout']
 
 setup(
     name='mozanalysis',

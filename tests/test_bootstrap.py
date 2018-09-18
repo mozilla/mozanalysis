@@ -1,3 +1,4 @@
+import mock
 import numpy as np
 
 from mozanalysis.bootstrap import bootstrap, _percentile
@@ -31,3 +32,11 @@ def test_bootstrap_mean(spark_context):
     high = np.mean(DATA) + 1.96 * STDDEV
     assert low - TOLERANCE < d['confidence_low'] < low + TOLERANCE
     assert high - TOLERANCE < d['confidence_high'] < high + TOLERANCE
+
+
+@mock.patch('mozanalysis.bootstrap._percentile')
+def test_percentile_data(mocked, spark_context):
+    # Test that we pass the bootstrap data to `_percentile`.
+    data = np.arange(20)
+    bootstrap(spark_context, data, np.mean, num_iterations=5)
+    assert list(mocked.call_args[0][0]) != list(data)
