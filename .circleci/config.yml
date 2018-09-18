@@ -58,10 +58,10 @@ jobs:
         name: Run linting
         command: |
           pip install flake8
-          flake8 moztelemetry/ tests/
+          flake8 src/ tests/
 
-  # Only runs when a tag starting with 'v' is place on the repository;
-  # see the workflows section below for trigger logic.
+  # Runs when the repository is tagged for release; see the workflows section
+  # below for trigger logic.
   deploy:
     docker:
       - image: python:2.7
@@ -79,7 +79,7 @@ jobs:
           name: Upload to PyPI
           command: |
             # Relies on the TWINE_USERNAME and TWINE_PASSWORD environment variables configured at:
-            #   https://circleci.com/gh/mozilla/python_moztelemetry/edit#env-vars
+            #   https://circleci.com/gh/mozilla/mozanalysis/edit#env-vars
             # For more on twine, see:
             #   https://twine.readthedocs.io/en/latest/
             twine upload dist/*
@@ -100,8 +100,8 @@ workflows:
     jobs:
       - deploy:
           filters:
+            tags:
+              only: /[0-9]{4}.[0-9]{1,2}.[0-9]+/  # Calver: YYYY.M.MINOR
             branches:
               # Ignore all branches; this workflow should only run for tags.
               ignore: /.*/
-            tags:
-              only: /^v.*/

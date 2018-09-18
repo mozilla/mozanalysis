@@ -18,7 +18,7 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     install_requires=['py4j', 'numpy'],
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest-runner', 'setuptools_scm'],
     extras_require={
         'testing': tests_require,
     },

@@ -16,7 +16,7 @@ TOXENV="py${PYTHON_VERSION/./}"
 # Create a named volume to hold cached tox environment between runs;
 # this can cause errors with running tests after modifying setup.py, etc.,
 # so be prepared to run the bin/clean script.
-docker volume create moztelemetry-tox
+docker volume create mozanalysis-tox
 
 # If nothing has changed, this build step will hit cache and run quickly.
 docker build -t mozanalysis:"$TOXENV" --build-arg PYTHON_VERSION="$PYTHON_VERSION" .
