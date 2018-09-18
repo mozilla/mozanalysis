@@ -20,6 +20,7 @@ def _percentile(data, confidence_level):
         'confidence_high': np.percentile(data, confidence_high * 100),
     }
 
+
 def bootstrap(sc, data, stat_fn, num_iterations=2000, confidence_level=0.95):
     """Returns a bootstrapped confidence interval
 
@@ -52,7 +53,7 @@ def bootstrap(sc, data, stat_fn, num_iterations=2000, confidence_level=0.95):
 
     broadcast_data.unpersist()
 
-    p = _percentile(data, confidence_level)
+    p = _percentile(stats, confidence_level)
 
     return {
         'calculated_value': stat_fn(data),
