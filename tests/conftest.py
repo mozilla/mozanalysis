@@ -10,11 +10,7 @@ from pyspark.sql import SparkSession
 @pytest.fixture(scope="session")
 def spark():
     spark = (
-        SparkSession
-        .builder
-        .master("local")
-        .appName("mozanalysis_test")
-        .getOrCreate()
+        SparkSession.builder.master("local").appName("mozanalysis_test").getOrCreate()
     )
 
     logger = logging.getLogger("py4j")
