@@ -17,7 +17,7 @@ setup(
     url='https://github.com/mozilla/mozanalysis',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['py4j', 'numpy'],
+    install_requires=['py4j', 'numpy', 'pandas'],
     setup_requires=['pytest-runner', 'setuptools_scm'],
     extras_require={
         'testing': tests_require,

@@ -19,8 +19,8 @@ def _percentile(data, confidence_level):
     confidence_high = 1.0 - confidence_margin
 
     return {
-        'confidence_low': np.percentile(data, confidence_low * 100),
-        'confidence_high': np.percentile(data, confidence_high * 100),
+        "confidence_low": np.percentile(data, confidence_low * 100),
+        "confidence_high": np.percentile(data, confidence_high * 100),
     }
 
 
@@ -59,7 +59,7 @@ def bootstrap(sc, data, stat_fn, num_iterations=2000, confidence_level=0.95):
     p = _percentile(stats, confidence_level)
 
     return {
-        'calculated_value': stat_fn(data),
-        'confidence_low': p['confidence_low'],
-        'confidence_high': p['confidence_high'],
+        "calculated_value": stat_fn(data),
+        "confidence_low": p["confidence_low"],
+        "confidence_high": p["confidence_high"],
     }
