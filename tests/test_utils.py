@@ -10,7 +10,7 @@ def test_dedupe_columns(spark):
     # NOTE: We are limited in the amount of testing we can do here b/c things
     # like `sorted([F.col(...)])` and checking for equality fail b/c of the
     # overridden magic methods on `Column` types.
-    assert len(dedupe_columns(['a', 'b', 'a'])) == 2
-    assert len(dedupe_columns(['a', 'b', F.col('a')])) == 2
-    assert len(dedupe_columns([F.col('a'), F.col('b'), F.col('a')])) == 2
-    assert len(dedupe_columns([F.expr('a'), F.col('b'), F.col('a')])) == 2
+    assert len(dedupe_columns(["a", "b", "a"])) == 2
+    assert len(dedupe_columns(["a", "b", F.col("a")])) == 2
+    assert len(dedupe_columns([F.col("a"), F.col("b"), F.col("a")])) == 2
+    assert len(dedupe_columns([F.expr("a"), F.col("b"), F.col("a")])) == 2
