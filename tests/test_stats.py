@@ -3,26 +3,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import mock
 import numpy as np
+from pytest import approx
 
-from mozanalysis.stats import bootstrap, _percentile
+from mozanalysis.stats import bootstrap, _t_percentile
 
 
 # Generate a normalized distribution around a known mean.
-MEAN = 15.0
-TOLERANCE = 0.2
-STDDEV = 0.1
+MEAN = 100.0
+STDDEV = 10.0
+TOLERANCE = 0.1
 DATA = np.random.normal(MEAN, STDDEV, 1000)
 
 
-def test_percentile():
-    data = np.arange(10)
-    p = _percentile(data, 0.8)
-    assert round(p["confidence_low"], 1) == 0.9
-    assert round(p["confidence_high"], 1) == 8.1
-
-
-def test_mean():
-    assert MEAN - TOLERANCE < np.mean(DATA) < MEAN + TOLERANCE
+def test_t_percentile():
+    t = np.mean(DATA)
+    d = _t_percentile(DATA, 0.95, t)
+    low = np.mean(DATA) - 1.96 * STDDEV
+    high = np.mean(DATA) + 1.96 * STDDEV
+    assert approx(low, rel=TOLERANCE) == d["confidence_low"]
+    assert approx(high, rel=TOLERANCE) == d["confidence_high"]
 
 
 def test_bootstrap_mean(spark_context):
@@ -30,17 +29,16 @@ def test_bootstrap_mean(spark_context):
         spark_context, DATA, np.mean, num_iterations=50, confidence_level=0.95
     )
     # Check that the calculated mean from the samples are in expected range.
-    assert MEAN - TOLERANCE < d["calculated_value"] < MEAN + TOLERANCE
+    assert approx(MEAN, rel=TOLERANCE) == d["calculated_value"]
+
     # Check that our confidence values are within expected ranges.
-    low = np.mean(DATA) - 1.96 * STDDEV
-    high = np.mean(DATA) + 1.96 * STDDEV
-    assert low - TOLERANCE < d["confidence_low"] < low + TOLERANCE
-    assert high - TOLERANCE < d["confidence_high"] < high + TOLERANCE
+    assert approx(MEAN * 0.975, rel=TOLERANCE) == d["confidence_low"]
+    assert approx(MEAN * 1.025, rel=TOLERANCE) == d["confidence_high"]
 
 
-@mock.patch("mozanalysis.stats._percentile")
+@mock.patch("mozanalysis.stats._t_percentile")
 def test_percentile_data(mocked, spark_context):
-    # Test that we pass the bootstrap data to `_percentile`.
+    # Test that we pass the bootstrap data to `_t_percentile`.
     data = np.arange(20)
     bootstrap(spark_context, data, np.mean, num_iterations=5)
     assert list(mocked.call_args[0][0]) != list(data)

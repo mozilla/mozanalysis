@@ -12,15 +12,15 @@ def _resample(iteration, stat_fn, broadcast_data):
     return stat_fn(broadcast_data.value[randints])
 
 
-def _percentile(data, confidence_level):
+def _t_percentile(data, confidence_level, t):
     """Returns low and high percentile based on provided confidence level"""
     confidence_margin = 0.5 * (1.0 - confidence_level)
-    confidence_low = 0.0 + confidence_margin
-    confidence_high = 1.0 - confidence_margin
+    confidence_high = (0.0 + confidence_margin) * 100
+    confidence_low = (1.0 - confidence_margin) * 100
 
     return {
-        "confidence_low": np.percentile(data, confidence_low * 100),
-        "confidence_high": np.percentile(data, confidence_high * 100),
+        "confidence_low": t - np.percentile(data - t, confidence_low),
+        "confidence_high": t - np.percentile(data - t, confidence_high),
     }
 
 
@@ -51,12 +51,13 @@ def bootstrap(sc, data, stat_fn, num_iterations=2000, confidence_level=0.95):
     # Broadcast the data as read-only to the clusters.
     broadcast_data = sc.broadcast(data)
 
+    t = stat_fn(data)
     f = partial(_resample, stat_fn=stat_fn, broadcast_data=broadcast_data)
     stats = sc.parallelize(range(num_iterations)).map(f).collect()
 
     broadcast_data.unpersist()
 
-    p = _percentile(stats, confidence_level)
+    p = _t_percentile(np.array(stats), confidence_level, t)
 
     return {
         "calculated_value": stat_fn(data),
