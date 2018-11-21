@@ -1,8 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from itertools import product
+
 import mock
 import numpy as np
+import pandas as pd
 import pyspark.sql.functions as F
 
 # NOTE: The metrics are not imported here b/c they are evaluated and require a
@@ -172,3 +175,44 @@ def test_engagement_metrics(spark):
     assert np.allclose(control_values[3], 4.75 / (1 / 3600.0 + 35.625))
     # Note: 13.75 is the sum of the total hours, 103.125 is the sum of the active hours.
     assert np.allclose(variant_values[3], 13.75 / (1 / 3600.0 + 103.125))
+
+
+def test_metrics_handle_nulls(spark):
+    from mozanalysis.metrics import (
+        EngagementAvgDailyHours,
+        EngagementAvgDailyActiveHours,
+        EngagementHourlyUris,
+        EngagementIntensity,
+        p50,
+    )
+
+    metrics = [
+        EngagementAvgDailyHours,
+        EngagementAvgDailyActiveHours,
+        EngagementHourlyUris,
+        EngagementIntensity,
+    ]
+    for m in metrics:
+        m.stats = [np.mean, p50]
+
+    data = {
+        "client_id": ["a", "b", "c"],
+        "experiment_branch": ["control"] * 3,
+        "submission_date_s3": ["1", "2", "3"],
+        "scalar_parent_browser_engagement_total_uri_count": [None, 10, 10],
+        "subsession_length": [10, None, 10],
+        "active_ticks": [10, 10, None],
+    }
+    sdf = spark.createDataFrame(pd.DataFrame(data, dtype=object))
+    summary = ExperimentAnalysis(sdf).metrics(*metrics).run()
+    # assert that each stat is defined for each metric
+    must_have = pd.DataFrame(
+        [
+            {"stat_name": stat, "metric_name": metric_name}
+            for stat, metric_name in product(
+                ["mean", "p50"], [m.name.replace(" ", "_").lower() for m in metrics]
+            )
+        ]
+    )
+    assert len(must_have.merge(summary, how="inner")) == len(must_have)
+    assert not summary.isnull().any(axis=None)
