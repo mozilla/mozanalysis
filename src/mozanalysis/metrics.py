@@ -61,15 +61,19 @@ class MetricDefinition(object):
 
 
 sum_total_uris_expr = F.expr(
-    "SUM(scalar_parent_browser_engagement_total_uri_count)"
+    "SUM(COALESCE(scalar_parent_browser_engagement_total_uri_count, 0))"
 ).alias("sum_total_uris")
 
+
 sum_total_hours_expr = F.expr(
-    "SUM(subsession_length / {seconds_per_hour})".format(**CONSTANTS)
+    "SUM(COALESCE(subsession_length, 0) / {seconds_per_hour})".format(**CONSTANTS)
 ).alias("sum_total_hours")
 
+
 sum_active_hours_expr = F.expr(
-    "SUM(active_ticks * {ticks_per_second} / {seconds_per_hour})".format(**CONSTANTS)
+    "SUM(COALESCE(active_ticks, 0) * {ticks_per_second} / {seconds_per_hour})".format(
+        **CONSTANTS
+    )
 ).alias("sum_active_hours")
 
 
