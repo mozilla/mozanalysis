@@ -15,27 +15,22 @@ def generate_histogram(spark):
     ])
 
 
-def test_histogram_mean(spark):
-    from mozanalysis.udf import histogram_mean
+def test_histogram_udfs(spark):
+    from mozanalysis.udf import histogram_mean, histogram_count, histogram_sum
     df = (
         generate_histogram(spark)
         .withColumn("mean", histogram_mean("my_histogram"))
-        .toPandas()
-        .set_index("client_id")
-    )
-    assert df.loc["b", "mean"] > df.loc["a", "mean"]
-
-
-def test_histogram_count(spark):
-    from mozanalysis.udf import histogram_count
-    df = (
-        generate_histogram(spark)
         .withColumn("count", histogram_count("my_histogram"))
+        .withColumn("sum", histogram_sum("my_histogram"))
         .toPandas()
         .set_index("client_id")
     )
     assert df.loc["a", "count"] == 16
     assert df.loc["b", "count"] == 53
+    assert df.loc["a", "sum"] == 142
+    assert df.loc["b", "sum"] == 38*42 + 5*43
+    assert df.loc["a", "mean"] == float(df.loc["a", "sum"]) / df.loc["a", "count"]
+    assert df.loc["b", "mean"] == float(df.loc["b", "sum"]) / df.loc["b", "count"]
 
 
 def test_histogram_quantiles(spark):
