@@ -1,5 +1,6 @@
 from pyspark.sql import Row
 from pyspark.sql import functions as F
+from pytest import approx
 
 
 def generate_histogram(spark):
@@ -61,3 +62,37 @@ def test_histogram_quantiles(spark):
     assert df.loc[("a", 0.95), "value"] == 42
     assert df.loc[("b", 0.5), "value"] == 42
     assert df.loc[("b", 0.95), "value"] == 43
+
+
+def test_histogram_threshold(spark):
+    from mozanalysis.udf import generate_threshold_udf
+
+    sdf = generate_histogram(spark)
+    threshold_udf = generate_threshold_udf(
+        sdf=sdf,
+        grouping_fields=["client_id"],
+        bucket_field="bucket",
+        count_field="count",
+        thresholds=[0, 43],
+    )
+
+    df = (
+        sdf
+        .select(
+            sdf.client_id,
+            F.explode(sdf.my_histogram).alias("bucket", "count"),
+        )
+        .groupBy(sdf.client_id)
+        .apply(threshold_udf)
+        .toPandas()
+        .set_index(["client_id", "threshold"])
+    )
+
+    def check(client, threshold, fraction):
+        value = df.loc[(client, threshold), "fraction_exceeding"]
+        assert value == approx(fraction)
+
+    check("a", 0, 1)
+    check("a", 43, 0)
+    check("b", 0, 1)
+    check("b", 43, 5./53)
