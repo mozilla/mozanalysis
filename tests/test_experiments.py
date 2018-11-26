@@ -153,15 +153,19 @@ def test_engagement_metrics(spark):
         assert np.allclose(lookup.loc[(metric, "control", "mean")], control)
         assert np.allclose(lookup.loc[(metric, "variant", "mean")], variant)
 
+    # sum(subsession lengths / 3600) / n_days
     check_stat("engagement_avg_daily_hours", control=4.75 / 9, variant=13.75 / 9)
+    # sum(active ticks * 5 / 3600) / n_days
     check_stat(
         "engagement_avg_daily_active_hours", control=35.625 / 9, variant=103.125 / 9
     )
+    # sum(uris) / (1/3600 + sum(active hours))
     check_stat(
         "engagement_uris_per_active_hour",
         control=342 / (1 / 3600.0 + 35.625),
         variant=990 / (1 / 3600.0 + 103.125),
     )
+    # sum(total hours) / (1/3600 + sum(active hours))
     check_stat(
         "engagement_intensity",
         control=4.75 / (1 / 3600.0 + 35.625),
