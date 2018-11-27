@@ -147,34 +147,30 @@ def test_engagement_metrics(spark):
 
     df = _generate_data(spark, {"aaaa": "control", "bbbb": "variant"})
     pdf = ExperimentAnalysis(df).metrics(*metrics).run()
+    lookup = pdf.set_index(["metric_name", "branch", "stat_name"])["stat_value"]
 
-    # Get the control rows and "stat_value" columns.
-    control_values = list(pdf[pdf.branch == "control"].to_dict()["stat_value"].values())
-    variant_values = list(pdf[pdf.branch == "variant"].to_dict()["stat_value"].values())
+    def check_stat(metric, control, variant):
+        assert np.allclose(lookup.loc[(metric, "control", "mean")], control)
+        assert np.allclose(lookup.loc[(metric, "variant", "mean")], variant)
 
-    # engagement_daily_hours
-    # Note: 4.75 is the sum of the subsession lengths / 3600 over 9 days.
-    assert np.allclose(control_values[0], 4.75 / 9)
-    # Note: 13.75 is the sum of the subsession lengths / 3600 over 9 days.
-    assert np.allclose(variant_values[0], 13.75 / 9)
-
-    # engagement_daily_active_hours
-    # Note: 35.625 is the sum of the active ticks * 5 / 3600 over 9 days.
-    assert np.allclose(control_values[1], 35.625 / 9)
-    # Note: 103.125 is the sum of the active ticks * 5 / 3600 over 9 days.
-    assert np.allclose(variant_values[1], 103.125 / 9)
-
-    # engagement_uris_per_active_hour
-    # Note: 342 is the sum of the URIs, 35.625 is the sum of the active hours.
-    assert np.allclose(control_values[2], 342 / (1 / 3600.0 + 35.625))
-    # Note: 990 is the sum of the URIs, 103.125 is the sum of the active hours.
-    assert np.allclose(variant_values[2], 990 / (1 / 3600.0 + 103.125))
-
-    # engagement_intensity
-    # Note: 4.75 is the sum of the total hours, 35.625 is the sum of the active hours.
-    assert np.allclose(control_values[3], 4.75 / (1 / 3600.0 + 35.625))
-    # Note: 13.75 is the sum of the total hours, 103.125 is the sum of the active hours.
-    assert np.allclose(variant_values[3], 13.75 / (1 / 3600.0 + 103.125))
+    # sum(subsession lengths / 3600) / n_days
+    check_stat("engagement_avg_daily_hours", control=4.75 / 9, variant=13.75 / 9)
+    # sum(active ticks * 5 / 3600) / n_days
+    check_stat(
+        "engagement_avg_daily_active_hours", control=35.625 / 9, variant=103.125 / 9
+    )
+    # sum(uris) / (1/3600 + sum(active hours))
+    check_stat(
+        "engagement_uris_per_active_hour",
+        control=342 / (1 / 3600.0 + 35.625),
+        variant=990 / (1 / 3600.0 + 103.125),
+    )
+    # sum(total hours) / (1/3600 + sum(active hours))
+    check_stat(
+        "engagement_intensity",
+        control=4.75 / (1 / 3600.0 + 35.625),
+        variant=13.75 / (1 / 3600.0 + 103.125),
+    )
 
 
 def test_metrics_handle_nulls(spark):
