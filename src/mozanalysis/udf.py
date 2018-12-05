@@ -16,7 +16,7 @@ def histogram_sum(values):
     """
     if values is None:
         return None
-    return sum(int(k)*v for k, v in values.items())
+    return sum(int(k) * v for k, v in values.items())
 
 
 @udf(DoubleType())
@@ -32,7 +32,7 @@ def histogram_mean(values):
     numerator = 0
     denominator = 0
     for k, v in values.items():
-        numerator += int(k)*v
+        numerator += int(k) * v
         denominator += v
     return numerator / float(denominator)
 

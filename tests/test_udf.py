@@ -4,20 +4,17 @@ from pytest import approx
 
 
 def generate_histogram(spark):
-    return spark.createDataFrame([
-        Row(
-            client_id="a",
-            my_histogram={"0": 5, "10": 10, "42": 1, "43": 0},
-        ),
-        Row(
-            client_id="b",
-            my_histogram={"0": 10, "10": 0, "42": 38, "43": 5},
-        )
-    ])
+    return spark.createDataFrame(
+        [
+            Row(client_id="a", my_histogram={"0": 5, "10": 10, "42": 1, "43": 0}),
+            Row(client_id="b", my_histogram={"0": 10, "10": 0, "42": 38, "43": 5}),
+        ]
+    )
 
 
 def test_histogram_udfs(spark):
     from mozanalysis.udf import histogram_mean, histogram_count, histogram_sum
+
     df = (
         generate_histogram(spark)
         .withColumn("mean", histogram_mean("my_histogram"))
@@ -29,7 +26,7 @@ def test_histogram_udfs(spark):
     assert df.loc["a", "count"] == 16
     assert df.loc["b", "count"] == 53
     assert df.loc["a", "sum"] == 142
-    assert df.loc["b", "sum"] == 38*42 + 5*43
+    assert df.loc["b", "sum"] == 38 * 42 + 5 * 43
     assert df.loc["a", "mean"] == float(df.loc["a", "sum"]) / df.loc["a", "count"]
     assert df.loc["b", "mean"] == float(df.loc["b", "sum"]) / df.loc["b", "count"]
 
@@ -50,7 +47,7 @@ def test_histogram_quantiles(spark):
         sdf
         .select(
             sdf.client_id,
-            F.explode(sdf.my_histogram).alias("bucket", "count"),
+            F.explode(sdf.my_histogram).alias("bucket", "count")
         )
         .groupBy(sdf.client_id)
         .apply(quantile_udf)
@@ -80,7 +77,7 @@ def test_histogram_threshold(spark):
         sdf
         .select(
             sdf.client_id,
-            F.explode(sdf.my_histogram).alias("bucket", "count"),
+            F.explode(sdf.my_histogram).alias("bucket", "count")
         )
         .groupBy(sdf.client_id)
         .apply(threshold_udf)
@@ -95,4 +92,4 @@ def test_histogram_threshold(spark):
     check("a", 0, 1)
     check("a", 43, 0)
     check("b", 0, 1)
-    check("b", 43, 5./53)
+    check("b", 43, 5.0 / 53)
