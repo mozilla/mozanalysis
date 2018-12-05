@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-2018.12.1 (2018-12-05)
+2018.12.0 (2018-12-05)
 ^^^^^^^^^^^^^^^^^^^^^^
 
 - Updated to use basic bootstrap for confidence intervals (Fixes issue #5)
