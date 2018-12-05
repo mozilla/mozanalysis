@@ -165,11 +165,11 @@ def test_engagement_metrics(spark):
         control=342 / (1 / 3600.0 + 35.625),
         variant=990 / (1 / 3600.0 + 103.125),
     )
-    # sum(total hours) / (1/3600 + sum(active hours))
+    # sum(active hours) / (1/3600 + sum(total hours))
     check_stat(
         "engagement_intensity",
-        control=4.75 / (1 / 3600.0 + 35.625),
-        variant=13.75 / (1 / 3600.0 + 103.125),
+        control=35.625 / (1 / 3600.0 + 4.75),
+        variant=103.125 / (1 / 3600.0 + 13.75),
     )
 
 

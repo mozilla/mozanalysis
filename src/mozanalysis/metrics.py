@@ -120,7 +120,7 @@ class EngagementIntensity(MetricDefinition):
     columns = [F.col("sum_total_hours"), F.col("sum_active_hours")]
     aggregations = [
         F.expr(
-            "SUM(sum_total_hours) / ({hours_epsilon} + SUM(sum_active_hours))".format(
+            "SUM(sum_active_hours) / ({hours_epsilon} + SUM(sum_total_hours))".format(
                 **CONSTANTS
             )
         ).alias("intensity")
