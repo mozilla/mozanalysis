@@ -136,8 +136,6 @@ class ExperimentAnalysis(object):
                         }
                     )
 
-        dataset.unpersist()
-
         return pd.DataFrame(
             data,
             columns=[
