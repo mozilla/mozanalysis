@@ -1,6 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import warnings
+
 import pandas as pd
 import pyspark.sql.functions as F
 
@@ -95,6 +97,17 @@ class ExperimentAnalysis(object):
             defined in the `MetricDefinition`s `columns` field.
 
         """
+        dataset_was_cached = False
+        # `DataFrame.is_cached` is undocumented, so try to avoid breaking
+        # if a Spark upgrade drops it.
+        try:
+            dataset_was_cached = dataset.is_cached
+        except AttributeError:
+            warnings.warn(
+                "Could not determine whether the provided DataFrame was already "
+                "cached. `analyze` will unpersist the DataFrame. "
+                "(This does not affect the analysis.)"
+            )
         dataset.cache()
 
         data = []
@@ -135,6 +148,9 @@ class ExperimentAnalysis(object):
                             "ci_high": bs["confidence_high"],
                         }
                     )
+
+        if not dataset_was_cached:
+            dataset.unpersist()
 
         return pd.DataFrame(
             data,
