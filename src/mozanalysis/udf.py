@@ -48,57 +48,61 @@ def histogram_count(values):
 def generate_quantile_udf(sdf, grouping_fields, bucket_field, count_field, quantiles):
     """Returns a UDF for computing histogram quantiles.
 
-    Parameters:
+    Args:
         sdf: Spark DataFrame
         grouping_fields: list of strings representing columns from sdf
         bucket_field: Name of the field containing histogram buckets
         count_field: Name of the field containing counts
         quantiles: List of quantiles as floating point values on [0, 1]
 
-    `sdf` and `grouping_fields` are necessary to infer the schema of the
+    ``sdf`` and ``grouping_fields`` are necessary to infer the schema of the
     returned Spark DataFrame.
 
-    For example, to compute per-user median FX_NEW_WINDOW_MS values for a recent
-    sample of main_summary, you could write:
+    For example, to compute per-user median ``FX_NEW_WINDOW_MS`` values for a recent
+    sample of main_summary, you could write something like the example below::
 
-    ---
-    import pyspark.sql.functions as F
-    ms = spark.table("main_summary")
+        import pyspark.sql.functions as F
+        ms = spark.table("main_summary")
 
-    grouping_fields = ["client_id"]
+        grouping_fields = ["client_id"]
 
-    quantile_udf = generate_quantile_udf(
-        sdf=ms,
-        grouping_fields=grouping_fields,
-        bucket_field="bucket",
-        count_field="count",
-        quantiles=[0.5, 0.95],
-    )
-
-    quantiles = (
-        ms
-        .filter(ms.submission_date_s3 == "20181001")
-        .filter(ms.sample_id == "42")
-        .select(
-            F.explode(ms.histogram_content_fx_new_window_ms).alias("bucket", "count"),
-            *grouping_fields
+        quantile_udf = generate_quantile_udf(
+            sdf=ms,
+            grouping_fields=grouping_fields,
+            bucket_field="bucket",
+            count_field="count",
+            quantiles=[0.5, 0.95],
         )
-        .groupBy(*grouping_fields)
-        .apply(quantile_udf)
-        .toPandas()
-    )
-    ---
-    Note that the `quantile_udf` returned by this function is used together
-    with the `.apply` method of the grouped DataFrame.
 
-    This will return a table `quantiles` that looks like:
+        quantiles = (
+            ms
+            .filter(ms.submission_date_s3 == "20181001")
+            .filter(ms.sample_id == "42")
+            .select(
+                (
+                    F.explode(ms.histogram_content_fx_new_window_ms)
+                    .alias("bucket", "count")
+                ),
+                *grouping_fields
+            )
+            .groupBy(*grouping_fields)
+            .apply(quantile_udf)
+            .toPandas()
+        )
 
-    client_id | quantile | value
-    -----------------------------
-    id_1      | 0.5      | 2
-    id_1      | 0.95     | 23
-    id_2      | 0.5      | 4
-    ...       | ...      | ...
+    Note that the ``quantile_udf`` returned by this function is used together
+    with the ``.apply`` method of the grouped ``DataFrame``.
+
+    This will return a table ``quantiles`` that looks like the table below.
+
+    ========= ======== =====
+    client_id quantile value
+    ========= ======== =====
+    id_1      0.5      2
+    id_1      0.95     23
+    id_2      0.5      4
+    ...       ...      ...
+    ========= ======== =====
     """
     schema = (
         sdf
@@ -126,7 +130,7 @@ def generate_threshold_udf(sdf, grouping_fields, bucket_field, count_field, thre
     """Returns a UDF for calculating the fraction of values in a histogram
     equal to or exceeding a threshold.
 
-    Parameters:
+    Args:
         sdf: Spark DataFrame
         grouping_fields: list of strings representing columns from sdf
         bucket_field: Name of the field containing histogram buckets
@@ -139,46 +143,47 @@ def generate_threshold_udf(sdf, grouping_fields, bucket_field, count_field, thre
 
     For example, to compute the per-user fractions of CONTENT_FRAME_TIME values
     equal to or exceeding 103% or 192% of a vsync from a sample of main_summary,
-    you could write:
+    you could write::
 
-    ---
-    import pyspark.sql.functions as F
-    ms = spark.table("main_summary")
+        import pyspark.sql.functions as F
+        ms = spark.table("main_summary")
 
-    grouping_fields = ["client_id"]
+        grouping_fields = ["client_id"]
 
-    threshold_udf = generate_threshold_udf(
-        sdf=ms,
-        grouping_fields=grouping_fields,
-        bucket_field="bucket",
-        count_field="count",
-        thresholds=[103, 192],
-    )
-
-    thresholded = (
-        ms
-        .filter(ms.submission_date_s3 == "20181001")
-        .filter(ms.sample_id == "42")
-        .select(
-            F.explode(ms.histogram_gpu_content_frame_time).alias("bucket", "count"),
-            *grouping_fields
+        threshold_udf = generate_threshold_udf(
+            sdf=ms,
+            grouping_fields=grouping_fields,
+            bucket_field="bucket",
+            count_field="count",
+            thresholds=[103, 192],
         )
-        .groupBy(*grouping_fields)
-        .apply(threshold_udf)
-        .toPandas()
-    )
-    ---
+
+        thresholded = (
+            ms
+            .filter(ms.submission_date_s3 == "20181001")
+            .filter(ms.sample_id == "42")
+            .select(
+                F.explode(ms.histogram_gpu_content_frame_time).alias("bucket", "count"),
+                *grouping_fields
+            )
+            .groupBy(*grouping_fields)
+            .apply(threshold_udf)
+            .toPandas()
+        )
+
     Note that the `threshold_udf` returned by this function is used together
     with the `.apply` method of the grouped DataFrame.
 
     This will return a table `thresholded` that looks like:
 
-    client_id | threshold | fraction_exceeding
-    ------------------------------------------
-    id_1      | 103       | 0.994
-    id_1      | 192       | 0.036
-    id_2      | 103       | 0.978
-    ...       | ...       | ...
+    =========  =========  ==================
+    client_id  threshold  fraction_exceeding
+    =========  =========  ==================
+    id_1       103        0.994
+    id_1       192        0.036
+    id_2       103        0.978
+    ...        ...        ...
+    =========  =========  ==================
     """
     schema = (
         sdf
