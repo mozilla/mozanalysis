@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+Next
+^^^^
+
+- ExperimentAnalysis.analyze no longer unpersists the dataset.
+
+
 2018.12.0 (2018-12-05)
 ^^^^^^^^^^^^^^^^^^^^^^
 
