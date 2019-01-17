@@ -7,7 +7,6 @@
 from setuptools import setup, find_packages
 
 tests_require = ['mock', 'pyspark', 'pytest', 'pytest-cov', 'pytest-timeout']
-docs_require = ['sphinx', 'sphinx_rtd_theme']
 
 setup(
     name='mozanalysis',
@@ -29,7 +28,6 @@ setup(
     setup_requires=['pytest-runner', 'setuptools_scm'],
     extras_require={
         'testing': tests_require,
-        'docs': docs_require,
     },
     tests_require=tests_require,
 )

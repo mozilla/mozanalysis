@@ -4,6 +4,10 @@ The `mozanalysis` Python library is a library to standardize experiment analysis
 at Mozilla for the purpose of producing decision reports templates that are
 edited by data scientists.
 
+## Documentation
+
+Online documentation is available at https://mozilla.github.io/mozanalysis/
+
 ## Installing from pypi
 - To install this package from pypi run:
 ```
