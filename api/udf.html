@@ -1,0 +1,419 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.udf &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="API Documentation" href="../api.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About Mozanalysis</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Documentation</a> &raquo;</li>
+        
+      <li><code class="docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/udf.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mozanalysis.udf">
+<span id="mozanalysis-udf"></span><h1><a class="reference internal" href="#module-mozanalysis.udf" title="mozanalysis.udf"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a><a class="headerlink" href="#module-mozanalysis.udf" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="mozanalysis.udf.generate_quantile_udf">
+<code class="descclassname">mozanalysis.udf.</code><code class="descname">generate_quantile_udf</code><span class="sig-paren">(</span><em>sdf</em>, <em>grouping_fields</em>, <em>bucket_field</em>, <em>count_field</em>, <em>quantiles</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#generate_quantile_udf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.generate_quantile_udf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a UDF for computing histogram quantiles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sdf</strong> – Spark DataFrame</li>
+<li><strong>grouping_fields</strong> – list of strings representing columns from sdf</li>
+<li><strong>bucket_field</strong> – Name of the field containing histogram buckets</li>
+<li><strong>count_field</strong> – Name of the field containing counts</li>
+<li><strong>quantiles</strong> – List of quantiles as floating point values on [0, 1]</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">sdf</span></code> and <code class="docutils literal notranslate"><span class="pre">grouping_fields</span></code> are necessary to infer the schema of the
+returned Spark DataFrame.</p>
+<p>For example, to compute per-user median <code class="docutils literal notranslate"><span class="pre">FX_NEW_WINDOW_MS</span></code> values for a recent
+sample of main_summary, you could write something like the example below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyspark.sql.functions</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="n">ms</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;main_summary&quot;</span><span class="p">)</span>
+
+<span class="n">grouping_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;client_id&quot;</span><span class="p">]</span>
+
+<span class="n">quantile_udf</span> <span class="o">=</span> <span class="n">generate_quantile_udf</span><span class="p">(</span>
+    <span class="n">sdf</span><span class="o">=</span><span class="n">ms</span><span class="p">,</span>
+    <span class="n">grouping_fields</span><span class="o">=</span><span class="n">grouping_fields</span><span class="p">,</span>
+    <span class="n">bucket_field</span><span class="o">=</span><span class="s2">&quot;bucket&quot;</span><span class="p">,</span>
+    <span class="n">count_field</span><span class="o">=</span><span class="s2">&quot;count&quot;</span><span class="p">,</span>
+    <span class="n">quantiles</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">quantiles</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ms</span>
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">submission_date_s3</span> <span class="o">==</span> <span class="s2">&quot;20181001&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">sample_id</span> <span class="o">==</span> <span class="s2">&quot;42&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="n">F</span><span class="o">.</span><span class="n">explode</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">histogram_content_fx_new_window_ms</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;bucket&quot;</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="o">*</span><span class="n">grouping_fields</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="o">*</span><span class="n">grouping_fields</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">quantile_udf</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">quantile_udf</span></code> returned by this function is used together
+with the <code class="docutils literal notranslate"><span class="pre">.apply</span></code> method of the grouped <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
+<p>This will return a table <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> that looks like the table below.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="36%" />
+<col width="23%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">client_id</th>
+<th class="head">quantile</th>
+<th class="head">value</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>id_1</td>
+<td>0.5</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>id_1</td>
+<td>0.95</td>
+<td>23</td>
+</tr>
+<tr class="row-even"><td>id_2</td>
+<td>0.5</td>
+<td>4</td>
+</tr>
+<tr class="row-odd"><td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.udf.generate_threshold_udf">
+<code class="descclassname">mozanalysis.udf.</code><code class="descname">generate_threshold_udf</code><span class="sig-paren">(</span><em>sdf</em>, <em>grouping_fields</em>, <em>bucket_field</em>, <em>count_field</em>, <em>thresholds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#generate_threshold_udf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.generate_threshold_udf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a UDF for calculating the fraction of values in a histogram
+equal to or exceeding a threshold.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sdf</strong> – Spark DataFrame</li>
+<li><strong>grouping_fields</strong> – list of strings representing columns from sdf</li>
+<li><strong>bucket_field</strong> – Name of the field containing histogram buckets</li>
+<li><strong>count_field</strong> – Name of the field containing counts</li>
+<li><strong>thresholds</strong> – List of thresholds. Should probably align on the left edge
+of a bucket.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><cite>sdf</cite> and <cite>grouping_fields</cite> are necessary to infer the schema of the
+returned Spark DataFrame.</p>
+<p>For example, to compute the per-user fractions of CONTENT_FRAME_TIME values
+equal to or exceeding 103% or 192% of a vsync from a sample of main_summary,
+you could write:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyspark.sql.functions</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="n">ms</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;main_summary&quot;</span><span class="p">)</span>
+
+<span class="n">grouping_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;client_id&quot;</span><span class="p">]</span>
+
+<span class="n">threshold_udf</span> <span class="o">=</span> <span class="n">generate_threshold_udf</span><span class="p">(</span>
+    <span class="n">sdf</span><span class="o">=</span><span class="n">ms</span><span class="p">,</span>
+    <span class="n">grouping_fields</span><span class="o">=</span><span class="n">grouping_fields</span><span class="p">,</span>
+    <span class="n">bucket_field</span><span class="o">=</span><span class="s2">&quot;bucket&quot;</span><span class="p">,</span>
+    <span class="n">count_field</span><span class="o">=</span><span class="s2">&quot;count&quot;</span><span class="p">,</span>
+    <span class="n">thresholds</span><span class="o">=</span><span class="p">[</span><span class="mi">103</span><span class="p">,</span> <span class="mi">192</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">thresholded</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ms</span>
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">submission_date_s3</span> <span class="o">==</span> <span class="s2">&quot;20181001&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">sample_id</span> <span class="o">==</span> <span class="s2">&quot;42&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">explode</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">histogram_gpu_content_frame_time</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;bucket&quot;</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">),</span>
+        <span class="o">*</span><span class="n">grouping_fields</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="o">*</span><span class="n">grouping_fields</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">threshold_udf</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that the <cite>threshold_udf</cite> returned by this function is used together
+with the <cite>.apply</cite> method of the grouped DataFrame.</p>
+<p>This will return a table <cite>thresholded</cite> that looks like:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="25%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">client_id</th>
+<th class="head">threshold</th>
+<th class="head">fraction_exceeding</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>id_1</td>
+<td>103</td>
+<td>0.994</td>
+</tr>
+<tr class="row-odd"><td>id_1</td>
+<td>192</td>
+<td>0.036</td>
+</tr>
+<tr class="row-even"><td>id_2</td>
+<td>103</td>
+<td>0.978</td>
+</tr>
+<tr class="row-odd"><td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.udf.histogram_count">
+<code class="descclassname">mozanalysis.udf.</code><code class="descname">histogram_count</code><span class="sig-paren">(</span><em>values</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#histogram_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.histogram_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counts the number of events recorded by a histogram.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.udf.histogram_mean">
+<code class="descclassname">mozanalysis.udf.</code><code class="descname">histogram_mean</code><span class="sig-paren">(</span><em>values</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#histogram_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.histogram_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the mean of values in a histogram.</p>
+<p>This mean relies on the sum <em>post</em>-quantization, which amounts to a
+left-hand-rule discrete integral of the histogram. It is therefore
+likely to be an underestimate of the true mean.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.udf.histogram_sum">
+<code class="descclassname">mozanalysis.udf.</code><code class="descname">histogram_sum</code><span class="sig-paren">(</span><em>values</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#histogram_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.histogram_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the weighted sum of the histogram.</p>
+<p>Note that this is the sum <em>post</em>-quantization, which amounts to a
+left-hand-rule discrete integral of the histogram. It is therefore
+likely to be an underestimate of the true sum.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../api.html" class="btn btn-neutral" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
