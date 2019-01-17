@@ -9,14 +9,14 @@
 test_settings: &test_settings
   steps:
     - checkout
-    - run:
+    - run: &install_packages
         name: Install system packages
         command: |
           # pyspark needs to run Java, so we install openjdk.
           apt-get update
           apt-get install -y openjdk-8-jre-headless
-    - run:
-        name: Run tests
+    - run: &run_tox_environment_matching_circleci_job_name
+        name: Run tox job
         command: |
           pip install tox
           tox -e $CIRCLE_JOB
@@ -84,6 +84,44 @@ jobs:
             #   https://twine.readthedocs.io/en/latest/
             twine upload dist/*
 
+  docs: &docs_settings
+    docker:
+      - image: python:3.7
+    steps:
+      - checkout
+      - run:
+          <<: *install_packages
+      - run:
+          <<: *run_tox_environment_matching_circleci_job_name
+      - persist_to_workspace:
+          root: docs/_build
+          paths: html
+
+  docs-deploy:
+    docker:
+      - image: node:8.10.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: docs/_build
+      - run:
+          name: Disable jekyll builds
+          command: touch docs/_build/html/.nojekyll
+      # Needed for write access to the GitHub repository;
+      # see https://circleci.com/docs/2.0/gh-bb-integration/#deployment-keys-and-user-keys
+      - add_ssh_keys:
+          fingerprints:
+            - "48:91:ca:2d:0d:5d:57:dc:fd:bd:00:ff:c3:53:3a:33"
+      # The gh-pages npm package looks to be the most widely used utility for
+      # pushing a directory to a git branch;
+      # see https://www.npmjs.com/package/gh-pages
+      - run:
+          name: Deploy docs to gh-pages branch
+          command: |
+            git config user.email "fx-data-platform@mozilla.com"
+            git config user.name "CircleCI docs-deploy job"
+            npm install -g --silent gh-pages@2.0.1
+            gh-pages --dotfiles --message "[skip ci] Updates" --dist docs/_build/html
 
 ####################
 # Workflows: see https://circleci.com/docs/2.0/workflows/
@@ -96,6 +134,13 @@ workflows:
       - py27
       - py37
       - lint
+      - docs
+      - docs-deploy:
+          requires:
+            - docs
+          filters:
+            branches:
+              only: master
   tagged-deploy:
     jobs:
       - deploy:
