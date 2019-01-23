@@ -31,14 +31,14 @@ def bootstrap(sc, data, stat_fn, num_iterations=2000, confidence_level=0.95):
     on the confidence level provided. This uses pyspark and distributes the data
     to the nodes for efficiency.
 
-    NOTE: All the data, plus one replicate, should fit into memory.
+    **NOTE**: All the data, plus one replicate, should fit into memory.
 
-    Arguments:
-    sc : The spark context.
-    data : The data as a list or numpy array.
-    stat_fn : A callable that computes the statistic.
-    num_iterations : The number of bootstrap iterations to perform.
-    confidence_level : The confidence level desired (between 0 and 1)
+    Args:
+        sc: The spark context
+        data: The data as a list or numpy array
+        stat_fn: A callable that computes the statistic
+        num_iterations: The number of bootstrap iterations to perform
+        confidence_level: The confidence level desired, [0, 1]
 
     Returns a dictionary with the keys::
 
