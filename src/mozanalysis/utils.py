@@ -30,16 +30,34 @@ def dedupe_columns(columns):
 
 
 def all_(l):
-    """Return the logical AND of the input list l.
+    """Return the element-wise logical AND of `Column`s.
 
-    Unlike the built-in `all`, this is compatible with dataframe columns.
+    Think of this as a vector-friendly version of the built-in function
+    `all()`.
+
+    Args:
+        l: A list of `Column`s of booleans. Or, more generally,
+            an iterable of items to reduce over.
+
+    Returns:
+        A `Column` of booleans representing the logical AND. Or,
+            more generally, the result of the logical AND.
     """
     return reduce(lambda x, y: x & y, l)
 
 
 def any_(l):
-    """Return the logical OR of the input list l.
+    """Return the element-wise logical OR of `Column`s.
 
-    Unlike the built-in `any`, this is compatible with dataframe columns.
+    Think of this as a vector-friendly version of the built-in function
+    `any()`.
+
+    Args:
+        l: A list of `Column`s of booleans. Or, more generally,
+            an iterable of items to reduce over.
+
+    Returns:
+        A `Column` of booleans representing the logical OR. Or,
+            more generally, the result of the logical OR.
     """
     return reduce(lambda x, y: x | y, l)

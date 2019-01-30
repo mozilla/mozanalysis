@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import pyspark.sql.functions as F
+import pytest
 
 from mozanalysis.utils import dedupe_columns, all_, any_
 
@@ -42,6 +43,10 @@ def test_all_(spark):
     assert not pres['mixed_5'][::2].any()
     assert pres['mixed_5'][1::2].all()
 
+    # Check this workaround is still necessary:
+    with pytest.raises(ValueError):
+        all([df.all_true, df.all_true])
+
 
 def test_any_(spark):
     df = spark.createDataFrame(
@@ -68,3 +73,7 @@ def test_any_(spark):
     assert pres['true_4'].any()
     assert not pres['mixed_5'][::2].any()
     assert pres['mixed_5'][1::2].all()
+
+    # Check this workaround is still necessary:
+    with pytest.raises(ValueError):
+        any([df.all_true, df.all_true])
