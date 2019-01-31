@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import pyspark.sql.functions as F
 from pyspark.sql.column import Column
+from functools import reduce
 
 
 def dedupe_columns(columns):
@@ -26,3 +27,37 @@ def dedupe_columns(columns):
         d[col._jc] = col
 
     return list(d.values())
+
+
+def all_(l):
+    """Return the element-wise logical AND of `Column`s.
+
+    Think of this as a vector-friendly version of the built-in function
+    `all()`.
+
+    Args:
+        l: A list of `Column`s of booleans. Or, more generally,
+            an iterable of items to reduce over.
+
+    Returns:
+        A `Column` of booleans representing the logical AND. Or,
+            more generally, the result of the logical AND.
+    """
+    return reduce(lambda x, y: x & y, l)
+
+
+def any_(l):
+    """Return the element-wise logical OR of `Column`s.
+
+    Think of this as a vector-friendly version of the built-in function
+    `any()`.
+
+    Args:
+        l: A list of `Column`s of booleans. Or, more generally,
+            an iterable of items to reduce over.
+
+    Returns:
+        A `Column` of booleans representing the logical OR. Or,
+            more generally, the result of the logical OR.
+    """
+    return reduce(lambda x, y: x | y, l)
