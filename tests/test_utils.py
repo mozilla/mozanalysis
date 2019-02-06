@@ -25,23 +25,23 @@ def test_all_(spark):
             [True, False, False],
             [True, False, True],
         ],
-        schema=['all_true', 'all_false', 'mixed'],
+        schema=["all_true", "all_false", "mixed"],
     )
     pres = df.select(
-        all_([df.all_true, df.all_true, df.all_true]).alias('true_1'),
-        all_([df.all_true, df.all_false]).alias('false_2'),
-        all_([df.all_false, df.all_false]).alias('false_3'),
-        all_([df.mixed, df.all_false]).alias('false_4'),
-        all_([df.mixed, df.all_true]).alias('mixed_5'),
+        all_([df.all_true, df.all_true, df.all_true]).alias("true_1"),
+        all_([df.all_true, df.all_false]).alias("false_2"),
+        all_([df.all_false, df.all_false]).alias("false_3"),
+        all_([df.mixed, df.all_false]).alias("false_4"),
+        all_([df.mixed, df.all_true]).alias("mixed_5"),
     ).toPandas()
     assert pres.shape == (4, 5)
     assert not pres.isnull().any().any()
-    assert pres['true_1'].all()
-    assert not pres['false_2'].any()
-    assert not pres['false_3'].any()
-    assert not pres['false_4'].any()
-    assert not pres['mixed_5'][::2].any()
-    assert pres['mixed_5'][1::2].all()
+    assert pres["true_1"].all()
+    assert not pres["false_2"].any()
+    assert not pres["false_3"].any()
+    assert not pres["false_4"].any()
+    assert not pres["mixed_5"][::2].any()
+    assert pres["mixed_5"][1::2].all()
 
     # Check this workaround is still necessary:
     with pytest.raises(ValueError):
@@ -56,23 +56,23 @@ def test_any_(spark):
             [True, False, False],
             [True, False, True],
         ],
-        schema=['all_true', 'all_false', 'mixed'],
+        schema=["all_true", "all_false", "mixed"],
     )
     pres = df.select(
-        any_([df.all_true, df.all_true, df.all_true]).alias('true_1'),
-        any_([df.all_true, df.all_false]).alias('true_2'),
-        any_([df.all_false, df.all_false]).alias('false_3'),
-        any_([df.mixed, df.all_true]).alias('true_4'),
-        any_([df.mixed, df.all_false]).alias('mixed_5'),
+        any_([df.all_true, df.all_true, df.all_true]).alias("true_1"),
+        any_([df.all_true, df.all_false]).alias("true_2"),
+        any_([df.all_false, df.all_false]).alias("false_3"),
+        any_([df.mixed, df.all_true]).alias("true_4"),
+        any_([df.mixed, df.all_false]).alias("mixed_5"),
     ).toPandas()
     assert pres.shape == (4, 5)
     assert not pres.isnull().any().any()
-    assert pres['true_1'].all()
-    assert pres['true_2'].any()
-    assert not pres['false_3'].any()
-    assert pres['true_4'].any()
-    assert not pres['mixed_5'][::2].any()
-    assert pres['mixed_5'][1::2].all()
+    assert pres["true_1"].all()
+    assert pres["true_2"].any()
+    assert not pres["false_3"].any()
+    assert pres["true_4"].any()
+    assert not pres["mixed_5"][::2].any()
+    assert pres["mixed_5"][1::2].all()
 
     # Check this workaround is still necessary:
     with pytest.raises(ValueError):
