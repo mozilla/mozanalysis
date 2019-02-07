@@ -8,9 +8,14 @@ import numpy as np
 import pandas as pd
 import pyspark.sql.functions as F
 
-# NOTE: The metrics are not imported here b/c they are evaluated and require a
-# spark context, which isn't available outside the test functions.
 from mozanalysis.experiments import ExperimentAnalysis
+from mozanalysis.metrics import (
+    EngagementAvgDailyActiveHours,
+    EngagementAvgDailyHours,
+    EngagementHourlyUris,
+    EngagementIntensity,
+    p50,
+)
 
 
 def test_chaining():
@@ -77,8 +82,6 @@ def test_split_by_values(spark):
 
 def test_aggregate_per_client_daily(spark):
     # Test the daily aggregation returns 1 row per date.
-    from mozanalysis.metrics import EngagementAvgDailyHours
-
     df = _generate_data(spark, {"aaaa": "control", "bbbb": "variant"})
     agg_df = (
         ExperimentAnalysis(df)
@@ -127,12 +130,6 @@ def test_aggregate_per_client_daily(spark):
 
 def test_engagement_metrics(spark):
     # Testing all engagement metrics in one pass to reduce amount of Spark testing time.
-    from mozanalysis.metrics import (
-        EngagementAvgDailyHours,
-        EngagementAvgDailyActiveHours,
-        EngagementHourlyUris,
-        EngagementIntensity,
-    )
 
     # Only compute the means across all stats.
     metrics = [
@@ -174,14 +171,6 @@ def test_engagement_metrics(spark):
 
 
 def test_metrics_handle_nulls(spark):
-    from mozanalysis.metrics import (
-        EngagementAvgDailyHours,
-        EngagementAvgDailyActiveHours,
-        EngagementHourlyUris,
-        EngagementIntensity,
-        p50,
-    )
-
     metrics = [
         EngagementAvgDailyHours,
         EngagementAvgDailyActiveHours,
