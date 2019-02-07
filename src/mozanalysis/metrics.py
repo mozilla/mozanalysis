@@ -60,6 +60,12 @@ class MetricDefinition(object):
     stats = [np.mean, p5, p25, p50, p75, p95]
 
 
+class CoreMetric(object):
+    metrics = []
+    pre_callable = None
+    post_callable = None
+
+
 sum_total_uris_expr = F.expr(
     "SUM(COALESCE(scalar_parent_browser_engagement_total_uri_count, 0))"
 ).alias("sum_total_uris")
@@ -126,3 +132,12 @@ class EngagementIntensity(MetricDefinition):
         ).alias("intensity")
     ]
     final_expression = F.col("intensity")
+
+
+class EngagementMetrics(CoreMetric):
+    metrics = [
+        EngagementAvgDailyHours,
+        EngagementAvgDailyActiveHours,
+        EngagementHourlyUris,
+        EngagementIntensity,
+    ]

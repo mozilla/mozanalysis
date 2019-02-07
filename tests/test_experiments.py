@@ -10,11 +10,13 @@ import pyspark.sql.functions as F
 
 from mozanalysis.experiments import ExperimentAnalysis
 from mozanalysis.metrics import (
+    CoreMetric,
     EngagementAvgDailyActiveHours,
     EngagementAvgDailyHours,
     EngagementHourlyUris,
     EngagementIntensity,
-    p50,
+    EngagementMetrics,
+    p50
 )
 
 
@@ -31,6 +33,20 @@ def test_chaining():
     assert exp._aggregate_by == "client_id"  # The default.
     assert exp._metrics == ("metric1", "metric2")
     assert exp._split_by == "split"
+
+
+def test_all_metrics():
+    dataset = mock.Mock()
+    dataset._sc = "sc"
+
+    class TestMetric1(CoreMetric):
+        metrics = EngagementMetrics.metrics[:2]
+
+    class TestMetric2(CoreMetric):
+        metrics = EngagementMetrics.metrics[2:]
+
+    exp = ExperimentAnalysis(dataset).metrics(TestMetric1, TestMetric2)
+    assert exp.all_metrics() == EngagementMetrics.metrics
 
 
 def _generate_data(spark, client_branches):
@@ -82,10 +98,13 @@ def test_split_by_values(spark):
 
 def test_aggregate_per_client_daily(spark):
     # Test the daily aggregation returns 1 row per date.
+    class TestMetric(CoreMetric):
+        metrics = [EngagementAvgDailyHours]
+
     df = _generate_data(spark, {"aaaa": "control", "bbbb": "variant"})
     agg_df = (
         ExperimentAnalysis(df)
-        .metrics(EngagementAvgDailyHours)
+        .metrics(TestMetric)
         .aggregate_per_client_daily(df)
     )
     # Assert we have the expected columns.
@@ -132,18 +151,21 @@ def test_engagement_metrics(spark):
     # Testing all engagement metrics in one pass to reduce amount of Spark testing time.
 
     # Only compute the means across all stats.
-    metrics = [
+    _metrics = [
         EngagementAvgDailyHours,
         EngagementAvgDailyActiveHours,
         EngagementHourlyUris,
         EngagementIntensity,
     ]
     # Only calculate the means to reduce bootstrap time during testing.
-    for m in metrics:
+    for m in _metrics:
         m.stats = [np.mean]
 
+    class TestMetric(CoreMetric):
+        metrics = _metrics
+
     df = _generate_data(spark, {"aaaa": "control", "bbbb": "variant"})
-    pdf = ExperimentAnalysis(df).metrics(*metrics).run()
+    pdf = ExperimentAnalysis(df).metrics(TestMetric).run()
     lookup = pdf.set_index(["metric_name", "branch", "stat_name"])["stat_value"]
 
     def check_stat(metric, control, variant):
@@ -171,14 +193,17 @@ def test_engagement_metrics(spark):
 
 
 def test_metrics_handle_nulls(spark):
-    metrics = [
+    _metrics = [
         EngagementAvgDailyHours,
         EngagementAvgDailyActiveHours,
         EngagementHourlyUris,
         EngagementIntensity,
     ]
-    for m in metrics:
+    for m in _metrics:
         m.stats = [np.mean, p50]
+
+    class TestMetric(CoreMetric):
+        metrics = _metrics
 
     data = {
         "client_id": ["a", "b", "c"],
@@ -189,13 +214,13 @@ def test_metrics_handle_nulls(spark):
         "active_ticks": [10, 10, None],
     }
     sdf = spark.createDataFrame(pd.DataFrame(data, dtype=object))
-    summary = ExperimentAnalysis(sdf).metrics(*metrics).run()
+    summary = ExperimentAnalysis(sdf).metrics(TestMetric).run()
     # assert that each stat is defined for each metric
     must_have = pd.DataFrame(
         [
             {"stat_name": stat, "metric_name": metric_name}
             for stat, metric_name in product(
-                ["mean", "p50"], [m.name.replace(" ", "_").lower() for m in metrics]
+                ["mean", "p50"], [m.name.replace(" ", "_").lower() for m in _metrics]
             )
         ]
     )

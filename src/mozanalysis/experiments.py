@@ -14,14 +14,21 @@ class ExperimentAnalysis(object):
     def __init__(self, dataset):
         self.sc = dataset._sc
         self._dataset = dataset
-        self._metrics = None
+        self._metrics = None  # A list of `CoreMetric` classes.
         self._date_aggregate_by = "submission_date_s3"
         self._aggregate_by = "client_id"
         self._split_by = "experiment_branch"
 
     def metrics(self, *metrics):
+        """Assign the ``CoreMetric`` classes."""
+        # TODO: Type check and warning if not `CoreMetric` subclass?
         self._metrics = metrics
         return self
+
+    def all_metrics(self):
+        """Return the list of metrics across all ``CoreMetric`` classes."""
+        if self._metrics:
+            return sum([cm.metrics for cm in self._metrics], [])
 
     def date_aggregate_by(self, column):
         self._date_aggregate_by = column
@@ -69,7 +76,7 @@ class ExperimentAnalysis(object):
             F.col(self._date_aggregate_by),
         ]
         aggs = []
-        for m in self._metrics:
+        for m in self.all_metrics():
             cols.extend(m.daily_columns)
             aggs.extend(m.daily_aggregations)
 
@@ -113,7 +120,7 @@ class ExperimentAnalysis(object):
         data = []
         branches = self.get_split_by_values(dataset)
 
-        for m in self._metrics:
+        for m in self.all_metrics():
             # TODO: Use a lib or make this more robust.
             metric_name = m.name.replace(" ", "_").lower()
 
