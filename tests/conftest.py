@@ -7,19 +7,31 @@ import pytest
 from pyspark.sql import SparkSession
 
 
-@pytest.fixture(scope="session")
-def spark():
-    spark = (
+_spark_session = None
+_spark_context = None
+
+
+def pytest_configure(config):
+    global _spark_session, _spark_context
+
+    _spark_session = (
         SparkSession.builder.master("local").appName("mozanalysis_test").getOrCreate()
     )
+    _spark_context = _spark_session.sparkContext
 
     logger = logging.getLogger("py4j")
     logger.setLevel(logging.ERROR)
 
-    yield spark
-    spark.stop()
+
+def pytest_unconfigure(config):
+    _spark_session.stop()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
+def spark():
+    return _spark_session
+
+
+@pytest.fixture()
 def spark_context(spark):
-    return spark.sparkContext
+    return _spark_context
