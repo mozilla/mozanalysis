@@ -112,3 +112,15 @@ def _resample_parallel(sc, data, num_iterations, seed_start=None):
 
     finally:
         broadcast_data.unpersist()
+
+
+def _resample_local(data, num_iterations):
+    """Equivalent to `_resample_parallel` but doesn't require Spark.
+
+    The main purpose of this function is to document what's being done
+    in `_resample_parallel` :D
+    """
+    return np.array([
+        np.mean(np.random.choice(data, size=len(data)))
+        for _ in range(num_iterations)
+    ])
