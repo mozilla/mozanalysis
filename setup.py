@@ -18,6 +18,7 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     install_requires=[
+        'enum34',
         'numpy',
         'pandas',
         'py4j',

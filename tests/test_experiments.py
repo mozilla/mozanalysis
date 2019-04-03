@@ -1,53 +1,33 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import datetime
 from itertools import product
 
-import mock
 import numpy as np
 import pandas as pd
 import pyspark.sql.functions as F
 
-from mozanalysis.experiments import ExperimentAnalysis
-from mozanalysis.metrics import (
-    EngagementAvgDailyActiveHours,
-    EngagementAvgDailyHours,
-    EngagementHourlyUris,
-    EngagementIntensity,
-    p50,
-)
+from mozanalysis.experiments import COLUMNS, CoreMetrics, ExperimentAnalysis, p50
 
 
-def test_chaining():
-    dataset = mock.Mock()
-    dataset._sc = "sc"
-    exp = (
-        ExperimentAnalysis(dataset)
-        .metrics("metric1", "metric2")
-        .date_aggregate_by("other_date_column")
-        .split_by("split")
-    )
-    assert exp._date_aggregate_by == "other_date_column"
-    assert exp._aggregate_by == "client_id"  # The default.
-    assert exp._metrics == ("metric1", "metric2")
-    assert exp._split_by == "split"
-
-
-def _generate_data(spark, client_branches):
+def _generate_data(spark, client_branches, num_days=9):
     """
     Given a dict of clients->branches, generate predictive data for testing.
     """
-    submission_date = "2018010%d"  # Fill in date with digits 1-9.
+    submission_date_base = datetime.date(2018, 1, 1)
 
     incrementer = 1
     data_rows = []
     for client in sorted(client_branches.keys()):
         for branch in sorted(client_branches.values()):
-            for date in range(1, 10):
+            for days in range(0, num_days):
                 data_rows.append(
                     [
                         client,
-                        submission_date % date,
+                        (submission_date_base + datetime.timedelta(days=days)).strftime(
+                            "%Y%m%d"
+                        ),
                         "mozanalysis-tests",  # experiment_id
                         client_branches[client],  # experiment_branch
                         2 * incrementer,  # URI counts
@@ -71,26 +51,16 @@ def _generate_data(spark, client_branches):
     )
 
 
-def test_split_by_values(spark):
-    # Test that we get the correct branches back.
-    df = _generate_data(
-        spark, {"aaaa": "control", "bbbb": "variant", "cccc": "control"}
-    )
-    branches = ExperimentAnalysis(df).get_split_by_values(df)
-    assert sorted(branches) == ["control", "variant"]
-
-
 def test_aggregate_per_client_daily(spark):
-    # Test the daily aggregation returns 1 row per date.
+    # Test `get_data` returns 1 row client per day.
     df = _generate_data(spark, {"aaaa": "control", "bbbb": "variant"})
-    agg_df = (
-        ExperimentAnalysis(df)
-        .metrics(EngagementAvgDailyHours)
-        .aggregate_per_client_daily(df)
-    )
+    agg_df = ExperimentAnalysis(
+        spark, experiment_id="mozanalysis-tests"
+    ).aggregate_per_day(df, CoreMetrics.RETENTION)
     # Assert we have the expected columns.
     assert sorted(agg_df.columns) == sorted(
-        ["client_id", "experiment_branch", "submission_date_s3", "sum_total_hours"]
+        ["client_id", "experiment_branch", "submission_date"]
+        + COLUMNS[CoreMetrics.RETENTION]
     )
     # Assert the original dataframe has multiple rows per client per day.
     assert (
@@ -101,7 +71,7 @@ def test_aggregate_per_client_daily(spark):
     )
     # Assert we have 1 row per client per day after.
     assert (
-        agg_df.filter(F.col("submission_date_s3") == "20180101")
+        agg_df.filter(F.col("submission_date") == "2018-01-01")
         .filter(F.col("client_id") == "aaaa")
         .count()
         == 1
@@ -111,54 +81,45 @@ def test_aggregate_per_client_daily(spark):
         (
             df.filter(F.col("client_id") == "aaaa")
             .filter(F.col("submission_date_s3") == "20180109")
-            .agg(F.expr("SUM(subsession_length / 3600)").alias("sum_total_hours"))
+            .agg(F.expr("SUM(subsession_length)").alias("subsession_length"))
         )
         .first()
-        .asDict()["sum_total_hours"]
+        .asDict()["subsession_length"]
     )
     actual = (
         (
             agg_df.filter(F.col("client_id") == "aaaa").filter(
-                F.col("submission_date_s3") == "20180109"
+                F.col("submission_date") == "2018-01-09"
             )
         )
         .first()
-        .asDict()["sum_total_hours"]
+        .asDict()["subsession_length"]
     )
     assert actual == expected
 
 
 def test_engagement_metrics(spark):
-    # Testing all engagement metrics in one pass to reduce amount of Spark testing time.
+    df = _generate_data(spark, {"aaaa": "control", "bbbb": "variant"})
 
     # Only compute the means across all stats.
-    metrics = [
-        EngagementAvgDailyHours,
-        EngagementAvgDailyActiveHours,
-        EngagementHourlyUris,
-        EngagementIntensity,
-    ]
-    # Only calculate the means to reduce bootstrap time during testing.
-    for m in metrics:
-        m.stats = [np.mean]
-
-    df = _generate_data(spark, {"aaaa": "control", "bbbb": "variant"})
-    pdf = ExperimentAnalysis(df).metrics(*metrics).run()
-    lookup = pdf.set_index(["metric_name", "branch", "stat_name"])["stat_value"]
+    ea = ExperimentAnalysis(spark, experiment_id="mozanalysis-tests", stats=[np.mean])
+    df = ea.aggregate_per_day(df, CoreMetrics.ENGAGEMENT)
+    ea.df = df
+    engagement_df = ea.engagement()
+    summary = ea.bootstrap(engagement_df)
+    lookup = summary.set_index(["metric", "branch", "stat"])["value"]
 
     def check_stat(metric, control, variant):
         assert np.allclose(lookup.loc[(metric, "control", "mean")], control)
         assert np.allclose(lookup.loc[(metric, "variant", "mean")], variant)
 
     # sum(subsession lengths / 3600) / n_days
-    check_stat("engagement_avg_daily_hours", control=4.75 / 9, variant=13.75 / 9)
+    check_stat("engagement_daily_hours", control=4.75 / 9, variant=13.75 / 9)
     # sum(active ticks * 5 / 3600) / n_days
-    check_stat(
-        "engagement_avg_daily_active_hours", control=35.625 / 9, variant=103.125 / 9
-    )
+    check_stat("engagement_daily_active_hours", control=35.625 / 9, variant=103.125 / 9)
     # sum(uris) / (1/3600 + sum(active hours))
     check_stat(
-        "engagement_uris_per_active_hour",
+        "engagement_hourly_uris",
         control=342 / (1 / 3600.0 + 35.625),
         variant=990 / (1 / 3600.0 + 103.125),
     )
@@ -170,16 +131,36 @@ def test_engagement_metrics(spark):
     )
 
 
-def test_metrics_handle_nulls(spark):
-    metrics = [
-        EngagementAvgDailyHours,
-        EngagementAvgDailyActiveHours,
-        EngagementHourlyUris,
-        EngagementIntensity,
-    ]
-    for m in metrics:
-        m.stats = [np.mean, p50]
+def test_retention_metrics(spark):
+    def get_date(days):
+        base_day = datetime.date(2018, 1, 1)
+        return (base_day + datetime.timedelta(days=days)).strftime("%Y%m%d")
+    data = {
+        "client_id": ["a", "b"] * 30,
+        "experiment_branch": ["control", "variant"] * 30,
+        "submission_date_s3": [get_date(d) for d in range(30)]
+        + [get_date(d) for d in range(30)],
+        "scalar_parent_browser_engagement_total_uri_count": [0, 10] * 30,
+        "subsession_length": [0, 10] * 30,
+    }
+    sdf = spark.createDataFrame(pd.DataFrame(data, dtype=object))
+    # Only compute the means across all stats.
+    ea = ExperimentAnalysis(spark, experiment_id="mozanalysis-tests", stats=[np.mean])
+    df = ea.aggregate_per_day(sdf, CoreMetrics.RETENTION)
+    ea.df = df
+    retention_df = ea.retention()
+    summary = ea.bootstrap(retention_df)
+    lookup = summary.set_index(["metric", "branch", "stat"])["value"]
 
+    def check_stat(metric, control, variant):
+        assert np.allclose(lookup.loc[(metric, "control", "mean")], control)
+        assert np.allclose(lookup.loc[(metric, "variant", "mean")], variant)
+
+    check_stat("retention", control=0.0, variant=1.0)
+    check_stat("active_retention", control=0.0, variant=1.0)
+
+
+def test_metrics_handle_nulls(spark):
     data = {
         "client_id": ["a", "b", "c"],
         "experiment_branch": ["control"] * 3,
@@ -189,14 +170,25 @@ def test_metrics_handle_nulls(spark):
         "active_ticks": [10, 10, None],
     }
     sdf = spark.createDataFrame(pd.DataFrame(data, dtype=object))
-    summary = ExperimentAnalysis(sdf).metrics(*metrics).run()
+    ea = ExperimentAnalysis(
+        spark, experiment_id="mozanalysis-tests", stats=[np.mean, p50]
+    )
+    df = ea.aggregate_per_day(sdf, CoreMetrics.ENGAGEMENT)
+    ea.df = df
+    engagement_df = ea.engagement()
+    summary = ea.bootstrap(engagement_df)
+
     # assert that each stat is defined for each metric
+    metrics = [
+        "engagement_daily_hours",
+        "engagement_daily_active_hours",
+        "engagement_hourly_uris",
+        "engagement_intensity",
+    ]
     must_have = pd.DataFrame(
         [
-            {"stat_name": stat, "metric_name": metric_name}
-            for stat, metric_name in product(
-                ["mean", "p50"], [m.name.replace(" ", "_").lower() for m in metrics]
-            )
+            {"stat": stat, "metric": metric_name}
+            for stat, metric_name in product(["mean", "p50"], metrics)
         ]
     )
     assert len(must_have.merge(summary, how="inner")) == len(must_have)
