@@ -198,7 +198,7 @@ class Experiment(object):
                 Ideally also has:
                     - experiments (map)
             metric_list: A list of columns that aggregate and compute
-                metrics, e.g.
+                metrics over data grouped by `(client_id, branch)`, e.g.
                 `[F.coalesce(F.sum(df.metric_name), F.lit(0)).alias('metric_name')]`
             last_date_full_data (str): The most recent date for which we
                 have complete data, e.g. '20190322'. If you want to ignore
