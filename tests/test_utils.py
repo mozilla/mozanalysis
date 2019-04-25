@@ -4,7 +4,7 @@
 import pyspark.sql.functions as F
 import pytest
 
-from mozanalysis.utils import dedupe_columns, all_, any_
+from mozanalysis.utils import dedupe_columns, all_, any_, add_days
 
 
 def test_dedupe_columns(spark):
@@ -77,3 +77,9 @@ def test_any_(spark):
     # Check this workaround is still necessary:
     with pytest.raises(ValueError):
         any([df.all_true, df.all_true])
+
+
+def test_add_days():
+    assert add_days('20190101', 0) == '20190101'
+    assert add_days('20190101', 1) == '20190102'
+    assert add_days('20190101', -1) == '20181231'
