@@ -249,45 +249,47 @@ class Experiment(object):
             df, last_date_full_data, conv_window_start_days, conv_window_length_days
         )
 
+        join_on = [
+            # TODO perf: would it be faster if we enforce a join on sample_id?
+            enrollments.client_id == df.client_id,
+
+            # TODO accuracy: once we can rely on
+            #   `df.experiments[self.experiment_slug]`
+            # existing even after unenrollment, we could start joining on
+            # branch to reduce problems associated with split client_ids:
+            # enrollments.branch == df.experiments[self.experiment_slug]
+
+            # Do a quick pass aiming to efficiently filter out lots of rows:
+            enrollments.enrollment_date <= df.submission_date_s3,
+
+            # Now do a more thorough pass filtering out irrelevant data:
+            # TODO perf: what is a more efficient way to do this?
+            (
+                (
+                    F.unix_timestamp(df.submission_date_s3, 'yyyyMMdd')
+                    - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
+                ) / (24 * 60 * 60)
+            ).between(
+                conv_window_start_days,
+                conv_window_start_days + conv_window_length_days - 1
+            ),
+        ]
+
+        if 'experiments' in df.columns:
+            # Try to filter data from day of enrollment before time of enrollment.
+            # If the client enrolled and unenrolled on the same day then this
+            # will also filter out that day's post unenrollment data but that's
+            # probably the smallest and most innocuous evil on the menu.
+            join_on.append(
+                (enrollments.enrollment_date != df.submission_date_s3)
+                | (~F.isnull(df.experiments[self.experiment_slug]))
+            ),
+
         sanity_metrics = self._get_telemetry_sanity_check_metrics(enrollments, df)
 
         res = enrollments.join(
             df,
-            [
-                # TODO perf: would it be faster if we enforce a join on sample_id?
-                enrollments.client_id == df.client_id,
-
-                # TODO accuracy: once we can rely on
-                #   `df.experiments[self.experiment_slug]`
-                # existing even after unenrollment, we could start joining on
-                # branch to reduce problems associated with split client_ids:
-                # enrollments.branch == df.experiments[self.experiment_slug]
-
-                # Do a quick pass aiming to efficiently filter out lots of rows:
-                enrollments.enrollment_date <= df.submission_date_s3,
-
-                # Now do a more thorough pass filtering out irrelevant data:
-                # TODO perf: what is a more efficient way to do this?
-                (
-                    (
-                        F.unix_timestamp(df.submission_date_s3, 'yyyyMMdd')
-                        - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
-                    ) / (24 * 60 * 60)
-                ).between(
-                    conv_window_start_days,
-                    conv_window_start_days + conv_window_length_days - 1
-                ),
-
-                # Try to filter data from day of enrollment before time of enrollment.
-                # If the client enrolled and unenrolled on the same day then this
-                # will also filter out that day's post unenrollment data but that's
-                # probably the smallest and most innocuous evil on the menu.
-                (
-                    (enrollments.enrollment_date != df.submission_date_s3)
-                    | (~F.isnull(df.experiments[self.experiment_slug]))
-                ),
-
-            ],
+            join_on,
             'left'
         ).groupBy(
             enrollments.client_id, enrollments.branch

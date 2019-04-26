@@ -344,3 +344,18 @@ def test_get_per_client_data_join(spark):
     derek_lateisok = res.filter(res.client_id == 'derek-lateisok')
     assert derek_lateisok.count() == 1
     assert derek_lateisok.first()['some_value'] == 1
+
+    # Check that it still works for `df`s without an experiments map
+    res2 = exp.get_per_client_data(
+        enrollments,
+        df.drop('experiments'),
+        [
+            F.coalesce(F.sum(df.some_value), F.lit(0)).alias('some_value'),
+        ],
+        '20190114',
+        1,
+        3,
+        keep_client_id=True
+    )
+
+    assert res2.count() == enrollments.count()
