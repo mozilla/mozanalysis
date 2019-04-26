@@ -241,9 +241,6 @@ class Experiment(object):
         if self.num_dates_enrollment is None:
             self._print_enrollment_window(last_date_full_data, req_dates_of_data)
 
-        # TODO accuracy: can/should we switch from submission_date_s3 to when the
-        # events actually happened?
-
         enrollments = self.filter_enrollments_for_conv_window(
             enrollments, last_date_full_data, req_dates_of_data
         )
