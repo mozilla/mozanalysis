@@ -113,7 +113,9 @@ class Experiment(object):
         self.num_dates_enrollment = num_dates_enrollment
         self.addon_version = addon_version
 
-    def get_enrollments(self, spark, study_type='pref_flip', end_date=None):
+    def get_enrollments(
+        self, spark, study_type='pref_flip', end_date=None, debug_dupes=False
+    ):
         """Return a DataFrame of enrolled clients.
 
         This works for pref-flip and addon studies.
@@ -177,25 +179,38 @@ class Experiment(object):
                 enrollments.enrollment_date <= end_date
             )
 
+        # Deduplicate enrollment events. Optionally keep track of what
+        # had to be deduplicated. Deduplicating a client who enrolls in
+        # multiple branches is left as an exercise to the reader :|
+        enrollments = enrollments.groupBy(
+            enrollments.client_id, enrollments.branch
+        ).agg(*(
+            [F.min(enrollments.enrollment_date).alias('enrollment_date')]
+            + (
+                [F.count(enrollments.enrollment_date).alias('num_events')]
+                if debug_dupes else []
+            )
+        ))
+
         enrollments.cache()
 
         return enrollments
 
     def get_per_client_data(
-        self, enrollments, df, metric_list, last_date_full_data, conv_window_start_days,
-        conv_window_length_days, keep_client_id=False
+        self, enrollments, data_source, metric_list, last_date_full_data,
+        conv_window_start_days, conv_window_length_days, keep_client_id=False
     ):
         """Return a DataFrame containing per-client metric values.
 
         Args:
             enrollments: A spark DataFrame of enrollments, like the one
                 returned by `self.get_enrollments()`.
-            df: A spark DataFrame containing the data needed to calculate
-                the metrics. Could be `main_summary` or `clients_daily`.
-                _Don't_ use `experiments`; as of 2019/04/02 it drops data
-                collected after people self-unenroll, so unenrolling users
-                will appear to churn. Must have at least the following
-                columns:
+            data_source: A spark DataFrame containing the data needed to
+                calculate the metrics. Could be `main_summary` or
+                `clients_daily`. _Don't_ use `experiments`; as of 2019/04/02
+                it drops data collected after people self-unenroll, so
+                unenrolling users will appear to churn. Must have at least
+                the following columns:
                     - client_id (str)
                     - submission_date_s3 (str)
                     - data columns referred to in `metric_list`
@@ -209,7 +224,11 @@ class Experiment(object):
                         branch.
             metric_list: A list of columns that aggregate and compute
                 metrics over data grouped by `(client_id, branch)`, e.g.
-                `[F.coalesce(F.sum(df.metric_name), F.lit(0)).alias('metric_name')]`
+                ```
+                    [F.coalesce(F.sum(
+                        data_source.metric_name
+                    ), F.lit(0)).alias('metric_name')]
+                ```
             last_date_full_data (str): The most recent date for which we
                 have complete data, e.g. '20190322'. If you want to ignore
                 all data collected after a certain date (e.g. when the
@@ -243,12 +262,12 @@ class Experiment(object):
 
             This format - the schema plus there being one row per
             enrolled client, regardless of whether the client has data
-            in `df` - was agreed upon by the DS team, and is the
+            in `data_source` - was agreed upon by the DS team, and is the
             standard format for queried experimental data.
         """
         for col in ['client_id', 'submission_date_s3']:
-            if col not in df.columns:
-                raise ValueError("Column '{}' missing from 'df'".format(col))
+            if col not in data_source.columns:
+                raise ValueError("Column '{}' missing from 'data_source'".format(col))
 
         req_dates_of_data = conv_window_start_days + conv_window_length_days
 
@@ -259,28 +278,29 @@ class Experiment(object):
             enrollments, last_date_full_data, req_dates_of_data
         )
 
-        df = self.filter_df_for_conv_window(
-            df, last_date_full_data, conv_window_start_days, conv_window_length_days
+        data_source = self.filter_data_source_for_conv_window(
+            data_source, last_date_full_data, conv_window_start_days,
+            conv_window_length_days
         )
 
         join_on = [
             # TODO perf: would it be faster if we enforce a join on sample_id?
-            enrollments.client_id == df.client_id,
+            enrollments.client_id == data_source.client_id,
 
             # TODO accuracy: once we can rely on
-            #   `df.experiments[self.experiment_slug]`
+            #   `data_source.experiments[self.experiment_slug]`
             # existing even after unenrollment, we could start joining on
             # branch to reduce problems associated with split client_ids:
-            # enrollments.branch == df.experiments[self.experiment_slug]
+            # enrollments.branch == data_source.experiments[self.experiment_slug]
 
             # Do a quick pass aiming to efficiently filter out lots of rows:
-            enrollments.enrollment_date <= df.submission_date_s3,
+            enrollments.enrollment_date <= data_source.submission_date_s3,
 
             # Now do a more thorough pass filtering out irrelevant data:
             # TODO perf: what is a more efficient way to do this?
             (
                 (
-                    F.unix_timestamp(df.submission_date_s3, 'yyyyMMdd')
+                    F.unix_timestamp(data_source.submission_date_s3, 'yyyyMMdd')
                     - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
                 ) / (24 * 60 * 60)
             ).between(
@@ -289,20 +309,22 @@ class Experiment(object):
             ),
         ]
 
-        if 'experiments' in df.columns:
+        if 'experiments' in data_source.columns:
             # Try to filter data from day of enrollment before time of enrollment.
             # If the client enrolled and unenrolled on the same day then this
             # will also filter out that day's post unenrollment data but that's
             # probably the smallest and most innocuous evil on the menu.
             join_on.append(
-                (enrollments.enrollment_date != df.submission_date_s3)
-                | (~F.isnull(df.experiments[self.experiment_slug]))
+                (enrollments.enrollment_date != data_source.submission_date_s3)
+                | (~F.isnull(data_source.experiments[self.experiment_slug]))
             ),
 
-        sanity_metrics = self._get_telemetry_sanity_check_metrics(enrollments, df)
+        sanity_metrics = self._get_telemetry_sanity_check_metrics(
+            enrollments, data_source
+        )
 
         res = enrollments.join(
-            df,
+            data_source,
             join_on,
             'left'
         ).groupBy(
@@ -470,35 +492,36 @@ class Experiment(object):
             )
         )
 
-    def filter_df_for_conv_window(
-        self, df, last_date_full_data, conv_window_start_days, conv_window_length_days
+    def filter_data_source_for_conv_window(
+        self, data_source, last_date_full_data, conv_window_start_days,
+        conv_window_length_days
     ):
-        """Return the df, filtered to the relevant dates.
+        """Return `data_source`, filtered to the relevant dates.
 
         This should not affect the results - it should just speed things
         up.
         """
-        return df.filter(
+        return data_source.filter(
             # Ignore data before the conversion window of the first enrollment
-            df.submission_date_s3 >= add_days(
+            data_source.submission_date_s3 >= add_days(
                 self.start_date, conv_window_start_days
             )
         ).filter(
             # Ignore data after the conversion window of the last enrollment,
             # and data after the specified `last_date_full_data`
-            df.submission_date_s3 <= self._get_last_data_date(
+            data_source.submission_date_s3 <= self._get_last_data_date(
                 last_date_full_data, conv_window_start_days + conv_window_length_days
             )
         )
 
-    def _get_telemetry_sanity_check_metrics(self, enrollments, df):
+    def _get_telemetry_sanity_check_metrics(self, enrollments, data_source):
         """Return aggregations that check for problems with a client."""
 
         # TODO: Once we know what form the metrics library will take,
         # we should move the below metric definitions and documentation
         # into it.
 
-        if dict(df.dtypes).get('experiments') != 'map<string,string>':
+        if dict(data_source.dtypes).get('experiments') != 'map<string,string>':
             # Not all tables have an experiments map - can't make these checks.
             return []
 
@@ -508,7 +531,7 @@ class Experiment(object):
             # E.g. indicates cloned profiles. Fraction of such users should be
             # small, and similar between branches.
             F.max(F.coalesce((
-                df.experiments[self.experiment_slug] != enrollments.branch
+                data_source.experiments[self.experiment_slug] != enrollments.branch
             ).astype('int'), F.lit(0))).alias('has_contradictory_branch'),
 
             # Check to see whether the client_id was sending data in the conversion
@@ -516,7 +539,7 @@ class Experiment(object):
             # either a client_id clash, or the client unenrolling. Fraction of such
             # users should be small, and similar between branches.
             F.max(F.coalesce((
-                ~F.isnull(df.experiments)
-                & F.isnull(df.experiments[self.experiment_slug])
+                ~F.isnull(data_source.experiments)
+                & F.isnull(data_source.experiments[self.experiment_slug])
             ).astype('int'), F.lit(0))).alias('has_non_enrolled_data'),
         ]

@@ -92,7 +92,7 @@ def test_get_last_data_date2():
     assert exp_8d._get_last_data_date(the_fourteenth, 5) == '20190112'
 
 
-def _get_df(spark):
+def _get_data_source(spark):
     clients_branches = [
         ('aaaa', 'control'),
         ('bbbb', 'test'),
@@ -118,35 +118,37 @@ def _get_df(spark):
     )
 
 
-def _simple_return_agg_date(agg_fn, df):
-    return df.select(agg_fn(df.submission_date_s3).alias('b')).first()['b']
+def _simple_return_agg_date(agg_fn, data_source):
+    return data_source.select(
+        agg_fn(data_source.submission_date_s3).alias('b')
+    ).first()['b']
 
 
-def test_filter_df_for_conv_window(spark):
+def test_filter_data_source_for_conv_window(spark):
     start_date = '20190101'
     exp_8d = Experiment('experiment-with-8-day-cohort', start_date, 8)
-    df = _get_df(spark)
+    data_source = _get_data_source(spark)
 
     end_date = '20190114'
 
     # Are the fixtures sufficiently complicated that we're actually testing
     # things?
-    assert _simple_return_agg_date(F.min, df) < start_date
-    assert _simple_return_agg_date(F.max, df) > end_date
+    assert _simple_return_agg_date(F.min, data_source) < start_date
+    assert _simple_return_agg_date(F.max, data_source) > end_date
 
-    filtered_df = exp_8d.filter_df_for_conv_window(
-        df, end_date, 0, 3
+    filtered_ds = exp_8d.filter_data_source_for_conv_window(
+        data_source, end_date, 0, 3
     )
 
-    assert _simple_return_agg_date(F.min, filtered_df) == start_date
-    assert _simple_return_agg_date(F.max, filtered_df) == '20190110'
+    assert _simple_return_agg_date(F.min, filtered_ds) == start_date
+    assert _simple_return_agg_date(F.max, filtered_ds) == '20190110'
 
-    filtered_df_2 = exp_8d.filter_df_for_conv_window(
-        df, end_date, 2, 3
+    filtered_ds_2 = exp_8d.filter_data_source_for_conv_window(
+        data_source, end_date, 2, 3
     )
 
-    assert _simple_return_agg_date(F.min, filtered_df_2) == add_days(start_date, 2)
-    assert _simple_return_agg_date(F.max, filtered_df_2) == '20190112'
+    assert _simple_return_agg_date(F.min, filtered_ds_2) == add_days(start_date, 2)
+    assert _simple_return_agg_date(F.max, filtered_ds_2) == '20190112'
 
 
 def _get_enrollment_view(spark, slug):
@@ -217,16 +219,30 @@ def test_get_enrollments(spark, monkeypatch):
         )['b'] == '20190108'
 
 
+def test_get_enrollments_debug_dupes(spark, monkeypatch):
+    exp = Experiment('a-stub', '20190101')
+    _mock_exp(monkeypatch, exp)
+
+    enrl = exp.get_enrollments(spark)
+    assert 'num_events' not in enrl.columns
+
+    enrl2 = exp.get_enrollments(spark, debug_dupes=True)
+    assert 'num_events' in enrl2.columns
+
+    penrl2 = enrl2.toPandas()
+    assert (penrl2['num_events'] == 1).all()
+
+
 def test_get_per_client_data_doesnt_crash(spark):
     exp = Experiment('a-stub', '20190101', 8)
     enrollments = _get_enrollment_view(spark, exp.experiment_slug)
-    df = _get_df(spark)
+    data_source = _get_data_source(spark)
 
     exp.get_per_client_data(
         enrollments,
-        df,
+        data_source,
         [
-            F.sum(df.constant_one).alias('something_meaningless'),
+            F.sum(data_source.constant_one).alias('something_meaningless'),
         ],
         '20190114',
         0,
@@ -256,10 +272,10 @@ def test_get_per_client_data_join(spark):
     )
 
     ex_d = {'a-stub': 'fake-branch-lifes-too-short'}
-    df = spark.createDataFrame(
+    data_source = spark.createDataFrame(
         [
             # bob-badtiming only has data before/after conversion window
-            # but missed by `filter_df_for_conv_window`
+            # but missed by `filter_data_source_for_conv_window`
             ['bob-badtiming', '20190102', ex_d, 1],
             ['bob-badtiming', '20190106', ex_d, 2],
             # carol-gooddata has data on two days (including a dupe day)
@@ -281,9 +297,9 @@ def test_get_per_client_data_join(spark):
 
     res = exp.get_per_client_data(
         enrollments,
-        df,
+        data_source,
         [
-            F.coalesce(F.sum(df.some_value), F.lit(0)).alias('some_value'),
+            F.coalesce(F.sum(data_source.some_value), F.lit(0)).alias('some_value'),
         ],
         '20190114',
         1,
@@ -300,17 +316,17 @@ def test_get_per_client_data_join(spark):
     assert annie_nodata.first()['some_value'] == 0
 
     # Check that early and late data were ignored
-    # i.e. check the join, not just _filter_df_for_conv_window
+    # i.e. check the join, not just _filter_data_source_for_conv_window
     bob_badtiming = res.filter(res.client_id == 'bob-badtiming')
     assert bob_badtiming.count() == 1
     assert bob_badtiming.first()['some_value'] == 0
-    # Check that _filter_df_for_conv_window didn't do the
+    # Check that _filter_data_source_for_conv_window didn't do the
     # heavy lifting above
-    fdf = exp.filter_df_for_conv_window(df, '20190114', 1, 3)
-    assert fdf.filter(
-        fdf.client_id == 'bob-badtiming'
+    fds = exp.filter_data_source_for_conv_window(data_source, '20190114', 1, 3)
+    assert fds.filter(
+        fds.client_id == 'bob-badtiming'
     ).select(
-        F.sum(fdf.some_value).alias('agg_val')
+        F.sum(fds.some_value).alias('agg_val')
     ).first()['agg_val'] == 3
 
     # Check that relevant data was included appropriately
@@ -322,12 +338,12 @@ def test_get_per_client_data_join(spark):
     assert derek_lateisok.count() == 1
     assert derek_lateisok.first()['some_value'] == 1
 
-    # Check that it still works for `df`s without an experiments map
+    # Check that it still works for `data_source`s without an experiments map
     res2 = exp.get_per_client_data(
         enrollments,
-        df.drop('experiments'),
+        data_source.drop('experiments'),
         [
-            F.coalesce(F.sum(df.some_value), F.lit(0)).alias('some_value'),
+            F.coalesce(F.sum(data_source.some_value), F.lit(0)).alias('some_value'),
         ],
         '20190114',
         1,
