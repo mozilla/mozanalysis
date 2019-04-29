@@ -5,37 +5,14 @@ from mozanalysis.experiment import Experiment
 from mozanalysis.utils import add_days
 
 
-def test_check_windows():
+def test_print_enrollment_window():
     exp = Experiment('a-stub', '20190101')
-    exp_8d = Experiment('experiment-with-8-day-cohort', '20190101', 8)
 
     # When we have complete data for 20190114...
     the_fourteenth = '20190114'
 
     # ...we have 14 dates of data for those who enrolled on the 1st
     exp._print_enrollment_window(the_fourteenth, 14)
-
-    # We don't have 14 dates of data for the 8-day cohort:
-    with pytest.raises(AssertionError):
-        exp_8d._print_enrollment_window(the_fourteenth, 14)
-
-    # We don't have 15 full dates of data for any users
-    with pytest.raises(AssertionError):
-        exp._print_enrollment_window(the_fourteenth, 15)
-
-    # And we certainly don't have 15 full dates for the 8-day cohort:
-    with pytest.raises(AssertionError):
-        exp_8d._print_enrollment_window(the_fourteenth, 15)
-
-    # For the 8-day cohort We have enough data for a 7 day window
-    exp_8d._print_enrollment_window(the_fourteenth, 7)
-
-    # But not an 8 day window
-    with pytest.raises(AssertionError):
-        exp_8d._print_enrollment_window(the_fourteenth, 8)
-
-    # Of course the flexi-experiment has data for a 7 day window
-    exp._print_enrollment_window(the_fourteenth, 7)
 
 
 def test_get_last_enrollment_date():

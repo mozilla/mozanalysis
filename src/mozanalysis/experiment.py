@@ -164,7 +164,11 @@ class Experiment(object):
         )
 
         if self.num_dates_enrollment is not None:
-            assert end_date is None, "Possibly contradictory instructions!"
+            if end_date is not None:
+                raise ValueError(
+                    "Don't specify both 'end_date' and "
+                    "'num_dates_enrollment'; you might contradict yourself."
+                )
             enrollments = enrollments.filter(
                 enrollments.enrollment_date <= self._get_scheduled_max_enrollment_date()
             )
@@ -196,7 +200,13 @@ class Experiment(object):
                     - submission_date_s3 (str)
                     - data columns referred to in `metric_list`
                 Ideally also has:
-                    - experiments (map)
+                    - experiments (map): At present this is used to exclude
+                        pre-enrollment ping data collected on enrollment
+                        day. Once it or its successor reliably tags data
+                        from all enrolled users, even post-unenroll, we'll
+                        also join on it to exclude data from duplicate
+                        `client_id`s that are not enrolled in the same
+                        branch.
             metric_list: A list of columns that aggregate and compute
                 metrics over data grouped by `(client_id, branch)`, e.g.
                 `[F.coalesce(F.sum(df.metric_name), F.lit(0)).alias('metric_name')]`
@@ -236,6 +246,10 @@ class Experiment(object):
             in `df` - was agreed upon by the DS team, and is the
             standard format for queried experimental data.
         """
+        for col in ['client_id', 'submission_date_s3']:
+            if col not in df.columns:
+                raise ValueError("Column '{}' missing from 'df'".format(col))
+
         req_dates_of_data = conv_window_start_days + conv_window_length_days
 
         if self.num_dates_enrollment is None:

@@ -7,8 +7,7 @@
 from setuptools import setup, find_packages
 
 tests_require = [
-    'mock', 'pytest', 'pytest-cov', 'pytest-timeout', 'py4j', 'pyarrow>=0.8.0',
-    'pyspark'
+    'mock', 'pytest', 'pytest-cov', 'pytest-timeout', 'pyspark'
 ]
 
 setup(
@@ -25,6 +24,7 @@ setup(
         'pandas',
         'scipy',
         'statsmodels>=0.9',
+        'pyarrow>=0.8.0',
     ],
     setup_requires=['pytest-runner', 'setuptools_scm'],
     extras_require={
