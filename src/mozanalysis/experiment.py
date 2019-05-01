@@ -76,9 +76,9 @@ class Experiment(object):
             factor '7' removes weekly seasonality, and the `+1` accounts
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
-        addon_version (str): The version of the experiment addon. Some
-            addon experiment slugs get reused - in those cases we need to
-            filter on the addon version also.
+        addon_version (str, optional): The version of the experiment addon.
+            Some addon experiment slugs get reused - in those cases we need
+            to filter on the addon version also.
 
     Attributes:
         experiment_slug (str): Name of the study, used to identify
@@ -271,9 +271,6 @@ class Experiment(object):
 
         req_dates_of_data = conv_window_start_days + conv_window_length_days
 
-        if self.num_dates_enrollment is None:
-            self._print_enrollment_window(last_date_full_data, req_dates_of_data)
-
         enrollments = self.filter_enrollments_for_conv_window(
             enrollments, last_date_full_data, req_dates_of_data
         )
@@ -386,29 +383,6 @@ class Experiment(object):
             tssp.submission.alias('enrollment_date'),
         )
 
-    def _print_enrollment_window(self, last_date_full_data, req_dates_of_data):
-        """Print the enrollment dates being used.
-
-        We need `req_dates_of_data` days of post-enrollment data per user.
-        This places limits on how early we can run certain analyses.
-        This method calculates and prints these limits.
-
-        Args:
-            last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '20190322'. If you want to ignore
-                all data collected after a certain date (e.g. when the
-                experiment recipe was deactivated), then do that here.
-            req_dates_of_data (int): The minimum number of dates of
-                post-enrollment data required to have data for the user
-                for the entire conversion window.
-        """
-        print("Taking enrollments between {} and {}".format(
-            self.start_date,
-            self._get_last_enrollment_date(
-                last_date_full_data, req_dates_of_data
-            )
-        ))
-
     def _get_scheduled_max_enrollment_date(self):
         """Return the last enrollment date, according to the plan."""
         assert self.num_dates_enrollment is not None
@@ -422,6 +396,9 @@ class Experiment(object):
         This and `last_date_full_data` put constraints on the enrollment
         period. This method checks these constraints are feasible, and
         compatible with any manually supplied enrollment period.
+
+        If `self.num_dates_enrollment` is `None`, then there is potential
+        for the final date to be surprising, so we print it.
 
         Args:
             last_date_full_data (str): The most recent date for which we
@@ -437,47 +414,43 @@ class Experiment(object):
         )
 
         if self.num_dates_enrollment is None:
-            assert last_enrollment_with_data >= self.start_date, \
-                "No users have had time to convert yet"
+            if last_enrollment_with_data < self.start_date:
+                raise ValueError("No users have had time to convert yet")
+
+            print("Taking enrollments between {} and {}".format(
+                self.start_date, last_enrollment_with_data
+            ))
 
             return last_enrollment_with_data
 
         else:
             intended_last_enrollment = self._get_scheduled_max_enrollment_date()
-            assert last_enrollment_with_data >= intended_last_enrollment, \
-                "You said you wanted {} dates of enrollment, ".format(
-                    self.num_dates_enrollment
-                ) + "but your conversion window of {} days won't have ".format(
-                    req_dates_of_data
-                ) + "complete data until we have the data for {}.".format(
-                    add_days(intended_last_enrollment, req_dates_of_data - 1)
+
+            if last_enrollment_with_data < intended_last_enrollment:
+                raise ValueError(
+                    "You said you wanted {} dates of enrollment, ".format(
+                        self.num_dates_enrollment
+                    ) + "but your conversion window of {} days won't have ".format(
+                        req_dates_of_data
+                    ) + "complete data until we have the data for {}.".format(
+                        add_days(intended_last_enrollment, req_dates_of_data - 1)
+                    )
                 )
+
             return intended_last_enrollment
 
     def _get_last_data_date(self, last_date_full_data, req_dates_of_data):
         """Return the date of the final used datum."""
-        if self.num_dates_enrollment is None:
-            assert last_date_full_data >= add_days(
-                self.start_date, req_dates_of_data - 1
-            ), "No users have had time to convert yet"
-
-            return last_date_full_data
-
-        last_required_data_date = add_days(
-            self.start_date,
-            self.num_dates_enrollment - 1 + req_dates_of_data - 1
+        last_enrollment_date = self._get_last_enrollment_date(
+            last_date_full_data, req_dates_of_data
         )
 
-        # If I did the math right, this should be equivalent to the
-        # check in _get_last_enrollment_date()
-        assert last_required_data_date <= last_date_full_data, \
-            "You said you wanted {} dates of enrollment, ".format(
-                self.num_dates_enrollment
-            ) + "but your conversion time of {} days won't have ".format(
-                req_dates_of_data
-            ) + "complete data until we have the data for {}.".format(
-                last_required_data_date
-            )
+        last_required_data_date = add_days(
+            last_enrollment_date, req_dates_of_data - 1
+        )
+
+        # `_get_last_enrollment_date` should have checked for this
+        assert last_required_data_date <= last_date_full_data
 
         return last_required_data_date
 

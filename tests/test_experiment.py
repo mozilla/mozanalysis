@@ -5,16 +5,6 @@ from mozanalysis.experiment import Experiment
 from mozanalysis.utils import add_days
 
 
-def test_print_enrollment_window():
-    exp = Experiment('a-stub', '20190101')
-
-    # When we have complete data for 20190114...
-    the_fourteenth = '20190114'
-
-    # ...we have 14 dates of data for those who enrolled on the 1st
-    exp._print_enrollment_window(the_fourteenth, 14)
-
-
 def test_get_last_enrollment_date():
     exp = Experiment('a-stub', '20190101')
     exp_8d = Experiment('experiment-with-8-day-cohort', '20190101', 8)
@@ -26,15 +16,15 @@ def test_get_last_enrollment_date():
     exp._get_last_enrollment_date(the_fourteenth, 14) == '20190101'
 
     # We don't have 14 dates of data for the 8-day cohort:
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         exp_8d._get_last_enrollment_date(the_fourteenth, 14)
 
     # We don't have 15 full dates of data for any users
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         exp._get_last_enrollment_date(the_fourteenth, 15)
 
     # And we certainly don't have 15 full dates for the 8-day cohort:
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         exp_8d._get_last_enrollment_date(the_fourteenth, 15)
 
     # For the 8-day cohort We have enough data for a 7 day window
@@ -44,7 +34,7 @@ def test_get_last_enrollment_date():
     exp_8d._get_last_enrollment_date(the_fourteenth, 2) == '20190108'
 
     # But not an 8 day window
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         exp_8d._get_last_enrollment_date(the_fourteenth, 8)
 
     # Of course the flexi-experiment has data for a 1 day window
@@ -64,7 +54,7 @@ def test_get_last_data_date1():
     assert exp._get_last_data_date(the_fourteenth, 5) == the_fourteenth
 
     # But we don't have 15 full dates of data for any users
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         exp._get_last_data_date(the_fourteenth, 15)
 
 
@@ -73,10 +63,10 @@ def test_get_last_data_date2():
 
     the_fourteenth = '20190114'
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         assert exp_8d._get_last_data_date(the_fourteenth, 14) == the_fourteenth
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         assert exp_8d._get_last_data_date(the_fourteenth, 10) == the_fourteenth
 
     # If we only need 1 date of data then the final enrollment is fixed:
