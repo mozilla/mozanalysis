@@ -92,9 +92,9 @@ class Experiment(object):
             factor '7' removes weekly seasonality, and the `+1` accounts
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
-        addon_version (str): The version of the experiment addon. Some
-            addon experiment slugs get reused - in those cases we need to
-            filter on the addon version also.
+        addon_version (str, optional): The version of the experiment addon.
+            Some addon experiment slugs get reused - in those cases we need
+            to filter on the addon version also.
     """
     def __init__(
         self, experiment_slug, start_date, num_dates_enrollment=None,
@@ -366,10 +366,16 @@ class Experiment(object):
 
         Args:
             spark: The spark context.
+            addon_version (str, optional): The version of the experiment
+                addon. Some addon experiment slugs get reused - in those
+                cases we need to filter on the addon version also.
         """
         tssp = spark.table('telemetry_shield_study_parquet')
 
         if addon_version is not None:
+            # It's a little messy that we filter `addon_version` here
+            # and `study_name` elsewhere, but this seemed the least
+            # hacky solution
             tssp = tssp.filter(
                 tssp.payload.addon_version == addon_version
             )
