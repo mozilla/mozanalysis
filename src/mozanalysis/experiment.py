@@ -16,8 +16,8 @@ class Experiment(object):
         properties, aside from the intervention itself and its
         consequences; i.e. there must be no underlying bias in the
         branch populations.
-    - Every client should have an equal opportunity to convert, so that
-        we are measuring the same thing for each client.
+    - We must measure the same thing for each client, to minimize the
+        variance associated with our measurement.
 
     So that our analyses follow these abstract principles, we follow
     these rules:
@@ -32,6 +32,10 @@ class Experiment(object):
     - Typically if an enrolled user no longer qualifies for enrollment,
         we'll still want to include their data in the analysis, unless
         we're explicitly using stats methods that handle censored data.
+    - We define a "conversion window" with respect to clients'
+        enrollment dates. Each metric only uses data collected inside
+        this conversion window. We can only analyze data for a client
+        if we have data covering their entire conversion window.
 
 
     Example usage:
