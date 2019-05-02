@@ -29,13 +29,13 @@ class Experiment(object):
     - For any given metric, every client gets a non-null value; we don't
         implicitly ignore anyone, even if they churned and stopped
         sending data.
-    - Typically if an enrolled user no longer qualifies for enrollment,
+    - Typically if an enrolled client no longer qualifies for enrollment,
         we'll still want to include their data in the analysis, unless
         we're explicitly using stats methods that handle censored data.
-    - We define a "conversion window" with respect to clients'
+    - We define a "analysis window" with respect to clients'
         enrollment dates. Each metric only uses data collected inside
-        this conversion window. We can only analyze data for a client
-        if we have data covering their entire conversion window.
+        this analysis window. We can only analyze data for a client
+        if we have data covering their entire analysis window.
 
 
     Example usage:
@@ -61,8 +61,8 @@ class Experiment(object):
                 )).alias('uri_count'),
             ],
             last_date_full_data='20190107',
-            conv_window_start_days=0,
-            conv_window_length_days=7
+            analysis_start_days=0,
+            analysis_length_days=7
         )
 
         # Pull data into a pandas df, ready for running stats
@@ -75,7 +75,7 @@ class Experiment(object):
             events were received.
         num_dates_enrollment (int, optional): Only include this many dates
             of enrollments. If `None` then use the maximum number of dates
-            as determined by the metric's conversion window and
+            as determined by the metric's analysis window and
             `last_date_full_data`. Typically `7n+1`, e.g. `8`. The
             factor '7' removes weekly seasonality, and the `+1` accounts
             for the fact that enrollment typically starts a few hours
@@ -91,7 +91,7 @@ class Experiment(object):
             events were received.
         num_dates_enrollment (int, optional): Only include this many days
             of enrollments. If `None` then use the maximum number of days
-            as determined by the metric's conversion window and
+            as determined by the metric's analysis window and
             `last_date_full_data`. Typically `7n+1`, e.g. `8`. The
             factor '7' removes weekly seasonality, and the `+1` accounts
             for the fact that enrollment typically starts a few hours
@@ -202,7 +202,7 @@ class Experiment(object):
 
     def get_per_client_data(
         self, enrollments, data_source, metric_list, last_date_full_data,
-        conv_window_start_days, conv_window_length_days, keep_client_id=False
+        analysis_start_days, analysis_length_days, keep_client_id=False
     ):
         """Return a DataFrame containing per-client metric values.
 
@@ -237,10 +237,10 @@ class Experiment(object):
                 have complete data, e.g. '20190322'. If you want to ignore
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
-            conv_window_start_days (int): the start of the conversion window,
-                measured in 'days since the user enrolled'. We ignore data
-                collected outside this conversion window.
-            conv_window_length_days (int): the length of the conversion window,
+            analysis_start_days (int): the start of the analysis window,
+                measured in 'days since the client enrolled'. We ignore data
+                collected outside this analysis window.
+            analysis_length_days (int): the length of the analysis window,
                 measured in days.
             keep_client_id (bool): Whether to return a `client_id` column.
                 Defaults to False to reduce memory usage of the results.
@@ -273,15 +273,15 @@ class Experiment(object):
             if col not in data_source.columns:
                 raise ValueError("Column '{}' missing from 'data_source'".format(col))
 
-        req_dates_of_data = conv_window_start_days + conv_window_length_days
+        req_dates_of_data = analysis_start_days + analysis_length_days
 
-        enrollments = self.filter_enrollments_for_conv_window(
+        enrollments = self.filter_enrollments_for_analysis_window(
             enrollments, last_date_full_data, req_dates_of_data
         )
 
-        data_source = self.filter_data_source_for_conv_window(
-            data_source, last_date_full_data, conv_window_start_days,
-            conv_window_length_days
+        data_source = self.filter_data_source_for_analysis_window(
+            data_source, last_date_full_data, analysis_start_days,
+            analysis_length_days
         )
 
         join_on = [
@@ -305,8 +305,8 @@ class Experiment(object):
                     - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
                 ) / (24 * 60 * 60)
             ).between(
-                conv_window_start_days,
-                conv_window_start_days + conv_window_length_days - 1
+                analysis_start_days,
+                analysis_start_days + analysis_length_days - 1
             ),
         ]
 
@@ -402,7 +402,7 @@ class Experiment(object):
     def _get_last_enrollment_date(self, last_date_full_data, req_dates_of_data):
         """Return the date of the final used enrollment.
 
-        We need `req_dates_of_data` days of post-enrollment data per user.
+        We need `req_dates_of_data` days of post-enrollment data per client.
         This and `last_date_full_data` put constraints on the enrollment
         period. This method checks these constraints are feasible, and
         compatible with any manually supplied enrollment period.
@@ -416,8 +416,8 @@ class Experiment(object):
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
             req_dates_of_data (int): The minimum number of dates of
-                post-enrollment data required to have data for the user
-                for the entire conversion window.
+                post-enrollment data required to have data for the client
+                for the entire analysis window.
         """
         last_enrollment_with_data = add_days(
             last_date_full_data, -(req_dates_of_data - 1)
@@ -425,7 +425,7 @@ class Experiment(object):
 
         if self.num_dates_enrollment is None:
             if last_enrollment_with_data < self.start_date:
-                raise ValueError("No users have had time to convert yet")
+                raise ValueError("No users have a complete analysis window")
 
             print("Taking enrollments between {} and {}".format(
                 self.start_date, last_enrollment_with_data
@@ -440,7 +440,7 @@ class Experiment(object):
                 raise ValueError(
                     "You said you wanted {} dates of enrollment, ".format(
                         self.num_dates_enrollment
-                    ) + "but your conversion window of {} days won't have ".format(
+                    ) + "but your analysis window of {} days won't have ".format(
                         req_dates_of_data
                     ) + "complete data until we have the data for {}.".format(
                         add_days(intended_last_enrollment, req_dates_of_data - 1)
@@ -464,20 +464,20 @@ class Experiment(object):
 
         return last_required_data_date
 
-    def filter_enrollments_for_conv_window(
+    def filter_enrollments_for_analysis_window(
         self, enrollments, last_date_full_data, req_dates_of_data
     ):
         """Return the enrollments, filtered to the relevant dates."""
         return enrollments.filter(
-            # Ignore clients that might convert in the future
+            # Ignore clients without a complete analysis window
             enrollments.enrollment_date <= self._get_last_enrollment_date(
                 last_date_full_data, req_dates_of_data
             )
         )
 
-    def filter_data_source_for_conv_window(
-        self, data_source, last_date_full_data, conv_window_start_days,
-        conv_window_length_days
+    def filter_data_source_for_analysis_window(
+        self, data_source, last_date_full_data, analysis_start_days,
+        analysis_length_days
     ):
         """Return `data_source`, filtered to the relevant dates.
 
@@ -485,15 +485,15 @@ class Experiment(object):
         up.
         """
         return data_source.filter(
-            # Ignore data before the conversion window of the first enrollment
+            # Ignore data before the analysis window of the first enrollment
             data_source.submission_date_s3 >= add_days(
-                self.start_date, conv_window_start_days
+                self.start_date, analysis_start_days
             )
         ).filter(
-            # Ignore data after the conversion window of the last enrollment,
+            # Ignore data after the analysis window of the last enrollment,
             # and data after the specified `last_date_full_data`
             data_source.submission_date_s3 <= self._get_last_data_date(
-                last_date_full_data, conv_window_start_days + conv_window_length_days
+                last_date_full_data, analysis_start_days + analysis_length_days
             )
         )
 
@@ -517,7 +517,7 @@ class Experiment(object):
                 data_source.experiments[self.experiment_slug] != enrollments.branch
             ).astype('int'), F.lit(0))).alias('has_contradictory_branch'),
 
-            # Check to see whether the client_id was sending data in the conversion
+            # Check to see whether the client_id was sending data in the analysis
             # window that wasn't tagged as being part of the experiment. Indicates
             # either a client_id clash, or the client unenrolling. Fraction of such
             # users should be small, and similar between branches.

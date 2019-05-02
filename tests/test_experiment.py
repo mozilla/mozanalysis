@@ -114,7 +114,7 @@ def _simple_return_agg_date(agg_fn, data_source):
     ).first()['b']
 
 
-def test_filter_data_source_for_conv_window(spark):
+def test_filter_data_source_for_analysis_window(spark):
     start_date = '20190101'
     exp_8d = Experiment('experiment-with-8-day-cohort', start_date, 8)
     data_source = _get_data_source(spark)
@@ -126,14 +126,14 @@ def test_filter_data_source_for_conv_window(spark):
     assert _simple_return_agg_date(F.min, data_source) < start_date
     assert _simple_return_agg_date(F.max, data_source) > end_date
 
-    filtered_ds = exp_8d.filter_data_source_for_conv_window(
+    filtered_ds = exp_8d.filter_data_source_for_analysis_window(
         data_source, end_date, 0, 3
     )
 
     assert _simple_return_agg_date(F.min, filtered_ds) == start_date
     assert _simple_return_agg_date(F.max, filtered_ds) == '20190110'
 
-    filtered_ds_2 = exp_8d.filter_data_source_for_conv_window(
+    filtered_ds_2 = exp_8d.filter_data_source_for_analysis_window(
         data_source, end_date, 2, 3
     )
 
@@ -163,7 +163,7 @@ def _get_enrollment_view(spark, slug):
     )
 
 
-def test_filter_enrollments_for_conv_window(spark, monkeypatch):
+def test_filter_enrollments_for_analysis_window(spark, monkeypatch):
     exp = Experiment('a-stub', '20190101')
     _mock_exp(monkeypatch, exp)
     enrollments = exp.get_enrollments(spark)
@@ -172,7 +172,7 @@ def test_filter_enrollments_for_conv_window(spark, monkeypatch):
     # With final data collected on '20190114', we have 7 dates of data
     # for 'cccc' enrolled on '20190108' but not for 'dddd' enrolled on
     # '20190109'.
-    fe = exp.filter_enrollments_for_conv_window(enrollments, '20190114', 7)
+    fe = exp.filter_enrollments_for_analysis_window(enrollments, '20190114', 7)
     assert fe.count() == 3
 
 
@@ -264,15 +264,15 @@ def test_get_per_client_data_join(spark):
     ex_d = {'a-stub': 'fake-branch-lifes-too-short'}
     data_source = spark.createDataFrame(
         [
-            # bob-badtiming only has data before/after conversion window
-            # but missed by `filter_data_source_for_conv_window`
+            # bob-badtiming only has data before/after analysis window
+            # but missed by `filter_data_source_for_analysis_window`
             ['bob-badtiming', '20190102', ex_d, 1],
             ['bob-badtiming', '20190106', ex_d, 2],
             # carol-gooddata has data on two days (including a dupe day)
             ['carol-gooddata', '20190102', ex_d, 3],
             ['carol-gooddata', '20190102', ex_d, 2],
             ['carol-gooddata', '20190104', ex_d, 6],
-            # derek-lateisok has data before and during the conversion window
+            # derek-lateisok has data before and during the analysis window
             ['derek-lateisok', '20190110', ex_d, 1000],
             ['derek-lateisok', '20190111', ex_d, 1],
             # TODO: exercise the last condition on the join
@@ -306,13 +306,13 @@ def test_get_per_client_data_join(spark):
     assert annie_nodata.first()['some_value'] == 0
 
     # Check that early and late data were ignored
-    # i.e. check the join, not just _filter_data_source_for_conv_window
+    # i.e. check the join, not just _filter_data_source_for_analysis_window
     bob_badtiming = res.filter(res.client_id == 'bob-badtiming')
     assert bob_badtiming.count() == 1
     assert bob_badtiming.first()['some_value'] == 0
-    # Check that _filter_data_source_for_conv_window didn't do the
+    # Check that _filter_data_source_for_analysis_window didn't do the
     # heavy lifting above
-    fds = exp.filter_data_source_for_conv_window(data_source, '20190114', 1, 3)
+    fds = exp.filter_data_source_for_analysis_window(data_source, '20190114', 1, 3)
     assert fds.filter(
         fds.client_id == 'bob-badtiming'
     ).select(
