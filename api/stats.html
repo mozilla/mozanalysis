@@ -155,37 +155,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-mozanalysis.stats">
-<span id="mozanalysis-stats"></span><h1><a class="reference internal" href="#module-mozanalysis.stats" title="mozanalysis.stats"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.stats</span></code></a><a class="headerlink" href="#module-mozanalysis.stats" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
-<dt id="mozanalysis.stats.bootstrap">
-<code class="descclassname">mozanalysis.stats.</code><code class="descname">bootstrap</code><span class="sig-paren">(</span><em>sc</em>, <em>data</em>, <em>stat_fn</em>, <em>num_iterations=2000</em>, <em>confidence_level=0.95</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/stats.html#bootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.stats.bootstrap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a bootstrapped confidence interval</p>
-<p>Given an array of data, returns the bootstrapped confidence interval based
-on the confidence level provided. This uses pyspark and distributes the data
-to the nodes for efficiency.</p>
-<p><strong>NOTE</strong>: All the data, plus one replicate, should fit into memory.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sc</strong> – The spark context</li>
-<li><strong>data</strong> – The data as a list or numpy array</li>
-<li><strong>stat_fn</strong> – A callable that computes the statistic</li>
-<li><strong>num_iterations</strong> – The number of bootstrap iterations to perform</li>
-<li><strong>confidence_level</strong> – The confidence level desired, [0, 1]</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Returns a dictionary with the keys:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s2">&quot;calcualted_value&quot;</span><span class="p">,</span> <span class="s2">&quot;confidence_low&quot;</span><span class="p">,</span> <span class="s2">&quot;confidence_high&quot;</span><span class="p">]</span>
-</pre></div>
-</div>
-</dd></dl>
-
+  <div class="section" id="mozanalysis-stats">
+<h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.stats</span></code><a class="headerlink" href="#mozanalysis-stats" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
