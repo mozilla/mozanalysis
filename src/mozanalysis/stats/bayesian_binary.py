@@ -6,14 +6,14 @@ import numpy as np
 import scipy.stats as st
 
 from mozanalysis.stats.summarize_samples import (
-    res_columns, one_res_index, compare_two_sample_sets
+    default_quantiles, compare_two_sample_sets
 )
 
 
 def compare(df, col_label, ref_branch_label='control', num_samples=10000):
     """Jointly sample conversion rates for branches then compare them.
 
-    See `compare_from_summary` for more details.
+    See `compare_from_agg` for more details.
 
     Args:
         df: a pandas DataFrame of queried experiment data in the standard
@@ -34,23 +34,17 @@ def compare(df, col_label, ref_branch_label='control', num_samples=10000):
             Series of summary stats for the posterior distribution over
             the branch's conversion rate.
     """
-    # I would have used `isin` but it seems to be ~100x slower?
-    assert ((df[col_label] == 0) | (df[col_label] == 1)).all()
+    agg_col = aggregate_col(df, col_label)
 
-    summary = df.groupby('branch')[col_label].agg({
-        'num_enrollments': len,
-        'num_conversions': np.sum
-    })
-
-    return compare_from_summary(
-        summary, ref_branch_label=ref_branch_label, num_samples=num_samples
+    return compare_from_agg(
+        agg_col, ref_branch_label=ref_branch_label, num_samples=num_samples
     )
 
 
 def compare_many(df, col_label, num_samples=10000):
     """Jointly sample conversion rates for many branches then compare them.
 
-    See `compare_many_from_summary` for more details.
+    See `compare_many_from_agg` for more details.
 
     Args:
         df: a pandas DataFrame of experiment data. Each row represents
@@ -68,24 +62,32 @@ def compare_many(df, col_label, num_samples=10000):
         - columns: equivalent to rows output by `compare_two()`
         - index: list of branches
     """
-    assert (df[col_label] == 0) | (df[col_label] == 1).all()
-    summary = df.groupby('branch')[col_label].agg({
+    agg_col = aggregate_col(df, col_label)
+
+    return compare_many_from_agg(
+        agg_col, num_samples=num_samples
+    )
+
+
+def aggregate_col(df, col_label):
+    # I would have used `isin` but it seems to be ~100x slower?
+    if not ((df[col_label] == 0) | (df[col_label] == 1)).all():
+        raise ValueError("All values in column '{}' must be 0 or 1.".format(col_label))
+
+    return df[col_label].groupby('branch').agg({
         'num_enrollments': len,
         'num_conversions': np.sum
     })
 
-    return compare_many_from_summary(
-        summary, num_samples=num_samples
-    )
 
-
-def summarize_one_from_summary(
-    s, num_enrollments_label='num_enrollments', num_conversions_label='num_conversions'
+def summarize_one_from_agg(
+    s, num_enrollments_label='num_enrollments', num_conversions_label='num_conversions',
+    quantiles=default_quantiles
 ):
-    res = pd.Series(index=one_res_index)
+    res = pd.Series()
     res['mean'] = s.loc[num_conversions_label] / s.loc[num_enrollments_label]
 
-    ppfs = [0.005, 0.05, 0.95, 0.995]
+    ppfs = quantiles
     res[[str(v) for v in ppfs]] = st.beta(
         s.loc[num_conversions_label] + 1,
         s.loc[num_enrollments_label] - s.loc[num_conversions_label] + 1
@@ -94,7 +96,7 @@ def summarize_one_from_summary(
     return res
 
 
-def compare_from_summary(
+def compare_from_agg(
     df,
     ref_branch_label='control',
     num_enrollments_label='num_enrollments',
@@ -146,14 +148,14 @@ def compare_from_summary(
                 ) for b in df.index.drop(ref_branch_label)
             },
         'individual': {
-                b: summarize_one_from_summary(
+                b: summarize_one_from_agg(
                     df.loc[b], num_enrollments_label, num_conversions_label
                 ) for b in df.index
             },
     }
 
 
-def compare_many_from_summary(
+def compare_many_from_agg(
     df,
     num_enrollments_label='num_enrollments',
     num_conversions_label='num_conversions',
@@ -203,7 +205,7 @@ def compare_many_from_summary(
         best_of_rest = samples.drop(branch, axis='columns').max(axis='columns')
 
         comparative.loc[branch] = compare_two_sample_sets(this_branch, best_of_rest)
-        individual[branch] = summarize_one_from_summary(
+        individual[branch] = summarize_one_from_agg(
             df.loc[branch], num_enrollments_label, num_conversions_label
         )
 

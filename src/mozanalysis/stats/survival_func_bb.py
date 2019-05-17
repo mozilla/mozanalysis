@@ -1,3 +1,6 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import numpy as np
 import mozanalysis.stats.bayesian_binary as bb
 
@@ -45,7 +48,7 @@ def crunch_nums_survival(df, col_label, ref_branch_label='control', thresholds=N
     for x in thresholds:
         assert 'tmp_crunch_nums' not in df.columns
         try:
-            # Sorry for mutating the input inplace
+            # Sorry for mutating the input inplace, I'll be sure to tidy up.
             df['tmp_crunch_nums'] = df[col_label] > x
             bla = bb.compare(
                 df, 'tmp_crunch_nums', ref_branch_label=ref_branch_label
@@ -59,8 +62,3 @@ def crunch_nums_survival(df, col_label, ref_branch_label='control', thresholds=N
             res['individual'][branch][x] = data
 
     return res
-
-
-# TODO: move this to utils?
-def all_eq(iterable):
-    return len(set(iterable)) <= 1
