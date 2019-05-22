@@ -9,6 +9,23 @@ default_quantiles = (0.005, 0.05, 0.5, 0.95, 0.995)
 
 
 def compare_two_sample_sets(focus, reference, quantiles=default_quantiles):
+    # Primary use case is comparing two sample sets
+    if len(focus.shape) == 1:
+        return _compare_two_sample_sets(focus, reference, quantiles)
+
+    # It's common that we'll want to do this for a batch of sample sets,
+    # each representing a different bootstrap stat_fn, or time period,
+    # or threshold.
+    if set(focus.columns) != set(reference.columns):
+        raise ValueError()
+
+    return pd.DataFrame({
+        k: _compare_two_sample_sets(focus[k], reference[k], quantiles)
+        for k in focus.columns
+    }, columns=focus.columns)
+
+
+def _compare_two_sample_sets(focus, reference, quantiles):
     rel_q_labels = ['rel_uplift_{}'.format(q) for q in quantiles]
     abs_q_labels = ['abs_uplift_{}'.format(q) for q in quantiles]
 
@@ -32,6 +49,14 @@ def compare_two_sample_sets(focus, reference, quantiles=default_quantiles):
 
 
 def summarize_one_sample_set(data, quantiles=default_quantiles):
+    return data.agg(_summarize_one_sample_set, quantiles=quantiles)
+
+
+def _summarize_one_sample_set(data, quantiles):
+    if not isinstance(data, (pd.Series, np.ndarray, list)):
+        # Hey pd.Series.agg - don't apply me elementwise!
+        raise TypeError("Can't summarize a scalar")
+
     q_index = [str(v) for v in quantiles]
 
     res = pd.Series(index=q_index + ['mean'])

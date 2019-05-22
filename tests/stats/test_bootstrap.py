@@ -82,3 +82,120 @@ def test_filter_outliers_2():
 
     filtered = masb._filter_outliers(data, 0.99)
     assert len(filtered) == 100
+
+
+def test_bootstrap_one(spark_context):
+    data = np.concatenate([np.zeros(10000), np.ones(10000)])
+    res = masb.bootstrap_one(
+        spark_context, data, num_samples=100, summary_quantiles=(0.5, 0.61)
+    )
+
+    assert res['mean'] == pytest.approx(0.5, rel=1e-1)
+    assert res['0.5'] == pytest.approx(0.5, rel=1e-1)
+    assert res['0.61'] == pytest.approx(0.5, rel=1e-1)
+    print(res)
+
+
+def test_bootstrap_one_multistat(spark_context):
+    data = np.concatenate([np.zeros(10000), np.ones(10000), [1e20]])
+    res = masb.bootstrap_one(
+        spark_context, data,
+        stat_fn=lambda x: {
+            'max': np.max(x),
+            'mean': np.mean(x),
+        },
+        num_samples=5,
+        summary_quantiles=(0.5, 0.61),
+        threshold_quantile=0.9999
+    )
+
+    assert res.shape == (3, 2)
+
+    assert res.loc['mean', 'max'] == 1
+    assert res.loc['0.5', 'max'] == 1
+    assert res.loc['0.61', 'max'] == 1
+    assert res.loc['mean', 'mean'] == pytest.approx(0.5, rel=1e-1)
+    assert res.loc['0.5', 'mean'] == pytest.approx(0.5, rel=1e-1)
+    assert res.loc['0.61', 'mean'] == pytest.approx(0.5, rel=1e-1)
+
+
+def test_compare(spark_context):
+    data = pd.DataFrame(
+        index=range(60000),
+        columns=['branch', 'val']
+    )
+    data.iloc[::3, 0] = 'control'
+    data.iloc[1::3, 0] = 'same'
+    data.iloc[2::3, 0] = 'bigger'
+
+    data.iloc[::2, 1] = 0
+    data.iloc[1::2, 1] = 1
+
+    data.iloc[2::12, 1] = 1
+
+    assert data.val[data.branch != 'bigger'].mean() == 0.5
+    assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
+
+    res = masb.compare(spark_context, data, 'val', num_samples=2)
+
+    assert res['individual']['control']['mean'] == pytest.approx(0.5, rel=1e-1)
+    assert res['individual']['same']['mean'] == pytest.approx(0.5, rel=1e-1)
+    assert res['individual']['bigger']['mean'] == pytest.approx(0.75, rel=1e-1)
+
+    assert 'control' not in res['comparative'].keys()
+    assert res['comparative']['same']['rel_uplift_exp'] == pytest.approx(0, abs=0.1)
+    assert res['comparative']['bigger']['rel_uplift_exp'] == pytest.approx(0.5, abs=0.1)
+
+    assert res['comparative']['same']['prob_win'] in (0, 0.5, 1)  # num_samples=2
+    assert res['comparative']['bigger']['prob_win'] == pytest.approx(1, abs=0.01)
+
+
+def test_compare_multistat(spark_context):
+    data = pd.DataFrame(
+        index=range(60000),
+        columns=['branch', 'val']
+    )
+    data.iloc[::3, 0] = 'control'
+    data.iloc[1::3, 0] = 'same'
+    data.iloc[2::3, 0] = 'bigger'
+
+    data.iloc[::2, 1] = 0
+    data.iloc[1::2, 1] = 1
+
+    data.iloc[2::12, 1] = 1
+
+    assert data.val[data.branch != 'bigger'].mean() == 0.5
+    assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
+
+    res = masb.compare(
+        spark_context,
+        data,
+        'val',
+        stat_fn=lambda x: {
+            'max': np.max(x),
+            'mean': np.mean(x),
+        },
+        num_samples=2
+    )
+
+    assert res['individual']['control'].loc['mean', 'mean'] \
+        == pytest.approx(0.5, rel=1e-1)
+    assert res['individual']['same'].loc['mean', 'mean'] \
+        == pytest.approx(0.5, rel=1e-1)
+    assert res['individual']['bigger'].loc['mean', 'mean'] \
+        == pytest.approx(0.75, rel=1e-1)
+
+    assert 'control' not in res['comparative'].keys()
+
+    print(res['comparative']['bigger'])
+    assert res['comparative']['same'].loc['rel_uplift_exp', 'mean'] \
+        == pytest.approx(0, abs=0.1)
+    assert res['comparative']['bigger'].loc['rel_uplift_exp', 'mean'] \
+        == pytest.approx(0.5, abs=0.1)
+
+    assert res['comparative']['same'].loc['prob_win', 'mean'] in (0, 0.5, 1)  # num_samples=2
+    assert res['comparative']['bigger'].loc['prob_win', 'mean'] \
+        == pytest.approx(1, abs=0.01)
+
+    assert res['comparative']['same'].loc['rel_uplift_exp', 'max'] == 0
+    assert res['comparative']['bigger'].loc['rel_uplift_exp', 'max'] == 0

@@ -5,21 +5,17 @@ import numpy as np
 import pandas as pd
 
 from mozanalysis.stats.summarize_samples import (
-    summarize_one_sample_set, compare_two_sample_sets
+    summarize_one_sample_set, compare_two_sample_sets, default_quantiles
 )
 
 
 # Functions that return highly processed stats
 
 
-# TODO: decide on whether to support here bootstrapping over
-# multiple quantiles, and if so what shape the results should
-# take. cf. survival_func_bb.py
-
-
 def compare(
-    sc, df, col_label, ref_branch_label='control', num_samples=10000,
-    threshold_quantile=None
+    sc, df, col_label, ref_branch_label='control', stat_fn=np.mean,
+    num_samples=10000, threshold_quantile=None,
+    individual_summary_quantiles=None, comparative_summary_quantiles=None
 ):
     """Jointly sample bootstrapped means then compare them.
 
@@ -43,6 +39,7 @@ def compare(
         'individual': dictionary mapping branch names to a pandas
             Series of summary stats for the bootstrapped means.
     """
+    # TODO: do we need to control seed_start?
     branch_list = df.branch.unique()
 
     if ref_branch_label not in branch_list:
@@ -52,27 +49,38 @@ def compare(
 
     samples = {
         b: get_bootstrap_samples(
-                sc, df[col_label][df.branch == b], np.mean, num_samples
-        )
-        for b in branch_list
+            sc,
+            df[col_label][df.branch == b],
+            stat_fn,
+            num_samples,
+            threshold_quantile=threshold_quantile
+        ) for b in branch_list
     }
 
-    # TODO: should 'comparative' and 'individual' be dfs?
     return {
         'comparative': {
             b: compare_two_sample_sets(
-                samples[b], samples[ref_branch_label]
+                samples[b], samples[ref_branch_label],
+                quantiles=comparative_summary_quantiles or default_quantiles
             ) for b in set(branch_list) - {ref_branch_label}
         },
         'individual': {
-            b: summarize_one_sample_set(samples[b])
-            for b in branch_list
+            b: summarize_one_sample_set(
+                samples[b],
+                quantiles=individual_summary_quantiles or default_quantiles
+            ) for b in branch_list
         },
     }
 
+    # TODO: Tim ultimately wants to transform into non-normalized dataframes with repetitive columns.
+    # So choose a neat data structure and write a util function that de-pivots that
 
-def bootstrap_one(sc, data, num_samples=10000, seed_start=None):
-    """Bootstrap on the means of one variation on its own.
+
+def bootstrap_one(
+    sc, data, stat_fn=np.mean, num_samples=10000, seed_start=None,
+    threshold_quantile=None, summary_quantiles=None
+):
+    """Bootstrap on the means of one branch on its own.
 
     Generates `num_samples` sampled means, then returns summary
     statistics for their distribution.
@@ -80,12 +88,23 @@ def bootstrap_one(sc, data, num_samples=10000, seed_start=None):
     Args:
         sc: The spark context
         data: The data as a list, 1D numpy array, or pandas Series
+        stat_fn: Either a function that aggregates each resampled
+            population to a scalar (e.g. the default value `np.mean`
+            lets you bootstrap means), or a function that aggregates
+            each resampled population to a dict of scalars. In both
+            cases, this function must accept a one-dimensional ndarray
+            as its input.
         num_samples: The number of bootstrap iterations to perform
         seed_start: An int with which to seed numpy's RNG. It must
             be unique within this set of calculations.
+        threshold_quantile: TODO
     """
-    samples = get_bootstrap_samples(sc, data, np.mean, num_samples, seed_start)
-    return summarize_one_sample_set(samples)
+    samples = get_bootstrap_samples(
+        sc, data, stat_fn, num_samples, seed_start, threshold_quantile
+    )
+    return summarize_one_sample_set(
+        samples, quantiles=summary_quantiles or default_quantiles
+    )
 
 
 # Functions that return per-resampled-population stats
