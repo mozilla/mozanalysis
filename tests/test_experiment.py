@@ -342,3 +342,38 @@ def test_get_per_client_data_join(spark):
     )
 
     assert res2.count() == enrollments.count()
+
+
+def test_no_analysis_exception_when_shared_parent_dataframe(spark):
+    # Check that we don't fall victim to
+    # https://issues.apache.org/jira/browse/SPARK-10925
+    df = spark.createDataFrame(
+        [  # Just need the schema, really
+            ['someone', '20190102', 'fake', 1],
+        ],
+        [
+            "client_id",
+            "submission_date_s3",
+            "branch",
+            "some_value",
+        ]
+    )
+
+    enrollments = df.groupby(
+        'client_id', 'branch'
+    ).agg(
+        F.min('submission_date_s3').alias('enrollment_date')
+    )
+
+    exp = Experiment('a-stub', '20180101')
+
+    exp.get_per_client_data(
+        enrollments,
+        df,
+        [
+            F.max(F.col('some_value'))
+        ],
+        last_date_full_data='20190522',
+        analysis_start_days=28,
+        analysis_length_days=7
+    )

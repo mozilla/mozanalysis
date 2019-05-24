@@ -295,13 +295,15 @@ class Experiment(object):
             # enrollments.branch == data_source.experiments[self.experiment_slug]
 
             # Do a quick pass aiming to efficiently filter out lots of rows:
-            enrollments.enrollment_date <= data_source.submission_date_s3,
+            # Use F.col() to avoid a bug in spark when `enrollments` is built
+            # from `data_source` (SPARK-10925)
+            enrollments.enrollment_date <= F.col('submission_date_s3'),
 
             # Now do a more thorough pass filtering out irrelevant data:
             # TODO perf: what is a more efficient way to do this?
             (
                 (
-                    F.unix_timestamp(data_source.submission_date_s3, 'yyyyMMdd')
+                    F.unix_timestamp(F.col('submission_date_s3'), 'yyyyMMdd')
                     - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
                 ) / (24 * 60 * 60)
             ).between(
@@ -316,7 +318,7 @@ class Experiment(object):
             # will also filter out that day's post unenrollment data but that's
             # probably the smallest and most innocuous evil on the menu.
             join_on.append(
-                (enrollments.enrollment_date != data_source.submission_date_s3)
+                (enrollments.enrollment_date != F.col('submission_date_s3'))
                 | (~F.isnull(data_source.experiments[self.experiment_slug]))
             ),
 
