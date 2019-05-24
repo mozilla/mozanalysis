@@ -16,6 +16,12 @@ pip install mozanalysis
 
 ## Testing locally
 
+### with Tox
+
+Install tox into your global Python environment and run `tox`.
+
+### with the CircleCI utilities
+
 To test/debug this package locally, you can run exactly the job that
 CircleCI runs for continuous integration by
 [installing the CircleCI local CLI](https://circleci.com/docs/2.0/local-cli/#installing-the-circleci-local-cli-on-macos-and-linux-distros)
@@ -27,15 +33,6 @@ circleci build --job py27
 
 See [.circleci/config.yml](https://github.com/mozilla/mozanalysis/blob/master/.circleci/config.yml)
 for the other configured job names (for running tests on different python versions).
-
-There is also a `bin/test` script that builds a docker image and
-python environment (both of which are cached locally) and allows
-you to run a subset of tests. Here are some sample invocations:
-
-```bash
-./bin/test tests/ -k <key>     # runs only tests with a given key
-PYTHON_VERSION=2.7 ./bin/test  # specify a python version
-```
 
 ## Deploying a new release
 
