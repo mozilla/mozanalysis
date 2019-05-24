@@ -1,8 +1,0 @@
-# Files/directories matching the patterns here will not be included
-# in the Docker context when you run `docker build`.
-
-.*
-*.egg*
-**/__pycache__/
-**.pyc
-**.pyo
