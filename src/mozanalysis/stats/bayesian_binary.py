@@ -73,10 +73,11 @@ def aggregate_col(df, col_label):
     if not ((df[col_label] == 0) | (df[col_label] == 1)).all():
         raise ValueError("All values in column '{}' must be 0 or 1.".format(col_label))
 
-    return df[col_label].groupby('branch').agg({
-        'num_enrollments': len,
-        'num_conversions': np.sum
-    })
+    return df.groupby('branch')[col_label].agg(
+        ['count', 'sum']
+    ).rename(
+        columns={'count': 'num_enrollments', 'sum': 'num_conversions'}
+    )
 
 
 def summarize_one_branch_from_agg(
@@ -101,17 +102,17 @@ def summarize_one_branch_from_agg(
     Returns a pandas Series; the index contains the stringified
     `quantiles` plus `'mean'`.
     """
+    beta = st.beta(
+        s.loc[num_conversions_label] + 1,
+        s.loc[num_enrollments_label] - s.loc[num_conversions_label] + 1
+    )
+
     q_index = [str(v) for v in quantiles]
 
     res = pd.Series(index=q_index + ['mean'])
 
-    res['mean'] = s.loc[num_conversions_label] / s.loc[num_enrollments_label]
-
-    ppfs = quantiles
-    res[[str(v) for v in ppfs]] = st.beta(
-        s.loc[num_conversions_label] + 1,
-        s.loc[num_enrollments_label] - s.loc[num_conversions_label] + 1
-    ).ppf(ppfs)
+    res[q_index] = beta.ppf(quantiles)
+    res['mean'] = beta.mean()
 
     return res
 

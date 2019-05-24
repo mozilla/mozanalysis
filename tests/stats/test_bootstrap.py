@@ -55,7 +55,6 @@ def test_get_bootstrap_samples_multistat(spark_context):
         },
         num_samples=2
     )
-    print(res)
 
     assert res.shape == (2, 3)
     assert (res['min'] == 0).all()
@@ -93,7 +92,6 @@ def test_bootstrap_one_branch(spark_context):
     assert res['mean'] == pytest.approx(0.5, rel=1e-1)
     assert res['0.5'] == pytest.approx(0.5, rel=1e-1)
     assert res['0.61'] == pytest.approx(0.5, rel=1e-1)
-    print(res)
 
 
 def test_bootstrap_one_branch_multistat(spark_context):
@@ -187,7 +185,6 @@ def test_compare_branches_multistat(spark_context):
 
     assert 'control' not in res['comparative'].keys()
 
-    print(res['comparative']['bigger'])
     assert res['comparative']['same'].loc['rel_uplift_exp', 'mean'] \
         == pytest.approx(0, abs=0.1)
     assert res['comparative']['bigger'].loc['rel_uplift_exp', 'mean'] \

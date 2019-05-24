@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import numpy as np
-import mozanalysis.stats.bayesian_binary as bb
+import mozanalysis.stats.bayesian_binary as masbb
 
 
 def get_thresholds(col, max_num_thresholds=101):
@@ -50,7 +50,7 @@ def crunch_nums_survival(df, col_label, ref_branch_label='control', thresholds=N
         try:
             # Sorry for mutating the input inplace, I'll be sure to tidy up.
             df['tmp_crunch_nums'] = df[col_label] > x
-            bla = bb.compare(
+            bla = masbb.compare_branches(
                 df, 'tmp_crunch_nums', ref_branch_label=ref_branch_label
             )
         finally:
