@@ -84,9 +84,9 @@ def test_filter_outliers_2():
     assert len(filtered) == 100
 
 
-def test_bootstrap_one(spark_context):
+def test_bootstrap_one_branch(spark_context):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
-    res = masb.bootstrap_one(
+    res = masb.bootstrap_one_branch(
         spark_context, data, num_samples=100, summary_quantiles=(0.5, 0.61)
     )
 
@@ -96,9 +96,9 @@ def test_bootstrap_one(spark_context):
     print(res)
 
 
-def test_bootstrap_one_multistat(spark_context):
+def test_bootstrap_one_branch_multistat(spark_context):
     data = np.concatenate([np.zeros(10000), np.ones(10000), [1e20]])
-    res = masb.bootstrap_one(
+    res = masb.bootstrap_one_branch(
         spark_context, data,
         stat_fn=lambda x: {
             'max': np.max(x),
@@ -119,7 +119,7 @@ def test_bootstrap_one_multistat(spark_context):
     assert res.loc['0.61', 'mean'] == pytest.approx(0.5, rel=1e-1)
 
 
-def test_compare(spark_context):
+def test_compare_branches(spark_context):
     data = pd.DataFrame(
         index=range(60000),
         columns=['branch', 'val']
@@ -136,7 +136,7 @@ def test_compare(spark_context):
     assert data.val[data.branch != 'bigger'].mean() == 0.5
     assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
 
-    res = masb.compare(spark_context, data, 'val', num_samples=2)
+    res = masb.compare_branches(spark_context, data, 'val', num_samples=2)
 
     assert res['individual']['control']['mean'] == pytest.approx(0.5, rel=1e-1)
     assert res['individual']['same']['mean'] == pytest.approx(0.5, rel=1e-1)
@@ -150,7 +150,7 @@ def test_compare(spark_context):
     assert res['comparative']['bigger']['prob_win'] == pytest.approx(1, abs=0.01)
 
 
-def test_compare_multistat(spark_context):
+def test_compare_branches_multistat(spark_context):
     data = pd.DataFrame(
         index=range(60000),
         columns=['branch', 'val']
@@ -167,7 +167,7 @@ def test_compare_multistat(spark_context):
     assert data.val[data.branch != 'bigger'].mean() == 0.5
     assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
 
-    res = masb.compare(
+    res = masb.compare_branches(
         spark_context,
         data,
         'val',
@@ -193,7 +193,8 @@ def test_compare_multistat(spark_context):
     assert res['comparative']['bigger'].loc['rel_uplift_exp', 'mean'] \
         == pytest.approx(0.5, abs=0.1)
 
-    assert res['comparative']['same'].loc['prob_win', 'mean'] in (0, 0.5, 1)  # num_samples=2
+    # num_samples=2 so only 3 possible outcomes
+    assert res['comparative']['same'].loc['prob_win', 'mean'] in (0, 0.5, 1)
     assert res['comparative']['bigger'].loc['prob_win', 'mean'] \
         == pytest.approx(1, abs=0.01)
 

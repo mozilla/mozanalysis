@@ -8,10 +8,10 @@ import pytest
 import mozanalysis.stats.summarize_samples as masss
 
 
-def test_summarize_one_sample_set():
+def test_summarize_one_branch_samples():
     s = pd.Series(np.linspace(0, 1, 1001))
 
-    res = masss.summarize_one_sample_set(s, [0.05, 0.31, 0.95])
+    res = masss.summarize_one_branch_samples(s, [0.05, 0.31, 0.95])
     assert res.shape == (4,)
     assert res['0.05'] == pytest.approx(0.05)
     assert res['0.31'] == pytest.approx(0.31)
@@ -19,10 +19,10 @@ def test_summarize_one_sample_set():
     assert res['mean'] == pytest.approx(0.5)
 
 
-def test_summarize_one_sample_set_multidim():
+def test_summarize_one_branch_samples_batch():
     s = pd.Series(np.linspace(0, 1, 1001))
     df = pd.DataFrame({'a': s, 'b': s + 1})
-    res = df.agg(masss.summarize_one_sample_set, quantiles=[0.05, 0.31, 0.95])
+    res = df.agg(masss.summarize_one_branch_samples_batch, quantiles=[0.05, 0.31, 0.95])
     assert res.shape == (4, 2)
 
     assert res.loc['0.05', 'a'] == pytest.approx(0.05)
@@ -36,9 +36,9 @@ def test_summarize_one_sample_set_multidim():
     assert res.loc['mean', 'b'] == pytest.approx(1.5)
 
 
-def test_compare_two_sample_sets_trivial():
+def test_summarize_joint_samples_trivial():
     quantiles = (0.05, 0.31, 0.95)
-    res = masss.compare_two_sample_sets(
+    res = masss.summarize_joint_samples(
         pd.Series([6, 6, 6]), pd.Series([3, 3, 3]), quantiles=quantiles
     )
     assert res['rel_uplift_exp'] == 1.
@@ -53,3 +53,36 @@ def test_compare_two_sample_sets_trivial():
     assert res['abs_uplift_0.05'] == 3.
     assert res['abs_uplift_0.31'] == 3.
     assert res['abs_uplift_0.95'] == 3.
+
+
+def test_summarize_joint_samples_batch_trivial():
+    quantiles = (0.05, 0.31, 0.95)
+    res = masss.summarize_joint_samples_batch(
+        pd.DataFrame({'a': [6, 6, 6], 'b': [1, 1, 1]}, columns=['a', 'b']),
+        pd.DataFrame({'a': [3, 3, 3], 'b': [1, 1, 1]}, columns=['b', 'a']),
+        quantiles=quantiles
+    )
+    assert res.loc['rel_uplift_exp', 'a'] == 1.
+    assert res.loc['abs_uplift_exp', 'a'] == 3.
+    assert res.loc['prob_win', 'a'] == 1
+    assert res.loc['max_abs_diff_0.95', 'a'] == 3.
+
+    assert res.loc['rel_uplift_0.05', 'a'] == 1.
+    assert res.loc['rel_uplift_0.31', 'a'] == 1.
+    assert res.loc['rel_uplift_0.95', 'a'] == 1.
+
+    assert res.loc['abs_uplift_0.05', 'a'] == 3.
+    assert res.loc['abs_uplift_0.31', 'a'] == 3.
+    assert res.loc['abs_uplift_0.95', 'a'] == 3.
+
+    assert res.loc['rel_uplift_exp', 'b'] == 0.
+    assert res.loc['abs_uplift_exp', 'b'] == 0.
+    assert res.loc['max_abs_diff_0.95', 'b'] == 0.
+
+    assert res.loc['rel_uplift_0.05', 'b'] == 0.
+    assert res.loc['rel_uplift_0.31', 'b'] == 0.
+    assert res.loc['rel_uplift_0.95', 'b'] == 0.
+
+    assert res.loc['abs_uplift_0.05', 'b'] == 0.
+    assert res.loc['abs_uplift_0.31', 'b'] == 0.
+    assert res.loc['abs_uplift_0.95', 'b'] == 0.
