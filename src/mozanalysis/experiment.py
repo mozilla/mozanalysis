@@ -13,32 +13,33 @@ class Experiment(object):
     principles, which are important for experiment analysis:
 
     - The population of clients in each branch must have the same
-        properties, aside from the intervention itself and its
-        consequences; i.e. there must be no underlying bias in the
-        branch populations.
+      properties, aside from the intervention itself and its
+      consequences; i.e. there must be no underlying bias in the
+      branch populations.
     - We must measure the same thing for each client, to minimize the
-        variance associated with our measurement.
+      variance associated with our measurement.
 
     So that our analyses follow these abstract principles, we follow
     these rules:
 
     - Start with a list of all clients who enrolled.
     - We can filter this list of clients only based on information known
-        to us at or before the time that they enrolled, because later
-        information might be causally connected to the intervention.
+      to us at or before the time that they enrolled, because later
+      information might be causally connected to the intervention.
     - For any given metric, every client gets a non-null value; we don't
-        implicitly ignore anyone, even if they churned and stopped
-        sending data.
+      implicitly ignore anyone, even if they churned and stopped
+      sending data.
     - Typically if an enrolled client no longer qualifies for enrollment,
-        we'll still want to include their data in the analysis, unless
-        we're explicitly using stats methods that handle censored data.
+      we'll still want to include their data in the analysis, unless
+      we're explicitly using stats methods that handle censored data.
     - We define a "analysis window" with respect to clients'
-        enrollment dates. Each metric only uses data collected inside
-        this analysis window. We can only analyze data for a client
-        if we have data covering their entire analysis window.
+      enrollment dates. Each metric only uses data collected inside
+      this analysis window. We can only analyze data for a client
+      if we have data covering their entire analysis window.
 
 
-    Example usage:
+    Example usage::
+
         cd = spark.table('clients_daily')
 
         experiment = Experiment(
@@ -74,10 +75,10 @@ class Experiment(object):
         start_date (str): e.g. '20190101'. First date on which enrollment
             events were received.
         num_dates_enrollment (int, optional): Only include this many dates
-            of enrollments. If `None` then use the maximum number of dates
+            of enrollments. If ``None`` then use the maximum number of dates
             as determined by the metric's analysis window and
-            `last_date_full_data`. Typically `7n+1`, e.g. `8`. The
-            factor '7' removes weekly seasonality, and the `+1` accounts
+            ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The
+            factor '7' removes weekly seasonality, and the ``+1`` accounts
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
         addon_version (str, optional): The version of the experiment addon.
@@ -90,10 +91,10 @@ class Experiment(object):
         start_date (str): e.g. '20190101'. First date on which enrollment
             events were received.
         num_dates_enrollment (int, optional): Only include this many days
-            of enrollments. If `None` then use the maximum number of days
+            of enrollments. If ``None`` then use the maximum number of days
             as determined by the metric's analysis window and
-            `last_date_full_data`. Typically `7n+1`, e.g. `8`. The
-            factor '7' removes weekly seasonality, and the `+1` accounts
+            ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The
+            factor '7' removes weekly seasonality, and the ``+1`` accounts
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
         addon_version (str, optional): The version of the experiment addon.
@@ -126,10 +127,10 @@ class Experiment(object):
 
         The underlying queries are different for pref-flip vs addon
         studies, because as of 2019/04/02, branch information isn't
-        reliably available in the `events` table for addon experiments:
+        reliably available in the ``events`` table for addon experiments:
         branch may be NULL for all enrollments. The enrollment
         information for them is most reliably available in
-        `telemetry_shield_study_parquet`. Once this issue is resolved,
+        ``telemetry_shield_study_parquet``. Once this issue is resolved,
         we will probably start using normandy events for all desktop
         studies.
         Ref: https://bugzilla.mozilla.org/show_bug.cgi?id=1536644
@@ -137,16 +138,19 @@ class Experiment(object):
         Args:
             spark: The spark context.
             study_type (str): One of the following strings:
+
                 - 'pref_flip'
                 - 'addon'
+
             end_date (str, optional): Ignore enrollments after this
                 date: for faster queries on stale experiments. If you
-                set `num_dates_enrollment` then do not set this; at best
+                set ``num_dates_enrollment`` then do not set this; at best
                 it would be redundant, at worst it's contradictory.
 
         Returns:
             A Spark DataFrame of enrollment data. One row per
             enrollment. Columns:
+
                 - client_id (str)
                 - enrollment_date (str): e.g. '20190329'
                 - branch (str)
@@ -208,31 +212,35 @@ class Experiment(object):
 
         Args:
             enrollments: A spark DataFrame of enrollments, like the one
-                returned by `self.get_enrollments()`.
+                returned by ``self.get_enrollments()``.
             data_source: A spark DataFrame containing the data needed to
-                calculate the metrics. Could be `main_summary` or
-                `clients_daily`. _Don't_ use `experiments`; as of 2019/04/02
+                calculate the metrics. Could be ``main_summary`` or
+                ``clients_daily``. *Don't* use ``experiments``; as of 2019/04/02
                 it drops data collected after people self-unenroll, so
                 unenrolling users will appear to churn. Must have at least
                 the following columns:
-                    - client_id (str)
-                    - submission_date_s3 (str)
-                    - data columns referred to in `metric_list`
+
+                - client_id (str)
+                - submission_date_s3 (str)
+                - data columns referred to in ``metric_list``
+
                 Ideally also has:
-                    - experiments (map): At present this is used to exclude
-                        pre-enrollment ping data collected on enrollment
-                        day. Once it or its successor reliably tags data
-                        from all enrolled users, even post-unenroll, we'll
-                        also join on it to exclude data from duplicate
-                        `client_id`s that are not enrolled in the same
-                        branch.
+
+                - experiments (map): At present this is used to exclude
+                  pre-enrollment ping data collected on enrollment
+                  day. Once it or its successor reliably tags data
+                  from all enrolled users, even post-unenroll, we'll
+                  also join on it to exclude data from duplicate
+                  ``client_id``\\s that are not enrolled in the same
+                  branch.
+
             metric_list: A list of columns that aggregate and compute
-                metrics over data grouped by `(client_id, branch)`, e.g.
-                ```
+                metrics over data grouped by ``(client_id, branch)``, e.g.::
+
                     [F.coalesce(F.sum(
                         data_source.metric_name
                     ), F.lit(0)).alias('metric_name')]
-                ```
+
             last_date_full_data (str): The most recent date for which we
                 have complete data, e.g. '20190322'. If you want to ignore
                 all data collected after a certain date (e.g. when the
@@ -242,31 +250,32 @@ class Experiment(object):
                 collected outside this analysis window.
             analysis_length_days (int): the length of the analysis window,
                 measured in days.
-            keep_client_id (bool): Whether to return a `client_id` column.
+            keep_client_id (bool): Whether to return a ``client_id`` column.
                 Defaults to False to reduce memory usage of the results.
 
         Returns:
-            A spark DataFrame of experiment data. One row per `client_id`.
+            A spark DataFrame of experiment data. One row per ``client_id``.
             One or two metadata columns, then one column per metric in
-            `metric_list`. Then one column per sanity-check metric.
+            ``metric_list``. Then one column per sanity-check metric.
             Columns:
+
                 - client_id (str, optional): Not necessary for
-                    "happy path" analyses.
+                  "happy path" analyses.
                 - branch (str): The client's branch
                 - [metric 1]: The client's value for the first metric in
-                    `metric_list`.
+                  ``metric_list``.
                 - ...
                 - [metric n]: The client's value for the nth (final)
-                    metric in `metric_list`.
+                  metric in ``metric_list``.
                 - [sanity check 1]: The client's value for the first
-                    sanity check metric.
+                  sanity check metric.
                 - ...
                 - [sanity check n]: The client's value for the last
-                    sanity check metric.
+                  sanity check metric.
 
             This format - the schema plus there being one row per
             enrolled client, regardless of whether the client has data
-            in `data_source` - was agreed upon by the DS team, and is the
+            in ``data_source`` - was agreed upon by the DS team, and is the
             standard format for queried experimental data.
         """
         for col in ['client_id', 'submission_date_s3']:
@@ -344,7 +353,7 @@ class Experiment(object):
     def _get_enrollments_view_normandy(spark):
         """Return a DataFrame of all normandy enrollment events.
 
-        Filter the `events` table to enrollment events and transform it
+        Filter the ``events`` table to enrollment events and transform it
         into the standard enrollments schema.
 
         Args:
@@ -367,7 +376,7 @@ class Experiment(object):
     def _get_enrollments_view_addon(spark, addon_version=None):
         """Return a DataFrame of all addon study enrollment events.
 
-        Filter the `telemetry_shield_study_parquet` to enrollment events
+        Filter the ``telemetry_shield_study_parquet`` to enrollment events
         and transform it into the standard enrollments schema.
 
         Args:
@@ -404,12 +413,12 @@ class Experiment(object):
     def _get_last_enrollment_date(self, last_date_full_data, req_dates_of_data):
         """Return the date of the final used enrollment.
 
-        We need `req_dates_of_data` days of post-enrollment data per client.
-        This and `last_date_full_data` put constraints on the enrollment
+        We need ``req_dates_of_data`` days of post-enrollment data per client.
+        This and ``last_date_full_data`` put constraints on the enrollment
         period. This method checks these constraints are feasible, and
         compatible with any manually supplied enrollment period.
 
-        If `self.num_dates_enrollment` is `None`, then there is potential
+        If ``self.num_dates_enrollment`` is ``None``, then there is potential
         for the final date to be surprising, so we print it.
 
         Args:
@@ -481,7 +490,7 @@ class Experiment(object):
         self, data_source, last_date_full_data, analysis_start_days,
         analysis_length_days
     ):
-        """Return `data_source`, filtered to the relevant dates.
+        """Return ``data_source``, filtered to the relevant dates.
 
         This should not affect the results - it should just speed things
         up.
