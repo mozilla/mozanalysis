@@ -1,0 +1,731 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.experiment &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>mozanalysis.experiment</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mozanalysis.experiment</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
+<span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
+<span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="k">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="k">import</span> <span class="n">add_days</span>
+
+
+<div class="viewcode-block" id="Experiment"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment">[docs]</a><span class="k">class</span> <span class="nc">Experiment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get DataFrames of experiment data; store experiment metadata.</span>
+
+<span class="sd">    The methods here query data in a way compatible with the following</span>
+<span class="sd">    principles, which are important for experiment analysis:</span>
+
+<span class="sd">    - The population of clients in each branch must have the same</span>
+<span class="sd">      properties, aside from the intervention itself and its</span>
+<span class="sd">      consequences; i.e. there must be no underlying bias in the</span>
+<span class="sd">      branch populations.</span>
+<span class="sd">    - We must measure the same thing for each client, to minimize the</span>
+<span class="sd">      variance associated with our measurement.</span>
+
+<span class="sd">    So that our analyses follow these abstract principles, we follow</span>
+<span class="sd">    these rules:</span>
+
+<span class="sd">    - Start with a list of all clients who enrolled.</span>
+<span class="sd">    - We can filter this list of clients only based on information known</span>
+<span class="sd">      to us at or before the time that they enrolled, because later</span>
+<span class="sd">      information might be causally connected to the intervention.</span>
+<span class="sd">    - For any given metric, every client gets a non-null value; we don&#39;t</span>
+<span class="sd">      implicitly ignore anyone, even if they churned and stopped</span>
+<span class="sd">      sending data.</span>
+<span class="sd">    - Typically if an enrolled client no longer qualifies for enrollment,</span>
+<span class="sd">      we&#39;ll still want to include their data in the analysis, unless</span>
+<span class="sd">      we&#39;re explicitly using stats methods that handle censored data.</span>
+<span class="sd">    - We define a &quot;analysis window&quot; with respect to clients&#39;</span>
+<span class="sd">      enrollment dates. Each metric only uses data collected inside</span>
+<span class="sd">      this analysis window. We can only analyze data for a client</span>
+<span class="sd">      if we have data covering their entire analysis window.</span>
+
+
+<span class="sd">    Example usage::</span>
+
+<span class="sd">        cd = spark.table(&#39;clients_daily&#39;)</span>
+
+<span class="sd">        experiment = Experiment(</span>
+<span class="sd">            experiment_slug=&#39;pref-flip-defaultoncookierestrictions-1506704&#39;,</span>
+<span class="sd">            start_date=&#39;20181215&#39;,</span>
+<span class="sd">            num_dates_enrollment=8</span>
+<span class="sd">        )</span>
+<span class="sd">        enrollments = experiment.get_enrollments(spark)</span>
+
+<span class="sd">        res = experiment.get_per_client_data(</span>
+<span class="sd">            enrollments,</span>
+<span class="sd">            cd,</span>
+<span class="sd">            [</span>
+<span class="sd">                F.sum(F.coalesce(</span>
+<span class="sd">                    cd.active_hours_sum, F.lit(0)</span>
+<span class="sd">                )).alias(&#39;active_hours&#39;),</span>
+<span class="sd">                F.sum(F.coalesce(</span>
+<span class="sd">                    cd.scalar_parent_browser_engagement_total_uri_count_sum,</span>
+<span class="sd">                    F.lit(0)</span>
+<span class="sd">                )).alias(&#39;uri_count&#39;),</span>
+<span class="sd">            ],</span>
+<span class="sd">            last_date_full_data=&#39;20190107&#39;,</span>
+<span class="sd">            analysis_start_days=0,</span>
+<span class="sd">            analysis_length_days=7</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Pull data into a pandas df, ready for running stats</span>
+<span class="sd">        pres = res.toPandas()</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        experiment_slug (str): Name of the study, used to identify</span>
+<span class="sd">            the enrollment events specific to this study.</span>
+<span class="sd">        start_date (str): e.g. &#39;20190101&#39;. First date on which enrollment</span>
+<span class="sd">            events were received.</span>
+<span class="sd">        num_dates_enrollment (int, optional): Only include this many dates</span>
+<span class="sd">            of enrollments. If ``None`` then use the maximum number of dates</span>
+<span class="sd">            as determined by the metric&#39;s analysis window and</span>
+<span class="sd">            ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The</span>
+<span class="sd">            factor &#39;7&#39; removes weekly seasonality, and the ``+1`` accounts</span>
+<span class="sd">            for the fact that enrollment typically starts a few hours</span>
+<span class="sd">            before UTC midnight.</span>
+<span class="sd">        addon_version (str, optional): The version of the experiment addon.</span>
+<span class="sd">            Some addon experiment slugs get reused - in those cases we need</span>
+<span class="sd">            to filter on the addon version also.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        experiment_slug (str): Name of the study, used to identify</span>
+<span class="sd">            the enrollment events specific to this study.</span>
+<span class="sd">        start_date (str): e.g. &#39;20190101&#39;. First date on which enrollment</span>
+<span class="sd">            events were received.</span>
+<span class="sd">        num_dates_enrollment (int, optional): Only include this many days</span>
+<span class="sd">            of enrollments. If ``None`` then use the maximum number of days</span>
+<span class="sd">            as determined by the metric&#39;s analysis window and</span>
+<span class="sd">            ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The</span>
+<span class="sd">            factor &#39;7&#39; removes weekly seasonality, and the ``+1`` accounts</span>
+<span class="sd">            for the fact that enrollment typically starts a few hours</span>
+<span class="sd">            before UTC midnight.</span>
+<span class="sd">        addon_version (str, optional): The version of the experiment addon.</span>
+<span class="sd">            Some addon experiment slugs get reused - in those cases we need</span>
+<span class="sd">            to filter on the addon version also.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">experiment_slug</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">num_dates_enrollment</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">addon_version</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="c1"># Let&#39;s be conservative about storing state - it doesn&#39;t belong</span>
+        <span class="c1"># in this class. Treat these attributes as immutable.</span>
+        <span class="c1"># These attributes are stored because it would be a PITA not to</span>
+        <span class="c1"># store them:</span>
+        <span class="c1">#   - they are required by both `get_enrollments()` and</span>
+        <span class="c1">#       `get_per_client_data()`</span>
+        <span class="c1">#   - if you were accidentally inconsistent with their values</span>
+        <span class="c1">#       then you would hit trouble quickly!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span> <span class="o">=</span> <span class="n">experiment_slug</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span> <span class="o">=</span> <span class="n">start_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="o">=</span> <span class="n">num_dates_enrollment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addon_version</span> <span class="o">=</span> <span class="n">addon_version</span>
+
+<div class="viewcode-block" id="Experiment.get_enrollments"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_enrollments">[docs]</a>    <span class="k">def</span> <span class="nf">get_enrollments</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">spark</span><span class="p">,</span> <span class="n">study_type</span><span class="o">=</span><span class="s1">&#39;pref_flip&#39;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">debug_dupes</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a DataFrame of enrolled clients.</span>
+
+<span class="sd">        This works for pref-flip and addon studies.</span>
+
+<span class="sd">        The underlying queries are different for pref-flip vs addon</span>
+<span class="sd">        studies, because as of 2019/04/02, branch information isn&#39;t</span>
+<span class="sd">        reliably available in the ``events`` table for addon experiments:</span>
+<span class="sd">        branch may be NULL for all enrollments. The enrollment</span>
+<span class="sd">        information for them is most reliably available in</span>
+<span class="sd">        ``telemetry_shield_study_parquet``. Once this issue is resolved,</span>
+<span class="sd">        we will probably start using normandy events for all desktop</span>
+<span class="sd">        studies.</span>
+<span class="sd">        Ref: https://bugzilla.mozilla.org/show_bug.cgi?id=1536644</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            spark: The spark context.</span>
+<span class="sd">            study_type (str): One of the following strings:</span>
+
+<span class="sd">                - &#39;pref_flip&#39;</span>
+<span class="sd">                - &#39;addon&#39;</span>
+
+<span class="sd">            end_date (str, optional): Ignore enrollments after this</span>
+<span class="sd">                date: for faster queries on stale experiments. If you</span>
+<span class="sd">                set ``num_dates_enrollment`` then do not set this; at best</span>
+<span class="sd">                it would be redundant, at worst it&#39;s contradictory.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A Spark DataFrame of enrollment data. One row per</span>
+<span class="sd">            enrollment. Columns:</span>
+
+<span class="sd">                - client_id (str)</span>
+<span class="sd">                - enrollment_date (str): e.g. &#39;20190329&#39;</span>
+<span class="sd">                - branch (str)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">study_type</span> <span class="o">==</span> <span class="s1">&#39;pref_flip&#39;</span><span class="p">:</span>
+            <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_enrollments_view_normandy</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">study_type</span> <span class="o">==</span> <span class="s1">&#39;addon&#39;</span><span class="p">:</span>
+            <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_enrollments_view_addon</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">addon_version</span><span class="p">)</span>
+
+        <span class="c1"># elif study_type == &#39;glean&#39;:</span>
+        <span class="c1">#     raise NotImplementedError</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized study_type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">study_type</span><span class="p">))</span>
+
+        <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="o">.</span><span class="n">experiment_slug</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">end_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Don&#39;t specify both &#39;end_date&#39; and &quot;</span>
+                    <span class="s2">&quot;&#39;num_dates_enrollment&#39;; you might contradict yourself.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scheduled_max_enrollment_date</span><span class="p">()</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">end_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="n">end_date</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Deduplicate enrollment events. Optionally keep track of what</span>
+        <span class="c1"># had to be deduplicated. Deduplicating a client who enrolls in</span>
+        <span class="c1"># multiple branches is left as an exercise to the reader :|</span>
+        <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">branch</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollment_date&#39;</span><span class="p">)]</span>
+            <span class="o">+</span> <span class="p">(</span>
+                <span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;num_events&#39;</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="n">debug_dupes</span> <span class="k">else</span> <span class="p">[]</span>
+            <span class="p">)</span>
+        <span class="p">))</span>
+
+        <span class="n">enrollments</span><span class="o">.</span><span class="n">cache</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">enrollments</span></div>
+
+<div class="viewcode-block" id="Experiment.get_per_client_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_per_client_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_per_client_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="n">analysis_start_days</span><span class="p">,</span> <span class="n">analysis_length_days</span><span class="p">,</span> <span class="n">keep_client_id</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a DataFrame containing per-client metric values.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            enrollments: A spark DataFrame of enrollments, like the one</span>
+<span class="sd">                returned by ``self.get_enrollments()``.</span>
+<span class="sd">            data_source: A spark DataFrame containing the data needed to</span>
+<span class="sd">                calculate the metrics. Could be ``main_summary`` or</span>
+<span class="sd">                ``clients_daily``. *Don&#39;t* use ``experiments``; as of 2019/04/02</span>
+<span class="sd">                it drops data collected after people self-unenroll, so</span>
+<span class="sd">                unenrolling users will appear to churn. Must have at least</span>
+<span class="sd">                the following columns:</span>
+
+<span class="sd">                - client_id (str)</span>
+<span class="sd">                - submission_date_s3 (str)</span>
+<span class="sd">                - data columns referred to in ``metric_list``</span>
+
+<span class="sd">                Ideally also has:</span>
+
+<span class="sd">                - experiments (map): At present this is used to exclude</span>
+<span class="sd">                  pre-enrollment ping data collected on enrollment</span>
+<span class="sd">                  day. Once it or its successor reliably tags data</span>
+<span class="sd">                  from all enrolled users, even post-unenroll, we&#39;ll</span>
+<span class="sd">                  also join on it to exclude data from duplicate</span>
+<span class="sd">                  ``client_id``\\s that are not enrolled in the same</span>
+<span class="sd">                  branch.</span>
+
+<span class="sd">            metric_list: A list of columns that aggregate and compute</span>
+<span class="sd">                metrics over data grouped by ``(client_id, branch)``, e.g.::</span>
+
+<span class="sd">                    [F.coalesce(F.sum(</span>
+<span class="sd">                        data_source.metric_name</span>
+<span class="sd">                    ), F.lit(0)).alias(&#39;metric_name&#39;)]</span>
+
+<span class="sd">            last_date_full_data (str): The most recent date for which we</span>
+<span class="sd">                have complete data, e.g. &#39;20190322&#39;. If you want to ignore</span>
+<span class="sd">                all data collected after a certain date (e.g. when the</span>
+<span class="sd">                experiment recipe was deactivated), then do that here.</span>
+<span class="sd">            analysis_start_days (int): the start of the analysis window,</span>
+<span class="sd">                measured in &#39;days since the client enrolled&#39;. We ignore data</span>
+<span class="sd">                collected outside this analysis window.</span>
+<span class="sd">            analysis_length_days (int): the length of the analysis window,</span>
+<span class="sd">                measured in days.</span>
+<span class="sd">            keep_client_id (bool): Whether to return a ``client_id`` column.</span>
+<span class="sd">                Defaults to False to reduce memory usage of the results.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A spark DataFrame of experiment data. One row per ``client_id``.</span>
+<span class="sd">            One or two metadata columns, then one column per metric in</span>
+<span class="sd">            ``metric_list``. Then one column per sanity-check metric.</span>
+<span class="sd">            Columns:</span>
+
+<span class="sd">                - client_id (str, optional): Not necessary for</span>
+<span class="sd">                  &quot;happy path&quot; analyses.</span>
+<span class="sd">                - branch (str): The client&#39;s branch</span>
+<span class="sd">                - [metric 1]: The client&#39;s value for the first metric in</span>
+<span class="sd">                  ``metric_list``.</span>
+<span class="sd">                - ...</span>
+<span class="sd">                - [metric n]: The client&#39;s value for the nth (final)</span>
+<span class="sd">                  metric in ``metric_list``.</span>
+<span class="sd">                - [sanity check 1]: The client&#39;s value for the first</span>
+<span class="sd">                  sanity check metric.</span>
+<span class="sd">                - ...</span>
+<span class="sd">                - [sanity check n]: The client&#39;s value for the last</span>
+<span class="sd">                  sanity check metric.</span>
+
+<span class="sd">            This format - the schema plus there being one row per</span>
+<span class="sd">            enrolled client, regardless of whether the client has data</span>
+<span class="sd">            in ``data_source`` - was agreed upon by the DS team, and is the</span>
+<span class="sd">            standard format for queried experimental data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;client_id&#39;</span><span class="p">,</span> <span class="s1">&#39;submission_date_s3&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data_source</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Column &#39;</span><span class="si">{}</span><span class="s2">&#39; missing from &#39;data_source&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+
+        <span class="n">req_dates_of_data</span> <span class="o">=</span> <span class="n">analysis_start_days</span> <span class="o">+</span> <span class="n">analysis_length_days</span>
+
+        <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_enrollments_for_analysis_window</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">req_dates_of_data</span>
+        <span class="p">)</span>
+
+        <span class="n">data_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_data_source_for_analysis_window</span><span class="p">(</span>
+            <span class="n">data_source</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">analysis_start_days</span><span class="p">,</span>
+            <span class="n">analysis_length_days</span>
+        <span class="p">)</span>
+
+        <span class="n">join_on</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="c1"># TODO perf: would it be faster if we enforce a join on sample_id?</span>
+            <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span> <span class="o">==</span> <span class="n">data_source</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span>
+
+            <span class="c1"># TODO accuracy: once we can rely on</span>
+            <span class="c1">#   `data_source.experiments[self.experiment_slug]`</span>
+            <span class="c1"># existing even after unenrollment, we could start joining on</span>
+            <span class="c1"># branch to reduce problems associated with split client_ids:</span>
+            <span class="c1"># enrollments.branch == data_source.experiments[self.experiment_slug]</span>
+
+            <span class="c1"># Do a quick pass aiming to efficiently filter out lots of rows:</span>
+            <span class="c1"># Use F.col() to avoid a bug in spark when `enrollments` is built</span>
+            <span class="c1"># from `data_source` (SPARK-10925)</span>
+            <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">),</span>
+
+            <span class="c1"># Now do a more thorough pass filtering out irrelevant data:</span>
+            <span class="c1"># TODO perf: what is a more efficient way to do this?</span>
+            <span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">F</span><span class="o">.</span><span class="n">unix_timestamp</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">),</span> <span class="s1">&#39;yyyyMMdd&#39;</span><span class="p">)</span>
+                    <span class="o">-</span> <span class="n">F</span><span class="o">.</span><span class="n">unix_timestamp</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span><span class="p">,</span> <span class="s1">&#39;yyyyMMdd&#39;</span><span class="p">)</span>
+                <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">between</span><span class="p">(</span>
+                <span class="n">analysis_start_days</span><span class="p">,</span>
+                <span class="n">analysis_start_days</span> <span class="o">+</span> <span class="n">analysis_length_days</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;experiments&#39;</span> <span class="ow">in</span> <span class="n">data_source</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="c1"># Try to filter data from day of enrollment before time of enrollment.</span>
+            <span class="c1"># If the client enrolled and unenrolled on the same day then this</span>
+            <span class="c1"># will also filter out that day&#39;s post unenrollment data but that&#39;s</span>
+            <span class="c1"># probably the smallest and most innocuous evil on the menu.</span>
+            <span class="n">join_on</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">))</span>
+                <span class="o">|</span> <span class="p">(</span><span class="o">~</span><span class="n">F</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">data_source</span><span class="o">.</span><span class="n">experiments</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">]))</span>
+            <span class="p">),</span>
+
+        <span class="n">sanity_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telemetry_sanity_check_metrics</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span>
+        <span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">data_source</span><span class="p">,</span>
+            <span class="n">join_on</span><span class="p">,</span>
+            <span class="s1">&#39;left&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">branch</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">(</span><span class="n">metric_list</span> <span class="o">+</span> <span class="n">sanity_metrics</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">keep_client_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">res</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_enrollments_view_normandy</span><span class="p">(</span><span class="n">spark</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a DataFrame of all normandy enrollment events.</span>
+
+<span class="sd">        Filter the ``events`` table to enrollment events and transform it</span>
+<span class="sd">        into the standard enrollments schema.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            spark: The spark context.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">events</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;events&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">event_category</span> <span class="o">==</span> <span class="s1">&#39;normandy&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">event_method</span> <span class="o">==</span> <span class="s1">&#39;enroll&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">event_string_value</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;experiment_slug&#39;</span><span class="p">),</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">event_map_values</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;branch&#39;</span><span class="p">),</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">submission_date_s3</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollment_date&#39;</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_enrollments_view_addon</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">addon_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a DataFrame of all addon study enrollment events.</span>
+
+<span class="sd">        Filter the ``telemetry_shield_study_parquet`` to enrollment events</span>
+<span class="sd">        and transform it into the standard enrollments schema.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            spark: The spark context.</span>
+<span class="sd">            addon_version (str, optional): The version of the experiment</span>
+<span class="sd">                addon. Some addon experiment slugs get reused - in those</span>
+<span class="sd">                cases we need to filter on the addon version also.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tssp</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;telemetry_shield_study_parquet&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">addon_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># It&#39;s a little messy that we filter `addon_version` here</span>
+            <span class="c1"># and `study_name` elsewhere, but this seemed the least</span>
+            <span class="c1"># hacky solution</span>
+            <span class="n">tssp</span> <span class="o">=</span> <span class="n">tssp</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">addon_version</span> <span class="o">==</span> <span class="n">addon_version</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tssp</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">study_state</span> <span class="o">==</span> <span class="s1">&#39;enter&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+            <span class="n">tssp</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span>
+            <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">study_name</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;experiment_slug&#39;</span><span class="p">),</span>
+            <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;branch&#39;</span><span class="p">),</span>
+            <span class="n">tssp</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollment_date&#39;</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_scheduled_max_enrollment_date</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the last enrollment date, according to the plan.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">add_days</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_last_enrollment_date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">req_dates_of_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the date of the final used enrollment.</span>
+
+<span class="sd">        We need ``req_dates_of_data`` days of post-enrollment data per client.</span>
+<span class="sd">        This and ``last_date_full_data`` put constraints on the enrollment</span>
+<span class="sd">        period. This method checks these constraints are feasible, and</span>
+<span class="sd">        compatible with any manually supplied enrollment period.</span>
+
+<span class="sd">        If ``self.num_dates_enrollment`` is ``None``, then there is potential</span>
+<span class="sd">        for the final date to be surprising, so we print it.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            last_date_full_data (str): The most recent date for which we</span>
+<span class="sd">                have complete data, e.g. &#39;20190322&#39;. If you want to ignore</span>
+<span class="sd">                all data collected after a certain date (e.g. when the</span>
+<span class="sd">                experiment recipe was deactivated), then do that here.</span>
+<span class="sd">            req_dates_of_data (int): The minimum number of dates of</span>
+<span class="sd">                post-enrollment data required to have data for the client</span>
+<span class="sd">                for the entire analysis window.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">last_enrollment_with_data</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
+            <span class="n">last_date_full_data</span><span class="p">,</span> <span class="o">-</span><span class="p">(</span><span class="n">req_dates_of_data</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">last_enrollment_with_data</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No users have a complete analysis window&quot;</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Taking enrollments between </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="n">last_enrollment_with_data</span>
+            <span class="p">))</span>
+
+            <span class="k">return</span> <span class="n">last_enrollment_with_data</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">intended_last_enrollment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scheduled_max_enrollment_date</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">last_enrollment_with_data</span> <span class="o">&lt;</span> <span class="n">intended_last_enrollment</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;You said you wanted </span><span class="si">{}</span><span class="s2"> dates of enrollment, &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span>
+                    <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;but your analysis window of </span><span class="si">{}</span><span class="s2"> days won&#39;t have &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">req_dates_of_data</span>
+                    <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;complete data until we have the data for </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">add_days</span><span class="p">(</span><span class="n">intended_last_enrollment</span><span class="p">,</span> <span class="n">req_dates_of_data</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">intended_last_enrollment</span>
+
+    <span class="k">def</span> <span class="nf">_get_last_data_date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">req_dates_of_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the date of the final used datum.&quot;&quot;&quot;</span>
+        <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_last_enrollment_date</span><span class="p">(</span>
+            <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">req_dates_of_data</span>
+        <span class="p">)</span>
+
+        <span class="n">last_required_data_date</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
+            <span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">req_dates_of_data</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="p">)</span>
+
+        <span class="c1"># `_get_last_enrollment_date` should have checked for this</span>
+        <span class="k">assert</span> <span class="n">last_required_data_date</span> <span class="o">&lt;=</span> <span class="n">last_date_full_data</span>
+
+        <span class="k">return</span> <span class="n">last_required_data_date</span>
+
+<div class="viewcode-block" id="Experiment.filter_enrollments_for_analysis_window"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window">[docs]</a>    <span class="k">def</span> <span class="nf">filter_enrollments_for_analysis_window</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">req_dates_of_data</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the enrollments, filtered to the relevant dates.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="c1"># Ignore clients without a complete analysis window</span>
+            <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_last_enrollment_date</span><span class="p">(</span>
+                <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">req_dates_of_data</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Experiment.filter_data_source_for_analysis_window"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window">[docs]</a>    <span class="k">def</span> <span class="nf">filter_data_source_for_analysis_window</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">analysis_start_days</span><span class="p">,</span>
+        <span class="n">analysis_length_days</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``data_source``, filtered to the relevant dates.</span>
+
+<span class="sd">        This should not affect the results - it should just speed things</span>
+<span class="sd">        up.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">data_source</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="c1"># Ignore data before the analysis window of the first enrollment</span>
+            <span class="n">data_source</span><span class="o">.</span><span class="n">submission_date_s3</span> <span class="o">&gt;=</span> <span class="n">add_days</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="n">analysis_start_days</span>
+            <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="c1"># Ignore data after the analysis window of the last enrollment,</span>
+            <span class="c1"># and data after the specified `last_date_full_data`</span>
+            <span class="n">data_source</span><span class="o">.</span><span class="n">submission_date_s3</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_last_data_date</span><span class="p">(</span>
+                <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">analysis_start_days</span> <span class="o">+</span> <span class="n">analysis_length_days</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_telemetry_sanity_check_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return aggregations that check for problems with a client.&quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: Once we know what form the metrics library will take,</span>
+        <span class="c1"># we should move the below metric definitions and documentation</span>
+        <span class="c1"># into it.</span>
+
+        <span class="k">if</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data_source</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;experiments&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;map&lt;string,string&gt;&#39;</span><span class="p">:</span>
+            <span class="c1"># Not all tables have an experiments map - can&#39;t make these checks.</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+
+            <span class="c1"># Check to see whether the client_id is also enrolled in other branches</span>
+            <span class="c1"># E.g. indicates cloned profiles. Fraction of such users should be</span>
+            <span class="c1"># small, and similar between branches.</span>
+            <span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">((</span>
+                <span class="n">data_source</span><span class="o">.</span><span class="n">experiments</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">]</span> <span class="o">!=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">branch</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;has_contradictory_branch&#39;</span><span class="p">),</span>
+
+            <span class="c1"># Check to see whether the client_id was sending data in the analysis</span>
+            <span class="c1"># window that wasn&#39;t tagged as being part of the experiment. Indicates</span>
+            <span class="c1"># either a client_id clash, or the client unenrolling. Fraction of such</span>
+            <span class="c1"># users should be small, and similar between branches.</span>
+            <span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">((</span>
+                <span class="o">~</span><span class="n">F</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">data_source</span><span class="o">.</span><span class="n">experiments</span><span class="p">)</span>
+                <span class="o">&amp;</span> <span class="n">F</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">data_source</span><span class="o">.</span><span class="n">experiments</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">])</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;has_non_enrolled_data&#39;</span><span class="p">),</span>
+        <span class="p">]</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

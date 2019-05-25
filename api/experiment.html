@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.experiment &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="mozanalysis.udf" href="udf.html" />
+    <link rel="prev" title="API Documentation" href="../api.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About Mozanalysis</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Documentation</a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/experiment.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mozanalysis.experiment">
+<span id="mozanalysis-experiment"></span><h1><a class="reference internal" href="#module-mozanalysis.experiment" title="mozanalysis.experiment"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a><a class="headerlink" href="#module-mozanalysis.experiment" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="mozanalysis.experiment.Experiment">
+<em class="property">class </em><code class="descclassname">mozanalysis.experiment.</code><code class="descname">Experiment</code><span class="sig-paren">(</span><em>experiment_slug</em>, <em>start_date</em>, <em>num_dates_enrollment=None</em>, <em>addon_version=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get DataFrames of experiment data; store experiment metadata.</p>
+<p>The methods here query data in a way compatible with the following
+principles, which are important for experiment analysis:</p>
+<ul class="simple">
+<li><p>The population of clients in each branch must have the same
+properties, aside from the intervention itself and its
+consequences; i.e. there must be no underlying bias in the
+branch populations.</p></li>
+<li><p>We must measure the same thing for each client, to minimize the
+variance associated with our measurement.</p></li>
+</ul>
+<p>So that our analyses follow these abstract principles, we follow
+these rules:</p>
+<ul class="simple">
+<li><p>Start with a list of all clients who enrolled.</p></li>
+<li><p>We can filter this list of clients only based on information known
+to us at or before the time that they enrolled, because later
+information might be causally connected to the intervention.</p></li>
+<li><p>For any given metric, every client gets a non-null value; we don’t
+implicitly ignore anyone, even if they churned and stopped
+sending data.</p></li>
+<li><p>Typically if an enrolled client no longer qualifies for enrollment,
+we’ll still want to include their data in the analysis, unless
+we’re explicitly using stats methods that handle censored data.</p></li>
+<li><p>We define a “analysis window” with respect to clients’
+enrollment dates. Each metric only uses data collected inside
+this analysis window. We can only analyze data for a client
+if we have data covering their entire analysis window.</p></li>
+</ul>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
+
+<span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">experiment_slug</span><span class="o">=</span><span class="s1">&#39;pref-flip-defaultoncookierestrictions-1506704&#39;</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="s1">&#39;20181215&#39;</span><span class="p">,</span>
+    <span class="n">num_dates_enrollment</span><span class="o">=</span><span class="mi">8</span>
+<span class="p">)</span>
+<span class="n">enrollments</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get_enrollments</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get_per_client_data</span><span class="p">(</span>
+    <span class="n">enrollments</span><span class="p">,</span>
+    <span class="n">cd</span><span class="p">,</span>
+    <span class="p">[</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span>
+            <span class="n">cd</span><span class="o">.</span><span class="n">active_hours_sum</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;active_hours&#39;</span><span class="p">),</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span>
+            <span class="n">cd</span><span class="o">.</span><span class="n">scalar_parent_browser_engagement_total_uri_count_sum</span><span class="p">,</span>
+            <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;uri_count&#39;</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">last_date_full_data</span><span class="o">=</span><span class="s1">&#39;20190107&#39;</span><span class="p">,</span>
+    <span class="n">analysis_start_days</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">analysis_length_days</span><span class="o">=</span><span class="mi">7</span>
+<span class="p">)</span>
+
+<span class="c1"># Pull data into a pandas df, ready for running stats</span>
+<span class="n">pres</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_slug</strong> (<em>str</em>) – Name of the study, used to identify
+the enrollment events specific to this study.</p></li>
+<li><p><strong>start_date</strong> (<em>str</em>) – e.g. ‘20190101’. First date on which enrollment
+events were received.</p></li>
+<li><p><strong>num_dates_enrollment</strong> (<em>int</em><em>, </em><em>optional</em>) – Only include this many dates
+of enrollments. If <code class="docutils literal notranslate"><span class="pre">None</span></code> then use the maximum number of dates
+as determined by the metric’s analysis window and
+<code class="docutils literal notranslate"><span class="pre">last_date_full_data</span></code>. Typically <code class="docutils literal notranslate"><span class="pre">7n+1</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">8</span></code>. The
+factor ‘7’ removes weekly seasonality, and the <code class="docutils literal notranslate"><span class="pre">+1</span></code> accounts
+for the fact that enrollment typically starts a few hours
+before UTC midnight.</p></li>
+<li><p><strong>addon_version</strong> (<em>str</em><em>, </em><em>optional</em>) – The version of the experiment addon.
+Some addon experiment slugs get reused - in those cases we need
+to filter on the addon version also.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="mozanalysis.experiment.Experiment.experiment_slug">
+<code class="descname">experiment_slug</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.experiment_slug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the study, used to identify
+the enrollment events specific to this study.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mozanalysis.experiment.Experiment.start_date">
+<code class="descname">start_date</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.start_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>e.g. ‘20190101’. First date on which enrollment
+events were received.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mozanalysis.experiment.Experiment.num_dates_enrollment">
+<code class="descname">num_dates_enrollment</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.num_dates_enrollment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only include this many days
+of enrollments. If <code class="docutils literal notranslate"><span class="pre">None</span></code> then use the maximum number of days
+as determined by the metric’s analysis window and
+<code class="docutils literal notranslate"><span class="pre">last_date_full_data</span></code>. Typically <code class="docutils literal notranslate"><span class="pre">7n+1</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">8</span></code>. The
+factor ‘7’ removes weekly seasonality, and the <code class="docutils literal notranslate"><span class="pre">+1</span></code> accounts
+for the fact that enrollment typically starts a few hours
+before UTC midnight.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mozanalysis.experiment.Experiment.addon_version">
+<code class="descname">addon_version</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.addon_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>The version of the experiment addon.
+Some addon experiment slugs get reused - in those cases we need
+to filter on the addon version also.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window">
+<code class="descname">filter_data_source_for_analysis_window</code><span class="sig-paren">(</span><em>data_source</em>, <em>last_date_full_data</em>, <em>analysis_start_days</em>, <em>analysis_length_days</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_data_source_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">data_source</span></code>, filtered to the relevant dates.</p>
+<p>This should not affect the results - it should just speed things
+up.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window">
+<code class="descname">filter_enrollments_for_analysis_window</code><span class="sig-paren">(</span><em>enrollments</em>, <em>last_date_full_data</em>, <em>req_dates_of_data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_enrollments_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the enrollments, filtered to the relevant dates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mozanalysis.experiment.Experiment.get_enrollments">
+<code class="descname">get_enrollments</code><span class="sig-paren">(</span><em>spark</em>, <em>study_type='pref_flip'</em>, <em>end_date=None</em>, <em>debug_dupes=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_enrollments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_enrollments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a DataFrame of enrolled clients.</p>
+<p>This works for pref-flip and addon studies.</p>
+<p>The underlying queries are different for pref-flip vs addon
+studies, because as of 2019/04/02, branch information isn’t
+reliably available in the <code class="docutils literal notranslate"><span class="pre">events</span></code> table for addon experiments:
+branch may be NULL for all enrollments. The enrollment
+information for them is most reliably available in
+<code class="docutils literal notranslate"><span class="pre">telemetry_shield_study_parquet</span></code>. Once this issue is resolved,
+we will probably start using normandy events for all desktop
+studies.
+Ref: <a class="reference external" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1536644">https://bugzilla.mozilla.org/show_bug.cgi?id=1536644</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spark</strong> – The spark context.</p></li>
+<li><p><strong>study_type</strong> (<em>str</em>) – <p>One of the following strings:</p>
+<ul>
+<li><p>’pref_flip’</p></li>
+<li><p>’addon’</p></li>
+</ul>
+</p></li>
+<li><p><strong>end_date</strong> (<em>str</em><em>, </em><em>optional</em>) – Ignore enrollments after this
+date: for faster queries on stale experiments. If you
+set <code class="docutils literal notranslate"><span class="pre">num_dates_enrollment</span></code> then do not set this; at best
+it would be redundant, at worst it’s contradictory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A Spark DataFrame of enrollment data. One row per
+enrollment. Columns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>client_id (str)</p></li>
+<li><p>enrollment_date (str): e.g. ‘20190329’</p></li>
+<li><p>branch (str)</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mozanalysis.experiment.Experiment.get_per_client_data">
+<code class="descname">get_per_client_data</code><span class="sig-paren">(</span><em>enrollments</em>, <em>data_source</em>, <em>metric_list</em>, <em>last_date_full_data</em>, <em>analysis_start_days</em>, <em>analysis_length_days</em>, <em>keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_per_client_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_per_client_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a DataFrame containing per-client metric values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>enrollments</strong> – A spark DataFrame of enrollments, like the one
+returned by <code class="docutils literal notranslate"><span class="pre">self.get_enrollments()</span></code>.</p></li>
+<li><p><strong>data_source</strong> – <p>A spark DataFrame containing the data needed to
+calculate the metrics. Could be <code class="docutils literal notranslate"><span class="pre">main_summary</span></code> or
+<code class="docutils literal notranslate"><span class="pre">clients_daily</span></code>. <em>Don’t</em> use <code class="docutils literal notranslate"><span class="pre">experiments</span></code>; as of 2019/04/02
+it drops data collected after people self-unenroll, so
+unenrolling users will appear to churn. Must have at least
+the following columns:</p>
+<ul>
+<li><p>client_id (str)</p></li>
+<li><p>submission_date_s3 (str)</p></li>
+<li><p>data columns referred to in <code class="docutils literal notranslate"><span class="pre">metric_list</span></code></p></li>
+</ul>
+<p>Ideally also has:</p>
+<ul>
+<li><p>experiments (map): At present this is used to exclude
+pre-enrollment ping data collected on enrollment
+day. Once it or its successor reliably tags data
+from all enrolled users, even post-unenroll, we’ll
+also join on it to exclude data from duplicate
+<code class="docutils literal notranslate"><span class="pre">client_id</span></code>s that are not enrolled in the same
+branch.</p></li>
+</ul>
+</p></li>
+<li><p><strong>metric_list</strong> – <p>A list of columns that aggregate and compute
+metrics over data grouped by <code class="docutils literal notranslate"><span class="pre">(client_id,</span> <span class="pre">branch)</span></code>, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">.</span><span class="n">metric_name</span>
+<span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;metric_name&#39;</span><span class="p">)]</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
+have complete data, e.g. ‘20190322’. If you want to ignore
+all data collected after a certain date (e.g. when the
+experiment recipe was deactivated), then do that here.</p></li>
+<li><p><strong>analysis_start_days</strong> (<em>int</em>) – the start of the analysis window,
+measured in ‘days since the client enrolled’. We ignore data
+collected outside this analysis window.</p></li>
+<li><p><strong>analysis_length_days</strong> (<em>int</em>) – the length of the analysis window,
+measured in days.</p></li>
+<li><p><strong>keep_client_id</strong> (<em>bool</em>) – Whether to return a <code class="docutils literal notranslate"><span class="pre">client_id</span></code> column.
+Defaults to False to reduce memory usage of the results.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A spark DataFrame of experiment data. One row per <code class="docutils literal notranslate"><span class="pre">client_id</span></code>.
+One or two metadata columns, then one column per metric in
+<code class="docutils literal notranslate"><span class="pre">metric_list</span></code>. Then one column per sanity-check metric.
+Columns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>client_id (str, optional): Not necessary for
+“happy path” analyses.</p></li>
+<li><p>branch (str): The client’s branch</p></li>
+<li><p>[metric 1]: The client’s value for the first metric in
+<code class="docutils literal notranslate"><span class="pre">metric_list</span></code>.</p></li>
+<li><p>…</p></li>
+<li><p>[metric n]: The client’s value for the nth (final)
+metric in <code class="docutils literal notranslate"><span class="pre">metric_list</span></code>.</p></li>
+<li><p>[sanity check 1]: The client’s value for the first
+sanity check metric.</p></li>
+<li><p>…</p></li>
+<li><p>[sanity check n]: The client’s value for the last
+sanity check metric.</p></li>
+</ul>
+</div></blockquote>
+<p>This format - the schema plus there being one row per
+enrolled client, regardless of whether the client has data
+in <code class="docutils literal notranslate"><span class="pre">data_source</span></code> - was agreed upon by the DS team, and is the
+standard format for queried experimental data.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="udf.html" class="btn btn-neutral float-right" title="mozanalysis.udf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../api.html" class="btn btn-neutral float-left" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
