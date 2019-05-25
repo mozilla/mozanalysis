@@ -20,6 +20,15 @@ pip install mozanalysis
 
 Install tox into your global Python environment and run `tox`.
 
+You can pass flags to tox to limit the different environments you test in
+or the tests you run. Options after `--` or positional arguments are forwarded to pytest.
+
+For example, you can run:
+
+* `tox -e lint` to lint
+* `tox -e py37 -- -k utils` to only run tests with "utils" somewhere in the name, on Python 3.7
+* `tox tests/test_utils.py` to run tests in a specific file
+
 ### with the CircleCI utilities
 
 To test/debug this package locally, you can run exactly the job that
