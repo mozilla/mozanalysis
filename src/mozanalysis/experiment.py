@@ -235,7 +235,7 @@ class Experiment(object):
                   branch.
 
             metric_list: A list of columns that aggregate and compute
-                metrics over data grouped by `(client_id, branch)`, e.g.::
+                metrics over data grouped by ``(client_id, branch)``, e.g.::
 
                     [F.coalesce(F.sum(
                         data_source.metric_name
@@ -250,7 +250,7 @@ class Experiment(object):
                 collected outside this analysis window.
             analysis_length_days (int): the length of the analysis window,
                 measured in days.
-            keep_client_id (bool): Whether to return a `client_id` column.
+            keep_client_id (bool): Whether to return a ``client_id`` column.
                 Defaults to False to reduce memory usage of the results.
 
         Returns:
@@ -275,7 +275,7 @@ class Experiment(object):
 
             This format - the schema plus there being one row per
             enrolled client, regardless of whether the client has data
-            in `data_source` - was agreed upon by the DS team, and is the
+            in ``data_source`` - was agreed upon by the DS team, and is the
             standard format for queried experimental data.
         """
         for col in ['client_id', 'submission_date_s3']:
@@ -353,7 +353,7 @@ class Experiment(object):
     def _get_enrollments_view_normandy(spark):
         """Return a DataFrame of all normandy enrollment events.
 
-        Filter the `events` table to enrollment events and transform it
+        Filter the ``events`` table to enrollment events and transform it
         into the standard enrollments schema.
 
         Args:
@@ -418,7 +418,7 @@ class Experiment(object):
         period. This method checks these constraints are feasible, and
         compatible with any manually supplied enrollment period.
 
-        If ``self.num_dates_enrollment`` is `None`, then there is potential
+        If ``self.num_dates_enrollment`` is ``None``, then there is potential
         for the final date to be surprising, so we print it.
 
         Args:
@@ -490,7 +490,7 @@ class Experiment(object):
         self, data_source, last_date_full_data, analysis_start_days,
         analysis_length_days
     ):
-        """Return `data_source`, filtered to the relevant dates.
+        """Return ``data_source``, filtered to the relevant dates.
 
         This should not affect the results - it should just speed things
         up.
