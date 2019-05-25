@@ -17,34 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="mozanalysis.stats" href="stats.html" /> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
+    <link rel="prev" title="API Documentation" href="../api.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -84,8 +86,7 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="stats.html"><code class="docutils literal notranslate"><span class="pre">mozanalysis.stats</span></code></a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -135,7 +136,7 @@
         
           <li><a href="../api.html">API Documentation</a> &raquo;</li>
         
-      <li><code class="docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></li>
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -160,21 +161,17 @@
 <dt id="mozanalysis.udf.generate_quantile_udf">
 <code class="descclassname">mozanalysis.udf.</code><code class="descname">generate_quantile_udf</code><span class="sig-paren">(</span><em>sdf</em>, <em>grouping_fields</em>, <em>bucket_field</em>, <em>count_field</em>, <em>quantiles</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#generate_quantile_udf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.generate_quantile_udf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a UDF for computing histogram quantiles.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sdf</strong> – Spark DataFrame</li>
-<li><strong>grouping_fields</strong> – list of strings representing columns from sdf</li>
-<li><strong>bucket_field</strong> – Name of the field containing histogram buckets</li>
-<li><strong>count_field</strong> – Name of the field containing counts</li>
-<li><strong>quantiles</strong> – List of quantiles as floating point values on [0, 1]</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sdf</strong> – Spark DataFrame</p></li>
+<li><p><strong>grouping_fields</strong> – list of strings representing columns from sdf</p></li>
+<li><p><strong>bucket_field</strong> – Name of the field containing histogram buckets</p></li>
+<li><p><strong>count_field</strong> – Name of the field containing counts</p></li>
+<li><p><strong>quantiles</strong> – List of quantiles as floating point values on [0, 1]</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <p><code class="docutils literal notranslate"><span class="pre">sdf</span></code> and <code class="docutils literal notranslate"><span class="pre">grouping_fields</span></code> are necessary to infer the schema of the
 returned Spark DataFrame.</p>
 <p>For example, to compute per-user median <code class="docutils literal notranslate"><span class="pre">FX_NEW_WINDOW_MS</span></code> values for a recent
@@ -212,34 +209,34 @@ sample of main_summary, you could write something like the example below:</p>
 <p>Note that the <code class="docutils literal notranslate"><span class="pre">quantile_udf</span></code> returned by this function is used together
 with the <code class="docutils literal notranslate"><span class="pre">.apply</span></code> method of the grouped <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <p>This will return a table <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> that looks like the table below.</p>
-<table border="1" class="docutils">
+<table class="docutils align-center">
 <colgroup>
-<col width="41%" />
-<col width="36%" />
-<col width="23%" />
+<col style="width: 41%" />
+<col style="width: 36%" />
+<col style="width: 23%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">client_id</th>
-<th class="head">quantile</th>
-<th class="head">value</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>client_id</p></th>
+<th class="head"><p>quantile</p></th>
+<th class="head"><p>value</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>id_1</td>
-<td>0.5</td>
-<td>2</td>
+<tbody>
+<tr class="row-even"><td><p>id_1</p></td>
+<td><p>0.5</p></td>
+<td><p>2</p></td>
 </tr>
-<tr class="row-odd"><td>id_1</td>
-<td>0.95</td>
-<td>23</td>
+<tr class="row-odd"><td><p>id_1</p></td>
+<td><p>0.95</p></td>
+<td><p>23</p></td>
 </tr>
-<tr class="row-even"><td>id_2</td>
-<td>0.5</td>
-<td>4</td>
+<tr class="row-even"><td><p>id_2</p></td>
+<td><p>0.5</p></td>
+<td><p>4</p></td>
 </tr>
-<tr class="row-odd"><td>…</td>
-<td>…</td>
-<td>…</td>
+<tr class="row-odd"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
@@ -250,22 +247,18 @@ with the <code class="docutils literal notranslate"><span class="pre">.apply</sp
 <code class="descclassname">mozanalysis.udf.</code><code class="descname">generate_threshold_udf</code><span class="sig-paren">(</span><em>sdf</em>, <em>grouping_fields</em>, <em>bucket_field</em>, <em>count_field</em>, <em>thresholds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#generate_threshold_udf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.generate_threshold_udf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a UDF for calculating the fraction of values in a histogram
 equal to or exceeding a threshold.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sdf</strong> – Spark DataFrame</li>
-<li><strong>grouping_fields</strong> – list of strings representing columns from sdf</li>
-<li><strong>bucket_field</strong> – Name of the field containing histogram buckets</li>
-<li><strong>count_field</strong> – Name of the field containing counts</li>
-<li><strong>thresholds</strong> – List of thresholds. Should probably align on the left edge
-of a bucket.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sdf</strong> – Spark DataFrame</p></li>
+<li><p><strong>grouping_fields</strong> – list of strings representing columns from sdf</p></li>
+<li><p><strong>bucket_field</strong> – Name of the field containing histogram buckets</p></li>
+<li><p><strong>count_field</strong> – Name of the field containing counts</p></li>
+<li><p><strong>thresholds</strong> – List of thresholds. Should probably align on the left edge
+of a bucket.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <p><cite>sdf</cite> and <cite>grouping_fields</cite> are necessary to infer the schema of the
 returned Spark DataFrame.</p>
 <p>For example, to compute the per-user fractions of CONTENT_FRAME_TIME values
@@ -301,34 +294,34 @@ you could write:</p>
 <p>Note that the <cite>threshold_udf</cite> returned by this function is used together
 with the <cite>.apply</cite> method of the grouped DataFrame.</p>
 <p>This will return a table <cite>thresholded</cite> that looks like:</p>
-<table border="1" class="docutils">
+<table class="docutils align-center">
 <colgroup>
-<col width="25%" />
-<col width="25%" />
-<col width="50%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 50%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">client_id</th>
-<th class="head">threshold</th>
-<th class="head">fraction_exceeding</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>client_id</p></th>
+<th class="head"><p>threshold</p></th>
+<th class="head"><p>fraction_exceeding</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>id_1</td>
-<td>103</td>
-<td>0.994</td>
+<tbody>
+<tr class="row-even"><td><p>id_1</p></td>
+<td><p>103</p></td>
+<td><p>0.994</p></td>
 </tr>
-<tr class="row-odd"><td>id_1</td>
-<td>192</td>
-<td>0.036</td>
+<tr class="row-odd"><td><p>id_1</p></td>
+<td><p>192</p></td>
+<td><p>0.036</p></td>
 </tr>
-<tr class="row-even"><td>id_2</td>
-<td>103</td>
-<td>0.978</td>
+<tr class="row-even"><td><p>id_2</p></td>
+<td><p>103</p></td>
+<td><p>0.978</p></td>
 </tr>
-<tr class="row-odd"><td>…</td>
-<td>…</td>
-<td>…</td>
+<tr class="row-odd"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
@@ -369,7 +362,7 @@ likely to be an underestimate of the true sum.</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="stats.html" class="btn btn-neutral" title="mozanalysis.stats" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../api.html" class="btn btn-neutral float-left" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -395,26 +388,16 @@ likely to be an underestimate of the true sum.</p>
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
