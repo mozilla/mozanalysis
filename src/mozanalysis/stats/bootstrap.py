@@ -129,7 +129,11 @@ def bootstrap_one_branch(
         num_samples: The number of bootstrap iterations to perform
         seed_start: An int with which to seed numpy's RNG. It must
             be unique within this set of calculations.
-        threshold_quantile: TODO
+        threshold_quantile (float, optional): An optional threshold
+            quantile, above which to discard outliers. E.g. `0.9999`.
+        summary_quantiles (list, optional): Quantiles to determine the
+            confidence bands on the branch statistics. Change these
+            when making Bonferroni corrections.
     """
     samples = get_bootstrap_samples(
         sc, data, stat_fn, num_samples, seed_start, threshold_quantile
@@ -163,19 +167,6 @@ def get_bootstrap_samples(
     """Return samples of `stat_fn` evaluated on resampled data.
 
     Do the resampling in parallel over the cluster.
-
-    FIXME: decide which of the following forms of stat_fn to support:
-    1. Function that maps 1D array -> scalar
-    2. Function that maps 1D array -> dict of scalars
-    3. Dict of functions that each map 1D array -> scalar
-    Almost certainly will support (1). But which others?
-    (3) seems neater/easier to reason about than (2), but (2) will
-    probably be more efficient when bootstrapping over many quantiles,
-    since calling `np.quantile(..., [0.01, 0.02, ...])` once will be
-    faster calling `np.quantile(..., 0.01)`, `np.quantile(..., 0.02)`
-    etc. Could possibly support both (2) and (3) but ergh.
-    A related question is whether the return values of (2) and (3)
-    are dicts or ndarrays.
 
     Args:
         sc: The spark context
@@ -240,8 +231,10 @@ def get_bootstrap_samples_local(data, stat_fn, num_samples):
     """Equivalent to `get_bootstrap_samples` but doesn't require Spark.
 
     The main purpose of this function is to document what's being done
-    in `get_bootstrap_samples` :D FIXME: or maybe running when spark
-    isn't available? Do we actually want to make this function work?
+    in `get_bootstrap_samples` :D
+
+    TODO: or maybe running when spark isn't available? Do we actually
+    want to make this function work?
     """
     return [
         _resample_and_agg_once(stat_fn, data)  # slower?
@@ -278,7 +271,7 @@ def _filter_outliers(branch_data, threshold_quantile):
     the entire experiment population in whole, then you may bias the
     results.
 
-    FIXME: here we remove outliers - should we have an option or
+    TODO: here we remove outliers - should we have an option or
     default to cap them instead?
 
     Args:
