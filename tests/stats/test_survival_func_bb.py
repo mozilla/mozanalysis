@@ -50,7 +50,7 @@ def test_one_thresh():
         res['individual']['test'].loc['0.5']
 
     assert res['individual']['test'].loc['0.5'] == pytest.approx(
-        (df.val > 41).sum() / len(df.val),
+        1. * (df.val > 41).sum() / len(df.val),
         abs=0.001
     )
 
