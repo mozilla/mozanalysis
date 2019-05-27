@@ -62,27 +62,27 @@ def test_summarize_joint_samples_batch_trivial():
         pd.DataFrame({'a': [3, 3, 3], 'b': [1, 1, 1]}, columns=['b', 'a']),
         quantiles=quantiles
     )
-    assert res.loc['rel_uplift_exp', 'a'] == 1.
-    assert res.loc['abs_uplift_exp', 'a'] == 3.
-    assert res.loc['prob_win', 'a'] == 1
-    assert res.loc['max_abs_diff_0.95', 'a'] == 3.
+    assert res.loc['a', 'rel_uplift_exp'] == 1.
+    assert res.loc['a', 'abs_uplift_exp'] == 3.
+    assert res.loc['a', 'prob_win'] == 1
+    assert res.loc['a', 'max_abs_diff_0.95'] == 3.
 
-    assert res.loc['rel_uplift_0.05', 'a'] == 1.
-    assert res.loc['rel_uplift_0.31', 'a'] == 1.
-    assert res.loc['rel_uplift_0.95', 'a'] == 1.
+    assert res.loc['a', 'rel_uplift_0.05'] == 1.
+    assert res.loc['a', 'rel_uplift_0.31'] == 1.
+    assert res.loc['a', 'rel_uplift_0.95'] == 1.
 
-    assert res.loc['abs_uplift_0.05', 'a'] == 3.
-    assert res.loc['abs_uplift_0.31', 'a'] == 3.
-    assert res.loc['abs_uplift_0.95', 'a'] == 3.
+    assert res.loc['a', 'abs_uplift_0.05'] == 3.
+    assert res.loc['a', 'abs_uplift_0.31'] == 3.
+    assert res.loc['a', 'abs_uplift_0.95'] == 3.
 
-    assert res.loc['rel_uplift_exp', 'b'] == 0.
-    assert res.loc['abs_uplift_exp', 'b'] == 0.
-    assert res.loc['max_abs_diff_0.95', 'b'] == 0.
+    assert res.loc['b', 'rel_uplift_exp'] == 0.
+    assert res.loc['b', 'abs_uplift_exp'] == 0.
+    assert res.loc['b', 'max_abs_diff_0.95'] == 0.
 
-    assert res.loc['rel_uplift_0.05', 'b'] == 0.
-    assert res.loc['rel_uplift_0.31', 'b'] == 0.
-    assert res.loc['rel_uplift_0.95', 'b'] == 0.
+    assert res.loc['b', 'rel_uplift_0.05'] == 0.
+    assert res.loc['b', 'rel_uplift_0.31'] == 0.
+    assert res.loc['b', 'rel_uplift_0.95'] == 0.
 
-    assert res.loc['abs_uplift_0.05', 'b'] == 0.
-    assert res.loc['abs_uplift_0.31', 'b'] == 0.
-    assert res.loc['abs_uplift_0.95', 'b'] == 0.
+    assert res.loc['b', 'abs_uplift_0.05'] == 0.
+    assert res.loc['b', 'abs_uplift_0.31'] == 0.
+    assert res.loc['b', 'abs_uplift_0.95'] == 0.

@@ -18,10 +18,10 @@ def compare_branches(
     See `compare_branches_from_agg` for more details.
 
     Args:
-        df: a pandas DataFrame of queried experiment data in the standard
-            format.
-        col_label (str): Label for the df column contaning the metric to be
-            analyzed.
+        df: a pandas DataFrame of queried experiment data in the
+            standard format.
+        col_label (str): Label for the df column contaning the metric
+            to be analyzed.
         ref_branch_label (str, optional): String in `df['branch']` that
             identifies the the branch with respect to which we want to
             calculate uplifts - usually the control branch.
@@ -36,13 +36,13 @@ def compare_branches(
             Bonferroni corrections.
 
     Returns a dictionary:
+        'individual': dictionary mapping branch names to a pandas
+            Series of summary stats for the posterior distribution over
+            the branch's conversion rate.
         'comparative': dictionary mapping branch names to a pandas
             Series of summary statistics for the possible uplifts of the
             conversion rate relative to the reference branch - see docs
             for `summarize_joint_samples`.
-        'individual': dictionary mapping branch names to a pandas
-            Series of summary stats for the posterior distribution over
-            the branch's conversion rate.
     """
     agg_col = aggregate_col(df, col_label)
 

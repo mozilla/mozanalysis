@@ -107,14 +107,14 @@ def test_bootstrap_one_branch_multistat(spark_context):
         threshold_quantile=0.9999
     )
 
-    assert res.shape == (3, 2)
+    assert res.shape == (2, 3)
 
-    assert res.loc['mean', 'max'] == 1
-    assert res.loc['0.5', 'max'] == 1
-    assert res.loc['0.61', 'max'] == 1
+    assert res.loc['max', 'mean'] == 1
+    assert res.loc['max', '0.5'] == 1
+    assert res.loc['max', '0.61'] == 1
     assert res.loc['mean', 'mean'] == pytest.approx(0.5, rel=1e-1)
-    assert res.loc['0.5', 'mean'] == pytest.approx(0.5, rel=1e-1)
-    assert res.loc['0.61', 'mean'] == pytest.approx(0.5, rel=1e-1)
+    assert res.loc['mean', '0.5'] == pytest.approx(0.5, rel=1e-1)
+    assert res.loc['mean', '0.61'] == pytest.approx(0.5, rel=1e-1)
 
 
 def test_compare_branches(spark_context):
@@ -185,15 +185,15 @@ def test_compare_branches_multistat(spark_context):
 
     assert 'control' not in res['comparative'].keys()
 
-    assert res['comparative']['same'].loc['rel_uplift_exp', 'mean'] \
+    assert res['comparative']['same'].loc['mean', 'rel_uplift_exp'] \
         == pytest.approx(0, abs=0.1)
-    assert res['comparative']['bigger'].loc['rel_uplift_exp', 'mean'] \
+    assert res['comparative']['bigger'].loc['mean', 'rel_uplift_exp'] \
         == pytest.approx(0.5, abs=0.1)
 
     # num_samples=2 so only 3 possible outcomes
-    assert res['comparative']['same'].loc['prob_win', 'mean'] in (0, 0.5, 1)
-    assert res['comparative']['bigger'].loc['prob_win', 'mean'] \
+    assert res['comparative']['same'].loc['mean', 'prob_win'] in (0, 0.5, 1)
+    assert res['comparative']['bigger'].loc['mean', 'prob_win'] \
         == pytest.approx(1, abs=0.01)
 
-    assert res['comparative']['same'].loc['rel_uplift_exp', 'max'] == 0
-    assert res['comparative']['bigger'].loc['rel_uplift_exp', 'max'] == 0
+    assert res['comparative']['same'].loc['max', 'rel_uplift_exp'] == 0
+    assert res['comparative']['bigger'].loc['max', 'rel_uplift_exp'] == 0

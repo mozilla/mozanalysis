@@ -60,7 +60,7 @@ def compare_branches(
 
     Otherwise, when `stat_fn` returns a dict, then this function
     returns a similar dictionary, except the Series are replaced with
-    DataFrames. Each column in each DataFrame corresponds to one output
+    DataFrames. Each row in each DataFrame corresponds to one output
     of `stat_fn`, and is the Series that would be returned if `stat_fn`
     computed only this statistic.
     """

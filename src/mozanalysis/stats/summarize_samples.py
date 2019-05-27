@@ -71,11 +71,11 @@ def summarize_one_branch_samples_batch(samples, quantiles=default_quantiles):
             reason to override the defaults would be when Bonferroni
             corrections are required.
 
-    Returns a pandas DataFrame; the index contains the stringified
-    `quantiles` plus `'mean'`. The columns match the columns of
+    Returns a pandas DataFrame; the columns contain the stringified
+    `quantiles` plus `'mean'`. The index matches the columns of
     `samples`.
     """
-    return samples.agg(summarize_one_branch_samples, quantiles=quantiles)
+    return samples.agg(summarize_one_branch_samples, quantiles=quantiles).T
 
 
 def summarize_joint_samples(focus, reference, quantiles=default_quantiles):
@@ -172,8 +172,8 @@ def summarize_joint_samples_batch(focus, reference, quantiles=default_quantiles)
             reason to override the defaults would be when Bonferroni
             corrections are required.
 
-    Returns a pandas DataFrame with columns matching the columns of
-    `focus`, and the following rows:
+    Returns a pandas DataFrame with an index matching the columns of
+    `focus`, and the following columns:
     - rel_uplift_*: Expectation value and quantiles over the relative
         uplift.
     - abs_uplift_*: Expectation value and quantiles over the absolute
@@ -192,4 +192,4 @@ def summarize_joint_samples_batch(focus, reference, quantiles=default_quantiles)
     return pd.DataFrame({
         k: summarize_joint_samples(focus[k], reference[k], quantiles)
         for k in focus.columns
-    }, columns=focus.columns)
+    }, columns=focus.columns).T

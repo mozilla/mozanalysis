@@ -286,12 +286,12 @@ class Experiment(object):
 
         enrollments = self.filter_enrollments_for_analysis_window(
             enrollments, last_date_full_data, req_dates_of_data
-        )
+        ).alias('enrollments')
 
         data_source = self.filter_data_source_for_analysis_window(
             data_source, last_date_full_data, analysis_start_days,
             analysis_length_days
-        )
+        ).alias('data_source')
 
         join_on = [
             # TODO perf: would it be faster if we enforce a join on sample_id?
