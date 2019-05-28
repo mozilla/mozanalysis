@@ -13,11 +13,12 @@ def compare_branches(df, col_label, ref_branch_label='control', thresholds=None)
     This function generates data for a metric's survival function
     (1 - cumulative distribution function) for each branch, and
     calculates the relative uplift compared to the reference branch
-    identified by `ref_branch_label`.
+    identified by ``ref_branch_label``.
 
     It converts the non-negative, real-valued per-user metric data in
-    `df[col_label]` into `n=len(thresholds)` different binary metrics,
-    and analyzes these `n` metrics with the Bayesian binary methods.
+    ``df[col_label]`` into ``n=len(thresholds)`` different binary
+    metrics, and analyzes these ``n`` metrics with the Bayesian binary
+    methods.
 
     The precise values of the thresholds usually don't matter unless
     certain thresholds have been standardized outside the context of
@@ -25,12 +26,14 @@ def compare_branches(df, col_label, ref_branch_label='control', thresholds=None)
 
     The results are related to those obtained by bootstrapping a range
     of quantiles over the data:
-    - In the survival plot, we set a value for the metric and calculate
-        the fraction of the data that was above this value, with
-        uncertainty on the fraction.
-    - When bootstrapping quantiles, we set a quantile (a fraction of
-        the data) and find the value such that the given fraction of
-        data is greater than this value, with uncertainty on the value.
+
+    * In the survival plot, we set a value for the metric and calculate
+      the fraction of the data that was above this value, with
+      uncertainty on the fraction.
+    * When bootstrapping quantiles, we set a quantile (a fraction of
+      the data) and find the value such that the given fraction of
+      data is greater than this value, with uncertainty on the value.
+
     Reiterating: if we plot the survival function with metric values
     on the x axis and "fractions" on the y axis, then this function
     first chooses some sensible values for x then runs statistics to
@@ -43,21 +46,23 @@ def compare_branches(df, col_label, ref_branch_label='control', thresholds=None)
             standard format. Target metric should be non-negative.
         col_label (str): Label for the df column contaning the metric
             to be analyzed.
-        ref_branch_label (str, optional): String in `df['branch']` that
-            identifies the the branch with respect to which we want to
-            calculate uplifts - usually the control branch.
+        ref_branch_label (str, optional): String in ``df['branch']``
+            that identifies the the branch with respect to which we
+            want to calculate uplifts - usually the control branch.
         thresholds (list/ndarray, optional): Thresholds that define the
-            metric's quantization; `df[col_label]`
+            metric's quantization; ``df[col_label]``
 
     Returns a dictionary:
-        'individual': dictionary mapping branch names to a pandas
-            DataFrame containing values from the survival function.
-            The DataFrames' indexes are the list of thresholds; the
-            columns are summary statistics on the survival function.
-        'comparative': dictionary mapping branch names to a pandas
-            DataFrame of summary statistics for the possible uplifts of the
-            conversion rate relative to the reference branch - see docs
-            for `summarize_joint_samples_batch`.
+
+        * 'individual': dictionary mapping branch names to a pandas
+          DataFrame containing values from the survival function.
+          The DataFrames' indexes are the list of thresholds; the
+          columns are summary statistics on the survival function.
+        * 'comparative': dictionary mapping branch names to a pandas
+          DataFrame of summary statistics for the possible uplifts of the
+          conversion rate relative to the reference branch - see docs
+          for
+          :meth:`mozanalysis.stats.summarize_samples.summarize_joint_samples_batch`.
     """
     branch_list = df.branch.unique()
 
@@ -82,7 +87,7 @@ def compare_branches(df, col_label, ref_branch_label='control', thresholds=None)
 
 
 def get_thresholds(col, max_num_thresholds=101):
-    """Return a set of interesting thresholds for the dataset `col`
+    """Return a set of interesting thresholds for the dataset ``col``
 
     Assumes that the values are non-negative, with zero as a special case.
 
@@ -114,7 +119,7 @@ def get_thresholds(col, max_num_thresholds=101):
 
 
 def _one_thresh(threshold, df, col_label, ref_branch_label):
-    """Run stats on the fraction of clients above `threshold`."""
+    """Run stats on the fraction of clients above ``threshold``."""
     if '_tmp_threshold_val' in df.columns:
         raise ValueError(
             "Either you have an exceedingly poor taste in column names, "

@@ -12,27 +12,27 @@ class Experiment(object):
     The methods here query data in a way compatible with the following
     principles, which are important for experiment analysis:
 
-    - The population of clients in each branch must have the same
+    * The population of clients in each branch must have the same
       properties, aside from the intervention itself and its
       consequences; i.e. there must be no underlying bias in the
       branch populations.
-    - We must measure the same thing for each client, to minimize the
+    * We must measure the same thing for each client, to minimize the
       variance associated with our measurement.
 
     So that our analyses follow these abstract principles, we follow
     these rules:
 
-    - Start with a list of all clients who enrolled.
-    - We can filter this list of clients only based on information known
+    * Start with a list of all clients who enrolled.
+    * We can filter this list of clients only based on information known
       to us at or before the time that they enrolled, because later
       information might be causally connected to the intervention.
-    - For any given metric, every client gets a non-null value; we don't
+    * For any given metric, every client gets a non-null value; we don't
       implicitly ignore anyone, even if they churned and stopped
       sending data.
-    - Typically if an enrolled client no longer qualifies for enrollment,
+    * Typically if an enrolled client no longer qualifies for enrollment,
       we'll still want to include their data in the analysis, unless
       we're explicitly using stats methods that handle censored data.
-    - We define a "analysis window" with respect to clients'
+    * We define a "analysis window" with respect to clients'
       enrollment dates. Each metric only uses data collected inside
       this analysis window. We can only analyze data for a client
       if we have data covering their entire analysis window.
@@ -139,8 +139,8 @@ class Experiment(object):
             spark: The spark context.
             study_type (str): One of the following strings:
 
-                - 'pref_flip'
-                - 'addon'
+                * 'pref_flip'
+                * 'addon'
 
             end_date (str, optional): Ignore enrollments after this
                 date: for faster queries on stale experiments. If you
@@ -151,9 +151,9 @@ class Experiment(object):
             A Spark DataFrame of enrollment data. One row per
             enrollment. Columns:
 
-                - client_id (str)
-                - enrollment_date (str): e.g. '20190329'
-                - branch (str)
+                * client_id (str)
+                * enrollment_date (str): e.g. '20190329'
+                * branch (str)
         """
         if study_type == 'pref_flip':
             enrollments = self._get_enrollments_view_normandy(spark)
@@ -220,13 +220,13 @@ class Experiment(object):
                 unenrolling users will appear to churn. Must have at least
                 the following columns:
 
-                - client_id (str)
-                - submission_date_s3 (str)
-                - data columns referred to in ``metric_list``
+                * client_id (str)
+                * submission_date_s3 (str)
+                * data columns referred to in ``metric_list``
 
                 Ideally also has:
 
-                - experiments (map): At present this is used to exclude
+                * experiments (map): At present this is used to exclude
                   pre-enrollment ping data collected on enrollment
                   day. Once it or its successor reliably tags data
                   from all enrolled users, even post-unenroll, we'll
@@ -259,18 +259,18 @@ class Experiment(object):
             ``metric_list``. Then one column per sanity-check metric.
             Columns:
 
-                - client_id (str, optional): Not necessary for
+                * client_id (str, optional): Not necessary for
                   "happy path" analyses.
-                - branch (str): The client's branch
-                - [metric 1]: The client's value for the first metric in
+                * branch (str): The client's branch
+                * [metric 1]: The client's value for the first metric in
                   ``metric_list``.
-                - ...
-                - [metric n]: The client's value for the nth (final)
+                * ...
+                * [metric n]: The client's value for the nth (final)
                   metric in ``metric_list``.
-                - [sanity check 1]: The client's value for the first
+                * [sanity check 1]: The client's value for the first
                   sanity check metric.
-                - ...
-                - [sanity check n]: The client's value for the last
+                * ...
+                * [sanity check n]: The client's value for the last
                   sanity check metric.
 
             This format - the schema plus there being one row per
@@ -313,7 +313,7 @@ class Experiment(object):
             (
                 (
                     F.unix_timestamp(F.col('submission_date_s3'), 'yyyyMMdd')
-                    - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
+                    * F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
                 ) / (24 * 60 * 60)
             ).between(
                 analysis_start_days,

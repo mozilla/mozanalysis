@@ -16,7 +16,7 @@ def summarize_one_branch_samples(samples, quantiles=default_quantiles):
 
     The intended primary use-case is for calculating confidence
     intervals when bootstrapping, or probability bands around model
-    parameters; in both cases `samples` relate to data from one branch
+    parameters; in both cases ``samples`` relate to data from one branch
     of an experiment.
 
     Args:
@@ -26,13 +26,14 @@ def summarize_one_branch_samples(samples, quantiles=default_quantiles):
             reason to override the defaults would be when Bonferroni
             corrections are required.
 
-    Returns a pandas Series; the index contains the stringified
-    `quantiles` plus `'mean'`.
+    Returns:
+        A pandas Series; the index contains the stringified
+        ``quantiles`` plus ``'mean'``.
     """
     if not isinstance(samples, (pd.Series, np.ndarray, list)):
         # Hey pd.Series.agg - don't apply me elementwise!
-        # Raising this error allows `summarize_one_branch_samples_batch`
-        # to work also for non-batch `samples` (i.e. doing double duty)
+        # Raising this error allows ``summarize_one_branch_samples_batch``
+        # to work also for non-batch ``samples`` (i.e. doing double duty)
         raise TypeError("Can't summarize a scalar")
 
     q_index = [str(v) for v in quantiles]
@@ -52,17 +53,19 @@ def summarize_one_branch_samples_batch(samples, quantiles=default_quantiles):
 
     The intended primary use-case is for calculating confidence
     intervals when bootstrapping, or probability bands around model
-    parameters; in both cases `samples` relate to data from one branch
+    parameters; in both cases ``samples`` relate to data from one branch
     of an experiment.
 
     Some example use-cases:
-    - When building a time series for one metric, each column's
-        samples are derived from data for a different analysis window.
-    - When bootstrapping several quantiles simultaneously (with a
-        `stat_fn` that returns several values), each column's samples
-        come from bootstrapping a different quantile. N.B. in this
-        example, the quantiles being bootstrapped over are unrelated to
-        the `quantiles` argument of this function.
+
+    * When building a time series for one metric, each column's
+      samples are derived from data for a different analysis window.
+
+    * When bootstrapping several quantiles simultaneously (with a
+      ``stat_fn`` that returns several values), each column's samples
+      come from bootstrapping a different quantile. N.B. in this
+      example, the quantiles being bootstrapped over are unrelated to
+      the ``quantiles`` argument of this function.
 
     Args:
         samples (pandas.DataFrame): Each column contains a set of
@@ -71,9 +74,10 @@ def summarize_one_branch_samples_batch(samples, quantiles=default_quantiles):
             reason to override the defaults would be when Bonferroni
             corrections are required.
 
-    Returns a pandas DataFrame; the columns contain the stringified
-    `quantiles` plus `'mean'`. The index matches the columns of
-    `samples`.
+    Returns:
+        A pandas DataFrame; the columns contain the stringified
+        ``quantiles`` plus ``'mean'``. The index matches the columns of
+        ``samples``.
     """
     return samples.agg(summarize_one_branch_samples, quantiles=quantiles).T
 
@@ -86,19 +90,20 @@ def summarize_joint_samples(focus, reference, quantiles=default_quantiles):
     control). Samples from each branch are combined pairwise; these
     pairs are considered to be samples from the joint probability
     distribution (JPD). We compute various quantities from the JPD:
-    - We compute summary statistics for the distribution over relative
-        uplifts `focus / reference - 1`
-    - We compute summary statistics for the distribution over absolute
-        uplifts `focus - reference`
-    - We compute a summary statistic for the distribution over the L1
-        norm of absolute uplifts `abs(focus - reference)`
-    - We compute the fraction of probability mass in the region
-        `focus > reference`, which in a Bayesian context may be
-        interpreted as the probability that the ground truth model
-        parameter is larger for the focus branch than the reference
-        branch.
 
-    `focus` and `reference` are samples from distributions; each is the
+    * We compute summary statistics for the distribution over relative
+      uplifts ``focus / reference - 1``
+    * We compute summary statistics for the distribution over absolute
+      uplifts ``focus - reference``
+    * We compute a summary statistic for the distribution over the L1
+      norm of absolute uplifts ``abs(focus - reference)``
+    * We compute the fraction of probability mass in the region
+      ``focus > reference``, which in a Bayesian context may be
+      interpreted as the probability that the ground truth model
+      parameter is larger for the focus branch than the reference
+      branch.
+
+    ``focus`` and ``reference`` are samples from distributions; each is the
     same format that would be supplied to `summarize_one_branch_samples`
     when analyzing the branches independently.
 
@@ -111,18 +116,20 @@ def summarize_joint_samples(focus, reference, quantiles=default_quantiles):
             reason to override the defaults would be when Bonferroni
             corrections are required.
 
-    Returns a pandas Series containing the following data:
-    - rel_uplift_*: Expectation value and quantiles over the relative
-        uplift.
-    - abs_uplift_*: Expectation value and quantiles over the absolute
-        uplift.
-    - max_abs_diff_0.95: Quantile 0.95 on the L1 norm of differences/
-        absolute uplifts. In a Bayesian context, there is a 95%
-        probability that the absolute difference is less than this in
-        either direction.
-    - prob_win: In a Bayesian context, the probability that the ground
-        truth model parameter is larger for the focus than the reference
-        branch.
+    Returns:
+        A pandas Series containing the following data
+
+        * rel_uplift_*: Expectation value and quantiles over the relative
+          uplift.
+        * abs_uplift_*: Expectation value and quantiles over the absolute
+          uplift.
+        * max_abs_diff_0.95: Quantile 0.95 on the L1 norm of differences/
+          absolute uplifts. In a Bayesian context, there is a 95%
+          probability that the absolute difference is less than this in
+          either direction.
+        * prob_win: In a Bayesian context, the probability that the ground
+          truth model parameter is larger for the focus than the reference
+          branch.
     """
     rel_q_labels = ['rel_uplift_{}'.format(q) for q in quantiles]
     abs_q_labels = ['abs_uplift_{}'.format(q) for q in quantiles]
@@ -150,17 +157,18 @@ def summarize_joint_samples_batch(focus, reference, quantiles=default_quantiles)
     """Batch version of `summarize_joint_samples`.
 
     See docs for `summarize_joint_samples`. The difference here is that
-    `focus` and `reference` are DataFrames not Series; each column
+    ``focus`` and ``reference`` are DataFrames not Series; each column
     represents samples from a different distribution or statistic.
 
     Some example use-cases:
-    - When building a time series for one metric, each column's
-        samples are derived from data for a different analysis window.
-    - When bootstrapping several quantiles simultaneously (with a
-        `stat_fn` that returns several values), each column's samples
-        come from bootstrapping a different quantile. N.B. in this
-        example, the quantiles being bootstrapped over are unrelated to
-        the `quantiles` argument of this function.
+
+    * When building a time series for one metric, each column's
+      samples are derived from data for a different analysis window.
+    * When bootstrapping several quantiles simultaneously (with a
+      ``stat_fn`` that returns several values), each column's samples
+      come from bootstrapping a different quantile. N.B. in this
+      example, the quantiles being bootstrapped over are unrelated to
+      the ``quantiles`` argument of this function.
 
     Args:
         focus (pandas.DataFrame): Each column contains bootstrapped
@@ -172,19 +180,21 @@ def summarize_joint_samples_batch(focus, reference, quantiles=default_quantiles)
             reason to override the defaults would be when Bonferroni
             corrections are required.
 
-    Returns a pandas DataFrame with an index matching the columns of
-    `focus`, and the following columns:
-    - rel_uplift_*: Expectation value and quantiles over the relative
-        uplift.
-    - abs_uplift_*: Expectation value and quantiles over the absolute
-        uplift.
-    - max_abs_diff_0.95: Quantile 0.95 on the L1 norm of differences/
-        absolute uplifts. In a Bayesian context, there is a 95%
-        probability that the absolute difference is less than this in
-        either direction.
-    - prob_win: In a Bayesian context, the probability that the ground
-        truth model parameter is larger for the focus than the reference
-        branch.
+    Returns:
+        A pandas DataFrame with an index matching the columns of
+        ``focus``, and the following columns:
+
+        * rel_uplift_*: Expectation value and quantiles over the relative
+          uplift.
+        * abs_uplift_*: Expectation value and quantiles over the absolute
+          uplift.
+        * max_abs_diff_0.95: Quantile 0.95 on the L1 norm of differences/
+          absolute uplifts. In a Bayesian context, there is a 95%
+          probability that the absolute difference is less than this in
+          either direction.
+        * prob_win: In a Bayesian context, the probability that the ground
+          truth model parameter is larger for the focus than the reference
+          branch.
     """
     if set(focus.columns) != set(reference.columns):
         raise ValueError()

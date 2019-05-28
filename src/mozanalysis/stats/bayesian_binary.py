@@ -18,13 +18,13 @@ def compare_branches(
     See `compare_branches_from_agg` for more details.
 
     Args:
-        df: a pandas DataFrame of queried experiment data in the
-            standard format.
+        df (pd.DataFrame): Queried experiment data in the standard
+            format.
         col_label (str): Label for the df column contaning the metric
             to be analyzed.
-        ref_branch_label (str, optional): String in `df['branch']` that
-            identifies the the branch with respect to which we want to
-            calculate uplifts - usually the control branch.
+        ref_branch_label (str, optional): String in ``df['branch']``
+            that identifies the the branch with respect to which we
+            want to calculate uplifts - usually the control branch.
         num_samples (int, optional): The number of samples to compute.
         individual_summary_quantiles (list, optional): Quantiles to
             determine the confidence bands on individual branch
@@ -36,13 +36,15 @@ def compare_branches(
             Bonferroni corrections.
 
     Returns a dictionary:
-        'individual': dictionary mapping branch names to a pandas
-            Series of summary stats for the posterior distribution over
-            the branch's conversion rate.
-        'comparative': dictionary mapping branch names to a pandas
-            Series of summary statistics for the possible uplifts of the
-            conversion rate relative to the reference branch - see docs
-            for `summarize_joint_samples`.
+
+        * 'individual': dictionary mapping branch names to a pandas
+          Series of summary stats for the posterior distribution over
+          the branch's conversion rate.
+        * 'comparative': dictionary mapping branch names to a pandas
+          Series of summary statistics for the possible uplifts of the
+          conversion rate relative to the reference branch - see docs
+          for
+          :meth:`mozanalysis.stats.summarize_samples.summarize_joint_samples`.
     """
     agg_col = aggregate_col(df, col_label)
 
@@ -57,17 +59,19 @@ def aggregate_col(df, col_label):
     """Return the number of enrollments and conversions per branch.
 
     Args:
-        df: a pandas DataFrame of queried experiment data in the
-            standard format.
+        df (pd.DataFrame): Queried experiment data in the standard
+            format.
         col_label (str): Label for the df column contaning the metric
             to be analyzed.
 
-    Returns a DataFrame. The index is the list of branches. It has the
-    following columns:
-    - num_enrollments: The number of experiment subjects enrolled in
-        this branch who were eligible for the metric.
-    - num_conversions: The number of these enrolled experiment subjects
-        who met the metric's conversion criteria.
+    Returns:
+        A DataFrame. The index is the list of branches. It has the
+        following columns:
+
+        * num_enrollments: The number of experiment subjects enrolled in
+          this branch who were eligible for the metric.
+        * num_conversions: The number of these enrolled experiment subjects
+          who met the metric's conversion criteria.
     """
     # I would have used `isin` but it seems to be ~100x slower?
     if not ((df[col_label] == 0) | (df[col_label] == 1)).all():
@@ -90,8 +94,8 @@ def summarize_one_branch_from_agg(
     distribution over the branch's conversion rate.
 
     Args:
-        s: A Series containing the number of enrollments and number
-            of conversions for this branch and metric.
+        s (pd.Series): Holds the number of enrollments and number of
+            conversions for this branch and metric.
         num_enrollments_label (str, optional): The label in this Series
             for the number of enrollments
         num_conversions_label (str, optional): The label in this Series
@@ -99,8 +103,9 @@ def summarize_one_branch_from_agg(
         quantiles (list, optional): The quantiles to return as summary
             statistics.
 
-    Returns a pandas Series; the index contains the stringified
-    `quantiles` plus `'mean'`.
+    Returns:
+        A pandas Series; the index contains the stringified
+        ``quantiles`` plus ``'mean'``.
     """
     beta = st.beta(
         s.loc[num_conversions_label] + 1,
@@ -136,12 +141,14 @@ def compare_branches_from_agg(
     Beta(1, 1) (uniform) prior over the conversion rate parameter.
 
     Args:
-        df: A pandas dataframe of integers:
-            - df.index lists the experiment branches
-            - df.columns is
-                `[num_enrollments_label, num_conversions_label]`
-        ref_branch_label: Label for the df row containing data for the
-            control branch
+        df: A pandas dataframe of integers.
+
+            * ``df.index`` lists the experiment branches
+            * ``df.columns`` is
+              ``[num_enrollments_label, num_conversions_label]``
+
+        ref_branch_label (str, optional): Label for the df row
+            containing data for the control branch
         num_enrollments_label: Label for the df column containing the
             number of enrollments in each branch.
         num_conversions_label: Label for the df column containing the
@@ -149,13 +156,15 @@ def compare_branches_from_agg(
         num_samples: The number of samples to compute
 
     Returns a dictionary:
-        'individual': dictionary mapping branch names to a pandas
-            Series of summary stats for the posterior distribution over
-            the branch's conversion rate.
-        'comparative': dictionary mapping branch names to a pandas
-            Series of summary statistics for the possible uplifts of the
-            conversion rate relative to the reference branch - see docs
-            for `summarize_joint_samples`.
+
+        * 'individual': dictionary mapping branch names to a pandas
+          Series of summary stats for the posterior distribution over
+          the branch's conversion rate.
+        * 'comparative': dictionary mapping branch names to a pandas
+          Series of summary statistics for the possible uplifts of the
+          conversion rate relative to the reference branch - see docs
+          for
+          :meth:`mozanalysis.stats.summarize_samples.summarize_joint_samples`.
     """
     assert ref_branch_label in df.index, "What's the reference branch?"
 
@@ -186,20 +195,23 @@ def get_samples(
 
     Assumes a Beta(1, 1) prior.
 
-        Args:
+    Args:
         df: A pandas dataframe of integers:
-            - df.index lists the experiment branches
-            - df.columns is
-                (num_enrollments_label, num_conversions_label)
+
+            * ``df.index`` lists the experiment branches
+            * ``df.columns`` is
+              ``(num_enrollments_label, num_conversions_label)``
+
         num_enrollments_label: Label for the df column containing the
             number of enrollments in each branch.
         num_conversions_label: Label for the df column containing the
             number of conversions in each branch.
         num_samples: The number of samples to compute
 
-    Returns a pandas.DataFrame of sampled conversion rates:
-        - columns: list of branches
-        - index: enumeration of samples
+    Returns a pandas.DataFrame of sampled conversion rates
+
+        * columns: list of branches
+        * index: enumeration of samples
     """
     samples = pd.DataFrame(index=np.arange(num_samples), columns=df.index)
     for branch_label, r in df.iterrows():

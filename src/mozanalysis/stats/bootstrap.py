@@ -24,16 +24,19 @@ def compare_branches(
             standard format (see `mozanalysis.experiment`).
         col_label (str): Label for the df column contaning the metric
             to be analyzed.
-        ref_branch_label (str, optional): String in `df['branch']` that
-            identifies the branch with respect to which we want to
+        ref_branch_label (str, optional): String in ``df['branch']``
+            that identifies the branch with respect to which we want to
             calculate uplifts - usually the control branch.
         stat_fn (func, optional): A function that either:
-            - Aggregates each resampled population to a scalar (e.g.
-                the default, `np.mean`), or
-            - Aggregates each resampled population to a dict of
-                scalars.
+
+            * Aggregates each resampled population to a scalar (e.g.
+              the default, ``np.mean``), or
+            * Aggregates each resampled population to a dict of
+              scalars.
+
             In both cases, this function must accept a one-dimensional
             ndarray or pandas Series as its input.
+
         num_samples (int, optional): The number of bootstrap iterations
             to perform.
         threshold_quantile (float, optional): An optional threshold
@@ -47,22 +50,23 @@ def compare_branches(
             branch, probably the control). Change these when making
             Bonferroni corrections.
 
-    Returns a dictionary:
-    If `stat_fn` returns a scalar (this is the default), then
-    this function returns a dictionary has the following keys and
-    values:
-        'individual': dictionary mapping each branch name to a pandas
-            Series that holds the expected value for the bootstrapped
-            `stat_fn`, and confidence intervals.
-        'comparative': dictionary mapping each branch name to a pandas
-            Series of summary statistics for the possible uplifts of
-            the bootstrapped `stat_fn` relative to the reference branch.
+    Returns:
+        If ``stat_fn`` returns a scalar (this is the default), then
+        this function returns a dictionary has the following keys and
+        values:
 
-    Otherwise, when `stat_fn` returns a dict, then this function
-    returns a similar dictionary, except the Series are replaced with
-    DataFrames. Each row in each DataFrame corresponds to one output
-    of `stat_fn`, and is the Series that would be returned if `stat_fn`
-    computed only this statistic.
+            * 'individual': dictionary mapping each branch name to a pandas
+              Series that holds the expected value for the bootstrapped
+              ``stat_fn``, and confidence intervals.
+            * 'comparative': dictionary mapping each branch name to a pandas
+              Series of summary statistics for the possible uplifts of
+              the bootstrapped ``stat_fn`` relative to the reference branch.
+
+        Otherwise, when ``stat_fn`` returns a dict, then this function
+        returns a similar dictionary, except the Series are replaced with
+        DataFrames. Each row in each DataFrame corresponds to one output
+        of ``stat_fn``, and is the Series that would be returned if
+        ``stat_fn`` computed only this statistic.
     """
     branch_list = df.branch.unique()
 
@@ -114,14 +118,14 @@ def bootstrap_one_branch(
 ):
     """Bootstrap on the means of one branch on its own.
 
-    Generates `num_samples` sampled means, then returns summary
+    Generates ``num_samples`` sampled means, then returns summary
     statistics for their distribution.
 
     Args:
         sc: The spark context
         data: The data as a list, 1D numpy array, or pandas Series
         stat_fn: Either a function that aggregates each resampled
-            population to a scalar (e.g. the default value `np.mean`
+            population to a scalar (e.g. the default value ``np.mean``
             lets you bootstrap means), or a function that aggregates
             each resampled population to a dict of scalars. In both
             cases, this function must accept a one-dimensional ndarray
@@ -130,7 +134,7 @@ def bootstrap_one_branch(
         seed_start: An int with which to seed numpy's RNG. It must
             be unique within this set of calculations.
         threshold_quantile (float, optional): An optional threshold
-            quantile, above which to discard outliers. E.g. `0.9999`.
+            quantile, above which to discard outliers. E.g. ``0.9999``.
         summary_quantiles (list, optional): Quantiles to determine the
             confidence bands on the branch statistics. Change these
             when making Bonferroni corrections.
@@ -139,7 +143,7 @@ def bootstrap_one_branch(
         sc, data, stat_fn, num_samples, seed_start, threshold_quantile
     )
 
-    # Depending on whether `stat_fn` returns a scalar or a dict,
+    # Depending on whether ``stat_fn`` returns a scalar or a dict,
     # we might have to call the 'batch' versions:
     if isinstance(samples, pd.Series):
         return masss.summarize_one_branch_samples(
@@ -164,7 +168,7 @@ def get_bootstrap_samples(
     sc, data, stat_fn=np.mean, num_samples=10000, seed_start=None,
     threshold_quantile=None
 ):
-    """Return samples of `stat_fn` evaluated on resampled data.
+    """Return samples of ``stat_fn`` evaluated on resampled data.
 
     Do the resampling in parallel over the cluster.
 
@@ -172,23 +176,25 @@ def get_bootstrap_samples(
         sc: The spark context
         data: The data as a list, 1D numpy array, or pandas series
         stat_fn: Either a function that aggregates each resampled
-            population to a scalar (e.g. the default value `np.mean`
+            population to a scalar (e.g. the default value ``np.mean``
             lets you bootstrap means), or a function that aggregates
             each resampled population to a dict of scalars. In both
             cases, this function must accept a one-dimensional ndarray
             as its input.
         num_samples: The number of samples to return
         seed_start: A seed for the random number generator; this
-            function will use seeds in the range
+            function will use seeds in the range::
+
                 [seed_start, seed_start + num_samples)
+
             and these particular seeds must not be used elsewhere
             in this calculation. By default, use a random seed.
 
     Returns:
-        - By default, a pandas Series of sampled means
-        - if `stat_fn` returns a scalar, a pandas Series
-        - if `stat_fn` returns a dict, a pandas DataFrame with
-            columns set to the dict keys.
+        * By default, a pandas Series of sampled means
+        * if ``stat_fn`` returns a scalar, a pandas Series
+        * if ``stat_fn`` returns a dict, a pandas DataFrame with
+          columns set to the dict keys.
     """
     if not type(data) == np.ndarray:
         data = np.array(data)
@@ -228,10 +234,10 @@ def get_bootstrap_samples(
 
 
 def get_bootstrap_samples_local(data, stat_fn, num_samples):
-    """Equivalent to `get_bootstrap_samples` but doesn't require Spark.
+    """Equivalent to ``get_bootstrap_samples`` but doesn't require Spark.
 
     The main purpose of this function is to document what's being done
-    in `get_bootstrap_samples` :D
+    in ``get_bootstrap_samples`` :D
 
     TODO: or maybe running when spark isn't available? Do we actually
     want to make this function work?
@@ -279,8 +285,9 @@ def _filter_outliers(branch_data, threshold_quantile):
         threshold_quantile (float): Discard outliers above this
             quantile.
 
-    Returns the subset of branch_data that was at or below the threshold
-    quantile.
+    Returns:
+        The subset of branch_data that was at or below the threshold
+        quantile.
     """
     if threshold_quantile >= 1 or threshold_quantile < 0.5:
         raise ValueError("'threshold_quantile' should be close to 1")
