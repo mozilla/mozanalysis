@@ -313,7 +313,7 @@ class Experiment(object):
             (
                 (
                     F.unix_timestamp(F.col('submission_date_s3'), 'yyyyMMdd')
-                    * F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
+                    - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
                 ) / (24 * 60 * 60)
             ).between(
                 analysis_start_days,
