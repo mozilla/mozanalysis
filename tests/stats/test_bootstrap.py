@@ -12,7 +12,7 @@ def test_resample_and_agg_once():
     assert masb._resample_and_agg_once(np.array([3., 3., 3.]), np.mean) == 3.
 
 
-def test_resample_and_agg_once_multistat():
+def test_resample_and_agg_once_multistat(stack_depth=0):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
     res = masb._resample_and_agg_once(
         data,
@@ -25,8 +25,14 @@ def test_resample_and_agg_once_multistat():
 
     assert res['min'] == 0
     assert res['max'] == 1
-    assert res['mean'] != np.mean(data)  # Extremely unlikely
     assert res['mean'] == pytest.approx(np.mean(data), rel=1e-1)
+
+    if stack_depth >= 3:
+        assert res['mean'] != np.mean(data)  # Extremely unlikely
+    elif res['mean'] == np.mean(data):
+        # This is a 0.5% event - implausible but not impossible.
+        # Re-roll the dice a few times to make sure this was a fluke.
+        test_resample_and_agg_once_multistat(stack_depth + 1)
 
 
 def test_resample_and_agg_once_bcast(spark_context):
@@ -46,7 +52,7 @@ def test_get_bootstrap_samples(spark_context):
     assert res[0][1] == 3.
 
 
-def test_get_bootstrap_samples_multistat(spark_context):
+def test_get_bootstrap_samples_multistat(spark_context, stack_depth=0):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
     res = masb.get_bootstrap_samples(
         spark_context,
@@ -67,12 +73,17 @@ def test_get_bootstrap_samples_multistat(spark_context):
 
     assert (res[0]['min'] == 0).all()
     assert (res[0]['max'] == 1).all()
-    assert (res[0]['mean'] != np.mean(data)).any()  # Extremely unlikely
     assert res[0]['mean'].iloc[0] == pytest.approx(np.mean(data), rel=1e-1)
     assert res[0]['mean'].iloc[1] == pytest.approx(np.mean(data), rel=1e-1)
 
     # If we stuff up (duplicate) the seeds then things aren't random
     assert res[0]['mean'].iloc[0] != res[0]['mean'].iloc[1]
+
+    if stack_depth >= 3:
+        assert (res[0]['mean'] != np.mean(data)).any()  # Extremely unlikely
+    elif (res[0]['mean'] == np.mean(data)).any():
+        # Re-roll the dice a few times to make sure this was a fluke.
+        test_get_bootstrap_samples_multistat(spark_context, stack_depth + 1)
 
 
 def test_filter_outliers():
