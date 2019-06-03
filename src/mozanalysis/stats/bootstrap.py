@@ -13,8 +13,8 @@ import mozanalysis.stats.summarize_samples as masss
 def compare_branches(
     sc, df, col_label, ref_branch_label='control', stat_fn=np.mean,
     num_samples=10000, threshold_quantile=None,
-    individual_summary_quantiles=masss.default_quantiles,
-    comparative_summary_quantiles=masss.default_quantiles
+    individual_summary_quantiles=masss.DEFAULT_QUANTILES,
+    comparative_summary_quantiles=masss.DEFAULT_QUANTILES
 ):
     """Jointly sample bootstrapped statistics then compare them.
 
@@ -88,24 +88,24 @@ def compare_branches(
 
     # Depending on whether `stat_fn` returns a scalar or a dict,
     # we might have to call the 'batch' versions:
-    if isinstance(samples[branch_list[0]], pd.Series):
-        summarize_one = masss.summarize_one_branch_samples
+    if isinstance(samples[branch_list[0]][0], pd.Series):
+        # summarize_one = masss.summarize_one_branch_samples
         compare_pair = masss.summarize_joint_samples
 
     else:
-        summarize_one = masss.summarize_one_branch_samples_batch
+        # summarize_one = masss.summarize_one_branch_samples_batch
         compare_pair = masss.summarize_joint_samples_batch
 
     return {
         'individual': {
-            b: summarize_one(
-                samples[b],
+            b: summarize_one_branch_empirical_bootstrap(
+                *samples[b],
                 quantiles=individual_summary_quantiles
             ) for b in branch_list
         },
         'comparative': {
             b: compare_pair(
-                samples[b], samples[ref_branch_label],
+                samples[b][0], samples[ref_branch_label][0],
                 quantiles=comparative_summary_quantiles
             ) for b in set(branch_list) - {ref_branch_label}
         },
@@ -114,7 +114,7 @@ def compare_branches(
 
 def bootstrap_one_branch(
     sc, data, stat_fn=np.mean, num_samples=10000, seed_start=None,
-    threshold_quantile=None, summary_quantiles=masss.default_quantiles
+    threshold_quantile=None, summary_quantiles=masss.DEFAULT_QUANTILES
 ):
     """Bootstrap on the means of one branch on its own.
 
@@ -139,20 +139,13 @@ def bootstrap_one_branch(
             confidence bands on the branch statistics. Change these
             when making Bonferroni corrections.
     """
-    samples = get_bootstrap_samples(
+    samples, original_sample = get_bootstrap_samples(
         sc, data, stat_fn, num_samples, seed_start, threshold_quantile
     )
 
-    # Depending on whether ``stat_fn`` returns a scalar or a dict,
-    # we might have to call the 'batch' versions:
-    if isinstance(samples, pd.Series):
-        return masss.summarize_one_branch_samples(
-            samples, quantiles=summary_quantiles
-        )
-    else:
-        return masss.summarize_one_branch_samples_batch(
-            samples, quantiles=summary_quantiles
-        )
+    return summarize_one_branch_empirical_bootstrap(
+        samples, original_sample, summary_quantiles
+    )
 
 
 # Functions that return per-resampled-population stats
@@ -168,7 +161,7 @@ def get_bootstrap_samples(
     sc, data, stat_fn=np.mean, num_samples=10000, seed_start=None,
     threshold_quantile=None
 ):
-    """Return samples of ``stat_fn`` evaluated on resampled data.
+    """Return ``stat_fn`` evaluated on resampled and original data.
 
     Do the resampling in parallel over the cluster.
 
@@ -191,16 +184,25 @@ def get_bootstrap_samples(
             in this calculation. By default, use a random seed.
 
     Returns:
-        * By default, a pandas Series of sampled means
-        * if ``stat_fn`` returns a scalar, a pandas Series
-        * if ``stat_fn`` returns a dict, a pandas DataFrame with
-          columns set to the dict keys.
+        A two-element tuple, with elements
+
+            1. ``stat_fn`` evaluated over ``num_samples`` samples.
+
+                * By default, a pandas Series of sampled means
+                * if ``stat_fn`` returns a scalar, a pandas Series
+                * if ``stat_fn`` returns a dict, a pandas DataFrame
+                  with columns set to the dict keys.
+
+            2. ``stat_fn`` evaluated on the (thresholded) original
+               dataset.
     """
     if not type(data) == np.ndarray:
         data = np.array(data)
 
     if threshold_quantile:
         data = _filter_outliers(data, threshold_quantile)
+
+    original_sample_stats = stat_fn(data)  # FIXME: should this be a series
 
     if seed_start is None:
         seed_start = np.random.randint(np.iinfo(np.uint32).max)
@@ -227,10 +229,10 @@ def get_bootstrap_samples(
     summary_df = pd.DataFrame(summary_stat_samples)
     if len(summary_df.columns) == 1:
         # Return a Series if stat_fn returns a scalar
-        return summary_df.iloc[:, 0]
+        return summary_df.iloc[:, 0], original_sample_stats
 
     # Else return a DataFrame if stat_fn returns a dict
-    return summary_df
+    return summary_df, original_sample_stats
 
 
 def get_bootstrap_samples_local(data, stat_fn, num_samples):
@@ -252,19 +254,64 @@ def get_bootstrap_samples_local(data, stat_fn, num_samples):
 # Functions that calculate stats over one resampled population
 
 
-def _resample_and_agg_once_bcast(broadcast_data, stat_fn, unique_seed=None):
-    np.random.seed(unique_seed)
-    return _resample_and_agg_once(broadcast_data.value, stat_fn)
+def _resample_and_agg_once_bcast(
+    broadcast_data, stat_fn, unique_seed
+):
+    return _resample_and_agg_once(
+        broadcast_data.value, stat_fn, unique_seed
+    )
 
 
-def _resample_and_agg_once(data, stat_fn):
+def _resample_and_agg_once(
+    data, stat_fn, unique_seed=None
+):
+    random_state = np.random.RandomState(unique_seed)
+
     n = len(data)
-    # TODO: can't we just use np.random.choice? Wouldn't that be faster?
+    # TODO: can't we just use random_state.choice? Wouldn't that be faster?
     # There's not thaaat much difference in RAM requirements?
-    randints = np.random.randint(0, n, n)
+    randints = random_state.randint(0, n, n)
     resampled_data = data[randints]
 
     return stat_fn(resampled_data)
+
+
+# Bootstrap-specific stats
+
+
+def summarize_one_branch_empirical_bootstrap(
+    samples, original_sample_stats, quantiles
+):
+    inv_quantiles = [1 - q for q in quantiles]
+
+    if not isinstance(original_sample_stats, dict):
+        # `stat_fn` returned a scalar: non-batch mode.
+        assert isinstance(samples, pd.Series)
+
+        res = original_sample_stats - masss.summarize_one_branch_samples(
+            samples - original_sample_stats, inv_quantiles
+        )
+
+        res.index = _update_index(res.index, quantiles, inv_quantiles)
+
+    else:
+        assert isinstance(samples, pd.DataFrame)
+        osss = pd.Series(original_sample_stats)
+
+        res = masss.summarize_one_branch_samples_batch(
+            samples.sub(osss), inv_quantiles
+        ).rsub(osss, axis='rows')
+
+        res.columns = _update_index(res.columns, quantiles, inv_quantiles)
+
+    return res
+
+
+def _update_index(index, quantiles, inv_quantiles):
+    for i, iq in enumerate(inv_quantiles):
+        assert index[i] == str(iq)
+
+    return [str(q) for q in quantiles] + list(index[len(quantiles):])
 
 
 # Utility functions

@@ -38,9 +38,12 @@ def test_get_bootstrap_samples(spark_context):
     res = masb.get_bootstrap_samples(
         spark_context, np.array([3., 3., 3.]), num_samples=2
     )
-    assert res.shape == (2,)
-    assert res[0] == 3.
+    assert res[0].shape == (2,)
+
     assert res[1] == 3.
+
+    assert res[0][0] == 3.
+    assert res[0][1] == 3.
 
 
 def test_get_bootstrap_samples_multistat(spark_context):
@@ -56,15 +59,20 @@ def test_get_bootstrap_samples_multistat(spark_context):
         num_samples=2
     )
 
-    assert res.shape == (2, 3)
-    assert (res['min'] == 0).all()
-    assert (res['max'] == 1).all()
-    assert (res['mean'] != np.mean(data)).any()  # Extremely unlikely
-    assert res['mean'].iloc[0] == pytest.approx(np.mean(data), rel=1e-1)
-    assert res['mean'].iloc[1] == pytest.approx(np.mean(data), rel=1e-1)
+    assert res[0].shape == (2, 3)
+
+    assert res[1]['min'] == 0
+    assert res[1]['max'] == 1
+    assert res[1]['mean'] == pytest.approx(np.mean(data))
+
+    assert (res[0]['min'] == 0).all()
+    assert (res[0]['max'] == 1).all()
+    assert (res[0]['mean'] != np.mean(data)).any()  # Extremely unlikely
+    assert res[0]['mean'].iloc[0] == pytest.approx(np.mean(data), rel=1e-1)
+    assert res[0]['mean'].iloc[1] == pytest.approx(np.mean(data), rel=1e-1)
 
     # If we stuff up (duplicate) the seeds then things aren't random
-    assert res['mean'].iloc[0] != res['mean'].iloc[1]
+    assert res[0]['mean'].iloc[0] != res[0]['mean'].iloc[1]
 
 
 def test_filter_outliers():
@@ -197,3 +205,36 @@ def test_compare_branches_multistat(spark_context):
 
     assert res['comparative']['same'].loc['max', 'rel_uplift_exp'] == 0
     assert res['comparative']['bigger'].loc['max', 'rel_uplift_exp'] == 0
+
+
+def test_summarize_one_branch_empirical_bootstrap():
+    s = pd.Series(np.linspace(0, 1, 1001))
+
+    res = masb.summarize_one_branch_empirical_bootstrap(
+        s, s.mean(), [0.05, 0.31, 0.95]
+    )
+    assert res.shape == (4,)
+    assert res['0.05'] == pytest.approx(0.05)
+    assert res['0.31'] == pytest.approx(0.31)
+    assert res['0.95'] == pytest.approx(0.95)
+    assert res['mean'] == pytest.approx(0.5)
+
+
+def test_summarize_one_branch_empirical_bootstrap_batch():
+    s = pd.Series(np.linspace(0, 1, 1001))
+    df = pd.DataFrame({'a': s, 'b': s + 1})
+    res = masb.summarize_one_branch_empirical_bootstrap(
+        df, {'a': s.mean(), 'b': s.mean() + 1},
+        quantiles=[0.05, 0.31, 0.95]
+    )
+    assert res.shape == (2, 4)
+
+    assert res.loc['a', '0.05'] == pytest.approx(0.05)
+    assert res.loc['a', '0.31'] == pytest.approx(0.31)
+    assert res.loc['a', '0.95'] == pytest.approx(0.95)
+    assert res.loc['a', 'mean'] == pytest.approx(0.5)
+
+    assert res.loc['b', '0.05'] == pytest.approx(1.05)
+    assert res.loc['b', '0.31'] == pytest.approx(1.31)
+    assert res.loc['b', '0.95'] == pytest.approx(1.95)
+    assert res.loc['b', 'mean'] == pytest.approx(1.5)

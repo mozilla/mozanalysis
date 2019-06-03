@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 
 
-default_quantiles = (0.005, 0.05, 0.5, 0.95, 0.995)
+DEFAULT_QUANTILES = (0.005, 0.05, 0.5, 0.95, 0.995)
 
 
-def summarize_one_branch_samples(samples, quantiles=default_quantiles):
+def summarize_one_branch_samples(samples, quantiles=DEFAULT_QUANTILES):
     """Return descriptive statistics for sampled population-level stats.
 
     Given samples from a distribution, calculate some quantiles and the
@@ -45,7 +45,7 @@ def summarize_one_branch_samples(samples, quantiles=default_quantiles):
     return res
 
 
-def summarize_one_branch_samples_batch(samples, quantiles=default_quantiles):
+def summarize_one_branch_samples_batch(samples, quantiles=DEFAULT_QUANTILES):
     """Return descriptive statistics for sampled population-level stats.
 
     Given samples from more than one distribution, calculate some
@@ -82,7 +82,7 @@ def summarize_one_branch_samples_batch(samples, quantiles=default_quantiles):
     return samples.agg(summarize_one_branch_samples, quantiles=quantiles).T
 
 
-def summarize_joint_samples(focus, reference, quantiles=default_quantiles):
+def summarize_joint_samples(focus, reference, quantiles=DEFAULT_QUANTILES):
     """Return descriptive statistics for uplifts.
 
     The intended use case of this function is to compare a 'focus'
@@ -153,7 +153,7 @@ def summarize_joint_samples(focus, reference, quantiles=default_quantiles):
     return res
 
 
-def summarize_joint_samples_batch(focus, reference, quantiles=default_quantiles):
+def summarize_joint_samples_batch(focus, reference, quantiles=DEFAULT_QUANTILES):
     """Batch version of `summarize_joint_samples`.
 
     See docs for `summarize_joint_samples`. The difference here is that

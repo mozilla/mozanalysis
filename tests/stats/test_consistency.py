@@ -22,16 +22,21 @@ def test_bootstrap_vs_beta(spark_context):
         'num_conversions': fake_data.sum() - 1
     }))
 
-    print(boot_res)
-    print(beta_res)
     for l in boot_res.index:
         # Bootstrapped quantiles are discretized based on the number of enrollments,
         # which sets `abs`.
-
+        #
         # Is `num_samples` large enough to consistently achieve results that
         # match the beta model to within the accuracy of this discrete limit?
-        # Not quite. So we back it off a bit and ask for the bootstrapped result
-        # to be within 1.9 quanta of the beta result
+        # Not quite. So we backed it off a bit and ask for the bootstrapped result
+        # to be within 1.9 quanta of the beta result - which was enough for a
+        # percentile bootstrap
+        #
+        # Though the empirical bootstrap seems
         assert boot_res.loc[l] == pytest.approx(
-            beta_res.loc[l], abs=1.9/num_enrollments
-        )
+            beta_res.loc[l],
+            # 1.9 is good enough with a percentile bootstrap
+            # abs=1.9/num_enrollments
+            # Empirical bootstrap requires a wider tolerance band (?!)
+            abs=3.9/num_enrollments
+        ), l

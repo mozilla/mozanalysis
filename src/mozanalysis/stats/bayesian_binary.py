@@ -10,8 +10,8 @@ import mozanalysis.stats.summarize_samples as masss
 
 def compare_branches(
     df, col_label, ref_branch_label='control', num_samples=10000,
-    individual_summary_quantiles=masss.default_quantiles,
-    comparative_summary_quantiles=masss.default_quantiles
+    individual_summary_quantiles=masss.DEFAULT_QUANTILES,
+    comparative_summary_quantiles=masss.DEFAULT_QUANTILES
 ):
     """Jointly sample conversion rates for branches then compare them.
 
@@ -50,8 +50,8 @@ def compare_branches(
 
     return compare_branches_from_agg(
         agg_col, ref_branch_label=ref_branch_label, num_samples=num_samples,
-        individual_summary_quantiles=masss.default_quantiles,
-        comparative_summary_quantiles=masss.default_quantiles
+        individual_summary_quantiles=masss.DEFAULT_QUANTILES,
+        comparative_summary_quantiles=masss.DEFAULT_QUANTILES
     )
 
 
@@ -86,7 +86,7 @@ def aggregate_col(df, col_label):
 
 def summarize_one_branch_from_agg(
     s, num_enrollments_label='num_enrollments', num_conversions_label='num_conversions',
-    quantiles=masss.default_quantiles
+    quantiles=masss.DEFAULT_QUANTILES
 ):
     """Return stats about a branch's conversion rate.
 
@@ -128,8 +128,8 @@ def compare_branches_from_agg(
     num_enrollments_label='num_enrollments',
     num_conversions_label='num_conversions',
     num_samples=10000,
-    individual_summary_quantiles=masss.default_quantiles,
-    comparative_summary_quantiles=masss.default_quantiles
+    individual_summary_quantiles=masss.DEFAULT_QUANTILES,
+    comparative_summary_quantiles=masss.DEFAULT_QUANTILES
 ):
     """Jointly sample conversion rates for two branches then compare them.
 
