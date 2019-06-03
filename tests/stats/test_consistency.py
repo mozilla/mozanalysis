@@ -38,5 +38,5 @@ def test_bootstrap_vs_beta(spark_context):
             # 1.9 is good enough with a percentile bootstrap
             # abs=1.9/num_enrollments
             # Empirical bootstrap requires a wider tolerance band (?!)
-            abs=3.9/num_enrollments
+            abs=4.9/num_enrollments
         ), l
