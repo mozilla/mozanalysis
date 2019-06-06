@@ -9,6 +9,20 @@ DEFAULT_QUANTILES = (0.005, 0.05, 0.5, 0.95, 0.995)
 
 
 def summarize_one_branch_samples(samples, quantiles=DEFAULT_QUANTILES):
+    if isinstance(samples, pd.DataFrame) or not np.isscalar(samples[0]):
+        return summarize_one_branch_samples_batch(samples, quantiles)
+    else:
+        return summarize_one_branch_samples_single(samples, quantiles)
+
+
+def summarize_joint_samples(focus, reference, quantiles=DEFAULT_QUANTILES):
+    if isinstance(focus, pd.DataFrame) or not np.isscalar(focus[0]):
+        return summarize_joint_samples_batch(focus, reference, quantiles)
+    else:
+        return summarize_joint_samples_single(focus, reference, quantiles)
+
+
+def summarize_one_branch_samples_single(samples, quantiles=DEFAULT_QUANTILES):
     """Return descriptive statistics for sampled population-level stats.
 
     Given samples from a distribution, calculate some quantiles and the
@@ -82,7 +96,7 @@ def summarize_one_branch_samples_batch(samples, quantiles=DEFAULT_QUANTILES):
     return samples.agg(summarize_one_branch_samples, quantiles=quantiles).T
 
 
-def summarize_joint_samples(focus, reference, quantiles=DEFAULT_QUANTILES):
+def summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILES):
     """Return descriptive statistics for uplifts.
 
     The intended use case of this function is to compare a 'focus'

@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 
-import mozanalysis.stats.bayesian_binary as masbb
+import mozanalysis.bayesian_stats.binary as mabsb
 
 
 def compare_branches(df, col_label, ref_branch_label='control', thresholds=None):
@@ -129,7 +129,7 @@ def _one_thresh(threshold, df, col_label, ref_branch_label):
         # Sorry for mutating the input inplace. I'll be sure to tidy up.
         df['_tmp_threshold_val'] = df[col_label] > threshold
 
-        return masbb.compare_branches(
+        return mabsb.compare_branches(
             df, '_tmp_threshold_val', ref_branch_label=ref_branch_label
         )
 

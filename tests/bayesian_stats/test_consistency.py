@@ -5,16 +5,16 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import mozanalysis.stats.bayesian_binary as masbbeta
-import mozanalysis.stats.bayesian_bootstrap as masbboot
-import mozanalysis.stats.bootstrap as masb
-import mozanalysis.stats.summarize_samples as masss
+import mozanalysis.bayesian_stats as mabs
+import mozanalysis.bayesian_stats.binary as mabsbin
+import mozanalysis.bayesian_stats.bayesian_bootstrap as mabsbb
+import mozanalysis.frequentist_stats.bootstrap as mafsb
 
 
 def percentile_bootstrap(spark_context, data):
-    samples, _ = masb.get_bootstrap_samples(spark_context, data)
+    samples, _ = mafsb.get_bootstrap_samples(spark_context, data)
 
-    return masss.summarize_one_branch_samples(samples)
+    return mabs.summarize_one_branch_samples(samples)
 
 
 def test_bootstrap_vs_beta(spark_context):
@@ -22,8 +22,8 @@ def test_bootstrap_vs_beta(spark_context):
     fake_data = pd.Series(np.zeros(num_enrollments))
     fake_data[:300] = 1
 
-    boot_res = masb.bootstrap_one_branch(spark_context, fake_data)
-    beta_res = masbbeta.summarize_one_branch_from_agg(pd.Series({
+    boot_res = mafsb.bootstrap_one_branch(spark_context, fake_data)
+    beta_res = mabsbin.summarize_one_branch_from_agg(pd.Series({
         # `-1` to simulate Beta(0, 0) improper prior, closer to
         # bootstrap for quantiles (i think?)
         'num_enrollments': len(fake_data) - 1,
@@ -56,7 +56,7 @@ def test_percentile_bootstrap_vs_beta(spark_context):
     fake_data[:300] = 1
 
     boot_res = percentile_bootstrap(spark_context, fake_data)
-    beta_res = masbbeta.summarize_one_branch_from_agg(pd.Series({
+    beta_res = mabsbin.summarize_one_branch_from_agg(pd.Series({
         # `-1` to simulate Beta(0, 0) improper prior, closer to
         # bootstrap for quantiles (i think?)
         'num_enrollments': len(fake_data) - 1,
@@ -89,8 +89,8 @@ def test_bayesian_bootstrap_vs_beta(spark_context):
     fake_data = pd.Series(np.zeros(num_enrollments))
     fake_data[:300] = 1
 
-    boot_res = masbboot.bootstrap_one_branch(spark_context, fake_data)
-    beta_res = masbbeta.summarize_one_branch_from_agg(pd.Series({
+    boot_res = mabsbb.bootstrap_one_branch(spark_context, fake_data)
+    beta_res = mabsbin.summarize_one_branch_from_agg(pd.Series({
         # `-1` to simulate Beta(0, 0) improper prior, closer to
         # bootstrap for quantiles (i think?)
         'num_enrollments': len(fake_data) - 1,
@@ -112,7 +112,7 @@ def test_bayesian_bootstrap_vs_percentile_bootstrap_geometric(spark_context):
     rs = np.random.RandomState(42)
     data = rs.geometric(p=0.1, size=num_enrollments)
 
-    bb_res = masbboot.bootstrap_one_branch(spark_context, data)
+    bb_res = mabsbb.bootstrap_one_branch(spark_context, data)
     pboot_res = percentile_bootstrap(spark_context, data)
 
     assert bb_res['mean'] == pytest.approx(10, rel=1e-2)
@@ -131,7 +131,7 @@ def test_bayesian_bootstrap_vs_percentile_bootstrap_poisson(spark_context):
     rs = np.random.RandomState(42)
     data = rs.poisson(lam=10, size=num_enrollments)
 
-    bb_res = masbboot.bootstrap_one_branch(spark_context, data)
+    bb_res = mabsbb.bootstrap_one_branch(spark_context, data)
     pboot_res = percentile_bootstrap(spark_context, data)
 
     assert bb_res['mean'] == pytest.approx(10, rel=1e-2)

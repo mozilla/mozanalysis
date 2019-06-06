@@ -5,13 +5,13 @@ import pandas as pd
 import numpy as np
 import scipy.stats as st
 
-import mozanalysis.stats.summarize_samples as masss
+import mozanalysis.bayesian_stats as mabs
 
 
 def compare_branches(
     df, col_label, ref_branch_label='control', num_samples=10000,
-    individual_summary_quantiles=masss.DEFAULT_QUANTILES,
-    comparative_summary_quantiles=masss.DEFAULT_QUANTILES
+    individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
+    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES
 ):
     """Jointly sample conversion rates for branches then compare them.
 
@@ -50,8 +50,8 @@ def compare_branches(
 
     return compare_branches_from_agg(
         agg_col, ref_branch_label=ref_branch_label, num_samples=num_samples,
-        individual_summary_quantiles=masss.DEFAULT_QUANTILES,
-        comparative_summary_quantiles=masss.DEFAULT_QUANTILES
+        individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
+        comparative_summary_quantiles=mabs.DEFAULT_QUANTILES
     )
 
 
@@ -86,7 +86,7 @@ def aggregate_col(df, col_label):
 
 def summarize_one_branch_from_agg(
     s, num_enrollments_label='num_enrollments', num_conversions_label='num_conversions',
-    quantiles=masss.DEFAULT_QUANTILES
+    quantiles=mabs.DEFAULT_QUANTILES
 ):
     """Return stats about a branch's conversion rate.
 
@@ -128,8 +128,8 @@ def compare_branches_from_agg(
     num_enrollments_label='num_enrollments',
     num_conversions_label='num_conversions',
     num_samples=10000,
-    individual_summary_quantiles=masss.DEFAULT_QUANTILES,
-    comparative_summary_quantiles=masss.DEFAULT_QUANTILES
+    individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
+    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES
 ):
     """Jointly sample conversion rates for two branches then compare them.
 
@@ -180,7 +180,7 @@ def compare_branches_from_agg(
                 ) for b in df.index
             },
         'comparative': {
-                b: masss.summarize_joint_samples(
+                b: mabs.summarize_joint_samples(
                     samples[b], samples[ref_branch_label],
                     quantiles=comparative_summary_quantiles
                 ) for b in df.index.drop(ref_branch_label)

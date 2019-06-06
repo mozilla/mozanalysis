@@ -5,13 +5,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import mozanalysis.stats.summarize_samples as masss
+import mozanalysis.bayesian_stats as mabs
 
 
 def test_summarize_one_branch_samples():
     s = pd.Series(np.linspace(0, 1, 1001))
 
-    res = masss.summarize_one_branch_samples(s, [0.05, 0.31, 0.95])
+    res = mabs.summarize_one_branch_samples(s, [0.05, 0.31, 0.95])
     assert res.shape == (4,)
     assert res['0.05'] == pytest.approx(0.05)
     assert res['0.31'] == pytest.approx(0.31)
@@ -22,7 +22,7 @@ def test_summarize_one_branch_samples():
 def test_summarize_one_branch_samples_batch():
     s = pd.Series(np.linspace(0, 1, 1001))
     df = pd.DataFrame({'a': s, 'b': s + 1})
-    res = masss.summarize_one_branch_samples_batch(df, quantiles=[0.05, 0.31, 0.95])
+    res = mabs.summarize_one_branch_samples_batch(df, quantiles=[0.05, 0.31, 0.95])
     assert res.shape == (2, 4)
 
     assert res.loc['a', '0.05'] == pytest.approx(0.05)
@@ -38,7 +38,7 @@ def test_summarize_one_branch_samples_batch():
 
 def test_summarize_joint_samples_trivial():
     quantiles = (0.05, 0.31, 0.95)
-    res = masss.summarize_joint_samples(
+    res = mabs.summarize_joint_samples(
         pd.Series([6, 6, 6]), pd.Series([3, 3, 3]), quantiles=quantiles
     )
     assert res['rel_uplift_exp'] == 1.
@@ -57,7 +57,7 @@ def test_summarize_joint_samples_trivial():
 
 def test_summarize_joint_samples_batch_trivial():
     quantiles = (0.05, 0.31, 0.95)
-    res = masss.summarize_joint_samples_batch(
+    res = mabs.summarize_joint_samples_batch(
         pd.DataFrame({'a': [6, 6, 6], 'b': [1, 1, 1]}, columns=['a', 'b']),
         pd.DataFrame({'a': [3, 3, 3], 'b': [1, 1, 1]}, columns=['b', 'a']),
         quantiles=quantiles

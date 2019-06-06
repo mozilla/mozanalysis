@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from mozanalysis.stats.bootstrap import _filter_outliers
-import mozanalysis.stats.summarize_samples as masss
+import mozanalysis.bayesian_stats as mabs
+from mozanalysis.utils import filter_outliers
 
 
 def bb_mean(data, prob_weights):
@@ -28,8 +28,8 @@ def make_bb_quantile_closure(quantiles):
 def compare_branches(
     sc, df, col_label, ref_branch_label='control', stat_fn=bb_mean,
     num_samples=10000, threshold_quantile=None,
-    individual_summary_quantiles=masss.DEFAULT_QUANTILES,
-    comparative_summary_quantiles=masss.DEFAULT_QUANTILES
+    individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
+    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES
 ):
     branch_list = df.branch.unique()
 
@@ -49,25 +49,15 @@ def compare_branches(
         ) for b in branch_list
     }
 
-    # Depending on whether `stat_fn` returns a scalar or a dict,
-    # we might have to call the 'batch' versions:
-    if isinstance(samples[ref_branch_label], pd.Series):
-        summarize_one = masss.summarize_one_branch_samples
-        compare_pair = masss.summarize_joint_samples
-
-    else:
-        summarize_one = masss.summarize_one_branch_samples_batch
-        compare_pair = masss.summarize_joint_samples_batch
-
     return {
         'individual': {
-            b: summarize_one(
+            b: mabs.summarize_one_branch_samples(
                 samples[b],
                 quantiles=individual_summary_quantiles
             ) for b in branch_list
         },
         'comparative': {
-            b: compare_pair(
+            b: mabs.summarize_joint_samples(
                 samples[b], samples[ref_branch_label],
                 quantiles=comparative_summary_quantiles
             ) for b in set(branch_list) - {ref_branch_label}
@@ -77,18 +67,18 @@ def compare_branches(
 
 def bootstrap_one_branch(
     sc, data, stat_fn=bb_mean, num_samples=10000, seed_start=None,
-    threshold_quantile=None, summary_quantiles=masss.DEFAULT_QUANTILES
+    threshold_quantile=None, summary_quantiles=mabs.DEFAULT_QUANTILES
 ):
     samples = get_bootstrap_samples(
         sc, data, stat_fn, num_samples, seed_start, threshold_quantile
     )
 
     if isinstance(samples, pd.Series):
-        return masss.summarize_one_branch_samples(
+        return mabs.summarize_one_branch_samples(
             samples, summary_quantiles
         )
     else:
-        return masss.summarize_one_branch_samples_batch(
+        return mabs.summarize_one_branch_samples_batch(
             samples, summary_quantiles
         )
 
@@ -101,7 +91,7 @@ def get_bootstrap_samples(
         data = np.array(data)
 
     if threshold_quantile:
-        data = _filter_outliers(data, threshold_quantile)
+        data = filter_outliers(data, threshold_quantile)
 
     data_values, data_counts = np.unique(data, return_counts=True)
 

@@ -5,19 +5,19 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import mozanalysis.stats.bayesian_bootstrap as masbb
+import mozanalysis.bayesian_stats.bayesian_bootstrap as mabsbb
 
 
 def test_resample_and_agg_once():
-    assert masbb._resample_and_agg_once(
-        np.array([3.]), np.array([3]), masbb.bb_mean
+    assert mabsbb._resample_and_agg_once(
+        np.array([3.]), np.array([3]), mabsbb.bb_mean
     ) == pytest.approx(3.)
 
 
 def test_resample_and_agg_once_multistat(stack_depth=0):
     data_values = np.array([0, 1])
     data_counts = np.array([10000, 10000])
-    res = masbb._resample_and_agg_once(
+    res = mabsbb._resample_and_agg_once(
         data_values,
         data_counts,
         lambda x, y: {
@@ -42,23 +42,23 @@ def test_resample_and_agg_once_multistat(stack_depth=0):
 def test_resample_and_agg_once_bcast(spark_context):
     b_data_values = spark_context.broadcast(np.array([3.]))
     b_data_counts = spark_context.broadcast(np.array([3]))
-    assert masbb._resample_and_agg_once_bcast(
-        b_data_values, b_data_counts, masbb.bb_mean, 42
+    assert mabsbb._resample_and_agg_once_bcast(
+        b_data_values, b_data_counts, mabsbb.bb_mean, 42
     ) == 3.
 
 
 def test_get_bootstrap_samples(spark_context):
-    res = masbb.get_bootstrap_samples(
+    res = mabsbb.get_bootstrap_samples(
         spark_context, np.array([3., 3., 3.]), num_samples=2
     )
     assert res.shape == (2,)
-    assert res[0] == 3.
-    assert res[1] == 3.
+    assert res[0] == pytest.approx(3.)
+    assert res[1] == pytest.approx(3.)
 
 
 def test_get_bootstrap_samples_multistat(spark_context, stack_depth=0):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
-    res = masbb.get_bootstrap_samples(
+    res = mabsbb.get_bootstrap_samples(
         spark_context,
         data,
         lambda x, y: {
@@ -86,25 +86,9 @@ def test_get_bootstrap_samples_multistat(spark_context, stack_depth=0):
         test_get_bootstrap_samples_multistat(spark_context, stack_depth + 1)
 
 
-def test_filter_outliers():
-    data = np.arange(100) + 1
-
-    filtered = masbb._filter_outliers(data, 0.99)
-    assert len(filtered) == 99
-    assert filtered.max() == 99
-    assert data.max() == 100
-
-
-def test_filter_outliers_2():
-    data = np.ones(100)
-
-    filtered = masbb._filter_outliers(data, 0.99)
-    assert len(filtered) == 100
-
-
 def test_bootstrap_one_branch(spark_context):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
-    res = masbb.bootstrap_one_branch(
+    res = mabsbb.bootstrap_one_branch(
         spark_context, data, num_samples=100, summary_quantiles=(0.5, 0.61)
     )
 
@@ -115,7 +99,7 @@ def test_bootstrap_one_branch(spark_context):
 
 def test_bootstrap_one_branch_multistat(spark_context):
     data = np.concatenate([np.zeros(10000), np.ones(10000), [1e20]])
-    res = masbb.bootstrap_one_branch(
+    res = mabsbb.bootstrap_one_branch(
         spark_context, data,
         stat_fn=lambda x, y: {
             'max': np.max(x),
@@ -153,7 +137,7 @@ def test_compare_branches(spark_context):
     assert data.val[data.branch != 'bigger'].mean() == 0.5
     assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
 
-    res = masbb.compare_branches(spark_context, data, 'val', num_samples=2)
+    res = mabsbb.compare_branches(spark_context, data, 'val', num_samples=2)
 
     assert res['individual']['control']['mean'] == pytest.approx(0.5, rel=1e-1)
     assert res['individual']['same']['mean'] == pytest.approx(0.5, rel=1e-1)
@@ -184,7 +168,7 @@ def test_compare_branches_multistat(spark_context):
     assert data.val[data.branch != 'bigger'].mean() == 0.5
     assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
 
-    res = masbb.compare_branches(
+    res = mabsbb.compare_branches(
         spark_context,
         data,
         'val',

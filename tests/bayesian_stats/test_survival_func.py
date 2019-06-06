@@ -4,14 +4,14 @@
 import pandas as pd
 import pytest
 
-import mozanalysis.stats.survival_func_bb as massf
+import mozanalysis.bayesian_stats.survival_func as mabssf
 
 
 def test_get_thresholds():
     # One nonzero data point per percentile: 1 ... 101
     # Reverse order to make life slightly more interesting
     data = pd.Series(range(102)[::-1])
-    res = massf.get_thresholds(data)
+    res = mabssf.get_thresholds(data)
 
     assert len(data) - 1 == 101
     assert len(res) == 101
@@ -27,7 +27,7 @@ def test_get_thresholds_2():
     data[300] = 4
     data[0] = 9001
 
-    res = massf.get_thresholds(data)
+    res = mabssf.get_thresholds(data)
 
     assert set(res) == {0, 1, 2, 4}
 
@@ -40,7 +40,7 @@ def test_one_thresh():
     df.iloc[:300, 1] = range(300)
 
     # Odd threshold: both branches have equal amounts of data above/below
-    res = massf._one_thresh(41, df, 'val', 'control')
+    res = mabssf._one_thresh(41, df, 'val', 'control')
 
     assert res['individual']['test'].loc['0.05'] == pytest.approx(0.227387, abs=1e-6)
     assert res['individual']['test'].loc['0.5'] == pytest.approx(0.258644, abs=1e-6)
@@ -57,7 +57,7 @@ def test_one_thresh():
     assert '_tmp_threshold_val' not in df.columns
 
     # Even threshold: 'test' has one more data point above it
-    res2 = massf._one_thresh(42, df, 'val', 'control')
+    res2 = mabssf._one_thresh(42, df, 'val', 'control')
     assert res2['individual']['test'].loc['0.05'] == pytest.approx(0.227387, abs=1e-6)
     assert res2['individual']['test'].loc['0.5'] == pytest.approx(0.258644, abs=1e-6)
     assert res2['individual']['control'].loc['0.05'] < \
@@ -74,7 +74,7 @@ def test_compare_branches():
     df.iloc[1::2, 0] = 'test'
     df.iloc[:300, 1] = range(300)
 
-    res = massf.compare_branches(df, 'val', thresholds=[0., 15.9])
+    res = mabssf.compare_branches(df, 'val', thresholds=[0., 15.9])
 
     assert res['individual']['control'].loc[0., '0.05'] == pytest.approx(
         0.265692, abs=1e-6
@@ -99,6 +99,6 @@ def test_few_auto_thresholds():
     df.iloc[20:30] = 1
     df.iloc[405] = 100
 
-    res = massf.compare_branches(df, 'val')
+    res = mabssf.compare_branches(df, 'val')
     assert set(res['individual']['test'].index) == {0, 1}
     assert set(res['individual']['control'].index) == {0, 1}
