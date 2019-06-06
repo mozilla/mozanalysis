@@ -88,7 +88,7 @@ def compare_branches(
 
     # Depending on whether `stat_fn` returns a scalar or a dict,
     # we might have to call the 'batch' versions:
-    if isinstance(samples[branch_list[0]][0], pd.Series):
+    if isinstance(samples[ref_branch_label][0], pd.Series):
         # summarize_one = masss.summarize_one_branch_samples
         compare_pair = masss.summarize_joint_samples
 
@@ -235,36 +235,16 @@ def get_bootstrap_samples(
     return summary_df, original_sample_stats
 
 
-def get_bootstrap_samples_local(data, stat_fn, num_samples):
-    """Equivalent to ``get_bootstrap_samples`` but doesn't require Spark.
-
-    The main purpose of this function is to document what's being done
-    in ``get_bootstrap_samples`` :D
-
-    TODO: or maybe running when spark isn't available? Do we actually
-    want to make this function work?
-    """
-    return [
-        _resample_and_agg_once(stat_fn, data)  # slower?
-        # stat_fn(np.random.choice(data, size=len(data)))
-        for _ in range(num_samples)
-    ]
-
-
 # Functions that calculate stats over one resampled population
 
 
-def _resample_and_agg_once_bcast(
-    broadcast_data, stat_fn, unique_seed
-):
+def _resample_and_agg_once_bcast(broadcast_data, stat_fn, unique_seed):
     return _resample_and_agg_once(
         broadcast_data.value, stat_fn, unique_seed
     )
 
 
-def _resample_and_agg_once(
-    data, stat_fn, unique_seed=None
-):
+def _resample_and_agg_once(data, stat_fn, unique_seed=None):
     random_state = np.random.RandomState(unique_seed)
 
     n = len(data)
@@ -279,9 +259,7 @@ def _resample_and_agg_once(
 # Bootstrap-specific stats
 
 
-def summarize_one_branch_empirical_bootstrap(
-    samples, original_sample_stats, quantiles
-):
+def summarize_one_branch_empirical_bootstrap(samples, original_sample_stats, quantiles):
     inv_quantiles = [1 - q for q in quantiles]
 
     if not isinstance(original_sample_stats, dict):
