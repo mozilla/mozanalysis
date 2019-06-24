@@ -133,6 +133,12 @@ class Experiment(object):
                 - 'pref_flip'
                 - 'addon'
 
+                or a callable that accepts a spark context as an argument
+                and returns a Spark DataFrame containing all enrollment events
+                ever conducted using that method, with columns ``client_id``,
+                ``experiment_slug``, ``branch``, ``enrollment_date``,
+                and ``addon_version`` if it's relevant.
+
             end_date (str, optional): Ignore enrollments after this
                 date: for faster queries on stale experiments. If you
                 set ``num_dates_enrollment`` then do not set this; at best
@@ -146,15 +152,14 @@ class Experiment(object):
                 - enrollment_date (str): e.g. '20190329'
                 - branch (str)
         """
-        if study_type == 'pref_flip':
+        if callable(study_type):
+            enrollments = study_type(spark)
+        elif study_type == 'pref_flip':
             enrollments = self._get_enrollments_view_normandy(spark)
-
         elif study_type == 'addon':
-            enrollments = self._get_enrollments_view_addon(spark, self.addon_version)
-
+            enrollments = self._get_enrollments_view_addon(spark)
         # elif study_type == 'glean':
         #     raise NotImplementedError
-
         else:
             raise ValueError("Unrecognized study_type: {}".format(study_type))
 
@@ -163,6 +168,17 @@ class Experiment(object):
         ).filter(
             enrollments.experiment_slug == self.experiment_slug
         )
+
+        if self.addon_version:
+            if "addon_version" not in enrollments.columns:
+                raise ValueError(
+                    ("Experiment constructed with an addon_version but your  "
+                     "study_type (%s) is incompatible with addon versions."
+                     ).format(study_type)
+                )
+            enrollments = enrollments.filter(
+                enrollments.addon_version == self.addon_version
+            ).drop(enrollments.addon_version)
 
         if self.num_dates_enrollment is not None:
             if end_date is not None:
@@ -364,7 +380,7 @@ class Experiment(object):
         )
 
     @staticmethod
-    def _get_enrollments_view_addon(spark, addon_version=None):
+    def _get_enrollments_view_addon(spark):
         """Return a DataFrame of all addon study enrollment events.
 
         Filter the ``telemetry_shield_study_parquet`` to enrollment events
@@ -372,19 +388,8 @@ class Experiment(object):
 
         Args:
             spark: The spark context.
-            addon_version (str, optional): The version of the experiment
-                addon. Some addon experiment slugs get reused - in those
-                cases we need to filter on the addon version also.
         """
         tssp = spark.table('telemetry_shield_study_parquet')
-
-        if addon_version is not None:
-            # It's a little messy that we filter `addon_version` here
-            # and `study_name` elsewhere, but this seemed the least
-            # hacky solution
-            tssp = tssp.filter(
-                tssp.payload.addon_version == addon_version
-            )
 
         return tssp.filter(
             tssp.payload.data.study_state == 'enter'
@@ -393,6 +398,7 @@ class Experiment(object):
             tssp.payload.study_name.alias('experiment_slug'),
             tssp.payload.branch.alias('branch'),
             tssp.submission.alias('enrollment_date'),
+            tssp.payload.addon_version.alias('addon_version'),
         )
 
     def _get_scheduled_max_enrollment_date(self):
