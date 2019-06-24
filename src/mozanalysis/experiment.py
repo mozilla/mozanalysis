@@ -1,11 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import attr
 from pyspark.sql import functions as F
 
 from mozanalysis.utils import add_days
 
 
+@attr.s(frozen=True, slots=True)
 class Experiment(object):
     """Get DataFrames of experiment data; store experiment metadata.
 
@@ -101,22 +103,11 @@ class Experiment(object):
             Some addon experiment slugs get reused - in those cases we need
             to filter on the addon version also.
     """
-    def __init__(
-        self, experiment_slug, start_date, num_dates_enrollment=None,
-        addon_version=None
-    ):
-        # Let's be conservative about storing state - it doesn't belong
-        # in this class. Treat these attributes as immutable.
-        # These attributes are stored because it would be a PITA not to
-        # store them:
-        #   - they are required by both `get_enrollments()` and
-        #       `get_per_client_data()`
-        #   - if you were accidentally inconsistent with their values
-        #       then you would hit trouble quickly!
-        self.experiment_slug = experiment_slug
-        self.start_date = start_date
-        self.num_dates_enrollment = num_dates_enrollment
-        self.addon_version = addon_version
+
+    experiment_slug = attr.ib()
+    start_date = attr.ib()
+    num_dates_enrollment = attr.ib(default=None)
+    addon_version = attr.ib(default=None)
 
     def get_enrollments(
         self, spark, study_type='pref_flip', end_date=None, debug_dupes=False
