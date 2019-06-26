@@ -141,32 +141,36 @@ def test_filter_data_source_for_analysis_window(spark):
     assert _simple_return_agg_date(F.max, filtered_ds_2) == '20190112'
 
 
-def _get_enrollment_view(spark, slug):
-    # `slug` is supplied so we reuse this fixture
-    # with multiple slugs
-    data_rows = [
-        ['aaaa', slug, 'control', '20190101'],
-        ['bbbb', slug, 'test', '20190101'],
-        ['cccc', slug, 'control', '20190108'],
-        ['dddd', slug, 'test', '20190109'],
-        ['eeee', 'no', 'control', '20190101'],
-    ]
+def _get_enrollment_view(slug):
+    def inner(spark):
+        # `slug` is supplied so we reuse this fixture
+        # with multiple slugs
+        data_rows = [
+            ['aaaa', slug, 'control', '20190101'],
+            ['bbbb', slug, 'test', '20190101'],
+            ['cccc', slug, 'control', '20190108'],
+            ['dddd', slug, 'test', '20190109'],
+            ['eeee', 'no', 'control', '20190101'],
+        ]
 
-    return spark.createDataFrame(
-        data_rows,
-        [
-            "client_id",
-            "experiment_slug",
-            "branch",
-            "enrollment_date",
-        ],
-    )
+        return spark.createDataFrame(
+            data_rows,
+            [
+                "client_id",
+                "experiment_slug",
+                "branch",
+                "enrollment_date",
+            ],
+        )
+    return inner
 
 
-def test_filter_enrollments_for_analysis_window(spark, monkeypatch):
+def test_filter_enrollments_for_analysis_window(spark):
     exp = Experiment('a-stub', '20190101')
-    _mock_exp(monkeypatch, exp)
-    enrollments = exp.get_enrollments(spark)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
     assert enrollments.count() == 4
 
     # With final data collected on '20190114', we have 7 dates of data
@@ -176,47 +180,34 @@ def test_filter_enrollments_for_analysis_window(spark, monkeypatch):
     assert fe.count() == 3
 
 
-def _mock_exp(monkeypatch, exp):
-    monkeypatch.setattr(
-        exp, '_get_enrollments_view_normandy',
-        lambda spark: _get_enrollment_view(spark, exp.experiment_slug)
-    )
-    monkeypatch.setattr(
-        exp, '_get_enrollments_view_addon',
-        lambda spark, addon_version: _get_enrollment_view(spark, exp.experiment_slug)
-    )
-
-
-def test_get_enrollments(spark, monkeypatch):
-    # Experiment = _mock_exp(monkeypatch)
-
+def test_get_enrollments(spark):
     exp = Experiment('a-stub', '20190101')
-    _mock_exp(monkeypatch, exp)
-    assert exp.get_enrollments(spark).count() == 4
+    view_method = _get_enrollment_view("a-stub")
+    assert exp.get_enrollments(spark, view_method).count() == 4
 
     exp2 = Experiment('a-stub2', '20190102')
-    _mock_exp(monkeypatch, exp2)
-    enrl2 = exp2.get_enrollments(spark, study_type='addon')
+    view_method2 = _get_enrollment_view("a-stub2")
+    enrl2 = exp2.get_enrollments(spark, study_type=view_method2)
     assert enrl2.count() == 2
     assert enrl2.select(F.min(enrl2.enrollment_date).alias('b')).first(
         )['b'] == '20190108'
 
     exp_8d = Experiment('experiment-with-8-day-cohort', '20190101', 8)
-    _mock_exp(monkeypatch, exp_8d)
-    enrl_8d = exp_8d.get_enrollments(spark)
+    view_method_8d = _get_enrollment_view("experiment-with-8-day-cohort")
+    enrl_8d = exp_8d.get_enrollments(spark, view_method_8d)
     assert enrl_8d.count() == 3
     assert enrl_8d.select(F.max(enrl_8d.enrollment_date).alias('b')).first(
         )['b'] == '20190108'
 
 
-def test_get_enrollments_debug_dupes(spark, monkeypatch):
+def test_get_enrollments_debug_dupes(spark):
     exp = Experiment('a-stub', '20190101')
-    _mock_exp(monkeypatch, exp)
+    view_method = _get_enrollment_view("a-stub")
 
-    enrl = exp.get_enrollments(spark)
+    enrl = exp.get_enrollments(spark, view_method)
     assert 'num_events' not in enrl.columns
 
-    enrl2 = exp.get_enrollments(spark, debug_dupes=True)
+    enrl2 = exp.get_enrollments(spark, view_method, debug_dupes=True)
     assert 'num_events' in enrl2.columns
 
     penrl2 = enrl2.toPandas()
@@ -225,7 +216,7 @@ def test_get_enrollments_debug_dupes(spark, monkeypatch):
 
 def test_get_per_client_data_doesnt_crash(spark):
     exp = Experiment('a-stub', '20190101', 8)
-    enrollments = _get_enrollment_view(spark, exp.experiment_slug)
+    enrollments = _get_enrollment_view(exp.experiment_slug)(spark)
     data_source = _get_data_source(spark)
 
     exp.get_per_client_data(
