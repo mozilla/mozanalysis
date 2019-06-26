@@ -151,12 +151,14 @@
 <span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="kn">import</span> <span class="nn">attr</span>
 <span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="k">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
 
 <span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="k">import</span> <span class="n">add_days</span>
 
 
-<div class="viewcode-block" id="Experiment"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment">[docs]</a><span class="k">class</span> <span class="nc">Experiment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Experiment"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Experiment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get DataFrames of experiment data; store experiment metadata.</span>
 
 <span class="sd">    The methods here query data in a way compatible with the following</span>
@@ -251,22 +253,11 @@
 <span class="sd">            Some addon experiment slugs get reused - in those cases we need</span>
 <span class="sd">            to filter on the addon version also.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">experiment_slug</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">num_dates_enrollment</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">addon_version</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">):</span>
-        <span class="c1"># Let&#39;s be conservative about storing state - it doesn&#39;t belong</span>
-        <span class="c1"># in this class. Treat these attributes as immutable.</span>
-        <span class="c1"># These attributes are stored because it would be a PITA not to</span>
-        <span class="c1"># store them:</span>
-        <span class="c1">#   - they are required by both `get_enrollments()` and</span>
-        <span class="c1">#       `get_per_client_data()`</span>
-        <span class="c1">#   - if you were accidentally inconsistent with their values</span>
-        <span class="c1">#       then you would hit trouble quickly!</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span> <span class="o">=</span> <span class="n">experiment_slug</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span> <span class="o">=</span> <span class="n">start_date</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="o">=</span> <span class="n">num_dates_enrollment</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">addon_version</span> <span class="o">=</span> <span class="n">addon_version</span>
+
+    <span class="n">experiment_slug</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">start_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">num_dates_enrollment</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">addon_version</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Experiment.get_enrollments"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_enrollments">[docs]</a>    <span class="k">def</span> <span class="nf">get_enrollments</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">spark</span><span class="p">,</span> <span class="n">study_type</span><span class="o">=</span><span class="s1">&#39;pref_flip&#39;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">debug_dupes</span><span class="o">=</span><span class="kc">False</span>
@@ -292,6 +283,12 @@
 <span class="sd">                - &#39;pref_flip&#39;</span>
 <span class="sd">                - &#39;addon&#39;</span>
 
+<span class="sd">                or a callable that accepts a spark context as an argument</span>
+<span class="sd">                and returns a Spark DataFrame containing all enrollment events</span>
+<span class="sd">                ever conducted using that method, with columns ``client_id``,</span>
+<span class="sd">                ``experiment_slug``, ``branch``, ``enrollment_date``,</span>
+<span class="sd">                and ``addon_version`` if it&#39;s relevant.</span>
+
 <span class="sd">            end_date (str, optional): Ignore enrollments after this</span>
 <span class="sd">                date: for faster queries on stale experiments. If you</span>
 <span class="sd">                set ``num_dates_enrollment`` then do not set this; at best</span>
@@ -305,15 +302,14 @@
 <span class="sd">                - enrollment_date (str): e.g. &#39;20190329&#39;</span>
 <span class="sd">                - branch (str)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">study_type</span> <span class="o">==</span> <span class="s1">&#39;pref_flip&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">study_type</span><span class="p">):</span>
+            <span class="n">enrollments</span> <span class="o">=</span> <span class="n">study_type</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">study_type</span> <span class="o">==</span> <span class="s1">&#39;pref_flip&#39;</span><span class="p">:</span>
             <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_enrollments_view_normandy</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
-
         <span class="k">elif</span> <span class="n">study_type</span> <span class="o">==</span> <span class="s1">&#39;addon&#39;</span><span class="p">:</span>
-            <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_enrollments_view_addon</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">addon_version</span><span class="p">)</span>
-
+            <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_enrollments_view_addon</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
         <span class="c1"># elif study_type == &#39;glean&#39;:</span>
         <span class="c1">#     raise NotImplementedError</span>
-
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized study_type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">study_type</span><span class="p">))</span>
 
@@ -322,6 +318,17 @@
         <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
             <span class="n">enrollments</span><span class="o">.</span><span class="n">experiment_slug</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span>
         <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">addon_version</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;addon_version&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="p">(</span><span class="s2">&quot;Experiment constructed with an addon_version but your  &quot;</span>
+                     <span class="s2">&quot;study_type (</span><span class="si">%s</span><span class="s2">) is incompatible with addon versions.&quot;</span>
+                     <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">study_type</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">enrollments</span><span class="o">.</span><span class="n">addon_version</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">addon_version</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">addon_version</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">end_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -523,7 +530,7 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_enrollments_view_addon</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">addon_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_enrollments_view_addon</span><span class="p">(</span><span class="n">spark</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a DataFrame of all addon study enrollment events.</span>
 
 <span class="sd">        Filter the ``telemetry_shield_study_parquet`` to enrollment events</span>
@@ -531,19 +538,8 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            spark: The spark context.</span>
-<span class="sd">            addon_version (str, optional): The version of the experiment</span>
-<span class="sd">                addon. Some addon experiment slugs get reused - in those</span>
-<span class="sd">                cases we need to filter on the addon version also.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">tssp</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;telemetry_shield_study_parquet&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">addon_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># It&#39;s a little messy that we filter `addon_version` here</span>
-            <span class="c1"># and `study_name` elsewhere, but this seemed the least</span>
-            <span class="c1"># hacky solution</span>
-            <span class="n">tssp</span> <span class="o">=</span> <span class="n">tssp</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-                <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">addon_version</span> <span class="o">==</span> <span class="n">addon_version</span>
-            <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">tssp</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
             <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">study_state</span> <span class="o">==</span> <span class="s1">&#39;enter&#39;</span>
@@ -552,6 +548,7 @@
             <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">study_name</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;experiment_slug&#39;</span><span class="p">),</span>
             <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;branch&#39;</span><span class="p">),</span>
             <span class="n">tssp</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollment_date&#39;</span><span class="p">),</span>
+            <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">addon_version</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;addon_version&#39;</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_scheduled_max_enrollment_date</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

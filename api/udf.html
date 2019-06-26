@@ -160,7 +160,7 @@
 <span id="mozanalysis-udf"></span><h1><a class="reference internal" href="#module-mozanalysis.udf" title="mozanalysis.udf"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a><a class="headerlink" href="#module-mozanalysis.udf" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="mozanalysis.udf.generate_quantile_udf">
-<code class="descclassname">mozanalysis.udf.</code><code class="descname">generate_quantile_udf</code><span class="sig-paren">(</span><em>sdf</em>, <em>grouping_fields</em>, <em>bucket_field</em>, <em>count_field</em>, <em>quantiles</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#generate_quantile_udf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.generate_quantile_udf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.udf.</code><code class="sig-name descname">generate_quantile_udf</code><span class="sig-paren">(</span><em class="sig-param">sdf</em>, <em class="sig-param">grouping_fields</em>, <em class="sig-param">bucket_field</em>, <em class="sig-param">count_field</em>, <em class="sig-param">quantiles</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#generate_quantile_udf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.generate_quantile_udf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a UDF for computing histogram quantiles.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -210,7 +210,7 @@ sample of main_summary, you could write something like the example below:</p>
 <p>Note that the <code class="docutils literal notranslate"><span class="pre">quantile_udf</span></code> returned by this function is used together
 with the <code class="docutils literal notranslate"><span class="pre">.apply</span></code> method of the grouped <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <p>This will return a table <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> that looks like the table below.</p>
-<table class="docutils align-center">
+<table class="docutils align-default">
 <colgroup>
 <col style="width: 41%" />
 <col style="width: 36%" />
@@ -245,7 +245,7 @@ with the <code class="docutils literal notranslate"><span class="pre">.apply</sp
 
 <dl class="function">
 <dt id="mozanalysis.udf.generate_threshold_udf">
-<code class="descclassname">mozanalysis.udf.</code><code class="descname">generate_threshold_udf</code><span class="sig-paren">(</span><em>sdf</em>, <em>grouping_fields</em>, <em>bucket_field</em>, <em>count_field</em>, <em>thresholds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#generate_threshold_udf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.generate_threshold_udf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.udf.</code><code class="sig-name descname">generate_threshold_udf</code><span class="sig-paren">(</span><em class="sig-param">sdf</em>, <em class="sig-param">grouping_fields</em>, <em class="sig-param">bucket_field</em>, <em class="sig-param">count_field</em>, <em class="sig-param">thresholds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#generate_threshold_udf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.generate_threshold_udf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a UDF for calculating the fraction of values in a histogram
 equal to or exceeding a threshold.</p>
 <dl class="field-list simple">
@@ -295,7 +295,7 @@ you could write:</p>
 <p>Note that the <cite>threshold_udf</cite> returned by this function is used together
 with the <cite>.apply</cite> method of the grouped DataFrame.</p>
 <p>This will return a table <cite>thresholded</cite> that looks like:</p>
-<table class="docutils align-center">
+<table class="docutils align-default">
 <colgroup>
 <col style="width: 25%" />
 <col style="width: 25%" />
@@ -330,13 +330,13 @@ with the <cite>.apply</cite> method of the grouped DataFrame.</p>
 
 <dl class="function">
 <dt id="mozanalysis.udf.histogram_count">
-<code class="descclassname">mozanalysis.udf.</code><code class="descname">histogram_count</code><span class="sig-paren">(</span><em>values</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#histogram_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.histogram_count" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.udf.</code><code class="sig-name descname">histogram_count</code><span class="sig-paren">(</span><em class="sig-param">values</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#histogram_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.histogram_count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Counts the number of events recorded by a histogram.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="mozanalysis.udf.histogram_mean">
-<code class="descclassname">mozanalysis.udf.</code><code class="descname">histogram_mean</code><span class="sig-paren">(</span><em>values</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#histogram_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.histogram_mean" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.udf.</code><code class="sig-name descname">histogram_mean</code><span class="sig-paren">(</span><em class="sig-param">values</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#histogram_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.histogram_mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the mean of values in a histogram.</p>
 <p>This mean relies on the sum <em>post</em>-quantization, which amounts to a
 left-hand-rule discrete integral of the histogram. It is therefore
@@ -345,7 +345,7 @@ likely to be an underestimate of the true mean.</p>
 
 <dl class="function">
 <dt id="mozanalysis.udf.histogram_sum">
-<code class="descclassname">mozanalysis.udf.</code><code class="descname">histogram_sum</code><span class="sig-paren">(</span><em>values</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#histogram_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.histogram_sum" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.udf.</code><code class="sig-name descname">histogram_sum</code><span class="sig-paren">(</span><em class="sig-param">values</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/udf.html#histogram_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.udf.histogram_sum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the weighted sum of the histogram.</p>
 <p>Note that this is the sum <em>post</em>-quantization, which amounts to a
 left-hand-rule discrete integral of the histogram. It is therefore

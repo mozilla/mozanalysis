@@ -161,7 +161,7 @@
 <span id="mozanalysis-experiment"></span><h1><a class="reference internal" href="#module-mozanalysis.experiment" title="mozanalysis.experiment"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a><a class="headerlink" href="#module-mozanalysis.experiment" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="mozanalysis.experiment.Experiment">
-<em class="property">class </em><code class="descclassname">mozanalysis.experiment.</code><code class="descname">Experiment</code><span class="sig-paren">(</span><em>experiment_slug</em>, <em>start_date</em>, <em>num_dates_enrollment=None</em>, <em>addon_version=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">Experiment</code><span class="sig-paren">(</span><em class="sig-param">experiment_slug</em>, <em class="sig-param">start_date</em>, <em class="sig-param">num_dates_enrollment=None</em>, <em class="sig-param">addon_version=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get DataFrames of experiment data; store experiment metadata.</p>
 <p>The methods here query data in a way compatible with the following
 principles, which are important for experiment analysis:</p>
@@ -244,7 +244,7 @@ to filter on the addon version also.</p></li>
 </dl>
 <dl class="attribute">
 <dt id="mozanalysis.experiment.Experiment.experiment_slug">
-<code class="descname">experiment_slug</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.experiment_slug" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">experiment_slug</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.experiment_slug" title="Permalink to this definition">¶</a></dt>
 <dd><p>Name of the study, used to identify
 the enrollment events specific to this study.</p>
 <dl class="field-list simple">
@@ -256,7 +256,7 @@ the enrollment events specific to this study.</p>
 
 <dl class="attribute">
 <dt id="mozanalysis.experiment.Experiment.start_date">
-<code class="descname">start_date</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.start_date" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">start_date</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.start_date" title="Permalink to this definition">¶</a></dt>
 <dd><p>e.g. ‘20190101’. First date on which enrollment
 events were received.</p>
 <dl class="field-list simple">
@@ -268,7 +268,7 @@ events were received.</p>
 
 <dl class="attribute">
 <dt id="mozanalysis.experiment.Experiment.num_dates_enrollment">
-<code class="descname">num_dates_enrollment</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.num_dates_enrollment" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">num_dates_enrollment</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.num_dates_enrollment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Only include this many days
 of enrollments. If <code class="docutils literal notranslate"><span class="pre">None</span></code> then use the maximum number of days
 as determined by the metric’s analysis window and
@@ -285,7 +285,7 @@ before UTC midnight.</p>
 
 <dl class="attribute">
 <dt id="mozanalysis.experiment.Experiment.addon_version">
-<code class="descname">addon_version</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.addon_version" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addon_version</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.addon_version" title="Permalink to this definition">¶</a></dt>
 <dd><p>The version of the experiment addon.
 Some addon experiment slugs get reused - in those cases we need
 to filter on the addon version also.</p>
@@ -298,7 +298,7 @@ to filter on the addon version also.</p>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window">
-<code class="descname">filter_data_source_for_analysis_window</code><span class="sig-paren">(</span><em>data_source</em>, <em>last_date_full_data</em>, <em>analysis_start_days</em>, <em>analysis_length_days</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_data_source_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">filter_data_source_for_analysis_window</code><span class="sig-paren">(</span><em class="sig-param">data_source</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_days</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_data_source_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">data_source</span></code>, filtered to the relevant dates.</p>
 <p>This should not affect the results - it should just speed things
 up.</p>
@@ -306,13 +306,13 @@ up.</p>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window">
-<code class="descname">filter_enrollments_for_analysis_window</code><span class="sig-paren">(</span><em>enrollments</em>, <em>last_date_full_data</em>, <em>req_dates_of_data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_enrollments_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">filter_enrollments_for_analysis_window</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">req_dates_of_data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_enrollments_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the enrollments, filtered to the relevant dates.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.get_enrollments">
-<code class="descname">get_enrollments</code><span class="sig-paren">(</span><em>spark</em>, <em>study_type='pref_flip'</em>, <em>end_date=None</em>, <em>debug_dupes=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_enrollments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_enrollments" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_enrollments</code><span class="sig-paren">(</span><em class="sig-param">spark</em>, <em class="sig-param">study_type='pref_flip'</em>, <em class="sig-param">end_date=None</em>, <em class="sig-param">debug_dupes=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_enrollments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_enrollments" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a DataFrame of enrolled clients.</p>
 <p>This works for pref-flip and addon studies.</p>
 <p>The underlying queries are different for pref-flip vs addon
@@ -333,6 +333,11 @@ Ref: <a class="reference external" href="https://bugzilla.mozilla.org/show_bug.c
 <li><p>’pref_flip’</p></li>
 <li><p>’addon’</p></li>
 </ul>
+<p>or a callable that accepts a spark context as an argument
+and returns a Spark DataFrame containing all enrollment events
+ever conducted using that method, with columns <code class="docutils literal notranslate"><span class="pre">client_id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">experiment_slug</span></code>, <code class="docutils literal notranslate"><span class="pre">branch</span></code>, <code class="docutils literal notranslate"><span class="pre">enrollment_date</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">addon_version</span></code> if it’s relevant.</p>
 </p></li>
 <li><p><strong>end_date</strong> (<em>str</em><em>, </em><em>optional</em>) – Ignore enrollments after this
 date: for faster queries on stale experiments. If you
@@ -357,7 +362,7 @@ enrollment. Columns:</p>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.get_per_client_data">
-<code class="descname">get_per_client_data</code><span class="sig-paren">(</span><em>enrollments</em>, <em>data_source</em>, <em>metric_list</em>, <em>last_date_full_data</em>, <em>analysis_start_days</em>, <em>analysis_length_days</em>, <em>keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_per_client_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_per_client_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_per_client_data</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">data_source</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_days</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_per_client_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_per_client_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a DataFrame containing per-client metric values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
