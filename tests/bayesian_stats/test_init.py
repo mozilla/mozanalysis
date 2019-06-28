@@ -22,7 +22,7 @@ def test_summarize_one_branch_samples():
 def test_summarize_one_branch_samples_batch():
     s = pd.Series(np.linspace(0, 1, 1001))
     df = pd.DataFrame({'a': s, 'b': s + 1})
-    res = mabs.summarize_one_branch_samples_batch(df, quantiles=[0.05, 0.31, 0.95])
+    res = mabs.summarize_one_branch_samples(df, quantiles=[0.05, 0.31, 0.95])
     assert res.shape == (2, 4)
 
     assert res.loc['a', '0.05'] == pytest.approx(0.05)
@@ -57,7 +57,7 @@ def test_summarize_joint_samples_trivial():
 
 def test_summarize_joint_samples_batch_trivial():
     quantiles = (0.05, 0.31, 0.95)
-    res = mabs.summarize_joint_samples_batch(
+    res = mabs.summarize_joint_samples(
         pd.DataFrame({'a': [6, 6, 6], 'b': [1, 1, 1]}, columns=['a', 'b']),
         pd.DataFrame({'a': [3, 3, 3], 'b': [1, 1, 1]}, columns=['b', 'a']),
         quantiles=quantiles

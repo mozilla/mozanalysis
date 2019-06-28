@@ -69,11 +69,15 @@ def test_one_thresh():
 
 
 def test_compare_branches():
-    df = pd.DataFrame(columns=['branch', 'val'], index=range(1000))
+    df = pd.DataFrame(columns=['branch', 'val'], index=range(1000), dtype='float')
     df.iloc[::2, 0] = 'control'
     df.iloc[1::2, 0] = 'test'
     df.iloc[:300, 1] = range(300)
 
+    with pytest.raises(ValueError):
+        mabssf.compare_branches(df, 'val', thresholds=[0., 15.9])
+
+    df.iloc[300:, 1] = 0
     res = mabssf.compare_branches(df, 'val', thresholds=[0., 15.9])
 
     assert res['individual']['control'].loc[0., '0.05'] == pytest.approx(

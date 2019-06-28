@@ -9,94 +9,39 @@ DEFAULT_QUANTILES = (0.005, 0.05, 0.5, 0.95, 0.995)
 
 
 def summarize_one_branch_samples(samples, quantiles=DEFAULT_QUANTILES):
+    """Return descriptive statistics for sampled population-level stats.
+
+    Given samples from one or more distributions, calculate some
+    quantiles and the mean.
+
+    The intended primary use-case is for calculating credible intervals
+    for stats when bootstrapping, or credible intervals around Bayesian
+    model parameters; in both cases ``samples`` are from a posterior
+    concerning one branch of an experiment.
+
+    Args:
+        samples (pandas.Series or pandas.DataFrame): Samples over which
+            to compute the mean and quantiles.
+        quantiles (list, optional): The quantiles to compute - a good
+            reason to override the defaults would be when Bonferroni
+            corrections are required.
+
+    Returns:
+        If ``samples`` is a Series, then returns a pandas Series;
+        the index contains the stringified ``quantiles`` plus
+        ``'mean'``.
+
+        If ``samples`` is a DataFrame, then returns a pandas DataFrame;
+        the columns contain the stringified ``quantiles`` plus
+        ``'mean'``. The index matches the columns of ``samples``.
+    """
     if isinstance(samples, pd.DataFrame) or not np.isscalar(samples[0]):
-        return summarize_one_branch_samples_batch(samples, quantiles)
+        return _summarize_one_branch_samples_batch(samples, quantiles)
     else:
-        return summarize_one_branch_samples_single(samples, quantiles)
+        return _summarize_one_branch_samples_single(samples, quantiles)
 
 
 def summarize_joint_samples(focus, reference, quantiles=DEFAULT_QUANTILES):
-    if isinstance(focus, pd.DataFrame) or not np.isscalar(focus[0]):
-        return summarize_joint_samples_batch(focus, reference, quantiles)
-    else:
-        return summarize_joint_samples_single(focus, reference, quantiles)
-
-
-def summarize_one_branch_samples_single(samples, quantiles=DEFAULT_QUANTILES):
-    """Return descriptive statistics for sampled population-level stats.
-
-    Given samples from a distribution, calculate some quantiles and the
-    mean.
-
-    The intended primary use-case is for calculating confidence
-    intervals when bootstrapping, or probability bands around model
-    parameters; in both cases ``samples`` relate to data from one branch
-    of an experiment.
-
-    Args:
-        samples (pandas.Series): Samples over which to compute the mean
-            and quantiles.
-        quantiles (list, optional): The quantiles to compute - a good
-            reason to override the defaults would be when Bonferroni
-            corrections are required.
-
-    Returns:
-        A pandas Series; the index contains the stringified
-        ``quantiles`` plus ``'mean'``.
-    """
-    if not isinstance(samples, (pd.Series, np.ndarray, list)):
-        # Hey pd.Series.agg - don't apply me elementwise!
-        # Raising this error allows ``summarize_one_branch_samples_batch``
-        # to work also for non-batch ``samples`` (i.e. doing double duty)
-        raise TypeError("Can't summarize a scalar")
-
-    q_index = [str(v) for v in quantiles]
-
-    res = pd.Series(index=q_index + ['mean'])
-
-    res[q_index] = np.quantile(samples, quantiles)
-    res['mean'] = np.mean(samples)
-    return res
-
-
-def summarize_one_branch_samples_batch(samples, quantiles=DEFAULT_QUANTILES):
-    """Return descriptive statistics for sampled population-level stats.
-
-    Given samples from more than one distribution, calculate some
-    quantiles and the means.
-
-    The intended primary use-case is for calculating confidence
-    intervals when bootstrapping, or probability bands around model
-    parameters; in both cases ``samples`` relate to data from one branch
-    of an experiment.
-
-    Some example use-cases:
-
-    * When building a time series for one metric, each column's
-      samples are derived from data for a different analysis window.
-
-    * When bootstrapping several quantiles simultaneously (with a
-      ``stat_fn`` that returns several values), each column's samples
-      come from bootstrapping a different quantile. N.B. in this
-      example, the quantiles being bootstrapped over are unrelated to
-      the ``quantiles`` argument of this function.
-
-    Args:
-        samples (pandas.DataFrame): Each column contains a set of
-            samples over which to compute the means and quantiles.
-        quantiles (list, optional): The quantiles to compute - a good
-            reason to override the defaults would be when Bonferroni
-            corrections are required.
-
-    Returns:
-        A pandas DataFrame; the columns contain the stringified
-        ``quantiles`` plus ``'mean'``. The index matches the columns of
-        ``samples``.
-    """
-    return samples.agg(summarize_one_branch_samples, quantiles=quantiles).T
-
-
-def summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILES):
     """Return descriptive statistics for uplifts.
 
     The intended use case of this function is to compare a 'focus'
@@ -121,17 +66,23 @@ def summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILES
     same format that would be supplied to `summarize_one_branch_samples`
     when analyzing the branches independently.
 
+    Can be used to analyse a single metric (supply Series as arguments)
+    or in batch mode (supply DataFrames as arguments).
+
     Args:
-        focus (pandas.Series): Bootstrapped samples or samples of a
-            model parameter for a branch of an experiment.
-        reference (pandas.Series): The same quantity, calculated for a
-            different branch (typically the control).
+        focus (pandas.Series or pandas.DataFrame): Bootstrapped samples
+            or samples of a model parameter for a branch of an
+            experiment. If a DataFrame, each column represents a
+            different quantity.
+        reference (pandas.Series or pandas.DataFrame): The same
+            quantity, calculated for a different branch (typically the
+            control).
         quantiles (list, optional): The quantiles to compute - a good
             reason to override the defaults would be when Bonferroni
             corrections are required.
 
     Returns:
-        A pandas Series containing the following data
+        A pandas Series or DataFrame containing the following data
 
         * rel_uplift_*: Expectation value and quantiles over the relative
           uplift.
@@ -144,7 +95,37 @@ def summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILES
         * prob_win: In a Bayesian context, the probability that the ground
           truth model parameter is larger for the focus than the reference
           branch.
+
+        If returning a DataFrame, these quantities form the columns, and
+        the index matches the columns of ``focus``.
     """
+    if isinstance(focus, pd.DataFrame) or not np.isscalar(focus[0]):
+        return _summarize_joint_samples_batch(focus, reference, quantiles)
+    else:
+        return _summarize_joint_samples_single(focus, reference, quantiles)
+
+
+def _summarize_one_branch_samples_single(samples, quantiles=DEFAULT_QUANTILES):
+    if not isinstance(samples, (pd.Series, np.ndarray, list)):
+        # Hey pd.Series.agg - don't apply me elementwise!
+        # Raising this error allows ``_summarize_one_branch_samples_batch``
+        # to work also for non-batch ``samples`` (i.e. doing double duty)
+        raise TypeError("Can't summarize a scalar")
+
+    q_index = [str(v) for v in quantiles]
+
+    res = pd.Series(index=q_index + ['mean'])
+
+    res[q_index] = np.quantile(samples, quantiles)
+    res['mean'] = np.mean(samples)
+    return res
+
+
+def _summarize_one_branch_samples_batch(samples, quantiles=DEFAULT_QUANTILES):
+    return samples.agg(summarize_one_branch_samples, quantiles=quantiles).T
+
+
+def _summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILES):
     rel_q_labels = ['rel_uplift_{}'.format(q) for q in quantiles]
     abs_q_labels = ['abs_uplift_{}'.format(q) for q in quantiles]
 
@@ -167,49 +148,7 @@ def summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILES
     return res
 
 
-def summarize_joint_samples_batch(focus, reference, quantiles=DEFAULT_QUANTILES):
-    """Batch version of `summarize_joint_samples`.
-
-    See docs for `summarize_joint_samples`. The difference here is that
-    ``focus`` and ``reference`` are DataFrames not Series; each column
-    represents samples from a different distribution or statistic.
-
-    Some example use-cases:
-
-    * When building a time series for one metric, each column's
-      samples are derived from data for a different analysis window.
-    * When bootstrapping several quantiles simultaneously (with a
-      ``stat_fn`` that returns several values), each column's samples
-      come from bootstrapping a different quantile. N.B. in this
-      example, the quantiles being bootstrapped over are unrelated to
-      the ``quantiles`` argument of this function.
-
-    Args:
-        focus (pandas.DataFrame): Each column contains bootstrapped
-            samples or samples of a model parameter for a branch of an
-            experiment.
-        reference (pandas.DataFrame): The same quantity, calculated for
-            a different branch (typically the control).
-        quantiles (list, optional): The quantiles to compute - a good
-            reason to override the defaults would be when Bonferroni
-            corrections are required.
-
-    Returns:
-        A pandas DataFrame with an index matching the columns of
-        ``focus``, and the following columns:
-
-        * rel_uplift_*: Expectation value and quantiles over the relative
-          uplift.
-        * abs_uplift_*: Expectation value and quantiles over the absolute
-          uplift.
-        * max_abs_diff_0.95: Quantile 0.95 on the L1 norm of differences/
-          absolute uplifts. In a Bayesian context, there is a 95%
-          probability that the absolute difference is less than this in
-          either direction.
-        * prob_win: In a Bayesian context, the probability that the ground
-          truth model parameter is larger for the focus than the reference
-          branch.
-    """
+def _summarize_joint_samples_batch(focus, reference, quantiles=DEFAULT_QUANTILES):
     if set(focus.columns) != set(reference.columns):
         raise ValueError()
 

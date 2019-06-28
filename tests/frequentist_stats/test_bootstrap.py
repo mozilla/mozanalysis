@@ -120,10 +120,10 @@ def test_bootstrap_one_branch_multistat(spark_context):
     assert res.loc['mean', '0.61'] == pytest.approx(0.5, rel=1e-1)
 
 
-def test_summarize_one_branch_empirical_bootstrap():
+def test_summarize_one_branch_samples():
     s = pd.Series(np.linspace(0, 1, 1001))
 
-    res = mafsb.summarize_one_branch_empirical_bootstrap(
+    res = mafsb.summarize_one_branch_samples(
         s, s.mean(), [0.05, 0.31, 0.95]
     )
     assert res.shape == (4,)
@@ -133,10 +133,10 @@ def test_summarize_one_branch_empirical_bootstrap():
     assert res['mean'] == pytest.approx(0.5)
 
 
-def test_summarize_one_branch_empirical_bootstrap_batch():
+def test_summarize_one_branch_samples_batch():
     s = pd.Series(np.linspace(0, 1, 1001))
     df = pd.DataFrame({'a': s, 'b': s + 1})
-    res = mafsb.summarize_one_branch_empirical_bootstrap(
+    res = mafsb.summarize_one_branch_samples(
         df, {'a': s.mean(), 'b': s.mean() + 1},
         quantiles=[0.05, 0.31, 0.95]
     )

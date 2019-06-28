@@ -99,6 +99,9 @@ def get_thresholds(col, max_num_thresholds=101):
         A list of thresholds. By default these are de-duped percentiles
         of the nonzero data.
     """
+    if col.isnull().any():
+        raise ValueError("'col' contains null values")
+
     if col.min() < 0:
         raise ValueError("This function assumes non-negative data")
 
@@ -120,6 +123,9 @@ def get_thresholds(col, max_num_thresholds=101):
 
 def _one_thresh(threshold, df, col_label, ref_branch_label):
     """Run stats on the fraction of clients above ``threshold``."""
+    if df[col_label].isnull().any():
+        raise ValueError("'df' contains null values for '{}'".format(col_label))
+
     if '_tmp_threshold_val' in df.columns:
         raise ValueError(
             "Either you have an exceedingly poor taste in column names, "
