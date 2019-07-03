@@ -85,6 +85,33 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric(spark_context):
         ), (l, bb_res, pboot_res)
 
 
+def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(spark_context):
+    num_enrollments = 20000
+
+    rs = np.random.RandomState(42)
+    data = rs.geometric(p=0.1, size=num_enrollments)
+
+    quantiles = [0.3, 0.5, 0.9]
+
+    def calc_quantiles(x):
+        return dict(zip(
+            quantiles, np.quantile(x, quantiles)
+        ))
+
+    bb_res = mabsbb.bootstrap_one_branch(
+        spark_context, data,
+        stat_fn=mabsbb.make_bb_quantile_closure(quantiles)
+    )
+    pboot_res = mafsb.bootstrap_one_branch(spark_context, data, stat_fn=calc_quantiles)
+
+    for q in bb_res.index:
+        for l in bb_res.columns:
+            assert bb_res.loc[q, l] == pytest.approx(
+                pboot_res.loc[q, l],
+                rel=5e-3
+            ), (q, l, bb_res, pboot_res)
+
+
 def test_bayesian_bootstrap_vs_bootstrap_poisson(spark_context):
     num_enrollments = 10001
 
@@ -102,3 +129,30 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson(spark_context):
             pboot_res.loc[l],
             rel=5e-3
         ), (l, bb_res, pboot_res)
+
+
+def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles(spark_context):
+    num_enrollments = 10001
+
+    rs = np.random.RandomState(42)
+    data = rs.poisson(lam=10, size=num_enrollments)
+
+    quantiles = [0.1, 0.5, 0.95]
+
+    def calc_quantiles(x):
+        return dict(zip(
+            quantiles, np.quantile(x, quantiles)
+        ))
+
+    bb_res = mabsbb.bootstrap_one_branch(
+        spark_context, data,
+        stat_fn=mabsbb.make_bb_quantile_closure(quantiles)
+    )
+    pboot_res = mafsb.bootstrap_one_branch(spark_context, data, stat_fn=calc_quantiles)
+
+    for q in bb_res.index:
+        for l in bb_res.columns:
+            assert bb_res.loc[q, l] == pytest.approx(
+                pboot_res.loc[q, l],
+                rel=5e-3
+            ), (q, l, bb_res, pboot_res)

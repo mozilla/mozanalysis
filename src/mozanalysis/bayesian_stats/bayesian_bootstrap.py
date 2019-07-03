@@ -25,10 +25,46 @@ def bb_mean(values, prob_weights):
 
 
 def make_bb_quantile_closure(quantiles):
-    """Return a function to calculate quantiles for a bootstrap replicate."""
+    """Return a function to calculate quantiles for a bootstrap replicate.
+
+    Args:
+        quantiles (float, list of floats): Quantiles to compute
+
+    Returns a function that calculates quantiles for a bootstrap replicate:
+
+        Args:
+
+            values (pd.Series, ndarray):
+                One dimensional array of observed values
+            prob_weights (pd.Series, ndarray):
+                Equally shaped array of the probability weight associated with
+                each value.
+
+        Returns:
+
+            * A quantile as a np.float, or
+            * several quantiles as a dict keyed by the quantiles
+
+    """
 
     # If https://github.com/numpy/numpy/pull/9211/ is ever merged then
     # we can just use that instead.
+
+    def get_value_at_quantile(values, cdf, quantile):
+        """Return the value at a quantile.
+
+        Does no interpolation because our Bayesian bootstrap
+        implementation calls `np.unique` to tally the values:
+        if it did not take this shortcut then regardless of whether
+        we interpolate when returning quantiles, the vast majority
+        of quantiles would coincide with a value. But since we take
+        this shortcut, interpolation mostly returns values not in the
+        dataset. Ergh.
+        """
+        # Add a tolerance of 1e-6 to account for numerical error when
+        # computing the cdf
+        arg = np.nonzero(quantile < cdf + 1e-6)[0][0]
+        return values[arg]
 
     def bb_quantile(values, prob_weights):
         """Calculate quantiles for a bootstrap replicate.
@@ -48,13 +84,14 @@ def make_bb_quantile_closure(quantiles):
         # assume values is previously sorted, as per np.unique()
         cdf = np.cumsum(prob_weights)
 
-        res = np.interp(quantiles, cdf, values)
-
         if np.isscalar(quantiles):
-            return res
+            return get_value_at_quantile(values, cdf, quantiles)
 
         else:
-            return dict(zip(quantiles, res))
+            return {
+                q: get_value_at_quantile(values, cdf, q)
+                for q in quantiles
+            }
 
     return bb_quantile
 
@@ -239,6 +276,10 @@ def get_bootstrap_samples(
     if threshold_quantile:
         data = filter_outliers(data, threshold_quantile)
 
+    # For computational efficiency, tally the data. If you are careful
+    # with the resulting draws from the dirichlet then this should be
+    # equivalent to not doing this step (and passing np.ones() as the
+    # counts)
     data_values, data_counts = np.unique(data, return_counts=True)
 
     if seed_start is None:
