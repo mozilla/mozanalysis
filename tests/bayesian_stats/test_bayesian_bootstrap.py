@@ -202,3 +202,27 @@ def test_compare_branches_multistat(spark_context):
 
     assert res['comparative']['same'].loc['max', 'rel_uplift_exp'] == 0
     assert res['comparative']['bigger'].loc['max', 'rel_uplift_exp'] == 0
+
+
+def test_bb_mean():
+    values = np.array([0, 1, 2])
+    weights = np.array([0.1, 0.4, 0.5])
+
+    assert mabsbb.bb_mean(values, weights) == pytest.approx(1.4)
+
+
+def test_bb_quantile():
+    values = np.array([0, 1, 2])
+    weights = np.array([0.1, 0.4, 0.5])
+
+    calc_median = mabsbb.make_bb_quantile_closure(0.5)
+
+    assert calc_median(values, weights) == pytest.approx(1)
+
+    calc_a_bunch = mabsbb.make_bb_quantile_closure([0, 0.1, 0.5, 1])
+
+    res = calc_a_bunch(values, weights)
+    assert res[0] == pytest.approx(0)
+    assert res[0.1] == pytest.approx(0)
+    assert res[0.5] == pytest.approx(1)
+    assert res[1] == pytest.approx(2)

@@ -5,7 +5,68 @@ import numpy as np
 import pandas as pd
 
 
-DEFAULT_QUANTILES = (0.005, 0.05, 0.5, 0.95, 0.995)
+DEFAULT_QUANTILES = (0.005, 0.025, 0.5, 0.975, 0.995)
+
+
+def compare_samples(
+    samples, ref_branch_label,
+    individual_summary_quantiles=DEFAULT_QUANTILES,
+    comparative_summary_quantiles=DEFAULT_QUANTILES
+):
+    """Return descriptive statistics for branch stats and uplifts.
+
+    Given per-branch samples for some quantity, return summary
+    statistics (percentiles and the mean) for the quantity for each
+    individual branch. Also return comparative summary statistics for
+    the uplift of this quantity for each branch with respect to the
+    reference branch.
+
+    Args:
+        samples (dict of pandas.Series or pandas.DataFrame): Each key
+            is the label for a branch. Each value is the corresponding
+            sample set.
+        ref_branch_label (str): Label for the reference branch
+            (typically the control).
+        individual_summary_quantiles (list of float): Quantiles that
+            define the summary stats for the individual branches'
+            samples.
+        comparative_summary_quantiles (list of float): Quantiles that
+            define the summary stats for the comparative stats.
+
+    Returns a dictionary:
+        When the values of ``samples`` are Series, then this function
+        returns a dictionary with the following keys and
+        values:
+
+            'individual': dictionary mapping each branch name to a
+                pandas Series that holds the per-branch sample means and
+                quantiles.
+            'comparative': dictionary mapping each branch name to a
+                pandas Series of summary statistics for the possible
+                uplifts of the sampled quantity relative to the
+                reference branch.
+
+        Otherwise, when the values of ``samples`` are DataFrames, then
+        this function returns a similar dictionary, except the Series
+        are replaced with DataFrames. The index for each DataFrame is
+        the columns of a value of ``samples``.
+    """
+    branch_list = list(samples.keys())
+
+    return {
+        'individual': {
+            b: summarize_one_branch_samples(
+                samples[b],
+                quantiles=individual_summary_quantiles
+            ) for b in branch_list
+        },
+        'comparative': {
+            b: summarize_joint_samples(
+                samples[b], samples[ref_branch_label],
+                quantiles=comparative_summary_quantiles
+            ) for b in set(branch_list) - {ref_branch_label}
+        },
+    }
 
 
 def summarize_one_branch_samples(samples, quantiles=DEFAULT_QUANTILES):

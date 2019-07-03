@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import pandas as pd
 import pytest
+import scipy.stats as st
 
 import mozanalysis.bayesian_stats.survival_func as mabssf
 
@@ -40,12 +41,17 @@ def test_one_thresh():
     df.iloc[:300, 1] = range(300)
 
     # Odd threshold: both branches have equal amounts of data above/below
+    # Specifically, 129 above, 371 below
     res = mabssf._one_thresh(41, df, 'val', 'control')
 
-    assert res['individual']['test'].loc['0.05'] == pytest.approx(0.227387, abs=1e-6)
-    assert res['individual']['test'].loc['0.5'] == pytest.approx(0.258644, abs=1e-6)
-    assert res['individual']['control'].loc['0.05'] == \
-        res['individual']['test'].loc['0.05']
+    assert res['individual']['test'].loc['0.025'] == pytest.approx(
+        st.beta(129 + 1, 371 + 1).ppf(0.025), abs=1e-6
+    )
+    assert res['individual']['test'].loc['0.5'] == pytest.approx(
+        st.beta(129 + 1, 371 + 1).ppf(0.5), abs=1e-6
+    )
+    assert res['individual']['control'].loc['0.025'] == \
+        res['individual']['test'].loc['0.025']
     assert res['individual']['control'].loc['0.5'] == \
         res['individual']['test'].loc['0.5']
 
@@ -56,12 +62,16 @@ def test_one_thresh():
 
     assert '_tmp_threshold_val' not in df.columns
 
-    # Even threshold: 'test' has one more data point above it
+    # Even threshold: 'control' has one fewer data point above it
     res2 = mabssf._one_thresh(42, df, 'val', 'control')
-    assert res2['individual']['test'].loc['0.05'] == pytest.approx(0.227387, abs=1e-6)
-    assert res2['individual']['test'].loc['0.5'] == pytest.approx(0.258644, abs=1e-6)
-    assert res2['individual']['control'].loc['0.05'] < \
-        res2['individual']['test'].loc['0.05']
+    assert res2['individual']['test'].loc['0.025'] == pytest.approx(
+        st.beta(129 + 1, 371 + 1).ppf(0.025), abs=1e-6
+    )
+    assert res2['individual']['test'].loc['0.5'] == pytest.approx(
+        st.beta(129 + 1, 371 + 1).ppf(0.5), abs=1e-6
+    )
+    assert res2['individual']['control'].loc['0.025'] < \
+        res2['individual']['test'].loc['0.025']
     assert res2['individual']['control'].loc['0.5'] < \
         res2['individual']['test'].loc['0.5']
 
@@ -80,15 +90,15 @@ def test_compare_branches():
     df.iloc[300:, 1] = 0
     res = mabssf.compare_branches(df, 'val', thresholds=[0., 15.9])
 
-    assert res['individual']['control'].loc[0., '0.05'] == pytest.approx(
-        0.265692, abs=1e-6
+    assert res['individual']['control'].loc[0., '0.025'] == pytest.approx(
+        st.beta(149 + 1, 351 + 1).ppf(0.025), abs=1e-6
     )
     assert res['individual']['control'].loc[0., '0.5'] == pytest.approx(
         0.298537, abs=1e-6
     )
 
-    assert res['individual']['test'].loc[15.9, '0.05'] == pytest.approx(
-        0.252249, abs=1e-6
+    assert res['individual']['test'].loc[15.9, '0.025'] == pytest.approx(
+        st.beta(142 + 1, 358 + 1).ppf(0.025), abs=1e-6
     )
     assert res['individual']['test'].loc[15.9, '0.5'] == pytest.approx(
         0.284575, abs=1e-6

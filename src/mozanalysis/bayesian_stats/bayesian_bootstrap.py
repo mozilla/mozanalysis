@@ -27,6 +27,9 @@ def bb_mean(values, prob_weights):
 def make_bb_quantile_closure(quantiles):
     """Return a function to calculate quantiles for a bootstrap replicate."""
 
+    # If https://github.com/numpy/numpy/pull/9211/ is ever merged then
+    # we can just use that instead.
+
     def bb_quantile(values, prob_weights):
         """Calculate quantiles for a bootstrap replicate.
 
@@ -45,7 +48,7 @@ def make_bb_quantile_closure(quantiles):
         # assume values is previously sorted, as per np.unique()
         cdf = np.cumsum(prob_weights)
 
-        res = np.interp(quantiles, values, cdf)
+        res = np.interp(quantiles, cdf, values)
 
         if np.isscalar(quantiles):
             return res
@@ -136,33 +139,10 @@ def compare_branches(
         ) for b in branch_list
     }
 
-    return {
-        'individual': {
-            b: mabs.summarize_one_branch_samples(
-                samples[b],
-                quantiles=individual_summary_quantiles
-            ) for b in branch_list
-        },
-        'comparative': {
-            b: mabs.summarize_joint_samples(
-                samples[b], samples[ref_branch_label],
-                quantiles=comparative_summary_quantiles
-            ) for b in set(branch_list) - {ref_branch_label}
-        },
-    }
-
-
-def bootstrap_each_branch(
-    sc, df, stat_fn=bb_mean, num_samples=10000, seed_start=None,
-    threshold_quantile=None, summary_quantiles=mabs.DEFAULT_QUANTILES
-):
-    """Run ``bootstrap_one_branch`` for each branch's data."""
-    return {
-        b: bootstrap_one_branch(
-            sc, df[df.branch == b], stat_fn, num_samples, seed_start,
-            threshold_quantile, summary_quantiles
-        ) for b in df.branch.unique()
-    }
+    return mabs.compare_samples(
+        samples, ref_branch_label, individual_summary_quantiles,
+        comparative_summary_quantiles
+    )
 
 
 def bootstrap_one_branch(
