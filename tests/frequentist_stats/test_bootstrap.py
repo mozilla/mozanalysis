@@ -139,11 +139,15 @@ def test_compare_branches(spark_context):
     assert res['individual']['bigger']['mean'] == pytest.approx(0.75, rel=1e-1)
 
     assert 'control' not in res['comparative'].keys()
-    assert res['comparative']['same']['rel_uplift_exp'] == pytest.approx(0, abs=0.1)
-    assert res['comparative']['bigger']['rel_uplift_exp'] == pytest.approx(0.5, abs=0.1)
+    assert res['comparative']['same'][('rel_uplift', 'exp')] == \
+        pytest.approx(0, abs=0.1)
+    assert res['comparative']['bigger'][('rel_uplift', 'exp')] == \
+        pytest.approx(0.5, abs=0.1)
 
-    assert res['comparative']['same']['prob_win'] in (0, 0.5, 1)  # num_samples=2
-    assert res['comparative']['bigger']['prob_win'] == pytest.approx(1, abs=0.01)
+    # num_samples=2 so (0, 0.5, 1):
+    assert res['comparative']['same'][('prob_win', None)] in (0, 0.5, 1)
+    assert res['comparative']['bigger'][('prob_win', None)] == \
+        pytest.approx(1, abs=0.01)
 
 
 def test_compare_branches_multistat(spark_context):
@@ -184,15 +188,15 @@ def test_compare_branches_multistat(spark_context):
 
     assert 'control' not in res['comparative'].keys()
 
-    assert res['comparative']['same'].loc['mean', 'rel_uplift_exp'] \
+    assert res['comparative']['same'].loc['mean', ('rel_uplift', 'exp')] \
         == pytest.approx(0, abs=0.1)
-    assert res['comparative']['bigger'].loc['mean', 'rel_uplift_exp'] \
+    assert res['comparative']['bigger'].loc['mean', ('rel_uplift', 'exp')] \
         == pytest.approx(0.5, abs=0.1)
 
     # num_samples=2 so only 3 possible outcomes
-    assert res['comparative']['same'].loc['mean', 'prob_win'] in (0, 0.5, 1)
-    assert res['comparative']['bigger'].loc['mean', 'prob_win'] \
+    assert res['comparative']['same'].loc['mean', ('prob_win', None)] in (0, 0.5, 1)
+    assert res['comparative']['bigger'].loc['mean', ('prob_win', None)] \
         == pytest.approx(1, abs=0.01)
 
-    assert res['comparative']['same'].loc['max', 'rel_uplift_exp'] == 0
-    assert res['comparative']['bigger'].loc['max', 'rel_uplift_exp'] == 0
+    assert res['comparative']['same'].loc['max', ('rel_uplift', 'exp')] == 0
+    assert res['comparative']['bigger'].loc['max', ('rel_uplift', 'exp')] == 0

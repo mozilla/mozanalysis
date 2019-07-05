@@ -143,13 +143,15 @@ def summarize_joint_samples(focus, reference, quantiles=DEFAULT_QUANTILES):
             corrections are required.
 
     Returns:
-        A pandas Series or DataFrame containing the following data
+        A pandas Series or DataFrame containing a MultiIndex with the
+        following labels on the higher level and stringified floats
+        on the inner level
 
-        * rel_uplift_*: Expectation value and quantiles over the relative
+        * rel_uplift: Expectation value and quantiles over the relative
           uplift.
-        * abs_uplift_*: Expectation value and quantiles over the absolute
+        * abs_uplift: Expectation value and quantiles over the absolute
           uplift.
-        * max_abs_diff_0.95: Quantile 0.95 on the L1 norm of differences/
+        * max_abs_diff: Quantile 0.95 on the L1 norm of differences/
           absolute uplifts. In a Bayesian context, there is a 95%
           probability that the absolute difference is less than this in
           either direction.
@@ -157,7 +159,7 @@ def summarize_joint_samples(focus, reference, quantiles=DEFAULT_QUANTILES):
           truth model parameter is larger for the focus than the reference
           branch.
 
-        If returning a DataFrame, these quantities form the columns, and
+        If returning a DataFrame, this MultiIndex is for the columns, and
         the index matches the columns of ``focus``.
     """
     if isinstance(focus, pd.DataFrame) or not np.isscalar(focus[0]):
@@ -187,24 +189,36 @@ def _summarize_one_branch_samples_batch(samples, quantiles=DEFAULT_QUANTILES):
 
 
 def _summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILES):
-    rel_q_labels = ['rel_uplift_{}'.format(q) for q in quantiles]
-    abs_q_labels = ['abs_uplift_{}'.format(q) for q in quantiles]
+    str_quantiles = [str(q) for q in quantiles]
 
-    res = pd.Series(index=rel_q_labels + ['rel_uplift_exp'] + abs_q_labels + [
-        'abs_uplift_exp', 'max_abs_diff_0.95', 'prob_win'
-    ])
+    index = pd.MultiIndex.from_tuples(
+        [('rel_uplift', q) for q in str_quantiles + ['exp']] +
+        [('abs_uplift', q) for q in str_quantiles + ['exp']] +
+        [
+            ('max_abs_diff', '0.95'),
+            ('prob_win', )
+        ]
+    )
+
+    res = pd.Series(index=index)
 
     rel_uplift_samples = focus / reference - 1
-    res[rel_q_labels] = np.quantile(rel_uplift_samples, quantiles)
-    res['rel_uplift_exp'] = np.mean(rel_uplift_samples)
+    res.loc[
+        [('rel_uplift', q) for q in str_quantiles]
+    ] = np.quantile(rel_uplift_samples, quantiles)
+
+    res.loc[('rel_uplift', 'exp')] = np.mean(rel_uplift_samples)
 
     abs_uplift_samples = focus - reference
-    res[abs_q_labels] = np.quantile(abs_uplift_samples, quantiles)
-    res['abs_uplift_exp'] = np.mean(abs_uplift_samples)
+    res.loc[
+        [('abs_uplift', q) for q in str_quantiles]
+    ] = np.quantile(abs_uplift_samples, quantiles)
 
-    res['max_abs_diff_0.95'] = np.quantile(np.abs(abs_uplift_samples), 0.95)
+    res.loc[('abs_uplift', 'exp')] = np.mean(abs_uplift_samples)
 
-    res['prob_win'] = np.mean(focus > reference)
+    res.loc[('max_abs_diff', '0.95')] = np.quantile(np.abs(abs_uplift_samples), 0.95)
+
+    res.loc['prob_win'] = np.mean(focus > reference)
 
     return res
 

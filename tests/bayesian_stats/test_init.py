@@ -41,18 +41,18 @@ def test_summarize_joint_samples_trivial():
     res = mabs.summarize_joint_samples(
         pd.Series([6, 6, 6]), pd.Series([3, 3, 3]), quantiles=quantiles
     )
-    assert res['rel_uplift_exp'] == 1.
-    assert res['abs_uplift_exp'] == 3.
-    assert res['prob_win'] == 1
-    assert res['max_abs_diff_0.95'] == 3.
+    assert res[('rel_uplift', 'exp')] == 1.
+    assert res[('abs_uplift', 'exp')] == 3.
+    assert res[('prob_win', None)] == 1
+    assert res[('max_abs_diff', '0.95')] == 3.
 
-    assert res['rel_uplift_0.05'] == 1.
-    assert res['rel_uplift_0.31'] == 1.
-    assert res['rel_uplift_0.95'] == 1.
+    assert res[('rel_uplift', '0.05')] == 1.
+    assert res[('rel_uplift', '0.31')] == 1.
+    assert res[('rel_uplift', '0.95')] == 1.
 
-    assert res['abs_uplift_0.05'] == 3.
-    assert res['abs_uplift_0.31'] == 3.
-    assert res['abs_uplift_0.95'] == 3.
+    assert res[('abs_uplift', '0.05')] == 3.
+    assert res[('abs_uplift', '0.31')] == 3.
+    assert res[('abs_uplift', '0.95')] == 3.
 
 
 def test_summarize_joint_samples_batch_trivial():
@@ -62,27 +62,27 @@ def test_summarize_joint_samples_batch_trivial():
         pd.DataFrame({'a': [3, 3, 3], 'b': [1, 1, 1]}, columns=['b', 'a']),
         quantiles=quantiles
     )
-    assert res.loc['a', 'rel_uplift_exp'] == 1.
-    assert res.loc['a', 'abs_uplift_exp'] == 3.
-    assert res.loc['a', 'prob_win'] == 1
-    assert res.loc['a', 'max_abs_diff_0.95'] == 3.
+    assert res.loc['a', ('rel_uplift', 'exp')] == 1.
+    assert res.loc['a', ('abs_uplift', 'exp')] == 3.
+    assert res.loc['a', ('prob_win', None)] == 1
+    assert res.loc['a', ('max_abs_diff', '0.95')] == 3.
 
-    assert res.loc['a', 'rel_uplift_0.05'] == 1.
-    assert res.loc['a', 'rel_uplift_0.31'] == 1.
-    assert res.loc['a', 'rel_uplift_0.95'] == 1.
+    assert res.loc['a', ('rel_uplift', '0.05')] == 1.
+    assert res.loc['a', ('rel_uplift', '0.31')] == 1.
+    assert res.loc['a', ('rel_uplift', '0.95')] == 1.
 
-    assert res.loc['a', 'abs_uplift_0.05'] == 3.
-    assert res.loc['a', 'abs_uplift_0.31'] == 3.
-    assert res.loc['a', 'abs_uplift_0.95'] == 3.
+    assert res.loc['a', ('abs_uplift', '0.05')] == 3.
+    assert res.loc['a', ('abs_uplift', '0.31')] == 3.
+    assert res.loc['a', ('abs_uplift', '0.95')] == 3.
 
-    assert res.loc['b', 'rel_uplift_exp'] == 0.
-    assert res.loc['b', 'abs_uplift_exp'] == 0.
-    assert res.loc['b', 'max_abs_diff_0.95'] == 0.
+    assert res.loc['b', ('rel_uplift', 'exp')] == 0.
+    assert res.loc['b', ('abs_uplift', 'exp')] == 0.
+    assert res.loc['b', ('max_abs_diff', '0.95')] == 0.
 
-    assert res.loc['b', 'rel_uplift_0.05'] == 0.
-    assert res.loc['b', 'rel_uplift_0.31'] == 0.
-    assert res.loc['b', 'rel_uplift_0.95'] == 0.
+    assert res.loc['b', ('rel_uplift', '0.05')] == 0.
+    assert res.loc['b', ('rel_uplift', '0.31')] == 0.
+    assert res.loc['b', ('rel_uplift', '0.95')] == 0.
 
-    assert res.loc['b', 'abs_uplift_0.05'] == 0.
-    assert res.loc['b', 'abs_uplift_0.31'] == 0.
-    assert res.loc['b', 'abs_uplift_0.95'] == 0.
+    assert res.loc['b', ('abs_uplift', '0.05')] == 0.
+    assert res.loc['b', ('abs_uplift', '0.31')] == 0.
+    assert res.loc['b', ('abs_uplift', '0.95')] == 0.
