@@ -1,3 +1,6 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from pyspark.sql import functions as F
 from pyspark.sql.functions import udf
 from pyspark.sql.types import DoubleType, LongType, StructField, IntegerType

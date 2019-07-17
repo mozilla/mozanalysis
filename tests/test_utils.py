@@ -1,10 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import numpy as np
 import pyspark.sql.functions as F
 import pytest
 
-from mozanalysis.utils import dedupe_columns, all_, any_, add_days
+from mozanalysis.utils import dedupe_columns, all_, any_, add_days, filter_outliers
 
 
 def test_dedupe_columns(spark):
@@ -83,3 +84,19 @@ def test_add_days():
     assert add_days('20190101', 0) == '20190101'
     assert add_days('20190101', 1) == '20190102'
     assert add_days('20190101', -1) == '20181231'
+
+
+def test_filter_outliers():
+    data = np.arange(100) + 1
+
+    filtered = filter_outliers(data, 0.99)
+    assert len(filtered) == 99
+    assert filtered.max() == 99
+    assert data.max() == 100
+
+
+def test_filter_outliers_2():
+    data = np.ones(100)
+
+    filtered = filter_outliers(data, 0.99)
+    assert len(filtered) == 100
