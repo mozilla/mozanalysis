@@ -164,27 +164,27 @@
 <span class="sd">    The methods here query data in a way compatible with the following</span>
 <span class="sd">    principles, which are important for experiment analysis:</span>
 
-<span class="sd">    - The population of clients in each branch must have the same</span>
+<span class="sd">    * The population of clients in each branch must have the same</span>
 <span class="sd">      properties, aside from the intervention itself and its</span>
 <span class="sd">      consequences; i.e. there must be no underlying bias in the</span>
 <span class="sd">      branch populations.</span>
-<span class="sd">    - We must measure the same thing for each client, to minimize the</span>
+<span class="sd">    * We must measure the same thing for each client, to minimize the</span>
 <span class="sd">      variance associated with our measurement.</span>
 
 <span class="sd">    So that our analyses follow these abstract principles, we follow</span>
 <span class="sd">    these rules:</span>
 
-<span class="sd">    - Start with a list of all clients who enrolled.</span>
-<span class="sd">    - We can filter this list of clients only based on information known</span>
+<span class="sd">    * Start with a list of all clients who enrolled.</span>
+<span class="sd">    * We can filter this list of clients only based on information known</span>
 <span class="sd">      to us at or before the time that they enrolled, because later</span>
 <span class="sd">      information might be causally connected to the intervention.</span>
-<span class="sd">    - For any given metric, every client gets a non-null value; we don&#39;t</span>
+<span class="sd">    * For any given metric, every client gets a non-null value; we don&#39;t</span>
 <span class="sd">      implicitly ignore anyone, even if they churned and stopped</span>
 <span class="sd">      sending data.</span>
-<span class="sd">    - Typically if an enrolled client no longer qualifies for enrollment,</span>
+<span class="sd">    * Typically if an enrolled client no longer qualifies for enrollment,</span>
 <span class="sd">      we&#39;ll still want to include their data in the analysis, unless</span>
 <span class="sd">      we&#39;re explicitly using stats methods that handle censored data.</span>
-<span class="sd">    - We define a &quot;analysis window&quot; with respect to clients&#39;</span>
+<span class="sd">    * We define a &quot;analysis window&quot; with respect to clients&#39;</span>
 <span class="sd">      enrollment dates. Each metric only uses data collected inside</span>
 <span class="sd">      this analysis window. We can only analyze data for a client</span>
 <span class="sd">      if we have data covering their entire analysis window.</span>
@@ -280,8 +280,8 @@
 <span class="sd">            spark: The spark context.</span>
 <span class="sd">            study_type (str): One of the following strings:</span>
 
-<span class="sd">                - &#39;pref_flip&#39;</span>
-<span class="sd">                - &#39;addon&#39;</span>
+<span class="sd">                * &#39;pref_flip&#39;</span>
+<span class="sd">                * &#39;addon&#39;</span>
 
 <span class="sd">                or a callable that accepts a spark context as an argument</span>
 <span class="sd">                and returns a Spark DataFrame containing all enrollment events</span>
@@ -298,9 +298,9 @@
 <span class="sd">            A Spark DataFrame of enrollment data. One row per</span>
 <span class="sd">            enrollment. Columns:</span>
 
-<span class="sd">                - client_id (str)</span>
-<span class="sd">                - enrollment_date (str): e.g. &#39;20190329&#39;</span>
-<span class="sd">                - branch (str)</span>
+<span class="sd">                * client_id (str)</span>
+<span class="sd">                * enrollment_date (str): e.g. &#39;20190329&#39;</span>
+<span class="sd">                * branch (str)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">study_type</span><span class="p">):</span>
             <span class="n">enrollments</span> <span class="o">=</span> <span class="n">study_type</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
@@ -377,13 +377,13 @@
 <span class="sd">                unenrolling users will appear to churn. Must have at least</span>
 <span class="sd">                the following columns:</span>
 
-<span class="sd">                - client_id (str)</span>
-<span class="sd">                - submission_date_s3 (str)</span>
-<span class="sd">                - data columns referred to in ``metric_list``</span>
+<span class="sd">                * client_id (str)</span>
+<span class="sd">                * submission_date_s3 (str)</span>
+<span class="sd">                * data columns referred to in ``metric_list``</span>
 
 <span class="sd">                Ideally also has:</span>
 
-<span class="sd">                - experiments (map): At present this is used to exclude</span>
+<span class="sd">                * experiments (map): At present this is used to exclude</span>
 <span class="sd">                  pre-enrollment ping data collected on enrollment</span>
 <span class="sd">                  day. Once it or its successor reliably tags data</span>
 <span class="sd">                  from all enrolled users, even post-unenroll, we&#39;ll</span>
@@ -416,18 +416,18 @@
 <span class="sd">            ``metric_list``. Then one column per sanity-check metric.</span>
 <span class="sd">            Columns:</span>
 
-<span class="sd">                - client_id (str, optional): Not necessary for</span>
+<span class="sd">                * client_id (str, optional): Not necessary for</span>
 <span class="sd">                  &quot;happy path&quot; analyses.</span>
-<span class="sd">                - branch (str): The client&#39;s branch</span>
-<span class="sd">                - [metric 1]: The client&#39;s value for the first metric in</span>
+<span class="sd">                * branch (str): The client&#39;s branch</span>
+<span class="sd">                * [metric 1]: The client&#39;s value for the first metric in</span>
 <span class="sd">                  ``metric_list``.</span>
-<span class="sd">                - ...</span>
-<span class="sd">                - [metric n]: The client&#39;s value for the nth (final)</span>
+<span class="sd">                * ...</span>
+<span class="sd">                * [metric n]: The client&#39;s value for the nth (final)</span>
 <span class="sd">                  metric in ``metric_list``.</span>
-<span class="sd">                - [sanity check 1]: The client&#39;s value for the first</span>
+<span class="sd">                * [sanity check 1]: The client&#39;s value for the first</span>
 <span class="sd">                  sanity check metric.</span>
-<span class="sd">                - ...</span>
-<span class="sd">                - [sanity check n]: The client&#39;s value for the last</span>
+<span class="sd">                * ...</span>
+<span class="sd">                * [sanity check n]: The client&#39;s value for the last</span>
 <span class="sd">                  sanity check metric.</span>
 
 <span class="sd">            This format - the schema plus there being one row per</span>
@@ -443,12 +443,12 @@
 
         <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_enrollments_for_analysis_window</span><span class="p">(</span>
             <span class="n">enrollments</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">req_dates_of_data</span>
-        <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollments&#39;</span><span class="p">)</span>
 
         <span class="n">data_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_data_source_for_analysis_window</span><span class="p">(</span>
             <span class="n">data_source</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">analysis_start_days</span><span class="p">,</span>
             <span class="n">analysis_length_days</span>
-        <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;data_source&#39;</span><span class="p">)</span>
 
         <span class="n">join_on</span> <span class="o">=</span> <span class="p">[</span>
             <span class="c1"># TODO perf: would it be faster if we enforce a join on sample_id?</span>

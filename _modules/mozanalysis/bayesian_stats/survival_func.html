@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.bayesian_stats.survival_func &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About Mozanalysis</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../bayesian_stats.html">mozanalysis.bayesian_stats</a> &raquo;</li>
+        
+      <li>mozanalysis.bayesian_stats.survival_func</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mozanalysis.bayesian_stats.survival_func</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
+<span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
+<span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.binary</span> <span class="k">as</span> <span class="nn">mabsb</span>
+
+
+<div class="viewcode-block" id="compare_branches"><a class="viewcode-back" href="../../../api/bayesian_stats/survival_func.html#mozanalysis.bayesian_stats.survival_func.compare_branches">[docs]</a><span class="k">def</span> <span class="nf">compare_branches</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="s1">&#39;control&#39;</span><span class="p">,</span> <span class="n">thresholds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the survival functions and relative uplifts thereupon.</span>
+
+<span class="sd">    This function generates data for a metric&#39;s survival function</span>
+<span class="sd">    (1 - cumulative distribution function) for each branch, and</span>
+<span class="sd">    calculates the relative uplift compared to the reference branch</span>
+<span class="sd">    identified by ``ref_branch_label``.</span>
+
+<span class="sd">    It converts the non-negative, real-valued per-user metric data in</span>
+<span class="sd">    ``df[col_label]`` into ``n=len(thresholds)`` different binary</span>
+<span class="sd">    metrics, and analyzes these ``n`` metrics with the Bayesian binary</span>
+<span class="sd">    methods.</span>
+
+<span class="sd">    The precise values of the thresholds usually don&#39;t matter unless</span>
+<span class="sd">    certain thresholds have been standardized outside the context of</span>
+<span class="sd">    this experiment.</span>
+
+<span class="sd">    The results are related to those obtained by bootstrapping a range</span>
+<span class="sd">    of quantiles over the data:</span>
+
+<span class="sd">    * In the survival plot, we set a value for the metric and calculate</span>
+<span class="sd">      the fraction of the data that was above this value, with</span>
+<span class="sd">      uncertainty on the fraction.</span>
+<span class="sd">    * When bootstrapping quantiles, we set a quantile (a fraction of</span>
+<span class="sd">      the data) and find the value such that the given fraction of</span>
+<span class="sd">      data is greater than this value, with uncertainty on the value.</span>
+
+<span class="sd">    Reiterating: if we plot the survival function with metric values</span>
+<span class="sd">    on the x axis and &quot;fractions&quot; on the y axis, then this function</span>
+<span class="sd">    first chooses some sensible values for x then runs statistics to</span>
+<span class="sd">    compute values for y, with uncertainty. If we were bootstrapping</span>
+<span class="sd">    quantiles, then we would choose some sensible values for y then</span>
+<span class="sd">    run statistics to compute values for x, with uncertainty.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df: a pandas DataFrame of queried experiment data in the</span>
+<span class="sd">            standard format. Target metric should be non-negative.</span>
+<span class="sd">        col_label (str): Label for the df column contaning the metric</span>
+<span class="sd">            to be analyzed.</span>
+<span class="sd">        ref_branch_label (str, optional): String in ``df[&#39;branch&#39;]``</span>
+<span class="sd">            that identifies the the branch with respect to which we</span>
+<span class="sd">            want to calculate uplifts - usually the control branch.</span>
+<span class="sd">        thresholds (list/ndarray, optional): Thresholds that define the</span>
+<span class="sd">            metric&#39;s quantization; ``df[col_label]``</span>
+
+<span class="sd">    Returns a dictionary:</span>
+
+<span class="sd">        * &#39;individual&#39;: dictionary mapping branch names to a pandas</span>
+<span class="sd">          DataFrame containing values from the survival function.</span>
+<span class="sd">          The DataFrames&#39; indexes are the list of thresholds; the</span>
+<span class="sd">          columns are summary statistics on the survival function.</span>
+<span class="sd">        * &#39;comparative&#39;: dictionary mapping branch names to a pandas</span>
+<span class="sd">          DataFrame of summary statistics for the possible uplifts of the</span>
+<span class="sd">          conversion rate relative to the reference branch - see docs</span>
+<span class="sd">          for</span>
+<span class="sd">          :meth:`mozanalysis.stats.summarize_samples.summarize_joint_samples_batch`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">branch_list</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">thresholds</span><span class="p">:</span>
+        <span class="n">thresholds</span> <span class="o">=</span> <span class="n">get_thresholds</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">])</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="p">:</span> <span class="n">_one_thresh</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">thresholds</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;individual&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">b</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+                <span class="n">t</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;individual&#39;</span><span class="p">][</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">},</span> <span class="n">columns</span><span class="o">=</span><span class="n">thresholds</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">branch_list</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;comparative&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">b</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+                <span class="n">t</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;comparative&#39;</span><span class="p">][</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">})</span><span class="o">.</span><span class="n">T</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">branch_list</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">ref_branch_label</span><span class="p">}</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="get_thresholds"><a class="viewcode-back" href="../../../api/bayesian_stats/survival_func.html#mozanalysis.bayesian_stats.survival_func.get_thresholds">[docs]</a><span class="k">def</span> <span class="nf">get_thresholds</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">max_num_thresholds</span><span class="o">=</span><span class="mi">101</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a set of interesting thresholds for the dataset ``col``</span>
+
+<span class="sd">    Assumes that the values are non-negative, with zero as a special case.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        col: a Series of individuals&#39; data for a metric</span>
+<span class="sd">        max_num_thresholds (int): Return at most this many threshold values.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of thresholds. By default these are de-duped percentiles</span>
+<span class="sd">        of the nonzero data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;col&#39; contains null values&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;This function assumes non-negative data&quot;</span><span class="p">)</span>
+
+    <span class="c1"># When taking quantiles, treat &quot;0&quot; as a special case so that we</span>
+    <span class="c1"># still have resolution if 99% of users are 0.</span>
+    <span class="n">nonzero_quantiles</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="n">col</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">max_num_thresholds</span><span class="p">),</span>
+        <span class="c1"># &#39;nearest&#39; is not what we want, but is the least-bad option.</span>
+        <span class="c1"># Can&#39;t use the default &#39;linear&#39; because we want to call &#39;unique()&#39;</span>
+        <span class="c1"># to avoid duplicating work.</span>
+        <span class="c1"># Can&#39;t use &#39;lower&#39;, &#39;higher&#39;, or &#39;midpoint&#39; due to rounding issues</span>
+        <span class="c1"># that lead to dumb choices. That leaves us with &#39;nearest&#39;</span>
+        <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">nonzero_quantiles</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+    <span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># The thresholds get used as `&gt;` not `&gt;=`, so exclude the max value</span></div>
+
+
+<span class="k">def</span> <span class="nf">_one_thresh</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run stats on the fraction of clients above ``threshold``.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;df&#39; contains null values for &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col_label</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="s1">&#39;_tmp_threshold_val&#39;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Either you have an exceedingly poor taste in column names, &quot;</span>
+            <span class="s2">&quot;or there is a bug in `_one_thresh`.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Sorry for mutating the input inplace. I&#39;ll be sure to tidy up.</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;_tmp_threshold_val&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">threshold</span>
+
+        <span class="k">return</span> <span class="n">mabsb</span><span class="o">.</span><span class="n">compare_branches</span><span class="p">(</span>
+            <span class="n">df</span><span class="p">,</span> <span class="s1">&#39;_tmp_threshold_val&#39;</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="n">ref_branch_label</span>
+        <span class="p">)</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;_tmp_threshold_val&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;columns&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

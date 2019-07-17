@@ -1,0 +1,299 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.bayesian_stats.survival_func &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mozanalysis.experiment" href="../experiment.html" />
+    <link rel="prev" title="mozanalysis.bayesian_stats.binary" href="binary.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../bayesian_stats.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="binary.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../api.html">API Documentation</a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/api/bayesian_stats/survival_func.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mozanalysis.bayesian_stats.survival_func">
+<span id="mozanalysis-bayesian-stats-survival-func"></span><h1><a class="reference internal" href="#module-mozanalysis.bayesian_stats.survival_func" title="mozanalysis.bayesian_stats.survival_func"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a><a class="headerlink" href="#module-mozanalysis.bayesian_stats.survival_func" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="mozanalysis.bayesian_stats.survival_func.compare_branches">
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.survival_func.</code><code class="sig-name descname">compare_branches</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">col_label</em>, <em class="sig-param">ref_branch_label='control'</em>, <em class="sig-param">thresholds=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/survival_func.html#compare_branches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.survival_func.compare_branches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the survival functions and relative uplifts thereupon.</p>
+<p>This function generates data for a metric’s survival function
+(1 - cumulative distribution function) for each branch, and
+calculates the relative uplift compared to the reference branch
+identified by <code class="docutils literal notranslate"><span class="pre">ref_branch_label</span></code>.</p>
+<p>It converts the non-negative, real-valued per-user metric data in
+<code class="docutils literal notranslate"><span class="pre">df[col_label]</span></code> into <code class="docutils literal notranslate"><span class="pre">n=len(thresholds)</span></code> different binary
+metrics, and analyzes these <code class="docutils literal notranslate"><span class="pre">n</span></code> metrics with the Bayesian binary
+methods.</p>
+<p>The precise values of the thresholds usually don’t matter unless
+certain thresholds have been standardized outside the context of
+this experiment.</p>
+<p>The results are related to those obtained by bootstrapping a range
+of quantiles over the data:</p>
+<ul class="simple">
+<li><p>In the survival plot, we set a value for the metric and calculate
+the fraction of the data that was above this value, with
+uncertainty on the fraction.</p></li>
+<li><p>When bootstrapping quantiles, we set a quantile (a fraction of
+the data) and find the value such that the given fraction of
+data is greater than this value, with uncertainty on the value.</p></li>
+</ul>
+<p>Reiterating: if we plot the survival function with metric values
+on the x axis and “fractions” on the y axis, then this function
+first chooses some sensible values for x then runs statistics to
+compute values for y, with uncertainty. If we were bootstrapping
+quantiles, then we would choose some sensible values for y then
+run statistics to compute values for x, with uncertainty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> – a pandas DataFrame of queried experiment data in the
+standard format. Target metric should be non-negative.</p></li>
+<li><p><strong>col_label</strong> (<em>str</em>) – Label for the df column contaning the metric
+to be analyzed.</p></li>
+<li><p><strong>ref_branch_label</strong> (<em>str</em><em>, </em><em>optional</em>) – String in <code class="docutils literal notranslate"><span class="pre">df['branch']</span></code>
+that identifies the the branch with respect to which we
+want to calculate uplifts - usually the control branch.</p></li>
+<li><p><strong>thresholds</strong> (<em>list/ndarray</em><em>, </em><em>optional</em>) – Thresholds that define the
+metric’s quantization; <code class="docutils literal notranslate"><span class="pre">df[col_label]</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns a dictionary:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>‘individual’: dictionary mapping branch names to a pandas
+DataFrame containing values from the survival function.
+The DataFrames’ indexes are the list of thresholds; the
+columns are summary statistics on the survival function.</p></li>
+<li><p>‘comparative’: dictionary mapping branch names to a pandas
+DataFrame of summary statistics for the possible uplifts of the
+conversion rate relative to the reference branch - see docs
+for
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.stats.summarize_samples.summarize_joint_samples_batch()</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.bayesian_stats.survival_func.get_thresholds">
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.survival_func.</code><code class="sig-name descname">get_thresholds</code><span class="sig-paren">(</span><em class="sig-param">col</em>, <em class="sig-param">max_num_thresholds=101</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/survival_func.html#get_thresholds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.survival_func.get_thresholds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a set of interesting thresholds for the dataset <code class="docutils literal notranslate"><span class="pre">col</span></code></p>
+<p>Assumes that the values are non-negative, with zero as a special case.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>col</strong> – a Series of individuals’ data for a metric</p></li>
+<li><p><strong>max_num_thresholds</strong> (<em>int</em>) – Return at most this many threshold values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of thresholds. By default these are de-duped percentiles
+of the nonzero data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../experiment.html" class="btn btn-neutral float-right" title="mozanalysis.experiment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="binary.html" class="btn btn-neutral float-left" title="mozanalysis.bayesian_stats.binary" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

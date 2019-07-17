@@ -1,0 +1,365 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.frequentist_stats.bootstrap &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mozanalysis.udf" href="../udf.html" />
+    <link rel="prev" title="mozanalysis.experiment" href="../experiment.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../bayesian_stats.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bayesian_stats/binary.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../api.html">API Documentation</a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/api/frequentist_stats/bootstrap.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mozanalysis.frequentist_stats.bootstrap">
+<span id="mozanalysis-frequentist-stats-bootstrap"></span><h1><a class="reference internal" href="#module-mozanalysis.frequentist_stats.bootstrap" title="mozanalysis.frequentist_stats.bootstrap"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a><a class="headerlink" href="#module-mozanalysis.frequentist_stats.bootstrap" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch">
+<code class="sig-prename descclassname">mozanalysis.frequentist_stats.bootstrap.</code><code class="sig-name descname">bootstrap_one_branch</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#bootstrap_one_branch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a bootstrap for one branch on its own.</p>
+<p>Resamples the data <code class="docutils literal notranslate"><span class="pre">num_samples</span></code> times, computes <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for
+each sample, then returns summary statistics for the distribution
+of the outputs of <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sc</strong> – The spark context</p></li>
+<li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas Series</p></li>
+<li><p><strong>stat_fn</strong> – Either a function that aggregates each resampled
+population to a scalar (e.g. the default value <code class="docutils literal notranslate"><span class="pre">np.mean</span></code>
+lets you bootstrap means), or a function that aggregates
+each resampled population to a dict of scalars. In both
+cases, this function must accept a one-dimensional ndarray
+as its input.</p></li>
+<li><p><strong>num_samples</strong> – The number of bootstrap iterations to perform</p></li>
+<li><p><strong>seed_start</strong> – An int with which to seed numpy’s RNG. It must
+be unique within this set of calculations.</p></li>
+<li><p><strong>threshold_quantile</strong> (<em>float</em><em>, </em><em>optional</em>) – An optional threshold
+quantile, above which to discard outliers. E.g. <code class="docutils literal notranslate"><span class="pre">0.9999</span></code>.</p></li>
+<li><p><strong>summary_quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – Quantiles to determine the
+confidence bands on the branch statistics. Change these
+when making Bonferroni corrections.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.frequentist_stats.bootstrap.compare_branches">
+<code class="sig-prename descclassname">mozanalysis.frequentist_stats.bootstrap.</code><code class="sig-name descname">compare_branches</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">df</em>, <em class="sig-param">col_label</em>, <em class="sig-param">ref_branch_label='control'</em>, <em class="sig-param">stat_fn=&lt;function mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">individual_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">comparative_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#compare_branches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.compare_branches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jointly sample bootstrapped statistics then compare them.</p>
+<p>Performs a percentile bootstrap, which, according to Efron,
+is not significantly more distasteful than a basic bootstrap,
+regardless of what you may read on Stack Overflow.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sc</strong> – The Spark context</p></li>
+<li><p><strong>df</strong> – a pandas DataFrame of queried experiment data in the
+standard format (see <code class="docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code>).</p></li>
+<li><p><strong>col_label</strong> (<em>str</em>) – Label for the df column contaning the metric
+to be analyzed.</p></li>
+<li><p><strong>ref_branch_label</strong> (<em>str</em><em>, </em><em>optional</em>) – String in <code class="docutils literal notranslate"><span class="pre">df['branch']</span></code> that
+identifies the branch with respect to which we want to
+calculate uplifts - usually the control branch.</p></li>
+<li><p><strong>stat_fn</strong> (<em>func</em><em>, </em><em>optional</em>) – <p>A function that either:</p>
+<ul>
+<li><dl class="simple">
+<dt>Aggregates each resampled population to a scalar (e.g.</dt><dd><p>the default, <code class="docutils literal notranslate"><span class="pre">np.mean</span></code>), or</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Aggregates each resampled population to a dict of</dt><dd><p>scalars.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>In both cases, this function must accept a one-dimensional
+ndarray or pandas Series as its input.</p>
+</p></li>
+<li><p><strong>num_samples</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of bootstrap iterations
+to perform.</p></li>
+<li><p><strong>threshold_quantile</strong> (<em>float</em><em>, </em><em>optional</em>) – An optional threshold
+quantile, above which to discard outliers. E.g. <cite>0.9999</cite>.</p></li>
+<li><p><strong>individual_summary_quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – Quantiles to
+determine the confidence bands on individual branch
+statistics. Change these when making Bonferroni corrections.</p></li>
+<li><p><strong>comparative_summary_quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – Quantiles to
+determine the confidence bands on comparative branch
+statistics (i.e. the change relative to the reference
+branch, probably the control). Change these when making
+Bonferroni corrections.</p></li>
+</ul>
+</dd>
+</dl>
+<dl>
+<dt>Returns a dictionary:</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> returns a scalar (this is the default), then
+this function returns a dictionary has the following keys and
+values:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>‘individual’: dictionary mapping each branch name to a pandas</dt><dd><p>Series that holds the expected value for the bootstrapped
+<code class="docutils literal notranslate"><span class="pre">stat_fn</span></code>, and confidence intervals.</p>
+</dd>
+<dt>‘comparative’: dictionary mapping each branch name to a pandas</dt><dd><p>Series of summary statistics for the possible uplifts of
+the bootstrapped <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> relative to the reference branch.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Otherwise, when <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> returns a dict, then this function
+returns a similar dictionary, except the Series are replaced with
+DataFrames. Each row in each DataFrame corresponds to one output
+of <cite>stat_fn</cite>, and is the Series that would be returned if <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code>
+computed only this statistic.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples">
+<code class="sig-prename descclassname">mozanalysis.frequentist_stats.bootstrap.</code><code class="sig-name descname">get_bootstrap_samples</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#get_bootstrap_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> evaluated on resampled and original data.</p>
+<p>Do the resampling in parallel over the cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sc</strong> – The spark context</p></li>
+<li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas series</p></li>
+<li><p><strong>stat_fn</strong> – Either a function that aggregates each resampled
+population to a scalar (e.g. the default value <code class="docutils literal notranslate"><span class="pre">np.mean</span></code>
+lets you bootstrap means), or a function that aggregates
+each resampled population to a dict of scalars. In both
+cases, this function must accept a one-dimensional ndarray
+as its input.</p></li>
+<li><p><strong>num_samples</strong> – The number of samples to return</p></li>
+<li><p><strong>seed_start</strong> – <p>A seed for the random number generator; this
+function will use seeds in the range:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">seed_start</span><span class="p">,</span> <span class="n">seed_start</span> <span class="o">+</span> <span class="n">num_samples</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and these particular seeds must not be used elsewhere
+in this calculation. By default, use a random seed.</p>
+</p></li>
+<li><p><strong>threshold_quantile</strong> (<em>float</em><em>, </em><em>optional</em>) – An optional threshold
+quantile, above which to discard outliers. E.g. <code class="docutils literal notranslate"><span class="pre">0.9999</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> evaluated over <code class="docutils literal notranslate"><span class="pre">num_samples</span></code> samples.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>By default, a pandas Series of sampled means</p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> returns a scalar, a pandas Series</p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> returns a dict, a pandas DataFrame
+with columns set to the dict keys.</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../udf.html" class="btn btn-neutral float-right" title="mozanalysis.udf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../experiment.html" class="btn btn-neutral float-left" title="mozanalysis.experiment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

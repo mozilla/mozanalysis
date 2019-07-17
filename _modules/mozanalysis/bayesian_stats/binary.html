@@ -1,0 +1,419 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.bayesian_stats.binary &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About Mozanalysis</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../bayesian_stats.html">mozanalysis.bayesian_stats</a> &raquo;</li>
+        
+      <li>mozanalysis.bayesian_stats.binary</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mozanalysis.bayesian_stats.binary</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
+<span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
+<span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="nn">st</span>
+
+<span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats</span> <span class="k">as</span> <span class="nn">mabs</span>
+
+
+<div class="viewcode-block" id="compare_branches"><a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.compare_branches">[docs]</a><span class="k">def</span> <span class="nf">compare_branches</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="s1">&#39;control&#39;</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+    <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Jointly sample conversion rates for branches then compare them.</span>
+
+<span class="sd">    See `compare_branches_from_agg` for more details.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df (pd.DataFrame): Queried experiment data in the standard</span>
+<span class="sd">            format.</span>
+<span class="sd">        col_label (str): Label for the df column contaning the metric</span>
+<span class="sd">            to be analyzed.</span>
+<span class="sd">        ref_branch_label (str, optional): String in ``df[&#39;branch&#39;]``</span>
+<span class="sd">            that identifies the the branch with respect to which we</span>
+<span class="sd">            want to calculate uplifts - usually the control branch.</span>
+<span class="sd">        num_samples (int, optional): The number of samples to compute.</span>
+<span class="sd">        individual_summary_quantiles (list, optional): Quantiles to</span>
+<span class="sd">            determine the confidence bands on individual branch</span>
+<span class="sd">            statistics. Change these when making Bonferroni corrections.</span>
+<span class="sd">        comparative_summary_quantiles (list, optional): Quantiles to</span>
+<span class="sd">            determine the confidence bands on comparative branch</span>
+<span class="sd">            statistics (i.e. the change relative to the reference</span>
+<span class="sd">            branch, probably the control). Change these when making</span>
+<span class="sd">            Bonferroni corrections.</span>
+
+<span class="sd">    Returns a dictionary:</span>
+
+<span class="sd">        * &#39;individual&#39;: dictionary mapping branch names to a pandas</span>
+<span class="sd">          Series of summary stats for the posterior distribution over</span>
+<span class="sd">          the branch&#39;s conversion rate.</span>
+<span class="sd">        * &#39;comparative&#39;: dictionary mapping branch names to a pandas</span>
+<span class="sd">          Series of summary statistics for the possible uplifts of the</span>
+<span class="sd">          conversion rate relative to the reference branch - see docs</span>
+<span class="sd">          for</span>
+<span class="sd">          :meth:`mozanalysis.stats.summarize_samples.summarize_joint_samples`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">agg_col</span> <span class="o">=</span> <span class="n">aggregate_col</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">compare_branches_from_agg</span><span class="p">(</span>
+        <span class="n">agg_col</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="n">ref_branch_label</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">num_samples</span><span class="p">,</span>
+        <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+        <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="aggregate_col"><a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.aggregate_col">[docs]</a><span class="k">def</span> <span class="nf">aggregate_col</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the number of enrollments and conversions per branch.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df (pd.DataFrame): Queried experiment data in the standard</span>
+<span class="sd">            format.</span>
+<span class="sd">        col_label (str): Label for the df column contaning the metric</span>
+<span class="sd">            to be analyzed.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A DataFrame. The index is the list of branches. It has the</span>
+<span class="sd">        following columns:</span>
+
+<span class="sd">        * num_enrollments: The number of experiment subjects enrolled in</span>
+<span class="sd">          this branch who were eligible for the metric.</span>
+<span class="sd">        * num_conversions: The number of these enrolled experiment subjects</span>
+<span class="sd">          who met the metric&#39;s conversion criteria.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># I would have used `isin` but it seems to be ~100x slower?</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All values in column &#39;</span><span class="si">{}</span><span class="s2">&#39; must be 0 or 1.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col_label</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;branch&#39;</span><span class="p">)[</span><span class="n">col_label</span><span class="p">]</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+        <span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">,</span> <span class="s1">&#39;sum&#39;</span><span class="p">]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+        <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="s1">&#39;num_enrollments&#39;</span><span class="p">,</span> <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="s1">&#39;num_conversions&#39;</span><span class="p">}</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="summarize_one_branch_from_agg"><a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.summarize_one_branch_from_agg">[docs]</a><span class="k">def</span> <span class="nf">summarize_one_branch_from_agg</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">,</span> <span class="n">num_enrollments_label</span><span class="o">=</span><span class="s1">&#39;num_enrollments&#39;</span><span class="p">,</span> <span class="n">num_conversions_label</span><span class="o">=</span><span class="s1">&#39;num_conversions&#39;</span><span class="p">,</span>
+    <span class="n">quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return stats about a branch&#39;s conversion rate.</span>
+
+<span class="sd">    Calculate and return a Series of summary stats for the posterior</span>
+<span class="sd">    distribution over the branch&#39;s conversion rate.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        s (pd.Series): Holds the number of enrollments and number of</span>
+<span class="sd">            conversions for this branch and metric.</span>
+<span class="sd">        num_enrollments_label (str, optional): The label in this Series</span>
+<span class="sd">            for the number of enrollments</span>
+<span class="sd">        num_conversions_label (str, optional): The label in this Series</span>
+<span class="sd">            for the number of conversions</span>
+<span class="sd">        quantiles (list, optional): The quantiles to return as summary</span>
+<span class="sd">            statistics.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A pandas Series; the index contains the stringified</span>
+<span class="sd">        ``quantiles`` plus ``&#39;mean&#39;``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">beta</span><span class="p">(</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">num_conversions_label</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">num_enrollments_label</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">num_conversions_label</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">)</span>
+
+    <span class="n">q_index</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">quantiles</span><span class="p">]</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">q_index</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">])</span>
+
+    <span class="n">res</span><span class="p">[</span><span class="n">q_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">quantiles</span><span class="p">)</span>
+    <span class="n">res</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<div class="viewcode-block" id="compare_branches_from_agg"><a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.compare_branches_from_agg">[docs]</a><span class="k">def</span> <span class="nf">compare_branches_from_agg</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">,</span>
+    <span class="n">ref_branch_label</span><span class="o">=</span><span class="s1">&#39;control&#39;</span><span class="p">,</span>
+    <span class="n">num_enrollments_label</span><span class="o">=</span><span class="s1">&#39;num_enrollments&#39;</span><span class="p">,</span>
+    <span class="n">num_conversions_label</span><span class="o">=</span><span class="s1">&#39;num_conversions&#39;</span><span class="p">,</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+    <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Jointly sample conversion rates for two branches then compare them.</span>
+
+<span class="sd">    Calculates various quantiles on the uplift of the non-control</span>
+<span class="sd">    branch&#39;s sampled conversion rates with respect to the control</span>
+<span class="sd">    branch&#39;s sampled conversion rates.</span>
+
+<span class="sd">    The data in `df` is modelled as being generated binomially, with a</span>
+<span class="sd">    Beta(1, 1) (uniform) prior over the conversion rate parameter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df: A pandas dataframe of integers.</span>
+
+<span class="sd">            * ``df.index`` lists the experiment branches</span>
+<span class="sd">            * ``df.columns`` is</span>
+<span class="sd">              ``[num_enrollments_label, num_conversions_label]``</span>
+
+<span class="sd">        ref_branch_label (str, optional): Label for the df row</span>
+<span class="sd">            containing data for the control branch</span>
+<span class="sd">        num_enrollments_label: Label for the df column containing the</span>
+<span class="sd">            number of enrollments in each branch.</span>
+<span class="sd">        num_conversions_label: Label for the df column containing the</span>
+<span class="sd">            number of conversions in each branch.</span>
+<span class="sd">        num_samples: The number of samples to compute</span>
+
+<span class="sd">    Returns a dictionary:</span>
+
+<span class="sd">        * &#39;individual&#39;: dictionary mapping branch names to a pandas</span>
+<span class="sd">          Series of summary stats for the posterior distribution over</span>
+<span class="sd">          the branch&#39;s conversion rate.</span>
+<span class="sd">        * &#39;comparative&#39;: dictionary mapping branch names to a pandas</span>
+<span class="sd">          Series of summary statistics for the possible uplifts of the</span>
+<span class="sd">          conversion rate relative to the reference branch - see docs</span>
+<span class="sd">          for</span>
+<span class="sd">          :meth:`mozanalysis.stats.summarize_samples.summarize_joint_samples`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">ref_branch_label</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s2">&quot;What&#39;s the reference branch?&quot;</span>
+
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">get_samples</span><span class="p">(</span>
+        <span class="n">df</span><span class="p">,</span> <span class="n">num_enrollments_label</span><span class="p">,</span> <span class="n">num_conversions_label</span><span class="p">,</span> <span class="n">num_samples</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;individual&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">b</span><span class="p">:</span> <span class="n">summarize_one_branch_from_agg</span><span class="p">(</span>
+                    <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">b</span><span class="p">],</span> <span class="n">num_enrollments_label</span><span class="p">,</span> <span class="n">num_conversions_label</span><span class="p">,</span>
+                    <span class="n">quantiles</span><span class="o">=</span><span class="n">individual_summary_quantiles</span>
+                <span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+            <span class="p">},</span>
+        <span class="s1">&#39;comparative&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">b</span><span class="p">:</span> <span class="n">mabs</span><span class="o">.</span><span class="n">summarize_joint_samples</span><span class="p">(</span>
+                    <span class="n">samples</span><span class="p">[</span><span class="n">b</span><span class="p">],</span> <span class="n">samples</span><span class="p">[</span><span class="n">ref_branch_label</span><span class="p">],</span>
+                    <span class="n">quantiles</span><span class="o">=</span><span class="n">comparative_summary_quantiles</span>
+                <span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">ref_branch_label</span><span class="p">)</span>
+            <span class="p">},</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="get_samples"><a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.get_samples">[docs]</a><span class="k">def</span> <span class="nf">get_samples</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">,</span> <span class="n">num_enrollments_label</span><span class="p">,</span> <span class="n">num_conversions_label</span><span class="p">,</span> <span class="n">num_samples</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return samples from Beta distributions.</span>
+
+<span class="sd">    Assumes a Beta(1, 1) prior.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df: A pandas dataframe of integers:</span>
+
+<span class="sd">            * ``df.index`` lists the experiment branches</span>
+<span class="sd">            * ``df.columns`` is</span>
+<span class="sd">              ``(num_enrollments_label, num_conversions_label)``</span>
+
+<span class="sd">        num_enrollments_label: Label for the df column containing the</span>
+<span class="sd">            number of enrollments in each branch.</span>
+<span class="sd">        num_conversions_label: Label for the df column containing the</span>
+<span class="sd">            number of conversions in each branch.</span>
+<span class="sd">        num_samples: The number of samples to compute</span>
+
+<span class="sd">    Returns a pandas.DataFrame of sampled conversion rates</span>
+
+<span class="sd">        * columns: list of branches</span>
+<span class="sd">        * index: enumeration of samples</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_samples</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">branch_label</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="c1"># Oh, for a better prior...</span>
+        <span class="n">samples</span><span class="p">[</span><span class="n">branch_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">beta</span><span class="p">(</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">num_conversions_label</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">num_enrollments_label</span><span class="p">]</span> <span class="o">-</span> <span class="n">r</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">num_conversions_label</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">num_samples</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">samples</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

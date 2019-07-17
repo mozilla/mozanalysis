@@ -1,0 +1,425 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.bayesian_stats &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>mozanalysis.bayesian_stats</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mozanalysis.bayesian_stats</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
+<span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
+<span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+
+<span class="n">DEFAULT_QUANTILES</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">,</span> <span class="mf">0.995</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="compare_samples"><a class="viewcode-back" href="../../api/bayesian_stats.html#mozanalysis.bayesian_stats.compare_samples">[docs]</a><span class="k">def</span> <span class="nf">compare_samples</span><span class="p">(</span>
+    <span class="n">samples</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="p">,</span>
+    <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+    <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return descriptive statistics for branch stats and uplifts.</span>
+
+<span class="sd">    Given per-branch samples for some quantity, return summary</span>
+<span class="sd">    statistics (percentiles and the mean) for the quantity for each</span>
+<span class="sd">    individual branch. Also return comparative summary statistics for</span>
+<span class="sd">    the uplift of this quantity for each branch with respect to the</span>
+<span class="sd">    reference branch.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        samples (dict of pandas.Series or pandas.DataFrame): Each key</span>
+<span class="sd">            is the label for a branch. Each value is the corresponding</span>
+<span class="sd">            sample set.</span>
+<span class="sd">        ref_branch_label (str): Label for the reference branch</span>
+<span class="sd">            (typically the control).</span>
+<span class="sd">        individual_summary_quantiles (list of float): Quantiles that</span>
+<span class="sd">            define the summary stats for the individual branches&#39;</span>
+<span class="sd">            samples.</span>
+<span class="sd">        comparative_summary_quantiles (list of float): Quantiles that</span>
+<span class="sd">            define the summary stats for the comparative stats.</span>
+
+<span class="sd">    Returns a dictionary:</span>
+<span class="sd">        When the values of ``samples`` are Series, then this function</span>
+<span class="sd">        returns a dictionary with the following keys and</span>
+<span class="sd">        values:</span>
+
+<span class="sd">            &#39;individual&#39;: dictionary mapping each branch name to a</span>
+<span class="sd">                pandas Series that holds the per-branch sample means and</span>
+<span class="sd">                quantiles.</span>
+<span class="sd">            &#39;comparative&#39;: dictionary mapping each branch name to a</span>
+<span class="sd">                pandas Series of summary statistics for the possible</span>
+<span class="sd">                uplifts of the sampled quantity relative to the</span>
+<span class="sd">                reference branch.</span>
+
+<span class="sd">        Otherwise, when the values of ``samples`` are DataFrames, then</span>
+<span class="sd">        this function returns a similar dictionary, except the Series</span>
+<span class="sd">        are replaced with DataFrames. The index for each DataFrame is</span>
+<span class="sd">        the columns of a value of ``samples``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">branch_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;individual&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">b</span><span class="p">:</span> <span class="n">summarize_one_branch_samples</span><span class="p">(</span>
+                <span class="n">samples</span><span class="p">[</span><span class="n">b</span><span class="p">],</span>
+                <span class="n">quantiles</span><span class="o">=</span><span class="n">individual_summary_quantiles</span>
+            <span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">branch_list</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;comparative&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">b</span><span class="p">:</span> <span class="n">summarize_joint_samples</span><span class="p">(</span>
+                <span class="n">samples</span><span class="p">[</span><span class="n">b</span><span class="p">],</span> <span class="n">samples</span><span class="p">[</span><span class="n">ref_branch_label</span><span class="p">],</span>
+                <span class="n">quantiles</span><span class="o">=</span><span class="n">comparative_summary_quantiles</span>
+            <span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">branch_list</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">ref_branch_label</span><span class="p">}</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="summarize_one_branch_samples"><a class="viewcode-back" href="../../api/bayesian_stats.html#mozanalysis.bayesian_stats.summarize_one_branch_samples">[docs]</a><span class="k">def</span> <span class="nf">summarize_one_branch_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return descriptive statistics for sampled population-level stats.</span>
+
+<span class="sd">    Given samples from one or more distributions, calculate some</span>
+<span class="sd">    quantiles and the mean.</span>
+
+<span class="sd">    The intended primary use-case is for calculating credible intervals</span>
+<span class="sd">    for stats when bootstrapping, or credible intervals around Bayesian</span>
+<span class="sd">    model parameters; in both cases ``samples`` are from a posterior</span>
+<span class="sd">    concerning one branch of an experiment.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        samples (pandas.Series or pandas.DataFrame): Samples over which</span>
+<span class="sd">            to compute the mean and quantiles.</span>
+<span class="sd">        quantiles (list, optional): The quantiles to compute - a good</span>
+<span class="sd">            reason to override the defaults would be when Bonferroni</span>
+<span class="sd">            corrections are required.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        If ``samples`` is a Series, then returns a pandas Series;</span>
+<span class="sd">        the index contains the stringified ``quantiles`` plus</span>
+<span class="sd">        ``&#39;mean&#39;``.</span>
+
+<span class="sd">        If ``samples`` is a DataFrame, then returns a pandas DataFrame;</span>
+<span class="sd">        the columns contain the stringified ``quantiles`` plus</span>
+<span class="sd">        ``&#39;mean&#39;``. The index matches the columns of ``samples``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">return</span> <span class="n">_summarize_one_branch_samples_batch</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_summarize_one_branch_samples_single</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="summarize_joint_samples"><a class="viewcode-back" href="../../api/bayesian_stats.html#mozanalysis.bayesian_stats.summarize_joint_samples">[docs]</a><span class="k">def</span> <span class="nf">summarize_joint_samples</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return descriptive statistics for uplifts.</span>
+
+<span class="sd">    The intended use case of this function is to compare a &#39;focus&#39;</span>
+<span class="sd">    experiment branch to a &#39;reference&#39; experiment branch (e.g. the</span>
+<span class="sd">    control). Samples from each branch are combined pairwise; these</span>
+<span class="sd">    pairs are considered to be samples from the joint probability</span>
+<span class="sd">    distribution (JPD). We compute various quantities from the JPD:</span>
+
+<span class="sd">    * We compute summary statistics for the distribution over relative</span>
+<span class="sd">      uplifts ``focus / reference - 1``</span>
+<span class="sd">    * We compute summary statistics for the distribution over absolute</span>
+<span class="sd">      uplifts ``focus - reference``</span>
+<span class="sd">    * We compute a summary statistic for the distribution over the L1</span>
+<span class="sd">      norm of absolute uplifts ``abs(focus - reference)``</span>
+<span class="sd">    * We compute the fraction of probability mass in the region</span>
+<span class="sd">      ``focus &gt; reference``, which in a Bayesian context may be</span>
+<span class="sd">      interpreted as the probability that the ground truth model</span>
+<span class="sd">      parameter is larger for the focus branch than the reference</span>
+<span class="sd">      branch.</span>
+
+<span class="sd">    ``focus`` and ``reference`` are samples from distributions; each is the</span>
+<span class="sd">    same format that would be supplied to `summarize_one_branch_samples`</span>
+<span class="sd">    when analyzing the branches independently.</span>
+
+<span class="sd">    Can be used to analyse a single metric (supply Series as arguments)</span>
+<span class="sd">    or in batch mode (supply DataFrames as arguments).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        focus (pandas.Series or pandas.DataFrame): Bootstrapped samples</span>
+<span class="sd">            or samples of a model parameter for a branch of an</span>
+<span class="sd">            experiment. If a DataFrame, each column represents a</span>
+<span class="sd">            different quantity.</span>
+<span class="sd">        reference (pandas.Series or pandas.DataFrame): The same</span>
+<span class="sd">            quantity, calculated for a different branch (typically the</span>
+<span class="sd">            control).</span>
+<span class="sd">        quantiles (list, optional): The quantiles to compute - a good</span>
+<span class="sd">            reason to override the defaults would be when Bonferroni</span>
+<span class="sd">            corrections are required.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A pandas Series or DataFrame containing a MultiIndex with the</span>
+<span class="sd">        following labels on the higher level and stringified floats</span>
+<span class="sd">        on the inner level</span>
+
+<span class="sd">        * rel_uplift: Expectation value and quantiles over the relative</span>
+<span class="sd">          uplift.</span>
+<span class="sd">        * abs_uplift: Expectation value and quantiles over the absolute</span>
+<span class="sd">          uplift.</span>
+<span class="sd">        * max_abs_diff: Quantile 0.95 on the L1 norm of differences/</span>
+<span class="sd">          absolute uplifts. In a Bayesian context, there is a 95%</span>
+<span class="sd">          probability that the absolute difference is less than this in</span>
+<span class="sd">          either direction.</span>
+<span class="sd">        * prob_win: In a Bayesian context, the probability that the ground</span>
+<span class="sd">          truth model parameter is larger for the focus than the reference</span>
+<span class="sd">          branch.</span>
+
+<span class="sd">        If returning a DataFrame, this MultiIndex is for the columns, and</span>
+<span class="sd">        the index matches the columns of ``focus``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">focus</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">return</span> <span class="n">_summarize_joint_samples_batch</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_summarize_joint_samples_single</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_summarize_one_branch_samples_single</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="c1"># Hey pd.Series.agg - don&#39;t apply me elementwise!</span>
+        <span class="c1"># Raising this error allows ``_summarize_one_branch_samples_batch``</span>
+        <span class="c1"># to work also for non-batch ``samples`` (i.e. doing double duty)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t summarize a scalar&quot;</span><span class="p">)</span>
+
+    <span class="n">q_index</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">quantiles</span><span class="p">]</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">q_index</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">])</span>
+
+    <span class="n">res</span><span class="p">[</span><span class="n">q_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">)</span>
+    <span class="n">res</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="k">def</span> <span class="nf">_summarize_one_branch_samples_batch</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">samples</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">summarize_one_branch_samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">quantiles</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+
+<span class="k">def</span> <span class="nf">_summarize_joint_samples_single</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+    <span class="n">str_quantiles</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quantiles</span><span class="p">]</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
+        <span class="p">[(</span><span class="s1">&#39;rel_uplift&#39;</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">str_quantiles</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;exp&#39;</span><span class="p">]]</span> <span class="o">+</span>
+        <span class="p">[(</span><span class="s1">&#39;abs_uplift&#39;</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">str_quantiles</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;exp&#39;</span><span class="p">]]</span> <span class="o">+</span>
+        <span class="p">[</span>
+            <span class="p">(</span><span class="s1">&#39;max_abs_diff&#39;</span><span class="p">,</span> <span class="s1">&#39;0.95&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;prob_win&#39;</span><span class="p">,</span> <span class="p">)</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="n">rel_uplift_samples</span> <span class="o">=</span> <span class="n">focus</span> <span class="o">/</span> <span class="n">reference</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+        <span class="p">[(</span><span class="s1">&#39;rel_uplift&#39;</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">str_quantiles</span><span class="p">]</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">rel_uplift_samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">)</span>
+
+    <span class="n">res</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="s1">&#39;rel_uplift&#39;</span><span class="p">,</span> <span class="s1">&#39;exp&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">rel_uplift_samples</span><span class="p">)</span>
+
+    <span class="n">abs_uplift_samples</span> <span class="o">=</span> <span class="n">focus</span> <span class="o">-</span> <span class="n">reference</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+        <span class="p">[(</span><span class="s1">&#39;abs_uplift&#39;</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">str_quantiles</span><span class="p">]</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">abs_uplift_samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">)</span>
+
+    <span class="n">res</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="s1">&#39;abs_uplift&#39;</span><span class="p">,</span> <span class="s1">&#39;exp&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">abs_uplift_samples</span><span class="p">)</span>
+
+    <span class="n">res</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="s1">&#39;max_abs_diff&#39;</span><span class="p">,</span> <span class="s1">&#39;0.95&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">abs_uplift_samples</span><span class="p">),</span> <span class="mf">0.95</span><span class="p">)</span>
+
+    <span class="n">res</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;prob_win&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">focus</span> <span class="o">&gt;</span> <span class="n">reference</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="k">def</span> <span class="nf">_summarize_joint_samples_batch</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">focus</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">summarize_joint_samples</span><span class="p">(</span><span class="n">focus</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">reference</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">quantiles</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">focus</span><span class="o">.</span><span class="n">columns</span>
+    <span class="p">},</span> <span class="n">columns</span><span class="o">=</span><span class="n">focus</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

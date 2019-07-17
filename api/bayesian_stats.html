@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.bayesian_stats &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="mozanalysis.bayesian_stats.bayesian_bootstrap" href="bayesian_stats/bayesian_bootstrap.html" />
+    <link rel="prev" title="API Documentation" href="../api.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About Mozanalysis</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bayesian_stats/binary.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Documentation</a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/bayesian_stats.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mozanalysis.bayesian_stats">
+<span id="mozanalysis-bayesian-stats"></span><h1><a class="reference internal" href="#module-mozanalysis.bayesian_stats" title="mozanalysis.bayesian_stats"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a><a class="headerlink" href="#module-mozanalysis.bayesian_stats" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="mozanalysis.bayesian_stats.compare_samples">
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.</code><code class="sig-name descname">compare_samples</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">ref_branch_label</em>, <em class="sig-param">individual_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">comparative_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#compare_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.compare_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return descriptive statistics for branch stats and uplifts.</p>
+<p>Given per-branch samples for some quantity, return summary
+statistics (percentiles and the mean) for the quantity for each
+individual branch. Also return comparative summary statistics for
+the uplift of this quantity for each branch with respect to the
+reference branch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>dict of pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Each key
+is the label for a branch. Each value is the corresponding
+sample set.</p></li>
+<li><p><strong>ref_branch_label</strong> (<em>str</em>) – Label for the reference branch
+(typically the control).</p></li>
+<li><p><strong>individual_summary_quantiles</strong> (<em>list of float</em>) – Quantiles that
+define the summary stats for the individual branches’
+samples.</p></li>
+<li><p><strong>comparative_summary_quantiles</strong> (<em>list of float</em>) – Quantiles that
+define the summary stats for the comparative stats.</p></li>
+</ul>
+</dd>
+</dl>
+<dl>
+<dt>Returns a dictionary:</dt><dd><p>When the values of <code class="docutils literal notranslate"><span class="pre">samples</span></code> are Series, then this function
+returns a dictionary with the following keys and
+values:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>‘individual’: dictionary mapping each branch name to a</dt><dd><p>pandas Series that holds the per-branch sample means and
+quantiles.</p>
+</dd>
+<dt>‘comparative’: dictionary mapping each branch name to a</dt><dd><p>pandas Series of summary statistics for the possible
+uplifts of the sampled quantity relative to the
+reference branch.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Otherwise, when the values of <code class="docutils literal notranslate"><span class="pre">samples</span></code> are DataFrames, then
+this function returns a similar dictionary, except the Series
+are replaced with DataFrames. The index for each DataFrame is
+the columns of a value of <code class="docutils literal notranslate"><span class="pre">samples</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.bayesian_stats.summarize_joint_samples">
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.</code><code class="sig-name descname">summarize_joint_samples</code><span class="sig-paren">(</span><em class="sig-param">focus</em>, <em class="sig-param">reference</em>, <em class="sig-param">quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#summarize_joint_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.summarize_joint_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return descriptive statistics for uplifts.</p>
+<p>The intended use case of this function is to compare a ‘focus’
+experiment branch to a ‘reference’ experiment branch (e.g. the
+control). Samples from each branch are combined pairwise; these
+pairs are considered to be samples from the joint probability
+distribution (JPD). We compute various quantities from the JPD:</p>
+<ul class="simple">
+<li><p>We compute summary statistics for the distribution over relative
+uplifts <code class="docutils literal notranslate"><span class="pre">focus</span> <span class="pre">/</span> <span class="pre">reference</span> <span class="pre">-</span> <span class="pre">1</span></code></p></li>
+<li><p>We compute summary statistics for the distribution over absolute
+uplifts <code class="docutils literal notranslate"><span class="pre">focus</span> <span class="pre">-</span> <span class="pre">reference</span></code></p></li>
+<li><p>We compute a summary statistic for the distribution over the L1
+norm of absolute uplifts <code class="docutils literal notranslate"><span class="pre">abs(focus</span> <span class="pre">-</span> <span class="pre">reference)</span></code></p></li>
+<li><p>We compute the fraction of probability mass in the region
+<code class="docutils literal notranslate"><span class="pre">focus</span> <span class="pre">&gt;</span> <span class="pre">reference</span></code>, which in a Bayesian context may be
+interpreted as the probability that the ground truth model
+parameter is larger for the focus branch than the reference
+branch.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">focus</span></code> and <code class="docutils literal notranslate"><span class="pre">reference</span></code> are samples from distributions; each is the
+same format that would be supplied to <cite>summarize_one_branch_samples</cite>
+when analyzing the branches independently.</p>
+<p>Can be used to analyse a single metric (supply Series as arguments)
+or in batch mode (supply DataFrames as arguments).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>focus</strong> (<em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Bootstrapped samples
+or samples of a model parameter for a branch of an
+experiment. If a DataFrame, each column represents a
+different quantity.</p></li>
+<li><p><strong>reference</strong> (<em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – The same
+quantity, calculated for a different branch (typically the
+control).</p></li>
+<li><p><strong>quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – The quantiles to compute - a good
+reason to override the defaults would be when Bonferroni
+corrections are required.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A pandas Series or DataFrame containing a MultiIndex with the
+following labels on the higher level and stringified floats
+on the inner level</p>
+<ul class="simple">
+<li><p>rel_uplift: Expectation value and quantiles over the relative
+uplift.</p></li>
+<li><p>abs_uplift: Expectation value and quantiles over the absolute
+uplift.</p></li>
+<li><p>max_abs_diff: Quantile 0.95 on the L1 norm of differences/
+absolute uplifts. In a Bayesian context, there is a 95%
+probability that the absolute difference is less than this in
+either direction.</p></li>
+<li><p>prob_win: In a Bayesian context, the probability that the ground
+truth model parameter is larger for the focus than the reference
+branch.</p></li>
+</ul>
+<p>If returning a DataFrame, this MultiIndex is for the columns, and
+the index matches the columns of <code class="docutils literal notranslate"><span class="pre">focus</span></code>.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.bayesian_stats.summarize_one_branch_samples">
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.</code><code class="sig-name descname">summarize_one_branch_samples</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#summarize_one_branch_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.summarize_one_branch_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return descriptive statistics for sampled population-level stats.</p>
+<p>Given samples from one or more distributions, calculate some
+quantiles and the mean.</p>
+<p>The intended primary use-case is for calculating credible intervals
+for stats when bootstrapping, or credible intervals around Bayesian
+model parameters; in both cases <code class="docutils literal notranslate"><span class="pre">samples</span></code> are from a posterior
+concerning one branch of an experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Samples over which
+to compute the mean and quantiles.</p></li>
+<li><p><strong>quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – The quantiles to compute - a good
+reason to override the defaults would be when Bonferroni
+corrections are required.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>If <code class="docutils literal notranslate"><span class="pre">samples</span></code> is a Series, then returns a pandas Series;
+the index contains the stringified <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus
+<code class="docutils literal notranslate"><span class="pre">'mean'</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">samples</span></code> is a DataFrame, then returns a pandas DataFrame;
+the columns contain the stringified <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus
+<code class="docutils literal notranslate"><span class="pre">'mean'</span></code>. The index matches the columns of <code class="docutils literal notranslate"><span class="pre">samples</span></code>.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="bayesian_stats/bayesian_bootstrap.html" class="btn btn-neutral float-right" title="mozanalysis.bayesian_stats.bayesian_bootstrap" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../api.html" class="btn btn-neutral float-left" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

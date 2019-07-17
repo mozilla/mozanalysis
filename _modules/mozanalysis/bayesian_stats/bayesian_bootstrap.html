@@ -1,0 +1,530 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.bayesian_stats.bayesian_bootstrap &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About Mozanalysis</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../bayesian_stats.html">mozanalysis.bayesian_stats</a> &raquo;</li>
+        
+      <li>mozanalysis.bayesian_stats.bayesian_bootstrap</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mozanalysis.bayesian_stats.bayesian_bootstrap</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
+<span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
+<span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats</span> <span class="k">as</span> <span class="nn">mabs</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="k">import</span> <span class="n">filter_outliers</span>
+
+
+<div class="viewcode-block" id="bb_mean"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.bb_mean">[docs]</a><span class="k">def</span> <span class="nf">bb_mean</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">prob_weights</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate the mean of a bootstrap replicate.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        values (pd.Series, ndarray): One dimensional array</span>
+<span class="sd">            of observed values</span>
+<span class="sd">        prob_weights (pd.Series, ndarray): Equally shaped</span>
+<span class="sd">            array of the probability weight associated with</span>
+<span class="sd">            each value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The mean as a np.float.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">prob_weights</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="make_bb_quantile_closure"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure">[docs]</a><span class="k">def</span> <span class="nf">make_bb_quantile_closure</span><span class="p">(</span><span class="n">quantiles</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a function to calculate quantiles for a bootstrap replicate.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantiles (float, list of floats): Quantiles to compute</span>
+
+<span class="sd">    Returns a function that calculates quantiles for a bootstrap replicate:</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            values (pd.Series, ndarray):</span>
+<span class="sd">                One dimensional array of observed values</span>
+<span class="sd">            prob_weights (pd.Series, ndarray):</span>
+<span class="sd">                Equally shaped array of the probability weight associated with</span>
+<span class="sd">                each value.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            * A quantile as a np.float, or</span>
+<span class="sd">            * several quantiles as a dict keyed by the quantiles</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># If https://github.com/numpy/numpy/pull/9211/ is ever merged then</span>
+    <span class="c1"># we can just use that instead.</span>
+
+    <span class="k">def</span> <span class="nf">get_value_at_quantile</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">cdf</span><span class="p">,</span> <span class="n">quantile</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the value at a quantile.</span>
+
+<span class="sd">        Does no interpolation because our Bayesian bootstrap</span>
+<span class="sd">        implementation calls `np.unique` to tally the values:</span>
+<span class="sd">        if it did not take this shortcut then regardless of whether</span>
+<span class="sd">        we interpolate when returning quantiles, the vast majority</span>
+<span class="sd">        of quantiles would coincide with a value. But since we take</span>
+<span class="sd">        this shortcut, interpolation mostly returns values not in the</span>
+<span class="sd">        dataset. Ergh.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Add a tolerance of 1e-6 to account for numerical error when</span>
+        <span class="c1"># computing the cdf</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">quantile</span> <span class="o">&lt;</span> <span class="n">cdf</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">bb_quantile</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">prob_weights</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate quantiles for a bootstrap replicate.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            values (pd.Series, ndarray): One dimensional array</span>
+<span class="sd">                of observed values</span>
+<span class="sd">            prob_weights (pd.Series, ndarray): Equally shaped</span>
+<span class="sd">                array of the probability weight associated with</span>
+<span class="sd">                each value.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            * A quantile as a np.float, or</span>
+<span class="sd">            * several quantiles as a dict keyed by the quantiles</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># assume values is previously sorted, as per np.unique()</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">prob_weights</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">quantiles</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">get_value_at_quantile</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">cdf</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="n">q</span><span class="p">:</span> <span class="n">get_value_at_quantile</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">cdf</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quantiles</span>
+            <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">bb_quantile</span></div>
+
+
+<div class="viewcode-block" id="compare_branches"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.compare_branches">[docs]</a><span class="k">def</span> <span class="nf">compare_branches</span><span class="p">(</span>
+    <span class="n">sc</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="s1">&#39;control&#39;</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">bb_mean</span><span class="p">,</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+    <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Jointly sample bootstrapped statistics then compare them.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sc: The Spark context</span>
+<span class="sd">        df: a pandas DataFrame of queried experiment data in the</span>
+<span class="sd">            standard format (see `mozanalysis.experiment`).</span>
+<span class="sd">        col_label (str): Label for the df column contaning the metric</span>
+<span class="sd">            to be analyzed.</span>
+<span class="sd">        ref_branch_label (str, optional): String in ``df[&#39;branch&#39;]``</span>
+<span class="sd">            that identifies the branch with respect to which we want to</span>
+<span class="sd">            calculate uplifts - usually the control branch.</span>
+<span class="sd">        stat_fn (callable, optional): A function that either:</span>
+
+<span class="sd">            * Aggregates each resampled population to a scalar (e.g.</span>
+<span class="sd">              the default, ``bb_mean``), or</span>
+<span class="sd">            * Aggregates each resampled population to a dict of</span>
+<span class="sd">              scalars (e.g. the func returned by</span>
+<span class="sd">              ``make_bb_quantile_closure`` when given multiple</span>
+<span class="sd">              quantiles.</span>
+
+<span class="sd">            In both cases, this function must accept two parameters:</span>
+
+<span class="sd">            * a one-dimensional ndarray or pandas Series of values,</span>
+<span class="sd">            * an identically shaped object of weights for these values</span>
+
+<span class="sd">        num_samples (int, optional): The number of bootstrap iterations</span>
+<span class="sd">            to perform.</span>
+<span class="sd">        threshold_quantile (float, optional): An optional threshold</span>
+<span class="sd">            quantile, above which to discard outliers. E.g. `0.9999`.</span>
+<span class="sd">        individual_summary_quantiles (list, optional): Quantiles to</span>
+<span class="sd">            determine the credible intervals on individual branch</span>
+<span class="sd">            statistics. Change these when making Bonferroni corrections.</span>
+<span class="sd">        comparative_summary_quantiles (list, optional): Quantiles to</span>
+<span class="sd">            determine the credible intervals on comparative branch</span>
+<span class="sd">            statistics (i.e. the change relative to the reference</span>
+<span class="sd">            branch, probably the control). Change these when making</span>
+<span class="sd">            Bonferroni corrections.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        If ``stat_fn`` returns a scalar (this is the default), then</span>
+<span class="sd">        this function returns a dictionary has the following keys and</span>
+<span class="sd">        values:</span>
+
+<span class="sd">            * &#39;individual&#39;: dictionary mapping each branch name to a pandas</span>
+<span class="sd">              Series that holds the expected value for the bootstrapped</span>
+<span class="sd">              ``stat_fn``, and credible intervals.</span>
+<span class="sd">            * &#39;comparative&#39;: dictionary mapping each branch name to a pandas</span>
+<span class="sd">              Series of summary statistics for the possible uplifts of</span>
+<span class="sd">              the bootstrapped ``stat_fn`` relative to the reference branch.</span>
+
+<span class="sd">        Otherwise, when ``stat_fn`` returns a dict, then this function</span>
+<span class="sd">        returns a similar dictionary, except the Series are replaced with</span>
+<span class="sd">        DataFrames. Each row in each DataFrame corresponds to one output</span>
+<span class="sd">        of ``stat_fn``, and is the Series that would be returned if</span>
+<span class="sd">        ``stat_fn`` computed only this statistic.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">branch_list</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">ref_branch_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">branch_list</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Branch label &#39;</span><span class="si">{b}</span><span class="s2">&#39; not in branch list &#39;</span><span class="si">{bl}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">b</span><span class="o">=</span><span class="n">ref_branch_label</span><span class="p">,</span> <span class="n">bl</span><span class="o">=</span><span class="n">branch_list</span>
+        <span class="p">))</span>
+
+    <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1"># TODO: do we need to control seed_start? If so then we must be careful here</span>
+        <span class="n">b</span><span class="p">:</span> <span class="n">get_bootstrap_samples</span><span class="p">(</span>
+            <span class="n">sc</span><span class="p">,</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">][</span><span class="n">df</span><span class="o">.</span><span class="n">branch</span> <span class="o">==</span> <span class="n">b</span><span class="p">],</span>
+            <span class="n">stat_fn</span><span class="p">,</span>
+            <span class="n">num_samples</span><span class="p">,</span>
+            <span class="n">threshold_quantile</span><span class="o">=</span><span class="n">threshold_quantile</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">branch_list</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">mabs</span><span class="o">.</span><span class="n">compare_samples</span><span class="p">(</span>
+        <span class="n">samples</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="p">,</span> <span class="n">individual_summary_quantiles</span><span class="p">,</span>
+        <span class="n">comparative_summary_quantiles</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="bootstrap_one_branch"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch">[docs]</a><span class="k">def</span> <span class="nf">bootstrap_one_branch</span><span class="p">(</span>
+    <span class="n">sc</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">bb_mean</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Bootstrap ``stat_fn`` for one branch on its own.</span>
+
+<span class="sd">    Computes ``stat_fn`` for ``num_samples`` resamples of ``data``,</span>
+<span class="sd">    then returns summary statistics for the results.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sc: The spark context</span>
+<span class="sd">        data: The data as a list, 1D numpy array, or pandas Series</span>
+<span class="sd">        stat_fn (callable, optional): A function that either:</span>
+
+<span class="sd">            * Aggregates each resampled population to a scalar (e.g.</span>
+<span class="sd">              the default, ``bb_mean``), or</span>
+<span class="sd">            * Aggregates each resampled population to a dict of</span>
+<span class="sd">              scalars (e.g. the func returned by</span>
+<span class="sd">              ``make_bb_quantile_closure`` when given multiple</span>
+<span class="sd">              quantiles.</span>
+
+<span class="sd">            In both cases, this function must accept two parameters:</span>
+
+<span class="sd">            * a one-dimensional ndarray or pandas Series of values,</span>
+<span class="sd">            * an identically shaped object of weights for these values</span>
+
+<span class="sd">        num_samples: The number of bootstrap iterations to perform</span>
+<span class="sd">        seed_start: An int with which to seed numpy&#39;s RNG. It must</span>
+<span class="sd">            be unique within this set of calculations.</span>
+<span class="sd">        threshold_quantile (float, optional): An optional threshold</span>
+<span class="sd">            quantile, above which to discard outliers. E.g. ``0.9999``.</span>
+<span class="sd">        summary_quantiles (list, optional): Quantiles to determine the</span>
+<span class="sd">            confidence bands on the branch statistics. Change these</span>
+<span class="sd">            when making Bonferroni corrections.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">get_bootstrap_samples</span><span class="p">(</span>
+        <span class="n">sc</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">seed_start</span><span class="p">,</span> <span class="n">threshold_quantile</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mabs</span><span class="o">.</span><span class="n">summarize_one_branch_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">summary_quantiles</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_bootstrap_samples"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples">[docs]</a><span class="k">def</span> <span class="nf">get_bootstrap_samples</span><span class="p">(</span>
+    <span class="n">sc</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">bb_mean</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``stat_fn`` evaluated on resampled data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sc: The spark context</span>
+<span class="sd">        data: The data as a list, 1D numpy array, or pandas series</span>
+<span class="sd">        stat_fn (callable, optional): A function that either:</span>
+
+<span class="sd">            * Aggregates each resampled population to a scalar (e.g.</span>
+<span class="sd">              the default, ``bb_mean``), or</span>
+<span class="sd">            * Aggregates each resampled population to a dict of</span>
+<span class="sd">              scalars (e.g. the func returned by</span>
+<span class="sd">              ``make_bb_quantile_closure`` when given multiple</span>
+<span class="sd">              quantiles.</span>
+
+<span class="sd">            In both cases, this function must accept two parameters:</span>
+
+<span class="sd">            * a one-dimensional ndarray or pandas Series of values,</span>
+<span class="sd">            * an identically shaped object of weights for these values</span>
+
+<span class="sd">        num_samples: The number of samples to return</span>
+<span class="sd">        seed_start: A seed for the random number generator; this</span>
+<span class="sd">            function will use seeds in the range::</span>
+
+<span class="sd">                [seed_start, seed_start + num_samples)</span>
+
+<span class="sd">            and these particular seeds must not be used elsewhere</span>
+<span class="sd">            in this calculation. By default, use a random seed.</span>
+
+<span class="sd">        threshold_quantile (float, optional): An optional threshold</span>
+<span class="sd">            quantile, above which to discard outliers. E.g. ``0.9999``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A Series or DataFrame with one row per sample and one column</span>
+<span class="sd">        per output of ``stat_fn``.</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        Rubin, Donald B. The Bayesian Bootstrap. Ann. Statist. 9 (1981),</span>
+<span class="sd">            no. 1, 130--134. https://dx.doi.org/10.1214/aos/1176345338</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; contains null values&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">threshold_quantile</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">filter_outliers</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="p">)</span>
+
+    <span class="c1"># For computational efficiency, tally the data. If you are careful</span>
+    <span class="c1"># with the resulting draws from the dirichlet then this should be</span>
+    <span class="c1"># equivalent to not doing this step (and passing np.ones() as the</span>
+    <span class="c1"># counts)</span>
+    <span class="n">data_values</span><span class="p">,</span> <span class="n">data_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">seed_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">seed_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+
+    <span class="c1"># Deterministic &quot;randomness&quot; requires careful state handling :(</span>
+    <span class="c1"># Need to ensure every call has a unique, deterministic seed.</span>
+    <span class="n">seed_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">seed_start</span><span class="p">,</span> <span class="n">seed_start</span> <span class="o">+</span> <span class="n">num_samples</span><span class="p">)</span>
+
+    <span class="c1"># TODO: run locally `if sc is None`?</span>
+    <span class="c1"># TODO: maybe we can just run locally anyway? It&#39;s efficient...</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">broadcast_data_values</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">data_values</span><span class="p">)</span>
+        <span class="n">broadcast_data_counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">data_counts</span><span class="p">)</span>
+
+        <span class="n">summary_stat_samples</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">(</span><span class="n">seed_range</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">seed</span><span class="p">:</span> <span class="n">_resample_and_agg_once_bcast</span><span class="p">(</span>
+                <span class="n">broadcast_data_values</span><span class="o">=</span><span class="n">broadcast_data_values</span><span class="p">,</span>
+                <span class="n">broadcast_data_counts</span><span class="o">=</span><span class="n">broadcast_data_counts</span><span class="p">,</span>
+                <span class="n">stat_fn</span><span class="o">=</span><span class="n">stat_fn</span><span class="p">,</span>
+                <span class="n">unique_seed</span><span class="o">=</span><span class="n">seed</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">broadcast_data_values</span><span class="o">.</span><span class="n">unpersist</span><span class="p">()</span>
+        <span class="n">broadcast_data_counts</span><span class="o">.</span><span class="n">unpersist</span><span class="p">()</span>
+
+    <span class="n">summary_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">summary_stat_samples</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">summary_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Return a Series if stat_fn returns a scalar</span>
+        <span class="k">return</span> <span class="n">summary_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Else return a DataFrame if stat_fn returns a dict</span>
+    <span class="k">return</span> <span class="n">summary_df</span></div>
+
+
+<span class="k">def</span> <span class="nf">_resample_and_agg_once_bcast</span><span class="p">(</span>
+    <span class="n">broadcast_data_values</span><span class="p">,</span> <span class="n">broadcast_data_counts</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">unique_seed</span>
+<span class="p">):</span>
+    <span class="k">return</span> <span class="n">_resample_and_agg_once</span><span class="p">(</span>
+        <span class="n">broadcast_data_values</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">broadcast_data_counts</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">stat_fn</span><span class="p">,</span> <span class="n">unique_seed</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_resample_and_agg_once</span><span class="p">(</span>
+    <span class="n">data_values</span><span class="p">,</span> <span class="n">data_counts</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">unique_seed</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+    <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">unique_seed</span><span class="p">)</span>
+
+    <span class="n">prob_weights</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">dirichlet</span><span class="p">(</span><span class="n">data_counts</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">stat_fn</span><span class="p">(</span><span class="n">data_values</span><span class="p">,</span> <span class="n">prob_weights</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
