@@ -1,85 +1,157 @@
 import pyspark.sql.functions as F
 import pytest
 
-from mozanalysis.experiment import Experiment
+from mozanalysis.experiment import Experiment, TimeLimits
 from mozanalysis.utils import add_days
 
 
-def test_get_last_enrollment_date():
-    exp = Experiment('a-stub', '20190101')
-    exp_8d = Experiment('experiment-with-8-day-cohort', '20190101', 8)
+def test_time_limits_validates():
+    # Mainly check that the validation is running at all
+    # No need to specify the same checks twice(?)
+    with pytest.raises(TypeError):
+        TimeLimits()
 
+    with pytest.raises(AssertionError):
+        TimeLimits(
+            first_enrollment_date='20190105',
+            last_enrollment_date='20190105',
+            analysis_window_start=1,
+            analysis_window_end=1,
+            analysis_window_length_dates=1,
+            first_date_data_required='20190101',  # Before enrollments
+            last_date_data_required='20190101',
+        )
+
+
+def test_time_limits_create1():
     # When we have complete data for 20190114...
-    the_fourteenth = '20190114'
-
     # ...We have 14 dates of data for those who enrolled on the 1st
-    exp._get_last_enrollment_date(the_fourteenth, 14) == '20190101'
+    tl = TimeLimits.create(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190114',
+        analysis_start_days=0,
+        analysis_length_dates=14,
+        # num_dates_enrollment=8,
+    )
 
-    # We don't have 14 dates of data for the 8-day cohort:
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190101'
+    assert tl.analysis_window_start == 0
+    assert tl.analysis_window_end == 13
+    assert tl.analysis_window_length_dates == 14
+    assert tl.first_date_data_required == '20190101'
+    assert tl.last_date_data_required == '20190114'
+    assert tl.num_periods is None
+
+
+def test_time_limits_create2():
+    # We don't have 14 dates of data for an 8-day cohort:
     with pytest.raises(ValueError):
-        exp_8d._get_last_enrollment_date(the_fourteenth, 14)
+        TimeLimits.create(
+            first_enrollment_date='20190101',
+            last_date_full_data='20190114',
+            analysis_start_days=0,
+            analysis_length_dates=14,
+            num_dates_enrollment=8,
+        )
 
     # We don't have 15 full dates of data for any users
-    with pytest.raises(ValueError):
-        exp._get_last_enrollment_date(the_fourteenth, 15)
+    with pytest.raises(AssertionError):
+        TimeLimits.create(
+            first_enrollment_date='20190101',
+            last_date_full_data='20190114',
+            analysis_start_days=0,
+            analysis_length_dates=15,
+            # num_dates_enrollment=8,
+        )
 
-    # And we certainly don't have 15 full dates for the 8-day cohort:
-    with pytest.raises(ValueError):
-        exp_8d._get_last_enrollment_date(the_fourteenth, 15)
 
+def test_time_limits_create3():
     # For the 8-day cohort We have enough data for a 7 day window
-    exp_8d._get_last_enrollment_date(the_fourteenth, 7) == '20190108'
+    tl = TimeLimits.create(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190114',
+        analysis_start_days=0,
+        analysis_length_dates=7,
+        num_dates_enrollment=8,
+    )
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190108'
+    assert tl.analysis_window_start == 0
+    assert tl.analysis_window_end == 6
+    assert tl.analysis_window_length_dates == 7
+    assert tl.first_date_data_required == '20190101'
+    assert tl.last_date_data_required == '20190114'
+    assert tl.num_periods is None
 
+
+def test_time_limits_create4():
     # Or a 2 day window
-    exp_8d._get_last_enrollment_date(the_fourteenth, 2) == '20190108'
+    tl = TimeLimits.create(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190114',
+        analysis_start_days=0,
+        analysis_length_dates=2,
+        num_dates_enrollment=8,
+    )
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190108'
+    assert tl.analysis_window_start == 0
+    assert tl.analysis_window_end == 1
+    assert tl.analysis_window_length_dates == 2
+    assert tl.first_date_data_required == '20190101'
+    assert tl.last_date_data_required == '20190109'
+    assert tl.num_periods is None
 
+
+def test_time_limits_create5():
     # But not an 8 day window
     with pytest.raises(ValueError):
-        exp_8d._get_last_enrollment_date(the_fourteenth, 8)
+        TimeLimits.create(
+            first_enrollment_date='20190101',
+            last_date_full_data='20190114',
+            analysis_start_days=0,
+            analysis_length_dates=8,
+            num_dates_enrollment=8,
+        )
 
+
+def test_time_limits_create6():
     # Of course the flexi-experiment has data for a 1 day window
-    exp._get_last_enrollment_date(the_fourteenth, 1) == '20190114'
+    tl = TimeLimits.create(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190114',
+        analysis_start_days=0,
+        analysis_length_dates=1,
+        # num_dates_enrollment=8,
+    )
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190114'
+    assert tl.analysis_window_start == 0
+    assert tl.analysis_window_end == 0
+    assert tl.analysis_window_length_dates == 1
+    assert tl.first_date_data_required == '20190101'
+    assert tl.last_date_data_required == '20190114'
+    assert tl.num_periods is None
 
 
-def test_get_last_data_date1():
-    exp = Experiment('a-stub', '20190101')
-
-    # When we have complete data for 20190114...
-    the_fourteenth = '20190114'
-
-    # When we don't specify num_days_enrollment we'll use all the data
-    assert exp._get_last_data_date(the_fourteenth, 14) == the_fourteenth
-    assert exp._get_last_data_date(the_fourteenth, 10) == the_fourteenth
-    assert exp._get_last_data_date(the_fourteenth, 1) == the_fourteenth
-    assert exp._get_last_data_date(the_fourteenth, 5) == the_fourteenth
-
-    # But we don't have 15 full dates of data for any users
-    with pytest.raises(ValueError):
-        exp._get_last_data_date(the_fourteenth, 15)
-
-
-def test_get_last_data_date2():
-    exp_8d = Experiment('experiment-with-8-day-cohort', '20190101', 8)
-
-    the_fourteenth = '20190114'
-
-    with pytest.raises(ValueError):
-        assert exp_8d._get_last_data_date(the_fourteenth, 14) == the_fourteenth
-
-    with pytest.raises(ValueError):
-        assert exp_8d._get_last_data_date(the_fourteenth, 10) == the_fourteenth
-
-    # If we only need 1 date of data then the final enrollment is fixed:
-    assert exp_8d._get_last_data_date(the_fourteenth, 1) == '20190108'
-    assert exp_8d._get_last_data_date('20190131', 1) == '20190108'
-    assert exp_8d._get_last_data_date('20201231', 1) == '20190108'
-
-    # And it's fixed to the date of the final enrollment
-    assert exp_8d._get_last_data_date(the_fourteenth, 1) \
-        == '20190108' \
-        == exp_8d._get_last_enrollment_date(the_fourteenth, 1)
-
-    assert exp_8d._get_last_data_date(the_fourteenth, 5) == '20190112'
+def test_time_limits_create7():
+    # If the analysis starts later, so does the data source
+    tl = TimeLimits.create(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190114',
+        analysis_start_days=7,
+        analysis_length_dates=1,
+        # num_dates_enrollment=8,
+    )
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190107'
+    assert tl.analysis_window_start == 7
+    assert tl.analysis_window_end == 7
+    assert tl.analysis_window_length_dates == 1
+    assert tl.first_date_data_required == '20190108'
+    assert tl.last_date_data_required == '20190114'
+    assert tl.num_periods is None
 
 
 def _get_data_source(spark):
@@ -114,7 +186,7 @@ def _simple_return_agg_date(agg_fn, data_source):
     ).first()['b']
 
 
-def test_filter_data_source_for_analysis_window(spark):
+def test_process_data_source(spark):
     start_date = '20190101'
     exp_8d = Experiment('experiment-with-8-day-cohort', start_date, 8)
     data_source = _get_data_source(spark)
@@ -126,19 +198,35 @@ def test_filter_data_source_for_analysis_window(spark):
     assert _simple_return_agg_date(F.min, data_source) < start_date
     assert _simple_return_agg_date(F.max, data_source) > end_date
 
-    filtered_ds = exp_8d.filter_data_source_for_analysis_window(
-        data_source, end_date, 0, 3
+    tl_03 = TimeLimits.create(
+        first_enrollment_date=exp_8d.start_date,
+        last_date_full_data='20190114',
+        analysis_start_days=0,
+        analysis_length_dates=3,
+        num_dates_enrollment=exp_8d.num_dates_enrollment
     )
+    assert tl_03.first_date_data_required == start_date
+    assert tl_03.last_date_data_required == '20190110'
 
-    assert _simple_return_agg_date(F.min, filtered_ds) == start_date
-    assert _simple_return_agg_date(F.max, filtered_ds) == '20190110'
+    filtered_ds = exp_8d._process_data_source(data_source, tl_03)
 
-    filtered_ds_2 = exp_8d.filter_data_source_for_analysis_window(
-        data_source, end_date, 2, 3
+    assert _simple_return_agg_date(F.min, filtered_ds) == tl_03.first_date_data_required
+    assert _simple_return_agg_date(F.max, filtered_ds) == tl_03.last_date_data_required
+
+    tl_23 = TimeLimits.create(
+        first_enrollment_date=exp_8d.start_date,
+        last_date_full_data='20190114',
+        analysis_start_days=2,
+        analysis_length_dates=3,
+        num_dates_enrollment=exp_8d.num_dates_enrollment
     )
+    assert tl_23.first_date_data_required == add_days(start_date, 2)
+    assert tl_23.last_date_data_required == '20190112'
 
-    assert _simple_return_agg_date(F.min, filtered_ds_2) == add_days(start_date, 2)
-    assert _simple_return_agg_date(F.max, filtered_ds_2) == '20190112'
+    f_ds_2 = exp_8d._process_data_source(data_source, tl_23)
+
+    assert _simple_return_agg_date(F.min, f_ds_2) == tl_23.first_date_data_required
+    assert _simple_return_agg_date(F.max, f_ds_2) == tl_23.last_date_data_required
 
 
 def _get_enrollment_view(slug):
@@ -165,7 +253,7 @@ def _get_enrollment_view(slug):
     return inner
 
 
-def test_filter_enrollments_for_analysis_window(spark):
+def test_process_enrollments_non_ts(spark):
     exp = Experiment('a-stub', '20190101')
     enrollments = exp.get_enrollments(
         spark,
@@ -176,7 +264,18 @@ def test_filter_enrollments_for_analysis_window(spark):
     # With final data collected on '20190114', we have 7 dates of data
     # for 'cccc' enrolled on '20190108' but not for 'dddd' enrolled on
     # '20190109'.
-    fe = exp.filter_enrollments_for_analysis_window(enrollments, '20190114', 7)
+    tl = TimeLimits.create(
+        first_enrollment_date=exp.start_date,
+        last_date_full_data='20190114',
+        analysis_start_days=0,
+        analysis_length_dates=7,
+        num_dates_enrollment=exp.num_dates_enrollment
+    )
+    assert tl.last_enrollment_date == '20190108'
+    assert tl.analysis_window_end == 6
+
+    # fe = exp._process_enrollments(enrollments, tl, None)
+    fe = exp._process_enrollments(enrollments, tl)
     assert fe.count() == 3
 
 
@@ -303,11 +402,14 @@ def test_get_per_client_data_join(spark):
     assert bob_badtiming.first()['some_value'] == 0
     # Check that _filter_data_source_for_analysis_window didn't do the
     # heavy lifting above
-    fds = exp.filter_data_source_for_analysis_window(data_source, '20190114', 1, 3)
-    assert fds.filter(
-        fds.client_id == 'bob-badtiming'
+    time_limits = TimeLimits.create(
+        exp.start_date, '20190114', 1, 3, exp.num_dates_enrollment
+    )
+    pds = exp._process_data_source(data_source, time_limits)
+    assert pds.filter(
+        pds.client_id == 'bob-badtiming'
     ).select(
-        F.sum(fds.some_value).alias('agg_val')
+        F.sum(pds.some_value).alias('agg_val')
     ).first()['agg_val'] == 3
 
     # Check that relevant data was included appropriately
