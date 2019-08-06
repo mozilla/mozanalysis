@@ -297,13 +297,9 @@ class Experiment(object):
             analysis_length_days, self.num_dates_enrollment
         )
 
-        enrollments = self._process_enrollments(
-            enrollments, time_limits
-        ).alias('enrollments')
+        enrollments = self._process_enrollments(enrollments, time_limits)
 
-        data_source = self._process_data_source(
-            data_source, time_limits
-        ).alias('data_source')
+        data_source = self._process_data_source(data_source, time_limits)
 
         join_on = self._get_join_conditions(enrollments, data_source, time_limits)
 
@@ -427,7 +423,7 @@ class Experiment(object):
         """
         return enrollments.filter(
             enrollments.enrollment_date <= time_limits.last_enrollment_date
-        )
+        ).alias('enrollments')
 
     @staticmethod
     def _process_data_source(data_source, time_limits):
@@ -446,7 +442,7 @@ class Experiment(object):
                 time_limits.first_date_data_required,
                 time_limits.last_date_data_required
             )
-        )
+        ).alias('data_source')
 
     def _get_telemetry_sanity_check_metrics(self, enrollments, data_source):
         """Return aggregations that check for problems with a client."""
