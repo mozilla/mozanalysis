@@ -309,6 +309,33 @@ class Experiment(object):
             data_source, time_limits
         ).alias('data_source')
 
+        join_on = self._get_join_conditions(enrollments, data_source, time_limits)
+
+        sanity_metrics = self._get_telemetry_sanity_check_metrics(
+            enrollments, data_source
+        )
+
+        res = enrollments.join(
+            data_source,
+            join_on,
+            'left'
+        ).groupBy(
+            enrollments.client_id, enrollments.branch
+        ).agg(
+            *(metric_list + sanity_metrics)
+        )
+        if keep_client_id:
+            return res
+        else:
+            return res.drop(enrollments.client_id)
+
+    def _get_join_conditions(self, enrollments, data_source, time_limits):
+        """Return a list of join conditions.
+
+        In ``_get_results_for_one_data_source``, we join ``enrollments``
+        to ``data_source``. This method returns the list of join
+        conditions.
+        """
         join_on = [
             # TODO perf: would it be faster if we enforce a join on sample_id?
             enrollments.client_id == data_source.client_id,
@@ -347,23 +374,7 @@ class Experiment(object):
                 | (~F.isnull(data_source.experiments[self.experiment_slug]))
             ),
 
-        sanity_metrics = self._get_telemetry_sanity_check_metrics(
-            enrollments, data_source
-        )
-
-        res = enrollments.join(
-            data_source,
-            join_on,
-            'left'
-        ).groupBy(
-            enrollments.client_id, enrollments.branch
-        ).agg(
-            *(metric_list + sanity_metrics)
-        )
-        if keep_client_id:
-            return res
-        else:
-            return res.drop(enrollments.client_id)
+        return join_on
 
     @staticmethod
     def _get_enrollments_view_normandy(spark):
