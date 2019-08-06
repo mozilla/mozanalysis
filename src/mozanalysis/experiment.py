@@ -297,11 +297,11 @@ class Experiment(object):
             analysis_length_days, self.num_dates_enrollment
         )
 
-        enrollments = self.filter_enrollments_for_analysis_window(
+        enrollments = self._process_enrollments(
             enrollments, time_limits
         ).alias('enrollments')
 
-        data_source = self.filter_data_source_for_analysis_window(
+        data_source = self._process_data_source(
             data_source, time_limits
         ).alias('data_source')
 
@@ -417,7 +417,7 @@ class Experiment(object):
             tssp.payload.addon_version.alias('addon_version'),
         )
 
-    def filter_enrollments_for_analysis_window(self, enrollments, time_limits):
+    def _process_enrollments(self, enrollments, time_limits):
         """Return ``enrollments``, filtered to the relevant dates.
 
         Ignore enrollments that were received after the enrollment
@@ -428,7 +428,7 @@ class Experiment(object):
             enrollments.enrollment_date <= time_limits.last_enrollment_date
         )
 
-    def filter_data_source_for_analysis_window(self, data_source, time_limits):
+    def _process_data_source(self, data_source, time_limits):
         """Return ``data_source``, filtered to the relevant dates.
 
         Ignore data before the analysis window of the first enrollment,

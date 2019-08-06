@@ -177,7 +177,7 @@ def _simple_return_agg_date(agg_fn, data_source):
     ).first()['b']
 
 
-def test_filter_data_source_for_analysis_window(spark):
+def test_process_data_source(spark):
     start_date = '20190101'
     exp_8d = Experiment('experiment-with-8-day-cohort', start_date, 8)
     data_source = _get_data_source(spark)
@@ -199,7 +199,7 @@ def test_filter_data_source_for_analysis_window(spark):
     assert tl_03.first_date_data_required == start_date
     assert tl_03.last_date_data_required == '20190110'
 
-    filtered_ds = exp_8d.filter_data_source_for_analysis_window(data_source, tl_03)
+    filtered_ds = exp_8d._process_data_source(data_source, tl_03)
 
     assert _simple_return_agg_date(F.min, filtered_ds) == tl_03.first_date_data_required
     assert _simple_return_agg_date(F.max, filtered_ds) == tl_03.last_date_data_required
@@ -214,7 +214,7 @@ def test_filter_data_source_for_analysis_window(spark):
     assert tl_23.first_date_data_required == add_days(start_date, 2)
     assert tl_23.last_date_data_required == '20190112'
 
-    f_ds_2 = exp_8d.filter_data_source_for_analysis_window(data_source, tl_23)
+    f_ds_2 = exp_8d._process_data_source(data_source, tl_23)
 
     assert _simple_return_agg_date(F.min, f_ds_2) == tl_23.first_date_data_required
     assert _simple_return_agg_date(F.max, f_ds_2) == tl_23.last_date_data_required
@@ -244,7 +244,7 @@ def _get_enrollment_view(slug):
     return inner
 
 
-def test_filter_enrollments_for_analysis_window(spark):
+def test_process_enrollments(spark):
     exp = Experiment('a-stub', '20190101')
     enrollments = exp.get_enrollments(
         spark,
@@ -265,7 +265,7 @@ def test_filter_enrollments_for_analysis_window(spark):
     assert tl.last_enrollment_date == '20190108'
     assert tl.analysis_window_end == 6
 
-    fe = exp.filter_enrollments_for_analysis_window(enrollments, tl)
+    fe = exp._process_enrollments(enrollments, tl)
     assert fe.count() == 3
 
 
@@ -345,7 +345,7 @@ def test_get_per_client_data_join(spark):
     data_source = spark.createDataFrame(
         [
             # bob-badtiming only has data before/after analysis window
-            # but missed by `filter_data_source_for_analysis_window`
+            # but missed by `process_data_source`
             ['bob-badtiming', '20190102', ex_d, 1],
             ['bob-badtiming', '20190106', ex_d, 2],
             # carol-gooddata has data on two days (including a dupe day)
@@ -386,16 +386,16 @@ def test_get_per_client_data_join(spark):
     assert annie_nodata.first()['some_value'] == 0
 
     # Check that early and late data were ignored
-    # i.e. check the join, not just _filter_data_source_for_analysis_window
+    # i.e. check the join, not just _process_data_source
     bob_badtiming = res.filter(res.client_id == 'bob-badtiming')
     assert bob_badtiming.count() == 1
     assert bob_badtiming.first()['some_value'] == 0
-    # Check that _filter_data_source_for_analysis_window didn't do the
+    # Check that _process_data_source didn't do the
     # heavy lifting above
     time_limits = TimeLimits.create(
         exp.start_date, '20190114', 1, 3, exp.num_dates_enrollment
     )
-    fds = exp.filter_data_source_for_analysis_window(data_source, time_limits)
+    fds = exp._process_data_source(data_source, time_limits)
     assert fds.filter(
         fds.client_id == 'bob-badtiming'
     ).select(
