@@ -502,6 +502,7 @@ class TimeLimits(object):
     and compute on the fly" because different state is supplied in
     different contexts.
     """
+
     first_enrollment_date = attr.ib(type=str)
     last_enrollment_date = attr.ib(type=str)
 
