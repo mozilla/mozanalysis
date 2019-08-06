@@ -326,8 +326,8 @@ class Experiment(object):
         )
         if keep_client_id:
             return res
-        else:
-            return res.drop(enrollments.client_id)
+
+        return res.drop(enrollments.client_id)
 
     def _get_join_conditions(self, enrollments, data_source, time_limits):
         """Return a list of join conditions.
@@ -372,7 +372,7 @@ class Experiment(object):
             join_on.append(
                 (enrollments.enrollment_date != F.col('submission_date_s3'))
                 | (~F.isnull(data_source.experiments[self.experiment_slug]))
-            ),
+            )
 
         return join_on
 
