@@ -303,16 +303,20 @@ to filter on the addon version also.</p>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window">
-<code class="sig-name descname">filter_data_source_for_analysis_window</code><span class="sig-paren">(</span><em class="sig-param">data_source</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_days</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_data_source_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">filter_data_source_for_analysis_window</code><span class="sig-paren">(</span><em class="sig-param">data_source</em>, <em class="sig-param">time_limits</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_data_source_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">data_source</span></code>, filtered to the relevant dates.</p>
-<p>This should not affect the results - it should just speed things
-up.</p>
+<p>Ignore data before the analysis window of the first enrollment,
+and after the analysis window of the last enrollment.  This
+should not affect the results - it should just speed things up.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window">
-<code class="sig-name descname">filter_enrollments_for_analysis_window</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">req_dates_of_data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_enrollments_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the enrollments, filtered to the relevant dates.</p>
+<code class="sig-name descname">filter_enrollments_for_analysis_window</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">time_limits</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_enrollments_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">enrollments</span></code>, filtered to the relevant dates.</p>
+<p>Ignore enrollments that were received after the enrollment
+period (if one was specified), else ignore enrollments for
+whom we do not have data for the entire analysis window.</p>
 </dd></dl>
 
 <dl class="method">
@@ -348,6 +352,9 @@ and <code class="docutils literal notranslate"><span class="pre">addon_version</
 date: for faster queries on stale experiments. If you
 set <code class="docutils literal notranslate"><span class="pre">num_dates_enrollment</span></code> then do not set this; at best
 it would be redundant, at worst it’s contradictory.</p></li>
+<li><p><strong>debug_dupes</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include a column <code class="docutils literal notranslate"><span class="pre">num_events</span></code>
+giving the number of enrollment events associated with
+the <code class="docutils literal notranslate"><span class="pre">client_id</span></code> and <code class="docutils literal notranslate"><span class="pre">branch</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -358,6 +365,7 @@ enrollment. Columns:</p>
 <li><p>client_id (str)</p></li>
 <li><p>enrollment_date (str): e.g. ‘20190329’</p></li>
 <li><p>branch (str)</p></li>
+<li><p>num_events (int, optional)</p></li>
 </ul>
 </div></blockquote>
 </p>
@@ -444,6 +452,96 @@ enrolled client, regardless of whether the client has data
 in <code class="docutils literal notranslate"><span class="pre">data_source</span></code> - was agreed upon by the DS team, and is the
 standard format for queried experimental data.</p>
 </p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mozanalysis.experiment.TimeLimits">
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">TimeLimits</code><span class="sig-paren">(</span><em class="sig-param">first_enrollment_date: str</em>, <em class="sig-param">last_enrollment_date: str</em>, <em class="sig-param">analysis_window_start</em>, <em class="sig-param">analysis_window_end</em>, <em class="sig-param">analysis_window_length_dates: int</em>, <em class="sig-param">first_date_data_required: str</em>, <em class="sig-param">last_date_data_required: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal object containing various time limits.</p>
+<p>Instantiated and used by the <code class="docutils literal notranslate"><span class="pre">Experiment</span></code> class; end users
+should not need to interact with it.</p>
+<p>Do not directly instantiate: use <code class="docutils literal notranslate"><span class="pre">TimeLimits.create()</span></code>.</p>
+<p>There are several time constraints needed to specify a valid query
+for experiment data:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>When did enrollments start?</p></li>
+<li><p>When did enrollments stop?</p></li>
+<li><p>How long after enrollment does the analysis window start?</p></li>
+<li><p>How long is the analysis window?</p></li>
+</ul>
+</div></blockquote>
+<p>Even if these four quantities are specified directly, it is
+important to check that they are consistent with the available
+data - i.e. that we have data for the entire analysis window for
+every enrollment.</p>
+<p>Furthermore, there are some extra quantities that are useful for
+writing efficient queries:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>What is the first date for which we need data from our data
+source?</p></li>
+<li><p>What is the last date for which we need data from our data
+source?</p></li>
+</ul>
+</div></blockquote>
+<p>Instances of this class store all these quantities and do validation
+to make sure that they’re consistent. The “store lots of overlapping
+state and validate” strategy was chosen over “store minimal state
+and compute on the fly” because different state is supplied in
+different contexts.</p>
+<dl class="attribute">
+<dt id="mozanalysis.experiment.TimeLimits.analysis_window_end">
+<code class="sig-name descname">analysis_window_end</code><em class="property"> = None</em><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.analysis_window_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>The integer number of days between enrollment and the end of
+the analysis window, represented either as an <code class="docutils literal notranslate"><span class="pre">int</span></code> or as a
+Column of integers in the <code class="docutils literal notranslate"><span class="pre">enrollments</span></code> DataFrame.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mozanalysis.experiment.TimeLimits.analysis_window_length_dates">
+<code class="sig-name descname">analysis_window_length_dates</code><em class="property"> = None</em><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.analysis_window_length_dates" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of dates in the analysis window</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mozanalysis.experiment.TimeLimits.analysis_window_start">
+<code class="sig-name descname">analysis_window_start</code><em class="property"> = None</em><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.analysis_window_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>The integer number of days between enrollment and the start of
+the analysis window, represented either as an <code class="docutils literal notranslate"><span class="pre">int</span></code> or as a
+Column of integers in the <code class="docutils literal notranslate"><span class="pre">enrollments</span></code> DataFrame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mozanalysis.experiment.TimeLimits.create">
+<em class="property">classmethod </em><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">first_enrollment_date</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_dates</em>, <em class="sig-param">num_dates_enrollment=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <code class="docutils literal notranslate"><span class="pre">TimeLimits</span></code> instance with the following parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>first_enrollment_date</strong> (<em>str</em>) – First date on which enrollment
+events were received; the start date of the experiment.</p></li>
+<li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
+have complete data, e.g. ‘20190322’. If you want to ignore
+all data collected after a certain date (e.g. when the
+experiment recipe was deactivated), then do that here.</p></li>
+<li><p><strong>analysis_start_days</strong> (<em>int</em>) – the start of the analysis window,
+measured in ‘days since the client enrolled’. We ignore data
+collected outside this analysis window.</p></li>
+<li><p><strong>analysis_length_days</strong> (<em>int</em>) – the length of the analysis window,
+measured in days.</p></li>
+<li><p><strong>num_dates_enrollment</strong> (<em>int</em><em>, </em><em>optional</em>) – Only include this many days
+of enrollments. If <code class="docutils literal notranslate"><span class="pre">None</span></code> then use the maximum number of days
+as determined by the metric’s analysis window and
+<code class="docutils literal notranslate"><span class="pre">last_date_full_data</span></code>. Typically <code class="docutils literal notranslate"><span class="pre">7n+1</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">8</span></code>. The
+factor ‘7’ removes weekly seasonality, and the <code class="docutils literal notranslate"><span class="pre">+1</span></code> accounts
+for the fact that enrollment typically starts a few hours
+before UTC midnight.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
