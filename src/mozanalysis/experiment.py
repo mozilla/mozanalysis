@@ -297,10 +297,6 @@ class Experiment(object):
             analysis_length_days, self.num_dates_enrollment
         )
 
-        for col in ['client_id', 'submission_date_s3']:
-            if col not in data_source.columns:
-                raise ValueError("Column '{}' missing from 'data_source'".format(col))
-
         enrollments = self.filter_enrollments_for_analysis_window(
             enrollments, time_limits
         ).alias('enrollments')
@@ -439,6 +435,10 @@ class Experiment(object):
         and after the analysis window of the last enrollment.  This
         should not affect the results - it should just speed things up.
         """
+        for col in ['client_id', 'submission_date_s3']:
+            if col not in data_source.columns:
+                raise ValueError("Column '{}' missing from 'data_source'".format(col))
+
         return data_source.filter(
             data_source.submission_date_s3.between(
                 time_limits.first_date_data_required,
