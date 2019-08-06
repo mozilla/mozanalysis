@@ -417,7 +417,8 @@ class Experiment(object):
             tssp.payload.addon_version.alias('addon_version'),
         )
 
-    def _process_enrollments(self, enrollments, time_limits):
+    @staticmethod
+    def _process_enrollments(enrollments, time_limits):
         """Return ``enrollments``, filtered to the relevant dates.
 
         Ignore enrollments that were received after the enrollment
@@ -428,7 +429,8 @@ class Experiment(object):
             enrollments.enrollment_date <= time_limits.last_enrollment_date
         )
 
-    def _process_data_source(self, data_source, time_limits):
+    @staticmethod
+    def _process_data_source(data_source, time_limits):
         """Return ``data_source``, filtered to the relevant dates.
 
         Ignore data before the analysis window of the first enrollment,
