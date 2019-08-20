@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import attr
-from pyspark.sql import Column, functions as F
+from pyspark.sql import functions as F
 
 from mozanalysis.utils import add_days
 
@@ -527,13 +527,13 @@ class TimeLimits(object):
 
     analysis_window_start = attr.ib()
     """The integer number of days between enrollment and the start of
-    the analysis window, represented either as an ``int`` or as a
-    Column of integers in the ``enrollments`` DataFrame."""
+    the analysis window, represented as an ``int``; or ``None`` if
+    querying a time series."""
 
     analysis_window_end = attr.ib()
     """The integer number of days between enrollment and the end of
-    the analysis window, represented either as an ``int`` or as a
-    Column of integers in the ``enrollments`` DataFrame."""
+    the analysis window, represented as an ``int``; or ``None`` if
+    querying a time series."""
 
     analysis_window_length_dates = attr.ib(type=int)
     """The number of dates in the analysis window"""
@@ -623,8 +623,8 @@ class TimeLimits(object):
 
     @analysis_window_start.validator
     def _validate_analysis_window_start(self, attribute, value):
-        if not isinstance(self.analysis_window_start, Column):
-            assert not isinstance(self.analysis_window_end, Column)
+        if self.analysis_window_start is not None:
+            assert self.analysis_window_end is not None
             assert self.analysis_window_start >= 0
             assert self.first_date_data_required == add_days(
                 self.first_enrollment_date, self.analysis_window_start
@@ -636,7 +636,7 @@ class TimeLimits(object):
 
     @analysis_window_end.validator
     def _validate_analysis_window_end(self, attribute, value):
-        if not isinstance(self.analysis_window_end, Column):
+        if self.analysis_window_end is not None:
             assert self.analysis_window_end == \
                 self.analysis_window_start + self.analysis_window_length_dates - 1
             assert self.last_date_data_required == add_days(
