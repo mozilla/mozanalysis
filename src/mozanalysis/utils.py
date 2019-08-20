@@ -73,6 +73,13 @@ def add_days(date_string, n_days):
     return datetime.datetime.strftime(new_date, '%Y%m%d')
 
 
+def date_sub(date_string_l, date_string_r):
+    """Return the number of days between two date strings like '20190101'"""
+    date_l = datetime.datetime.strptime(date_string_l, '%Y%m%d')
+    date_r = datetime.datetime.strptime(date_string_r, '%Y%m%d')
+    return (date_l - date_r).days
+
+
 def filter_outliers(branch_data, threshold_quantile):
     """Return branch_data with outliers removed.
 

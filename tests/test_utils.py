@@ -5,7 +5,8 @@ import numpy as np
 import pyspark.sql.functions as F
 import pytest
 
-from mozanalysis.utils import dedupe_columns, all_, any_, add_days, filter_outliers
+from mozanalysis.utils import dedupe_columns, all_, any_, add_days, filter_outliers, \
+    date_sub
 
 
 def test_dedupe_columns(spark):
@@ -84,6 +85,12 @@ def test_add_days():
     assert add_days('20190101', 0) == '20190101'
     assert add_days('20190101', 1) == '20190102'
     assert add_days('20190101', -1) == '20181231'
+
+
+def test_date_sub():
+    assert date_sub('20190101', '20190101') == 0
+    assert date_sub('20190102', '20190101') == 1
+    assert date_sub('20190101', '20190102') == -1
 
 
 def test_filter_outliers():
