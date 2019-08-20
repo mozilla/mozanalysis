@@ -312,7 +312,7 @@ class Experiment(object):
             join_on,
             'left'
         ).groupBy(
-            enrollments.client_id, enrollments.branch
+            *[enrollments[c] for c in enrollments.columns]  # Yes, really.
         ).agg(
             *(metric_list + sanity_metrics)
         )
@@ -348,19 +348,26 @@ class Experiment(object):
             # Use F.col() to avoid a bug in spark when `enrollments` is built
             # from `data_source` (SPARK-10925)
             enrollments.enrollment_date <= F.col('submission_date_s3'),
-
-            # Now do a more thorough pass filtering out irrelevant data:
-            # TODO perf: what is a more efficient way to do this?
-            (
-                (
-                    F.unix_timestamp(F.col('submission_date_s3'), 'yyyyMMdd')
-                    - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
-                ) / (24 * 60 * 60)
-            ).between(
-                time_limits.analysis_window_start,
-                time_limits.analysis_window_end
-            ),
         ]
+
+        # Now do a more thorough pass filtering out irrelevant data:
+        days_since_enrollment = (
+            F.unix_timestamp(F.col('submission_date_s3'), 'yyyyMMdd')
+            - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
+        ) / (24 * 60 * 60)
+
+        if time_limits.time_series_period is None:
+            # For `get_per_client_data()`, the analysis window is manually
+            # specified as ints.
+            join_on.append(days_since_enrollment.between(
+                time_limits.analysis_window_start, time_limits.analysis_window_end
+            ))
+        else:
+            # For `get_time_series_data()`, the analysis window varies per-row
+            # and is specified by Columns in `enrollments`.
+            join_on.append(days_since_enrollment.between(
+                enrollments.analysis_window_start, enrollments.analysis_window_end
+            ))
 
         if 'experiments' in data_source.columns:
             # Try to filter data from day of enrollment before time of enrollment.
