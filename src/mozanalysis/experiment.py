@@ -375,6 +375,39 @@ class Experiment(object):
         return join_on
 
     @staticmethod
+    def add_time_series_to_enrollments(enrollments, time_limits):
+        """Return an ``enrollments`` ``DataFrame`` for querying time series.
+
+        When querying time series, we need to query an extra dimension
+        of data (time!): each datum/value is identified by the tuple::
+
+            (client, period, metric)
+
+        where "period" identifies a point in the time series (i.e. an
+        analysis window).
+
+        In order to get 3 dimensions of data from a DB that returns
+        2-dimensional ``DataFrames``, we move from a "one row per
+        client" regime to a "one row per (client, period)" regime.
+
+        This method converts a "one row per client" ``enrollments``
+        ``DataFrame`` to a "one row per (client, period)"
+        ``enrollments`` ``DataFrame``, returning the Cartesian product
+        of clients and analysis windows
+        """
+        length = time_limits.analysis_window_length_dates
+        analysis_windows = [
+            (i * length, i * length + length - 1)
+            for i in range(time_limits.num_periods)
+        ]
+
+        analysis_window_df = enrollments.sql_ctx.createDataFrame(
+            analysis_windows, ['analysis_window_start', 'analysis_window_end']
+        )
+
+        return enrollments.crossJoin(analysis_window_df)
+
+    @staticmethod
     def _get_enrollments_view_normandy(spark):
         """Return a DataFrame of all normandy enrollment events.
 

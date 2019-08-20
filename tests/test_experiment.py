@@ -1,3 +1,4 @@
+import numpy as np
 import pyspark.sql.functions as F
 import pytest
 
@@ -389,6 +390,37 @@ def test_get_enrollments_debug_dupes(spark):
 
     penrl2 = enrl2.toPandas()
     assert (penrl2['num_events'] == 1).all()
+
+
+def test_add_time_series_to_enrollments(spark):
+    exp = Experiment('a-stub', '20190101', num_dates_enrollment=8)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    assert enrollments.count() == 3
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date=exp.start_date,
+        last_date_full_data='20190114',
+        time_series_period='daily',
+        num_dates_enrollment=exp.num_dates_enrollment,
+    )
+    assert tl.num_periods == 7
+
+    new_enrollments = exp.add_time_series_to_enrollments(enrollments, tl)
+
+    nep = new_enrollments.toPandas()
+    assert len(nep) == enrollments.count() * tl.num_periods
+    assert (
+        nep['analysis_window_end'] - nep['analysis_window_start']
+        == tl.analysis_window_length_dates - 1
+    ).all()
+
+    a = nep[nep['client_id'] == 'aaaa']
+    assert len(a) == tl.num_periods
+    assert (a.analysis_window_start.sort_values() == np.arange(tl.num_periods)).all()
+    assert (a.analysis_window_end.sort_values() == np.arange(tl.num_periods)).all()
 
 
 def test_get_per_client_data_doesnt_crash(spark):
