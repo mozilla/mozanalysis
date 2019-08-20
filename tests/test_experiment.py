@@ -328,36 +328,6 @@ def _get_enrollment_view(slug):
     return inner
 
 
-def test_process_enrollments(spark):
-    exp = Experiment('a-stub', '20190101')
-    enrollments = exp.get_enrollments(
-        spark,
-        _get_enrollment_view(slug="a-stub")
-    )
-    assert enrollments.count() == 4
-
-    # With final data collected on '20190114', we have 7 dates of data
-    # for 'cccc' enrolled on '20190108' but not for 'dddd' enrolled on
-    # '20190109'.
-    tl = TimeLimits.create(
-        first_enrollment_date=exp.start_date,
-        last_date_full_data='20190114',
-        analysis_start_days=0,
-        analysis_length_dates=7,
-        num_dates_enrollment=exp.num_dates_enrollment
-    )
-    assert tl.last_enrollment_date == '20190108'
-    assert tl.analysis_window_end == 6
-
-    fe = exp._process_enrollments(enrollments, tl)
-    assert fe.count() == 3
-
-    fe = exp._process_enrollments(enrollments.alias('main_summary'), tl)
-    assert fe.select(F.col('enrollments.enrollment_date'))
-    with pytest.raises(AnalysisException):
-        assert fe.select(F.col('main_summary.enrollment_date'))
-
-
 def test_get_enrollments(spark):
     exp = Experiment('a-stub', '20190101')
     view_method = _get_enrollment_view("a-stub")
@@ -421,6 +391,36 @@ def test_add_time_series_to_enrollments(spark):
     assert len(a) == tl.num_periods
     assert (a.analysis_window_start.sort_values() == np.arange(tl.num_periods)).all()
     assert (a.analysis_window_end.sort_values() == np.arange(tl.num_periods)).all()
+
+
+def test_process_enrollments(spark):
+    exp = Experiment('a-stub', '20190101')
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    assert enrollments.count() == 4
+
+    # With final data collected on '20190114', we have 7 dates of data
+    # for 'cccc' enrolled on '20190108' but not for 'dddd' enrolled on
+    # '20190109'.
+    tl = TimeLimits.create(
+        first_enrollment_date=exp.start_date,
+        last_date_full_data='20190114',
+        analysis_start_days=0,
+        analysis_length_dates=7,
+        num_dates_enrollment=exp.num_dates_enrollment
+    )
+    assert tl.last_enrollment_date == '20190108'
+    assert tl.analysis_window_end == 6
+
+    fe = exp._process_enrollments(enrollments, tl)
+    assert fe.count() == 3
+
+    fe = exp._process_enrollments(enrollments.alias('main_summary'), tl)
+    assert fe.select(F.col('enrollments.enrollment_date'))
+    with pytest.raises(AnalysisException):
+        assert fe.select(F.col('main_summary.enrollment_date'))
 
 
 def test_get_per_client_data_doesnt_crash(spark):
