@@ -423,6 +423,35 @@ def test_process_enrollments(spark):
         assert fe.select(F.col('main_summary.enrollment_date'))
 
 
+def test_process_enrollments_ts(spark):
+    exp = Experiment('a-stub', '20190101')
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    assert enrollments.count() == 4
+
+    # With final data collected on '20190114', we have 7 dates of data
+    # for 'cccc' enrolled on '20190108' but not for 'dddd' enrolled on
+    # '20190109'.
+    tl = TimeLimits.for_ts(
+        first_enrollment_date=exp.start_date,
+        last_date_full_data='20190114',
+        time_series_period='daily',
+        num_dates_enrollment=8,  # Naughty edge-case: not from exp.num_dates_enrollment
+    )
+    assert tl.num_periods == 7
+
+    pe = exp._process_enrollments(enrollments.alias('not_enrollments'), tl)
+    assert pe.count() == 3 * tl.num_periods
+
+    assert pe.select(F.col('enrollments.enrollment_date'))
+    with pytest.raises(AnalysisException):
+        assert pe.select(F.col('main_summary.enrollment_date'))
+
+    assert 'analysis_window_start' in pe.columns
+
+
 def test_get_per_client_data_doesnt_crash(spark):
     exp = Experiment('a-stub', '20190101', 8)
     enrollments = _get_enrollment_view(exp.experiment_slug)(spark)

@@ -452,8 +452,8 @@ class Experiment(object):
             tssp.payload.addon_version.alias('addon_version'),
         )
 
-    @staticmethod
-    def _process_enrollments(enrollments, time_limits):
+    @classmethod
+    def _process_enrollments(cls, enrollments, time_limits):
         """Return ``enrollments``, filtered to the relevant dates.
 
         Ignore enrollments that were received after the enrollment
@@ -462,9 +462,16 @@ class Experiment(object):
 
         Name the returned ``DataFrame`` 'enrollments', for consistency.
         """
-        return enrollments.filter(
+        enrollments = enrollments.filter(
             enrollments.enrollment_date <= time_limits.last_enrollment_date
-        ).alias('enrollments')
+        )
+
+        if time_limits.time_series_period:
+            enrollments = cls.add_time_series_to_enrollments(
+                enrollments, time_limits
+            )
+
+        return enrollments.alias('enrollments')
 
     @staticmethod
     def _process_data_source(data_source, time_limits):
