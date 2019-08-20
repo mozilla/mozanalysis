@@ -525,21 +525,22 @@ class TimeLimits(object):
     first_enrollment_date = attr.ib(type=str)
     last_enrollment_date = attr.ib(type=str)
 
-    analysis_window_start = attr.ib()  # TODO: make default=None
-    """The integer number of days between enrollment and the start of
-    the analysis window, represented as an ``int``; or ``None`` if
-    querying a time series."""
-
-    analysis_window_end = attr.ib()
-    """The integer number of days between enrollment and the end of
-    the analysis window, represented as an ``int``; or ``None`` if
-    querying a time series."""
+    first_date_data_required = attr.ib(type=str)
+    last_date_data_required = attr.ib(type=str)
 
     analysis_window_length_dates = attr.ib(type=int)
     """The number of dates in the analysis window"""
 
-    first_date_data_required = attr.ib(type=str)
-    last_date_data_required = attr.ib(type=str)
+    analysis_window_start = attr.ib(default=None)
+    """The integer number of days between enrollment and the start of
+    the analysis window, represented as an ``int``; or ``None`` if
+    querying a time series."""
+
+    analysis_window_end = attr.ib(default=None)
+    """The integer number of days between enrollment and the end of
+    the analysis window, represented as an ``int``; or ``None`` if
+    querying a time series."""
+
     time_series_period = attr.ib(default=None)
     num_periods = attr.ib(default=None)
 
@@ -601,11 +602,11 @@ class TimeLimits(object):
         tl = cls(
             first_enrollment_date=first_enrollment_date,
             last_enrollment_date=last_enrollment_date,
+            first_date_data_required=first_date_data_required,
+            last_date_data_required=last_date_data_required,
+            analysis_window_length_dates=analysis_length_dates,
             analysis_window_start=analysis_start_days,
             analysis_window_end=analysis_end_days,
-            analysis_window_length_dates=analysis_length_dates,
-            first_date_data_required=first_date_data_required,
-            last_date_data_required=last_date_data_required
         )
         return tl
 
@@ -654,11 +655,9 @@ class TimeLimits(object):
         return cls(
             first_enrollment_date=first_enrollment_date,
             last_enrollment_date=last_enrollment_date,
-            analysis_window_start=None,
-            analysis_window_end=None,
-            analysis_window_length_dates=analysis_window_length_dates,
             first_date_data_required=first_enrollment_date,
             last_date_data_required=last_date_data_required,
+            analysis_window_length_dates=analysis_window_length_dates,
             time_series_period=time_series_period,
             num_periods=num_periods
         )
