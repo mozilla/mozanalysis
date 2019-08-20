@@ -297,18 +297,43 @@ class Experiment(object):
             analysis_length_days, self.num_dates_enrollment
         )
 
-        for col in ['client_id', 'submission_date_s3']:
-            if col not in data_source.columns:
-                raise ValueError("Column '{}' missing from 'data_source'".format(col))
+        enrollments = self._process_enrollments(enrollments, time_limits)
 
-        enrollments = self.filter_enrollments_for_analysis_window(
-            enrollments, time_limits
-        ).alias('enrollments')
+        data_source = self._process_data_source(data_source, time_limits)
 
-        data_source = self.filter_data_source_for_analysis_window(
-            data_source, time_limits
-        ).alias('data_source')
+        join_on = self._get_join_conditions(enrollments, data_source, time_limits)
 
+        sanity_metrics = self._get_telemetry_sanity_check_metrics(
+            enrollments, data_source
+        )
+
+        res = enrollments.join(
+            data_source,
+            join_on,
+            'left'
+        ).groupBy(
+            enrollments.client_id, enrollments.branch
+        ).agg(
+            *(metric_list + sanity_metrics)
+        )
+        if keep_client_id:
+            return res
+
+        return res.drop(enrollments.client_id)
+
+    def _get_join_conditions(self, enrollments, data_source, time_limits):
+        """Return a list of join conditions.
+
+        Returns a list of boolean ``Column``s representing join
+        conditions between the ``enrollments`` ``DataFrame`` and
+        ``data_source``.
+
+        In ``_get_results_for_one_data_source``, we left join
+        ``enrollments`` to ``data_source`` using these join conditions
+        to produce a ``DataFrame`` containing the rows from
+        ``data_source`` for enrolled clients that were submitted during
+        the analysis window.
+        """
         join_on = [
             # TODO perf: would it be faster if we enforce a join on sample_id?
             enrollments.client_id == data_source.client_id,
@@ -345,25 +370,9 @@ class Experiment(object):
             join_on.append(
                 (enrollments.enrollment_date != F.col('submission_date_s3'))
                 | (~F.isnull(data_source.experiments[self.experiment_slug]))
-            ),
+            )
 
-        sanity_metrics = self._get_telemetry_sanity_check_metrics(
-            enrollments, data_source
-        )
-
-        res = enrollments.join(
-            data_source,
-            join_on,
-            'left'
-        ).groupBy(
-            enrollments.client_id, enrollments.branch
-        ).agg(
-            *(metric_list + sanity_metrics)
-        )
-        if keep_client_id:
-            return res
-        else:
-            return res.drop(enrollments.client_id)
+        return join_on
 
     @staticmethod
     def _get_enrollments_view_normandy(spark):
@@ -410,30 +419,40 @@ class Experiment(object):
             tssp.payload.addon_version.alias('addon_version'),
         )
 
-    def filter_enrollments_for_analysis_window(self, enrollments, time_limits):
+    @staticmethod
+    def _process_enrollments(enrollments, time_limits):
         """Return ``enrollments``, filtered to the relevant dates.
 
         Ignore enrollments that were received after the enrollment
         period (if one was specified), else ignore enrollments for
         whom we do not have data for the entire analysis window.
+
+        Name the returned ``DataFrame`` 'enrollments', for consistency.
         """
         return enrollments.filter(
             enrollments.enrollment_date <= time_limits.last_enrollment_date
-        )
+        ).alias('enrollments')
 
-    def filter_data_source_for_analysis_window(self, data_source, time_limits):
+    @staticmethod
+    def _process_data_source(data_source, time_limits):
         """Return ``data_source``, filtered to the relevant dates.
 
         Ignore data before the analysis window of the first enrollment,
         and after the analysis window of the last enrollment.  This
         should not affect the results - it should just speed things up.
+
+        Name the returned ``DataFrame`` 'data_source', for consistency.
         """
+        for col in ['client_id', 'submission_date_s3']:
+            if col not in data_source.columns:
+                raise ValueError("Column '{}' missing from 'data_source'".format(col))
+
         return data_source.filter(
             data_source.submission_date_s3.between(
                 time_limits.first_date_data_required,
                 time_limits.last_date_data_required
             )
-        )
+        ).alias('data_source')
 
     def _get_telemetry_sanity_check_metrics(self, enrollments, data_source):
         """Return aggregations that check for problems with a client."""

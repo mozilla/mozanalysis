@@ -60,9 +60,9 @@ def test_bayesian_bootstrap_vs_beta(spark_context):
     for l in boot_res.index:
         assert boot_res.loc[l] == pytest.approx(
             beta_res.loc[l],
-            # 1.9 is good enough with a percentile bootstrap
-            # abs=1.9/num_enrollments
-            abs=1.9/num_enrollments
+            # abs=1.9 is usually good enough with a percentile bootstrap
+            # set abs=2.9 because there are lots of tests
+            abs=2.9/num_enrollments
         ), (l, boot_res, beta_res)
 
 
