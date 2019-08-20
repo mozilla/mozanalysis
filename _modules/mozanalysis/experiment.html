@@ -447,18 +447,43 @@
             <span class="n">analysis_length_days</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span>
         <span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;client_id&#39;</span><span class="p">,</span> <span class="s1">&#39;submission_date_s3&#39;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data_source</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Column &#39;</span><span class="si">{}</span><span class="s2">&#39; missing from &#39;data_source&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+        <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_enrollments</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
 
-        <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_enrollments_for_analysis_window</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollments&#39;</span><span class="p">)</span>
+        <span class="n">data_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_data_source</span><span class="p">(</span><span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
 
-        <span class="n">data_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_data_source_for_analysis_window</span><span class="p">(</span>
-            <span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;data_source&#39;</span><span class="p">)</span>
+        <span class="n">join_on</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_join_conditions</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
 
+        <span class="n">sanity_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telemetry_sanity_check_metrics</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span>
+        <span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">data_source</span><span class="p">,</span>
+            <span class="n">join_on</span><span class="p">,</span>
+            <span class="s1">&#39;left&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">branch</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">(</span><span class="n">metric_list</span> <span class="o">+</span> <span class="n">sanity_metrics</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">keep_client_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_join_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of join conditions.</span>
+
+<span class="sd">        Returns a list of boolean ``Column``s representing join</span>
+<span class="sd">        conditions between the ``enrollments`` ``DataFrame`` and</span>
+<span class="sd">        ``data_source``.</span>
+
+<span class="sd">        In ``_get_results_for_one_data_source``, we left join</span>
+<span class="sd">        ``enrollments`` to ``data_source`` using these join conditions</span>
+<span class="sd">        to produce a ``DataFrame`` containing the rows from</span>
+<span class="sd">        ``data_source`` for enrolled clients that were submitted during</span>
+<span class="sd">        the analysis window.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">join_on</span> <span class="o">=</span> <span class="p">[</span>
             <span class="c1"># TODO perf: would it be faster if we enforce a join on sample_id?</span>
             <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span> <span class="o">==</span> <span class="n">data_source</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span>
@@ -495,25 +520,9 @@
             <span class="n">join_on</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">))</span>
                 <span class="o">|</span> <span class="p">(</span><span class="o">~</span><span class="n">F</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">data_source</span><span class="o">.</span><span class="n">experiments</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">]))</span>
-            <span class="p">),</span>
+            <span class="p">)</span>
 
-        <span class="n">sanity_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telemetry_sanity_check_metrics</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span>
-        <span class="p">)</span>
-
-        <span class="n">res</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="n">data_source</span><span class="p">,</span>
-            <span class="n">join_on</span><span class="p">,</span>
-            <span class="s1">&#39;left&#39;</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">branch</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
-            <span class="o">*</span><span class="p">(</span><span class="n">metric_list</span> <span class="o">+</span> <span class="n">sanity_metrics</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">keep_client_id</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">res</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">join_on</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_enrollments_view_normandy</span><span class="p">(</span><span class="n">spark</span><span class="p">):</span>
@@ -560,30 +569,40 @@
             <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">addon_version</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;addon_version&#39;</span><span class="p">),</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="Experiment.filter_enrollments_for_analysis_window"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window">[docs]</a>    <span class="k">def</span> <span class="nf">filter_enrollments_for_analysis_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_process_enrollments</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return ``enrollments``, filtered to the relevant dates.</span>
 
 <span class="sd">        Ignore enrollments that were received after the enrollment</span>
 <span class="sd">        period (if one was specified), else ignore enrollments for</span>
 <span class="sd">        whom we do not have data for the entire analysis window.</span>
+
+<span class="sd">        Name the returned ``DataFrame`` &#39;enrollments&#39;, for consistency.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
             <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollments&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Experiment.filter_data_source_for_analysis_window"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window">[docs]</a>    <span class="k">def</span> <span class="nf">filter_data_source_for_analysis_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_process_data_source</span><span class="p">(</span><span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return ``data_source``, filtered to the relevant dates.</span>
 
 <span class="sd">        Ignore data before the analysis window of the first enrollment,</span>
 <span class="sd">        and after the analysis window of the last enrollment.  This</span>
 <span class="sd">        should not affect the results - it should just speed things up.</span>
+
+<span class="sd">        Name the returned ``DataFrame`` &#39;data_source&#39;, for consistency.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;client_id&#39;</span><span class="p">,</span> <span class="s1">&#39;submission_date_s3&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data_source</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Column &#39;</span><span class="si">{}</span><span class="s2">&#39; missing from &#39;data_source&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+
         <span class="k">return</span> <span class="n">data_source</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
             <span class="n">data_source</span><span class="o">.</span><span class="n">submission_date_s3</span><span class="o">.</span><span class="n">between</span><span class="p">(</span>
                 <span class="n">time_limits</span><span class="o">.</span><span class="n">first_date_data_required</span><span class="p">,</span>
                 <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span>
             <span class="p">)</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;data_source&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_telemetry_sanity_check_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return aggregations that check for problems with a client.&quot;&quot;&quot;</span>

@@ -302,24 +302,6 @@ to filter on the addon version also.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window">
-<code class="sig-name descname">filter_data_source_for_analysis_window</code><span class="sig-paren">(</span><em class="sig-param">data_source</em>, <em class="sig-param">time_limits</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_data_source_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_data_source_for_analysis_window" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return <code class="docutils literal notranslate"><span class="pre">data_source</span></code>, filtered to the relevant dates.</p>
-<p>Ignore data before the analysis window of the first enrollment,
-and after the analysis window of the last enrollment.  This
-should not affect the results - it should just speed things up.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window">
-<code class="sig-name descname">filter_enrollments_for_analysis_window</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">time_limits</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.filter_enrollments_for_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.filter_enrollments_for_analysis_window" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return <code class="docutils literal notranslate"><span class="pre">enrollments</span></code>, filtered to the relevant dates.</p>
-<p>Ignore enrollments that were received after the enrollment
-period (if one was specified), else ignore enrollments for
-whom we do not have data for the entire analysis window.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="mozanalysis.experiment.Experiment.get_enrollments">
 <code class="sig-name descname">get_enrollments</code><span class="sig-paren">(</span><em class="sig-param">spark</em>, <em class="sig-param">study_type='pref_flip'</em>, <em class="sig-param">end_date=None</em>, <em class="sig-param">debug_dupes=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_enrollments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_enrollments" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a DataFrame of enrolled clients.</p>
