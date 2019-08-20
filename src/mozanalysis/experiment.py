@@ -4,7 +4,7 @@
 import attr
 from pyspark.sql import functions as F
 
-from mozanalysis.utils import add_days
+from mozanalysis.utils import add_days, date_sub
 
 
 @attr.s(frozen=True, slots=True)
@@ -525,7 +525,7 @@ class TimeLimits(object):
     first_enrollment_date = attr.ib(type=str)
     last_enrollment_date = attr.ib(type=str)
 
-    analysis_window_start = attr.ib()
+    analysis_window_start = attr.ib()  # TODO: make default=None
     """The integer number of days between enrollment and the start of
     the analysis window, represented as an ``int``; or ``None`` if
     querying a time series."""
@@ -540,6 +540,8 @@ class TimeLimits(object):
 
     first_date_data_required = attr.ib(type=str)
     last_date_data_required = attr.ib(type=str)
+    time_series_period = attr.ib(default=None)
+    num_periods = attr.ib(default=None)
 
     @classmethod
     def create(
@@ -606,6 +608,60 @@ class TimeLimits(object):
             last_date_data_required=last_date_data_required
         )
         return tl
+
+    @classmethod
+    def for_ts(
+        cls,
+        first_enrollment_date,
+        last_date_full_data,
+        time_series_period,
+        num_dates_enrollment,
+    ):
+        """Return a `TimeLimits` instance for a time series.
+
+        Args:
+            first_enrollment_date (str): First date on which enrollment
+                events were received; the start date of the experiment.
+            last_date_full_data (str): The most recent date for which we
+                have complete data, e.g. '20190322'. If you want to ignore
+                all data collected after a certain date (e.g. when the
+                experiment recipe was deactivated), then do that here.
+            time_series_period: 'daily' or 'weekly'.
+            num_dates_enrollment (int): Take this many days of client
+                enrollments. This is a mandatory argument because it
+                determines the number of points in the time series.
+        """
+        if time_series_period not in ('daily', 'weekly'):
+            raise ValueError("Unsupported time series period {}".format(
+                time_series_period
+            ))
+
+        analysis_window_length_dates = 1 if time_series_period == 'daily' else 7
+
+        last_enrollment_date = add_days(
+            first_enrollment_date, num_dates_enrollment - 1
+        )
+        max_dates_of_data = date_sub(last_date_full_data, last_enrollment_date) + 1
+        num_periods = max_dates_of_data // analysis_window_length_dates
+
+        if num_periods <= 0:
+            raise ValueError("Insufficient data")
+
+        last_date_data_required = add_days(
+            last_enrollment_date, num_periods * analysis_window_length_dates - 1
+        )
+
+        return cls(
+            first_enrollment_date=first_enrollment_date,
+            last_enrollment_date=last_enrollment_date,
+            analysis_window_start=None,
+            analysis_window_end=None,
+            analysis_window_length_dates=analysis_window_length_dates,
+            first_date_data_required=first_enrollment_date,
+            last_date_data_required=last_date_data_required,
+            time_series_period=time_series_period,
+            num_periods=num_periods
+        )
 
     @first_enrollment_date.validator
     def _validate_first_enrollment_date(self, attribute, value):

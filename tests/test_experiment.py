@@ -42,6 +42,8 @@ def test_time_limits_create1():
     assert tl.analysis_window_length_dates == 14
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
+    assert tl.time_series_period is None
+    assert tl.num_periods is None
 
 
 def test_time_limits_create2():
@@ -81,6 +83,8 @@ def test_time_limits_create3():
     assert tl.analysis_window_length_dates == 7
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
+    assert tl.time_series_period is None
+    assert tl.num_periods is None
 
 
 def test_time_limits_create4():
@@ -99,6 +103,8 @@ def test_time_limits_create4():
     assert tl.analysis_window_length_dates == 2
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190109'
+    assert tl.time_series_period is None
+    assert tl.num_periods is None
 
 
 def test_time_limits_create5():
@@ -128,6 +134,8 @@ def test_time_limits_create6():
     assert tl.analysis_window_length_dates == 1
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
+    assert tl.time_series_period is None
+    assert tl.num_periods is None
 
 
 def test_time_limits_create7():
@@ -145,6 +153,75 @@ def test_time_limits_create7():
     assert tl.analysis_window_length_dates == 1
     assert tl.first_date_data_required == '20190108'
     assert tl.last_date_data_required == '20190114'
+    assert tl.time_series_period is None
+    assert tl.num_periods is None
+
+
+def test_ts_time_limits_create1():
+    tl = TimeLimits.for_ts(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190114',
+        time_series_period='daily',
+        num_dates_enrollment=8
+    )
+
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190108'
+    assert tl.analysis_window_start is None
+    assert tl.analysis_window_end is None
+    assert tl.analysis_window_length_dates == 1
+    assert tl.first_date_data_required == '20190101'
+    assert tl.last_date_data_required == '20190114'
+    assert tl.time_series_period == 'daily'
+    assert tl.num_periods == 7
+
+
+def test_ts_time_limits_create2():
+    tl = TimeLimits.for_ts(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190114',
+        time_series_period='weekly',
+        num_dates_enrollment=8
+    )
+
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190108'
+    assert tl.analysis_window_start is None
+    assert tl.analysis_window_end is None
+    assert tl.analysis_window_length_dates == 7
+    assert tl.first_date_data_required == '20190101'
+    assert tl.last_date_data_required == '20190114'
+    assert tl.time_series_period == 'weekly'
+    assert tl.num_periods == 1
+
+
+def test_ts_time_limits_create3():
+    tl = TimeLimits.for_ts(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190115',
+        time_series_period='weekly',
+        num_dates_enrollment=8
+    )
+
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190108'
+    assert tl.analysis_window_start is None
+    assert tl.analysis_window_end is None
+    assert tl.analysis_window_length_dates == 7
+    assert tl.first_date_data_required == '20190101'
+    assert tl.last_date_data_required == '20190114'
+    assert tl.time_series_period == 'weekly'
+    assert tl.num_periods == 1
+
+
+def test_ts_time_limits_create_not_enough_data():
+    with pytest.raises(ValueError):
+        TimeLimits.for_ts(
+            first_enrollment_date='20190101',
+            last_date_full_data='20190113',
+            time_series_period='weekly',
+            num_dates_enrollment=8
+        )
 
 
 def _get_data_source(spark):
