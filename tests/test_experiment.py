@@ -1,6 +1,8 @@
 import pyspark.sql.functions as F
 import pytest
 
+from pyspark.sql.utils import AnalysisException
+
 from mozanalysis.experiment import Experiment, TimeLimits
 from mozanalysis.utils import add_days
 
@@ -199,10 +201,10 @@ def test_process_data_source(spark):
     assert tl_03.first_date_data_required == start_date
     assert tl_03.last_date_data_required == '20190110'
 
-    filtered_ds = exp_8d._process_data_source(data_source, tl_03)
+    proc_ds = exp_8d._process_data_source(data_source, tl_03)
 
-    assert _simple_return_agg_date(F.min, filtered_ds) == tl_03.first_date_data_required
-    assert _simple_return_agg_date(F.max, filtered_ds) == tl_03.last_date_data_required
+    assert _simple_return_agg_date(F.min, proc_ds) == tl_03.first_date_data_required
+    assert _simple_return_agg_date(F.max, proc_ds) == tl_03.last_date_data_required
 
     tl_23 = TimeLimits.create(
         first_enrollment_date=exp_8d.start_date,
@@ -214,10 +216,14 @@ def test_process_data_source(spark):
     assert tl_23.first_date_data_required == add_days(start_date, 2)
     assert tl_23.last_date_data_required == '20190112'
 
-    f_ds_2 = exp_8d._process_data_source(data_source, tl_23)
+    p_ds_2 = exp_8d._process_data_source(data_source, tl_23)
 
-    assert _simple_return_agg_date(F.min, f_ds_2) == tl_23.first_date_data_required
-    assert _simple_return_agg_date(F.max, f_ds_2) == tl_23.last_date_data_required
+    assert _simple_return_agg_date(F.min, p_ds_2) == tl_23.first_date_data_required
+    assert _simple_return_agg_date(F.max, p_ds_2) == tl_23.last_date_data_required
+
+    assert proc_ds.select(F.col('data_source.client_id'))
+    with pytest.raises(AnalysisException):
+        assert data_source.select(F.col('data_source.client_id'))
 
 
 def _get_enrollment_view(slug):
@@ -267,6 +273,11 @@ def test_process_enrollments(spark):
 
     fe = exp._process_enrollments(enrollments, tl)
     assert fe.count() == 3
+
+    fe = exp._process_enrollments(enrollments.alias('main_summary'), tl)
+    assert fe.select(F.col('enrollments.enrollment_date'))
+    with pytest.raises(AnalysisException):
+        assert fe.select(F.col('main_summary.enrollment_date'))
 
 
 def test_get_enrollments(spark):

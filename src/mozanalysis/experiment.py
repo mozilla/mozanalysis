@@ -324,9 +324,15 @@ class Experiment(object):
     def _get_join_conditions(self, enrollments, data_source, time_limits):
         """Return a list of join conditions.
 
-        In ``_get_results_for_one_data_source``, we join ``enrollments``
-        to ``data_source``. This method returns the list of join
-        conditions.
+        Returns a list of boolean ``Column``s representing join
+        conditions between the ``enrollments`` ``DataFrame`` and
+        ``data_source``.
+
+        In ``_get_results_for_one_data_source``, we left join
+        ``enrollments`` to ``data_source`` using these join conditions
+        to produce a ``DataFrame`` containing the rows from
+        ``data_source`` for enrolled clients that were submitted during
+        the analysis window.
         """
         join_on = [
             # TODO perf: would it be faster if we enforce a join on sample_id?
@@ -420,6 +426,8 @@ class Experiment(object):
         Ignore enrollments that were received after the enrollment
         period (if one was specified), else ignore enrollments for
         whom we do not have data for the entire analysis window.
+
+        Name the returned ``DataFrame`` 'enrollments', for consistency.
         """
         return enrollments.filter(
             enrollments.enrollment_date <= time_limits.last_enrollment_date
@@ -432,6 +440,8 @@ class Experiment(object):
         Ignore data before the analysis window of the first enrollment,
         and after the analysis window of the last enrollment.  This
         should not affect the results - it should just speed things up.
+
+        Name the returned ``DataFrame`` 'data_source', for consistency.
         """
         for col in ['client_id', 'submission_date_s3']:
             if col not in data_source.columns:
