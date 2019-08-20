@@ -297,6 +297,13 @@ class Experiment(object):
             analysis_length_days, self.num_dates_enrollment
         )
 
+        return self._get_per_client_data(
+            enrollments, data_source, metric_list, time_limits, keep_client_id
+        )
+
+    def _get_per_client_data(
+        self, enrollments, data_source, metric_list, time_limits, keep_client_id
+    ):
         enrollments = self._process_enrollments(enrollments, time_limits)
 
         data_source = self._process_data_source(data_source, time_limits)
