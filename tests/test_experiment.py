@@ -454,19 +454,107 @@ def test_process_enrollments_ts(spark):
 
 def test_get_per_client_data_doesnt_crash(spark):
     exp = Experiment('a-stub', '20190101', 8)
-    enrollments = _get_enrollment_view(exp.experiment_slug)(spark)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
     data_source = _get_data_source(spark)
 
     exp.get_per_client_data(
         enrollments,
         data_source,
         [
-            F.sum(data_source.constant_one).alias('something_meaningless'),
+            F.coalesce(F.sum(
+                data_source.constant_one
+            ), F.lit(0)).alias('something_meaningless'),
         ],
         '20190114',
         0,
         3
     )
+
+
+def test_get_time_series_data(spark):
+    exp = Experiment('a-stub', '20190101', 8)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    data_source = _get_data_source(spark)
+
+    res = exp.get_time_series_data(
+        enrollments,
+        data_source,
+        [
+            F.coalesce(F.sum(
+                data_source.constant_one
+            ), F.lit(0)).alias('how_many_ones'),
+        ],
+        '20190128',
+        time_series_period='weekly',
+        keep_client_id=True,
+    )
+
+    assert len(res) == 3
+    df = res[0]
+    assert df.client_id.nunique() == 3
+    assert len(df) == 3
+
+    df = df.set_index('client_id')
+
+    assert df.loc['aaaa', 'how_many_ones'] == 7
+    assert df.loc['bbbb', 'how_many_ones'] == 7
+    assert df.loc['cccc', 'how_many_ones'] == 0
+    assert (df['has_contradictory_branch'] == 0).all()
+    assert (df['has_non_enrolled_data'] == 0).all()
+
+    df = res[14]
+    assert df.client_id.nunique() == 3
+    assert len(df) == 3
+
+    df = df.set_index('client_id')
+
+    assert df.loc['aaaa', 'how_many_ones'] == 1
+    assert df.loc['bbbb', 'how_many_ones'] == 1
+    assert df.loc['cccc', 'how_many_ones'] == 0
+    assert (df['has_contradictory_branch'] == 0).all()
+    assert (df['has_non_enrolled_data'] == 0).all()
+
+
+def test_get_time_series_data_daily(spark):
+    exp = Experiment('a-stub', '20190101', 8)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    data_source = _get_data_source(spark)
+
+    res = exp.get_time_series_data(
+        enrollments,
+        data_source,
+        [
+            F.coalesce(F.sum(
+                data_source.constant_one
+            ), F.lit(0)).alias('should_be_1'),
+        ],
+        '20190114',
+        time_series_period='daily',
+        keep_client_id=True,
+    )
+
+    assert len(res) == 7
+
+    for df in res.values():
+        assert df.client_id.nunique() == 3
+        assert len(df) == 3
+
+        df = df.set_index('client_id')
+
+        assert df.loc['aaaa', 'should_be_1'] == 1
+        assert df.loc['bbbb', 'should_be_1'] == 1
+        assert df.loc['cccc', 'should_be_1'] == 0
+        assert (df['has_contradictory_branch'] == 0).all()
+        assert (df['has_non_enrolled_data'] == 0).all()
 
 
 def test_get_per_client_data_join(spark):

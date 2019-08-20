@@ -301,6 +301,105 @@ class Experiment(object):
             enrollments, data_source, metric_list, time_limits, keep_client_id
         )
 
+    def get_time_series_data(
+        self, enrollments, data_source, metric_list, last_date_full_data,
+        time_series_period='weekly', keep_client_id=False
+    ):
+        """Return a dict containing per-client metric values.
+
+        Equivalent to looping over ``get_per_client_data`` with
+        different analysis windows and putting the resulting pandas
+        DataFrames into a dictionary keyed by the day the analysis
+        window starts; but this should be more efficient.
+
+        Args:
+            enrollments: A spark DataFrame of enrollments, like the one
+                returned by ``self.get_enrollments()``.
+
+            data_source: A spark DataFrame containing the data needed to
+                calculate the metrics. Could be ``main_summary`` or
+                ``clients_daily``. *Don't* use ``experiments``; as of 2019/04/02
+                it drops data collected after people self-unenroll, so
+                unenrolling users will appear to churn. Must have at least
+                the following columns:
+
+                * client_id (str)
+                * submission_date_s3 (str)
+                * data columns referred to in ``metric_list``
+
+                Ideally also has:
+
+                * experiments (map): At present this is used to exclude
+                  pre-enrollment ping data collected on enrollment
+                  day. Once it or its successor reliably tags data
+                  from all enrolled users, even post-unenroll, we'll
+                  also join on it to exclude data from duplicate
+                  ``client_id``\\s that are not enrolled in the same
+                  branch.
+
+            metric_list: A list of columns that aggregate and compute
+                metrics over data grouped by ``(client_id, branch)``, e.g.::
+
+                    [F.coalesce(F.sum(
+                        data_source.metric_name
+                    ), F.lit(0)).alias('metric_name')]
+
+            last_date_full_data (str): The most recent date for which we
+                have complete data, e.g. '20190322'. If you want to ignore
+                all data collected after a certain date (e.g. when the
+                experiment recipe was deactivated), then do that here.
+            analysis_start_days (int): the start of the analysis window,
+                measured in 'days since the client enrolled'. We ignore data
+                collected outside this analysis window.
+            analysis_length_days (int): the length of the analysis window,
+                measured in days.
+            keep_client_id (bool): Whether to return a ``client_id`` column.
+                Defaults to False to reduce memory usage of the results.
+
+        Returns:
+            A spark DataFrame of experiment data. One row per ``client_id``.
+            One or two metadata columns, then one column per metric in
+            ``metric_list``. Then one column per sanity-check metric.
+            Columns:
+
+                * client_id (str, optional): Not necessary for
+                  "happy path" analyses.
+                * branch (str): The client's branch
+                * [metric 1]: The client's value for the first metric in
+                  ``metric_list``.
+                * ...
+                * [metric n]: The client's value for the nth (final)
+                  metric in ``metric_list``.
+                * [sanity check 1]: The client's value for the first
+                  sanity check metric.
+                * ...
+                * [sanity check n]: The client's value for the last
+                  sanity check metric.
+
+            This format - the schema plus there being one row per
+            enrolled client, regardless of whether the client has data
+            in ``data_source`` - was agreed upon by the DS team, and is the
+            standard format for queried experimental data.
+        """
+        time_limits = TimeLimits.for_ts(
+            self.start_date, last_date_full_data, time_series_period,
+            self.num_dates_enrollment
+        )
+
+        res = self._get_per_client_data(
+            enrollments, data_source, metric_list, time_limits, keep_client_id
+        )
+
+        res = res.drop(res.analysis_window_end)
+        res = res.toPandas()
+
+        return {
+            t: res[
+                res['analysis_window_start'] == t
+            ].drop('analysis_window_start', axis='columns')
+            for t in res['analysis_window_start'].unique()
+        }
+
     def _get_per_client_data(
         self, enrollments, data_source, metric_list, time_limits, keep_client_id
     ):
