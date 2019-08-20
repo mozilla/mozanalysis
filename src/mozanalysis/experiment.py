@@ -388,10 +388,7 @@ class Experiment(object):
 
         res = self._get_per_client_data(
             enrollments, data_source, metric_list, time_limits, keep_client_id
-        )
-
-        res = res.drop(res.analysis_window_end)
-        res = res.toPandas()
+        ).toPandas()
 
         return {
             t: res[
@@ -470,9 +467,11 @@ class Experiment(object):
             ))
         else:
             # For `get_time_series_data()`, the analysis window varies per-row
-            # and is specified by Columns in `enrollments`.
+            # and is specified by a Column in `enrollments`.
             join_on.append(days_since_enrollment.between(
-                enrollments.analysis_window_start, enrollments.analysis_window_end
+                enrollments.analysis_window_start,
+                enrollments.analysis_window_start
+                + time_limits.analysis_window_length_dates - 1
             ))
 
         if 'experiments' in data_source.columns:
@@ -510,12 +509,11 @@ class Experiment(object):
         """
         length = time_limits.analysis_window_length_dates
         analysis_windows = [
-            (i * length, i * length + length - 1)
-            for i in range(time_limits.num_periods)
+            [i * length] for i in range(time_limits.num_periods)
         ]
 
         analysis_window_df = enrollments.sql_ctx.createDataFrame(
-            analysis_windows, ['analysis_window_start', 'analysis_window_end']
+            analysis_windows, ['analysis_window_start']
         )
 
         return enrollments.crossJoin(analysis_window_df)

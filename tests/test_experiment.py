@@ -382,15 +382,10 @@ def test_add_time_series_to_enrollments(spark):
 
     nep = new_enrollments.toPandas()
     assert len(nep) == enrollments.count() * tl.num_periods
-    assert (
-        nep['analysis_window_end'] - nep['analysis_window_start']
-        == tl.analysis_window_length_dates - 1
-    ).all()
 
     a = nep[nep['client_id'] == 'aaaa']
     assert len(a) == tl.num_periods
     assert (a.analysis_window_start.sort_values() == np.arange(tl.num_periods)).all()
-    assert (a.analysis_window_end.sort_values() == np.arange(tl.num_periods)).all()
 
 
 def test_process_enrollments(spark):
