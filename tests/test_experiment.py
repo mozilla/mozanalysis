@@ -409,13 +409,13 @@ def test_process_enrollments(spark):
     assert tl.last_enrollment_date == '20190108'
     assert tl.analysis_window_end == 6
 
-    fe = exp._process_enrollments(enrollments, tl)
-    assert fe.count() == 3
+    pe = exp._process_enrollments(enrollments, tl)
+    assert pe.count() == 3
 
-    fe = exp._process_enrollments(enrollments.alias('main_summary'), tl)
-    assert fe.select(F.col('enrollments.enrollment_date'))
+    pe = exp._process_enrollments(enrollments.alias('main_summary'), tl)
+    assert pe.select(F.col('enrollments.enrollment_date'))
     with pytest.raises(AnalysisException):
-        assert fe.select(F.col('main_summary.enrollment_date'))
+        assert pe.select(F.col('main_summary.enrollment_date'))
 
 
 def test_process_enrollments_ts(spark):
@@ -627,11 +627,11 @@ def test_get_per_client_data_join(spark):
     time_limits = TimeLimits.create(
         exp.start_date, '20190114', 1, 3, exp.num_dates_enrollment
     )
-    fds = exp._process_data_source(data_source, time_limits)
-    assert fds.filter(
-        fds.client_id == 'bob-badtiming'
+    pds = exp._process_data_source(data_source, time_limits)
+    assert pds.filter(
+        pds.client_id == 'bob-badtiming'
     ).select(
-        F.sum(fds.some_value).alias('agg_val')
+        F.sum(pds.some_value).alias('agg_val')
     ).first()['agg_val'] == 3
 
     # Check that relevant data was included appropriately
