@@ -513,7 +513,7 @@ class Experiment(object):
         ]
 
         analysis_window_df = enrollments.sql_ctx.createDataFrame(
-            analysis_windows, ['analysis_window_start']
+            analysis_windows, 'analysis_window_start: int'
         )
 
         return enrollments.crossJoin(analysis_window_df)
