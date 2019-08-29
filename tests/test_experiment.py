@@ -29,7 +29,7 @@ def test_time_limits_validates():
 def test_time_limits_create1():
     # When we have complete data for 20190114...
     # ...We have 14 dates of data for those who enrolled on the 1st
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date='20190101',
         last_date_full_data='20190114',
         analysis_start_days=0,
@@ -50,7 +50,7 @@ def test_time_limits_create1():
 def test_time_limits_create2():
     # We don't have 14 dates of data for an 8-day cohort:
     with pytest.raises(ValueError):
-        TimeLimits.create(
+        TimeLimits.for_single_analysis_window(
             first_enrollment_date='20190101',
             last_date_full_data='20190114',
             analysis_start_days=0,
@@ -60,7 +60,7 @@ def test_time_limits_create2():
 
     # We don't have 15 full dates of data for any users
     with pytest.raises(AssertionError):
-        TimeLimits.create(
+        TimeLimits.for_single_analysis_window(
             first_enrollment_date='20190101',
             last_date_full_data='20190114',
             analysis_start_days=0,
@@ -70,7 +70,7 @@ def test_time_limits_create2():
 
 def test_time_limits_create3():
     # For the 8-day cohort We have enough data for a 7 day window
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date='20190101',
         last_date_full_data='20190114',
         analysis_start_days=0,
@@ -90,7 +90,7 @@ def test_time_limits_create3():
 
 def test_time_limits_create4():
     # Or a 2 day window
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date='20190101',
         last_date_full_data='20190114',
         analysis_start_days=0,
@@ -111,7 +111,7 @@ def test_time_limits_create4():
 def test_time_limits_create5():
     # But not an 8 day window
     with pytest.raises(ValueError):
-        TimeLimits.create(
+        TimeLimits.for_single_analysis_window(
             first_enrollment_date='20190101',
             last_date_full_data='20190114',
             analysis_start_days=0,
@@ -122,7 +122,7 @@ def test_time_limits_create5():
 
 def test_time_limits_create6():
     # Of course the flexi-experiment has data for a 1 day window
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date='20190101',
         last_date_full_data='20190114',
         analysis_start_days=0,
@@ -141,7 +141,7 @@ def test_time_limits_create6():
 
 def test_time_limits_create7():
     # If the analysis starts later, so does the data source
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date='20190101',
         last_date_full_data='20190114',
         analysis_start_days=7,
@@ -269,7 +269,7 @@ def test_process_data_source(spark):
     assert _simple_return_agg_date(F.min, data_source) < start_date
     assert _simple_return_agg_date(F.max, data_source) > end_date
 
-    tl_03 = TimeLimits.create(
+    tl_03 = TimeLimits.for_single_analysis_window(
         first_enrollment_date=exp_8d.start_date,
         last_date_full_data=end_date,
         analysis_start_days=0,
@@ -284,7 +284,7 @@ def test_process_data_source(spark):
     assert _simple_return_agg_date(F.min, proc_ds) == tl_03.first_date_data_required
     assert _simple_return_agg_date(F.max, proc_ds) == tl_03.last_date_data_required
 
-    tl_23 = TimeLimits.create(
+    tl_23 = TimeLimits.for_single_analysis_window(
         first_enrollment_date=exp_8d.start_date,
         last_date_full_data=end_date,
         analysis_start_days=2,
@@ -378,7 +378,7 @@ def test_add_time_series_to_enrollments(spark):
     )
     assert tl.num_periods == 7
 
-    new_enrollments = exp.add_time_series_to_enrollments(enrollments, tl)
+    new_enrollments = exp._add_time_series_to_enrollments(enrollments, tl)
 
     nep = new_enrollments.toPandas()
     assert len(nep) == enrollments.count() * tl.num_periods
@@ -399,7 +399,7 @@ def test_process_enrollments(spark):
     # With final data collected on '20190114', we have 7 dates of data
     # for 'cccc' enrolled on '20190108' but not for 'dddd' enrolled on
     # '20190109'.
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date=exp.start_date,
         last_date_full_data='20190114',
         analysis_start_days=0,
@@ -624,7 +624,7 @@ def test_get_per_client_data_join(spark):
     assert bob_badtiming.first()['some_value'] == 0
     # Check that _process_data_source didn't do the
     # heavy lifting above
-    time_limits = TimeLimits.create(
+    time_limits = TimeLimits.for_single_analysis_window(
         exp.start_date, '20190114', 1, 3, exp.num_dates_enrollment
     )
     pds = exp._process_data_source(data_source, time_limits)

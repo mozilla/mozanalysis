@@ -292,7 +292,7 @@ class Experiment(object):
             in ``data_source`` - was agreed upon by the DS team, and is the
             standard format for queried experimental data.
         """
-        time_limits = TimeLimits.create(
+        time_limits = TimeLimits.for_single_analysis_window(
             self.start_date, last_date_full_data, analysis_start_days,
             analysis_length_days, self.num_dates_enrollment
         )
@@ -487,7 +487,7 @@ class Experiment(object):
         return join_on
 
     @staticmethod
-    def add_time_series_to_enrollments(enrollments, time_limits):
+    def _add_time_series_to_enrollments(enrollments, time_limits):
         """Return an ``enrollments`` ``DataFrame`` for querying time series.
 
         When querying time series, we need to query an extra dimension
@@ -578,7 +578,7 @@ class Experiment(object):
         )
 
         if time_limits.time_series_period:
-            enrollments = cls.add_time_series_to_enrollments(
+            enrollments = cls._add_time_series_to_enrollments(
                 enrollments, time_limits
             )
 
@@ -643,7 +643,7 @@ class TimeLimits(object):
     Instantiated and used by the ``Experiment`` class; end users
     should not need to interact with it.
 
-    Do not directly instantiate: use ``TimeLimits.create()``.
+    Do not directly instantiate: use the constructors provided.
 
     There are several time constraints needed to specify a valid query
     for experiment data:
@@ -696,7 +696,7 @@ class TimeLimits(object):
     num_periods = attr.ib(default=None)
 
     @classmethod
-    def create(
+    def for_single_analysis_window(
         cls,
         first_enrollment_date,
         last_date_full_data,
