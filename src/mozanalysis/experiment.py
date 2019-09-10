@@ -396,6 +396,37 @@ class Experiment(object):
             for aw in time_limits.analysis_windows
         }
 
+    def get_time_series_data_lazy(
+        self, enrollments, data_source, metric_list, last_date_full_data,
+        time_series_period='weekly', keep_client_id=False
+    ):
+        """Like ``get_time_series_data()`` but with Spark DataFrames.
+
+        See docs for ``get_time_series_data()``.
+
+        Sometimes the results of ``get_time_series_data()`` do not fit
+        in memory. This method returns a dict of Spark DataFrames,
+        instead of a dict of pandas DataFrames. This allows for
+        subsequent processing to be done in Spark, or for smaller
+        portions of data to be loaded into memory.
+        """
+        time_limits = TimeLimits.for_ts(
+            self.start_date, last_date_full_data, time_series_period,
+            self.num_dates_enrollment
+        )
+
+        master_df = self._get_per_client_data(
+            enrollments, data_source, metric_list, time_limits, keep_client_id
+        ).drop('mozanalysis_analysis_window_end').cache()
+
+        return {
+            aw.start:
+                master_df.filter(
+                    master_df.mozanalysis_analysis_window_start == aw.start
+                ).drop('mozanalysis_analysis_window_start')
+            for aw in time_limits.analysis_windows
+        }
+
     def _get_per_client_data(
         self, enrollments, data_source, metric_list, time_limits, keep_client_id
     ):

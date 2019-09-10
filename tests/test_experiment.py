@@ -525,6 +525,43 @@ def test_get_time_series_data_daily(spark):
         assert (df['has_non_enrolled_data'] == 0).all()
 
 
+def test_get_time_series_data_lazy_daily(spark):
+    exp = Experiment('a-stub', '20190101', 8)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    data_source = _get_data_source(spark)
+
+    res = exp.get_time_series_data_lazy(
+        enrollments,
+        data_source,
+        [
+            F.coalesce(F.sum(
+                data_source.constant_one
+            ), F.lit(0)).alias('should_be_1'),
+        ],
+        '20190114',
+        time_series_period='daily',
+        keep_client_id=True,
+    )
+
+    assert len(res) == 7
+
+    for df in res.values():
+        pdf = df.toPandas()
+        assert pdf.client_id.nunique() == 3
+        assert len(pdf) == 3
+
+        pdf = pdf.set_index('client_id')
+
+        assert pdf.loc['aaaa', 'should_be_1'] == 1
+        assert pdf.loc['bbbb', 'should_be_1'] == 1
+        assert pdf.loc['cccc', 'should_be_1'] == 0
+        assert (pdf['has_contradictory_branch'] == 0).all()
+        assert (pdf['has_non_enrolled_data'] == 0).all()
+
+
 def test_get_per_client_data_join(spark):
     exp = Experiment('a-stub', '20190101')
 
