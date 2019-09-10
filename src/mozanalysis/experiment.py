@@ -679,6 +679,8 @@ class TimeLimits(object):
     first_date_data_required = attr.ib(type=str)
     last_date_data_required = attr.ib(type=str)
 
+    analysis_windows = attr.ib(type=tuple)
+
     analysis_window_length_dates = attr.ib(type=int)
     """The number of dates in the analysis window"""
 
@@ -692,6 +694,7 @@ class TimeLimits(object):
     the analysis window, represented as an ``int``; or ``None`` if
     querying a time series."""
 
+    analysis_window_start_list = attr.ib(default=None)
     time_series_period = attr.ib(default=None)
     num_periods = attr.ib(default=None)
 
@@ -726,38 +729,43 @@ class TimeLimits(object):
                 for the fact that enrollment typically starts a few hours
                 before UTC midnight.
         """
-        analysis_end_days = analysis_start_days + analysis_length_dates - 1
+        analysis_window = AnalysisWindow(
+            analysis_start_days, analysis_start_days + analysis_length_dates - 1
+        )
 
         if num_dates_enrollment is None:
-            last_enrollment_date = add_days(last_date_full_data, -analysis_end_days)
+            last_enrollment_date = add_days(last_date_full_data, -analysis_window.end)
 
         else:
             last_enrollment_date = add_days(
                 first_enrollment_date, num_dates_enrollment - 1
             )
 
-            if add_days(last_enrollment_date, analysis_end_days) > last_date_full_data:
+            if add_days(last_enrollment_date, analysis_window.end) > last_date_full_data:
                 raise ValueError(
                     "You said you wanted {} dates of enrollment, ".format(
                         num_dates_enrollment
                     ) + "and need data from the {}th day after enrollment. ".format(
-                        analysis_end_days
+                        analysis_window.end
                     ) + "For that, you need to wait until we have data for {}.".format(
                         last_enrollment_date
                     )
                 )
 
-        first_date_data_required = add_days(first_enrollment_date, analysis_start_days)
-        last_date_data_required = add_days(last_enrollment_date, analysis_end_days)
+        first_date_data_required = add_days(
+            first_enrollment_date, analysis_window.start
+        )
+        last_date_data_required = add_days(last_enrollment_date, analysis_window.end)
 
         tl = cls(
             first_enrollment_date=first_enrollment_date,
             last_enrollment_date=last_enrollment_date,
             first_date_data_required=first_date_data_required,
             last_date_data_required=last_date_data_required,
+            analysis_windows=(analysis_window,),
             analysis_window_length_dates=analysis_length_dates,
-            analysis_window_start=analysis_start_days,
-            analysis_window_end=analysis_end_days,
+            analysis_window_start=analysis_window.start,
+            analysis_window_end=analysis_window.end,
         )
         return tl
 
@@ -799,8 +807,16 @@ class TimeLimits(object):
         if num_periods <= 0:
             raise ValueError("Insufficient data")
 
+        analysis_windows = tuple([
+            AnalysisWindow(
+                i * analysis_window_length_dates,
+                (i + 1) * analysis_window_length_dates - 1
+            )
+            for i in range(num_periods)
+        ])
+
         last_date_data_required = add_days(
-            last_enrollment_date, num_periods * analysis_window_length_dates - 1
+            last_enrollment_date, analysis_windows[-1].end
         )
 
         return cls(
@@ -808,6 +824,7 @@ class TimeLimits(object):
             last_enrollment_date=last_enrollment_date,
             first_date_data_required=first_enrollment_date,
             last_date_data_required=last_date_data_required,
+            analysis_windows=analysis_windows,
             analysis_window_length_dates=analysis_window_length_dates,
             time_series_period=time_series_period,
             num_periods=num_periods
@@ -848,3 +865,13 @@ class TimeLimits(object):
             assert self.last_date_data_required == add_days(
                 self.last_enrollment_date, self.analysis_window_end
             )
+
+
+@attr.s(frozen=True)
+class AnalysisWindow:
+    start = attr.ib(type=int)
+    end = attr.ib(type=int)
+
+    @end.validator
+    def _validate_end(self, attribute, value):
+        assert value >= self.start

@@ -4,7 +4,7 @@ import pytest
 
 from pyspark.sql.utils import AnalysisException
 
-from mozanalysis.experiment import Experiment, TimeLimits
+from mozanalysis.experiment import Experiment, TimeLimits, AnalysisWindow
 from mozanalysis.utils import add_days
 
 
@@ -18,6 +18,7 @@ def test_time_limits_validates():
         TimeLimits(
             first_enrollment_date='20190105',
             last_enrollment_date='20190105',
+            analysis_windows=(AnalysisWindow(1, 1),),
             analysis_window_start=1,
             analysis_window_end=1,
             analysis_window_length_dates=1,
