@@ -209,6 +209,18 @@ def test_ts_time_limits_create_not_enough_data():
         )
 
 
+def test_analysis_window_validates_start():
+    AnalysisWindow(0, 1)
+    with pytest.raises(AssertionError):
+        AnalysisWindow(-1, 1)
+
+
+def test_analysis_window_validates_end():
+    AnalysisWindow(5, 5)
+    with pytest.raises(AssertionError):
+        AnalysisWindow(5, 4)
+
+
 def _get_data_source(spark):
     clients_branches = [
         ('aaaa', 'control'),
@@ -369,7 +381,10 @@ def test_add_analysis_windows_to_enrollments(spark):
 
     a = nep[nep['client_id'] == 'aaaa']
     assert len(a) == len(tl.analysis_windows)
-    assert (a.analysis_window_start.sort_values() == np.arange(
+    assert (a.mozanalysis_analysis_window_start.sort_values() == np.arange(
+        len(tl.analysis_windows))
+    ).all()
+    assert (a.mozanalysis_analysis_window_end.sort_values() == np.arange(
         len(tl.analysis_windows))
     ).all()
 
@@ -403,35 +418,6 @@ def test_process_enrollments(spark):
     assert pe.select(F.col('enrollments.enrollment_date'))
     with pytest.raises(AnalysisException):
         assert pe.select(F.col('main_summary.enrollment_date'))
-
-
-def test_process_enrollments_ts(spark):
-    exp = Experiment('a-stub', '20190101')
-    enrollments = exp.get_enrollments(
-        spark,
-        _get_enrollment_view(slug="a-stub")
-    )
-    assert enrollments.count() == 4
-
-    # With final data collected on '20190114', we have 7 dates of data
-    # for 'cccc' enrolled on '20190108' but not for 'dddd' enrolled on
-    # '20190109'.
-    tl = TimeLimits.for_ts(
-        first_enrollment_date=exp.start_date,
-        last_date_full_data='20190114',
-        time_series_period='daily',
-        num_dates_enrollment=8,  # Naughty edge-case: not from exp.num_dates_enrollment
-    )
-    assert len(tl.analysis_windows) == 7
-
-    pe = exp._process_enrollments(enrollments.alias('not_enrollments'), tl)
-    assert pe.count() == 3 * len(tl.analysis_windows)
-
-    assert pe.select(F.col('enrollments.enrollment_date'))
-    with pytest.raises(AnalysisException):
-        assert pe.select(F.col('main_summary.enrollment_date'))
-
-    assert 'analysis_window_start' in pe.columns
 
 
 def test_get_per_client_data_doesnt_crash(spark):

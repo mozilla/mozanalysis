@@ -299,18 +299,23 @@ class Experiment(object):
 
         return self._get_per_client_data(
             enrollments, data_source, metric_list, time_limits, keep_client_id
-        ).drop('analysis_window_start').drop('analysis_window_end')
+        ).drop(
+            'mozanalysis_analysis_window_start'
+        ).drop(
+            'mozanalysis_analysis_window_end'
+        )
 
     def get_time_series_data(
         self, enrollments, data_source, metric_list, last_date_full_data,
         time_series_period='weekly', keep_client_id=False
     ):
-        """Return a dict containing per-client metric values.
+        """Return a dict containing DataFrames with per-client metric values.
 
         Equivalent to looping over ``get_per_client_data`` with
-        different analysis windows and putting the resulting pandas
-        DataFrames into a dictionary keyed by the day the analysis
-        window starts; but this should be more efficient.
+        different analysis windows, calling ``.toPandas()``, and
+        putting the resulting pandas DataFrames into a dictionary keyed
+        by the day the analysis window starts; but this should be more
+        efficient.
 
         Args:
             enrollments: A spark DataFrame of enrollments, like the one
@@ -348,18 +353,17 @@ class Experiment(object):
                 have complete data, e.g. '20190322'. If you want to ignore
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
-            analysis_start_days (int): the start of the analysis window,
-                measured in 'days since the client enrolled'. We ignore data
-                collected outside this analysis window.
-            analysis_length_days (int): the length of the analysis window,
-                measured in days.
+            time_series_period ('daily' or 'weekly'): How long each
+                analysis window should be.
             keep_client_id (bool): Whether to return a ``client_id`` column.
                 Defaults to False to reduce memory usage of the results.
 
         Returns:
-            A spark DataFrame of experiment data. One row per ``client_id``.
-            One or two metadata columns, then one column per metric in
-            ``metric_list``. Then one column per sanity-check metric.
+            A ``dict`` of data per analysis window. Each key is an ``int``:
+            the number of days between enrollment and the start of the
+            analysis window. Each value is a pandas DataFrame in "the
+            standard format": one row per client, some metadata columns,
+            plus one column per metric and sanity-check metric.
             Columns:
 
                 * client_id (str, optional): Not necessary for
@@ -375,11 +379,6 @@ class Experiment(object):
                 * ...
                 * [sanity check n]: The client's value for the last
                   sanity check metric.
-
-            This format - the schema plus there being one row per
-            enrolled client, regardless of whether the client has data
-            in ``data_source`` - was agreed upon by the DS team, and is the
-            standard format for queried experimental data.
         """
         time_limits = TimeLimits.for_ts(
             self.start_date, last_date_full_data, time_series_period,
@@ -388,19 +387,33 @@ class Experiment(object):
 
         res = self._get_per_client_data(
             enrollments, data_source, metric_list, time_limits, keep_client_id
-        ).drop('analysis_window_end').toPandas()
+        ).drop('mozanalysis_analysis_window_end').toPandas()
 
         return {
             aw.start: res[
-                res['analysis_window_start'] == aw.start
-            ].drop('analysis_window_start', axis='columns')
+                res['mozanalysis_analysis_window_start'] == aw.start
+            ].drop('mozanalysis_analysis_window_start', axis='columns')
             for aw in time_limits.analysis_windows
         }
 
     def _get_per_client_data(
         self, enrollments, data_source, metric_list, time_limits, keep_client_id
     ):
+        """Return a Spark DataFrame with metric values per-client-and-analysis-window.
+
+        Each row contains the metric data for a (client, analysis window)
+        pair.
+
+        End users should prefer calling the public convenience methods
+        ``get_per_client_data()`` and ``get_time_series_data()``,
+        because they have simplified task-specific inputs, and output
+        DataFrames in the standard format (one row per client).
+        """
         enrollments = self._process_enrollments(enrollments, time_limits)
+
+        enrollments = self._add_analysis_windows_to_enrollments(
+            enrollments, time_limits
+        )
 
         data_source = self._process_data_source(data_source, time_limits)
 
@@ -459,8 +472,8 @@ class Experiment(object):
 
             # Now do a more thorough pass filtering out irrelevant data:
             days_since_enrollment.between(
-                enrollments.analysis_window_start,
-                enrollments.analysis_window_end
+                enrollments.mozanalysis_analysis_window_start,
+                enrollments.mozanalysis_analysis_window_end
             )
         ]
 
@@ -478,31 +491,39 @@ class Experiment(object):
 
     @staticmethod
     def _add_analysis_windows_to_enrollments(enrollments, time_limits):
-        """Return an ``enrollments`` ``DataFrame`` for querying time series.
+        """Return ``enrollments`` cross joined on analysis windows.
 
         When querying time series, we need to query an extra dimension
         of data (time!): each datum/value is identified by the tuple::
 
-            (client, period, metric)
+            (client, analysis window, metric)
 
-        where "period" identifies a point in the time series (i.e. an
-        analysis window).
+        where "analysis window" identifies a point in the time series.
 
         In order to get 3 dimensions of data from a DB that returns
         2-dimensional ``DataFrames``, we move from a "one row per
-        client" regime to a "one row per (client, period)" regime.
+        client" regime to a "one row per (client, analysis window)"
+        regime.
 
         This method converts a "one row per client" ``enrollments``
         ``DataFrame`` to a "one row per (client, period)"
         ``enrollments`` ``DataFrame``, returning the Cartesian product
-        of clients and analysis windows
+        of clients and analysis windows.
+
+        An analysis window is identified in the returned ``DataFrame``
+        by the pair of columns:
+
+            * ``mozanalysis_analysis_window_start`` (int)
+            * ``mozanalysis_analysis_window_end`` (int)
         """
         analysis_windows = [
             [aw.start, aw.end] for aw in time_limits.analysis_windows
         ]
 
         analysis_window_df = enrollments.sql_ctx.createDataFrame(
-            analysis_windows, 'analysis_window_start: int, analysis_window_end: int'
+            analysis_windows,
+            'mozanalysis_analysis_window_start: int, '
+            'mozanalysis_analysis_window_end: int'
         )
 
         return enrollments.crossJoin(analysis_window_df)
@@ -558,16 +579,12 @@ class Experiment(object):
 
         Ignore enrollments that were received after the enrollment
         period (if one was specified), else ignore enrollments for
-        whom we do not have data for the entire analysis window.
+        whom we do not have complete data for all analysis windows.
 
         Name the returned ``DataFrame`` 'enrollments', for consistency.
         """
         enrollments = enrollments.filter(
             enrollments.enrollment_date <= time_limits.last_enrollment_date
-        )
-
-        enrollments = cls._add_analysis_windows_to_enrollments(
-            enrollments, time_limits
         )
 
         return enrollments.alias('enrollments')
@@ -810,6 +827,7 @@ class TimeLimits(object):
     @first_date_data_required.validator
     def _validate_first_date_data_required(self, attribute, value):
         assert self.first_date_data_required <= self.last_date_data_required
+
         min_analysis_window_start = min(aw.start for aw in self.analysis_windows)
         assert self.first_date_data_required == add_days(
             self.first_enrollment_date, min_analysis_window_start
