@@ -19,9 +19,6 @@ def test_time_limits_validates():
             first_enrollment_date='20190105',
             last_enrollment_date='20190105',
             analysis_windows=(AnalysisWindow(1, 1),),
-            analysis_window_start=1,
-            analysis_window_end=1,
-            analysis_window_length_dates=1,
             first_date_data_required='20190101',  # Before enrollments
             last_date_data_required='20190101',
         )
@@ -39,13 +36,11 @@ def test_time_limits_create1():
 
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190101'
-    assert tl.analysis_window_start == 0
-    assert tl.analysis_window_end == 13
-    assert tl.analysis_window_length_dates == 14
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 13
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
-    assert tl.time_series_period is None
-    assert tl.num_periods is None
 
 
 def test_time_limits_create2():
@@ -80,13 +75,11 @@ def test_time_limits_create3():
     )
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190108'
-    assert tl.analysis_window_start == 0
-    assert tl.analysis_window_end == 6
-    assert tl.analysis_window_length_dates == 7
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 6
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
-    assert tl.time_series_period is None
-    assert tl.num_periods is None
 
 
 def test_time_limits_create4():
@@ -100,13 +93,11 @@ def test_time_limits_create4():
     )
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190108'
-    assert tl.analysis_window_start == 0
-    assert tl.analysis_window_end == 1
-    assert tl.analysis_window_length_dates == 2
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 1
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190109'
-    assert tl.time_series_period is None
-    assert tl.num_periods is None
 
 
 def test_time_limits_create5():
@@ -131,13 +122,11 @@ def test_time_limits_create6():
     )
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190114'
-    assert tl.analysis_window_start == 0
-    assert tl.analysis_window_end == 0
-    assert tl.analysis_window_length_dates == 1
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 0
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
-    assert tl.time_series_period is None
-    assert tl.num_periods is None
 
 
 def test_time_limits_create7():
@@ -150,13 +139,11 @@ def test_time_limits_create7():
     )
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190107'
-    assert tl.analysis_window_start == 7
-    assert tl.analysis_window_end == 7
-    assert tl.analysis_window_length_dates == 1
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 7
+    assert tl.analysis_windows[0].end == 7
     assert tl.first_date_data_required == '20190108'
     assert tl.last_date_data_required == '20190114'
-    assert tl.time_series_period is None
-    assert tl.num_periods is None
 
 
 def test_ts_time_limits_create1():
@@ -169,13 +156,13 @@ def test_ts_time_limits_create1():
 
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190108'
-    assert tl.analysis_window_start is None
-    assert tl.analysis_window_end is None
-    assert tl.analysis_window_length_dates == 1
+    assert len(tl.analysis_windows) == 7
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 0
+    assert tl.analysis_windows[6].start == 6
+    assert tl.analysis_windows[6].end == 6
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
-    assert tl.time_series_period == 'daily'
-    assert tl.num_periods == 7
 
 
 def test_ts_time_limits_create2():
@@ -188,13 +175,11 @@ def test_ts_time_limits_create2():
 
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190108'
-    assert tl.analysis_window_start is None
-    assert tl.analysis_window_end is None
-    assert tl.analysis_window_length_dates == 7
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 6
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
-    assert tl.time_series_period == 'weekly'
-    assert tl.num_periods == 1
 
 
 def test_ts_time_limits_create3():
@@ -207,13 +192,11 @@ def test_ts_time_limits_create3():
 
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190108'
-    assert tl.analysis_window_start is None
-    assert tl.analysis_window_end is None
-    assert tl.analysis_window_length_dates == 7
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 6
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
-    assert tl.time_series_period == 'weekly'
-    assert tl.num_periods == 1
 
 
 def test_ts_time_limits_create_not_enough_data():
@@ -363,7 +346,7 @@ def test_get_enrollments_debug_dupes(spark):
     assert (penrl2['num_events'] == 1).all()
 
 
-def test_add_time_series_to_enrollments(spark):
+def test_add_analysis_windows_to_enrollments(spark):
     exp = Experiment('a-stub', '20190101', num_dates_enrollment=8)
     enrollments = exp.get_enrollments(
         spark,
@@ -377,16 +360,18 @@ def test_add_time_series_to_enrollments(spark):
         time_series_period='daily',
         num_dates_enrollment=exp.num_dates_enrollment,
     )
-    assert tl.num_periods == 7
+    assert len(tl.analysis_windows) == 7
 
-    new_enrollments = exp._add_time_series_to_enrollments(enrollments, tl)
+    new_enrollments = exp._add_analysis_windows_to_enrollments(enrollments, tl)
 
     nep = new_enrollments.toPandas()
-    assert len(nep) == enrollments.count() * tl.num_periods
+    assert len(nep) == enrollments.count() * len(tl.analysis_windows)
 
     a = nep[nep['client_id'] == 'aaaa']
-    assert len(a) == tl.num_periods
-    assert (a.analysis_window_start.sort_values() == np.arange(tl.num_periods)).all()
+    assert len(a) == len(tl.analysis_windows)
+    assert (a.analysis_window_start.sort_values() == np.arange(
+        len(tl.analysis_windows))
+    ).all()
 
 
 def test_process_enrollments(spark):
@@ -408,7 +393,8 @@ def test_process_enrollments(spark):
         num_dates_enrollment=exp.num_dates_enrollment
     )
     assert tl.last_enrollment_date == '20190108'
-    assert tl.analysis_window_end == 6
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].end == 6
 
     pe = exp._process_enrollments(enrollments, tl)
     assert pe.count() == 3
@@ -436,10 +422,10 @@ def test_process_enrollments_ts(spark):
         time_series_period='daily',
         num_dates_enrollment=8,  # Naughty edge-case: not from exp.num_dates_enrollment
     )
-    assert tl.num_periods == 7
+    assert len(tl.analysis_windows) == 7
 
     pe = exp._process_enrollments(enrollments.alias('not_enrollments'), tl)
-    assert pe.count() == 3 * tl.num_periods
+    assert pe.count() == 3 * len(tl.analysis_windows)
 
     assert pe.select(F.col('enrollments.enrollment_date'))
     with pytest.raises(AnalysisException):

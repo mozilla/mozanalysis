@@ -299,7 +299,7 @@ class Experiment(object):
 
         return self._get_per_client_data(
             enrollments, data_source, metric_list, time_limits, keep_client_id
-        )
+        ).drop('analysis_window_start').drop('analysis_window_end')
 
     def get_time_series_data(
         self, enrollments, data_source, metric_list, last_date_full_data,
@@ -388,13 +388,13 @@ class Experiment(object):
 
         res = self._get_per_client_data(
             enrollments, data_source, metric_list, time_limits, keep_client_id
-        ).toPandas()
+        ).drop('analysis_window_end').toPandas()
 
         return {
-            t: res[
-                res['analysis_window_start'] == t
+            aw.start: res[
+                res['analysis_window_start'] == aw.start
             ].drop('analysis_window_start', axis='columns')
-            for t in res['analysis_window_start'].unique()
+            for aw in time_limits.analysis_windows
         }
 
     def _get_per_client_data(
@@ -437,6 +437,11 @@ class Experiment(object):
         ``data_source`` for enrolled clients that were submitted during
         the analysis window.
         """
+        days_since_enrollment = (
+            F.unix_timestamp(F.col('submission_date_s3'), 'yyyyMMdd')
+            - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
+        ) / (24 * 60 * 60)
+
         join_on = [
             # TODO perf: would it be faster if we enforce a join on sample_id?
             enrollments.client_id == data_source.client_id,
@@ -451,28 +456,13 @@ class Experiment(object):
             # Use F.col() to avoid a bug in spark when `enrollments` is built
             # from `data_source` (SPARK-10925)
             enrollments.enrollment_date <= F.col('submission_date_s3'),
-        ]
 
-        # Now do a more thorough pass filtering out irrelevant data:
-        days_since_enrollment = (
-            F.unix_timestamp(F.col('submission_date_s3'), 'yyyyMMdd')
-            - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
-        ) / (24 * 60 * 60)
-
-        if time_limits.time_series_period is None:
-            # For `get_per_client_data()`, the analysis window is manually
-            # specified as ints.
-            join_on.append(days_since_enrollment.between(
-                time_limits.analysis_window_start, time_limits.analysis_window_end
-            ))
-        else:
-            # For `get_time_series_data()`, the analysis window varies per-row
-            # and is specified by a Column in `enrollments`.
-            join_on.append(days_since_enrollment.between(
+            # Now do a more thorough pass filtering out irrelevant data:
+            days_since_enrollment.between(
                 enrollments.analysis_window_start,
-                enrollments.analysis_window_start
-                + time_limits.analysis_window_length_dates - 1
-            ))
+                enrollments.analysis_window_end
+            )
+        ]
 
         if 'experiments' in data_source.columns:
             # Try to filter data from day of enrollment before time of enrollment.
@@ -487,7 +477,7 @@ class Experiment(object):
         return join_on
 
     @staticmethod
-    def _add_time_series_to_enrollments(enrollments, time_limits):
+    def _add_analysis_windows_to_enrollments(enrollments, time_limits):
         """Return an ``enrollments`` ``DataFrame`` for querying time series.
 
         When querying time series, we need to query an extra dimension
@@ -507,13 +497,12 @@ class Experiment(object):
         ``enrollments`` ``DataFrame``, returning the Cartesian product
         of clients and analysis windows
         """
-        length = time_limits.analysis_window_length_dates
         analysis_windows = [
-            [i * length] for i in range(time_limits.num_periods)
+            [aw.start, aw.end] for aw in time_limits.analysis_windows
         ]
 
         analysis_window_df = enrollments.sql_ctx.createDataFrame(
-            analysis_windows, 'analysis_window_start: int'
+            analysis_windows, 'analysis_window_start: int, analysis_window_end: int'
         )
 
         return enrollments.crossJoin(analysis_window_df)
@@ -577,10 +566,9 @@ class Experiment(object):
             enrollments.enrollment_date <= time_limits.last_enrollment_date
         )
 
-        if time_limits.time_series_period:
-            enrollments = cls._add_time_series_to_enrollments(
-                enrollments, time_limits
-            )
+        enrollments = cls._add_analysis_windows_to_enrollments(
+            enrollments, time_limits
+        )
 
         return enrollments.alias('enrollments')
 
@@ -681,23 +669,6 @@ class TimeLimits(object):
 
     analysis_windows = attr.ib(type=tuple)
 
-    analysis_window_length_dates = attr.ib(type=int)
-    """The number of dates in the analysis window"""
-
-    analysis_window_start = attr.ib(default=None)
-    """The integer number of days between enrollment and the start of
-    the analysis window, represented as an ``int``; or ``None`` if
-    querying a time series."""
-
-    analysis_window_end = attr.ib(default=None)
-    """The integer number of days between enrollment and the end of
-    the analysis window, represented as an ``int``; or ``None`` if
-    querying a time series."""
-
-    analysis_window_start_list = attr.ib(default=None)
-    time_series_period = attr.ib(default=None)
-    num_periods = attr.ib(default=None)
-
     @classmethod
     def for_single_analysis_window(
         cls,
@@ -741,7 +712,9 @@ class TimeLimits(object):
                 first_enrollment_date, num_dates_enrollment - 1
             )
 
-            if add_days(last_enrollment_date, analysis_window.end) > last_date_full_data:
+            if add_days(
+                last_enrollment_date, analysis_window.end
+            ) > last_date_full_data:
                 raise ValueError(
                     "You said you wanted {} dates of enrollment, ".format(
                         num_dates_enrollment
@@ -763,9 +736,6 @@ class TimeLimits(object):
             first_date_data_required=first_date_data_required,
             last_date_data_required=last_date_data_required,
             analysis_windows=(analysis_window,),
-            analysis_window_length_dates=analysis_length_dates,
-            analysis_window_start=analysis_window.start,
-            analysis_window_end=analysis_window.end,
         )
         return tl
 
@@ -825,9 +795,6 @@ class TimeLimits(object):
             first_date_data_required=first_enrollment_date,
             last_date_data_required=last_date_data_required,
             analysis_windows=analysis_windows,
-            analysis_window_length_dates=analysis_window_length_dates,
-            time_series_period=time_series_period,
-            num_periods=num_periods
         )
 
     @first_enrollment_date.validator
@@ -843,34 +810,27 @@ class TimeLimits(object):
     @first_date_data_required.validator
     def _validate_first_date_data_required(self, attribute, value):
         assert self.first_date_data_required <= self.last_date_data_required
+        min_analysis_window_start = min(aw.start for aw in self.analysis_windows)
+        assert self.first_date_data_required == add_days(
+            self.first_enrollment_date, min_analysis_window_start
+        )
 
-    @analysis_window_start.validator
-    def _validate_analysis_window_start(self, attribute, value):
-        if self.analysis_window_start is not None:
-            assert self.analysis_window_end is not None
-            assert self.analysis_window_start >= 0
-            assert self.first_date_data_required == add_days(
-                self.first_enrollment_date, self.analysis_window_start
-            )
-
-    @analysis_window_length_dates.validator
-    def _validate_analysis_window_length_dates(self, attribute, value):
-        assert self.analysis_window_length_dates >= 1
-
-    @analysis_window_end.validator
-    def _validate_analysis_window_end(self, attribute, value):
-        if self.analysis_window_end is not None:
-            assert self.analysis_window_end == \
-                self.analysis_window_start + self.analysis_window_length_dates - 1
-            assert self.last_date_data_required == add_days(
-                self.last_enrollment_date, self.analysis_window_end
-            )
+    @last_date_data_required.validator
+    def _validate_last_date_data_required(self, attribute, value):
+        max_analysis_window_end = max(aw.end for aw in self.analysis_windows)
+        assert self.last_date_data_required == add_days(
+            self.last_enrollment_date, max_analysis_window_end
+        )
 
 
 @attr.s(frozen=True)
-class AnalysisWindow:
+class AnalysisWindow(object):
     start = attr.ib(type=int)
     end = attr.ib(type=int)
+
+    @start.validator
+    def _validate_start(self, attribute, value):
+        assert value >= 0
 
     @end.validator
     def _validate_end(self, attribute, value):
