@@ -744,9 +744,9 @@ class TimeLimits(object):
                 of enrollments. If ``None`` then use the maximum number of days
                 as determined by the metric's analysis window and
                 ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The
-                factor '7' removes weekly seasonality, and the ``+1`` accounts
-                for the fact that enrollment typically starts a few hours
-                before UTC midnight.
+                factor ``7`` removes weekly seasonality, and the ``+1``
+                accounts for the fact that enrollment typically starts a few
+                hours before UTC midnight.
         """
         analysis_window = AnalysisWindow(
             analysis_start_days, analysis_start_days + analysis_length_dates - 1
