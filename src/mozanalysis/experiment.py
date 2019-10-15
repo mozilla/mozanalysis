@@ -672,7 +672,7 @@ class Experiment(object):
         ]
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class TimeLimits(object):
     """Internal object containing various time limits.
 
@@ -872,7 +872,7 @@ class TimeLimits(object):
         )
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class AnalysisWindow(object):
     """Represents the range of days in which to measure a metric.
 
