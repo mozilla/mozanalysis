@@ -795,7 +795,7 @@ class TimeLimits(object):
         time_series_period,
         num_dates_enrollment,
     ):
-        """Return a `TimeLimits` instance for a time series.
+        """Return a ``TimeLimits`` instance for a time series.
 
         Args:
             first_enrollment_date (str): First date on which enrollment
