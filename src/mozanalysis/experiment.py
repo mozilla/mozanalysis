@@ -874,6 +874,18 @@ class TimeLimits(object):
 
 @attr.s(frozen=True)
 class AnalysisWindow(object):
+    """Represents the range of days in which to measure a metric.
+
+    The range is measured in "days after enrollment", and is inclusive.
+
+    For example, ``AnalysisWindow(0, 6)`` is the first week after enrollment.
+
+    Args:
+        start (int): First day of the analysis window, in days since
+            enrollment.
+        end (int): Final day of the analysis window, in days since
+            enrollment.
+    """
     start = attr.ib(type=int)
     end = attr.ib(type=int)
 
