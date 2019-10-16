@@ -152,9 +152,9 @@
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
 <span class="kn">import</span> <span class="nn">attr</span>
-<span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="k">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="k">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
 
-<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="k">import</span> <span class="n">add_days</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="k">import</span> <span class="n">add_days</span><span class="p">,</span> <span class="n">date_sub</span>
 
 
 <div class="viewcode-block" id="Experiment"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -442,12 +442,159 @@
 <span class="sd">            in ``data_source`` - was agreed upon by the DS team, and is the</span>
 <span class="sd">            standard format for queried experimental data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+        <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_single_analysis_window</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">analysis_start_days</span><span class="p">,</span>
             <span class="n">analysis_length_days</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span>
         <span class="p">)</span>
 
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_per_client_data</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
+            <span class="s1">&#39;mozanalysis_analysis_window_start&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
+            <span class="s1">&#39;mozanalysis_analysis_window_end&#39;</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Experiment.get_time_series_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span><span class="p">,</span> <span class="n">keep_client_id</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dict containing DataFrames with per-client metric values.</span>
+
+<span class="sd">        Equivalent to looping over ``get_per_client_data`` with</span>
+<span class="sd">        different analysis windows, calling ``.toPandas()``, and</span>
+<span class="sd">        putting the resulting pandas DataFrames into a dictionary keyed</span>
+<span class="sd">        by the day the analysis window starts; but this should be more</span>
+<span class="sd">        efficient.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            enrollments: A spark DataFrame of enrollments, like the one</span>
+<span class="sd">                returned by ``self.get_enrollments()``.</span>
+
+<span class="sd">            data_source: A spark DataFrame containing the data needed to</span>
+<span class="sd">                calculate the metrics. Could be ``main_summary`` or</span>
+<span class="sd">                ``clients_daily``. *Don&#39;t* use ``experiments``; as of 2019/04/02</span>
+<span class="sd">                it drops data collected after people self-unenroll, so</span>
+<span class="sd">                unenrolling users will appear to churn. Must have at least</span>
+<span class="sd">                the following columns:</span>
+
+<span class="sd">                * client_id (str)</span>
+<span class="sd">                * submission_date_s3 (str)</span>
+<span class="sd">                * data columns referred to in ``metric_list``</span>
+
+<span class="sd">                Ideally also has:</span>
+
+<span class="sd">                * experiments (map): At present this is used to exclude</span>
+<span class="sd">                  pre-enrollment ping data collected on enrollment</span>
+<span class="sd">                  day. Once it or its successor reliably tags data</span>
+<span class="sd">                  from all enrolled users, even post-unenroll, we&#39;ll</span>
+<span class="sd">                  also join on it to exclude data from duplicate</span>
+<span class="sd">                  ``client_id``\\s that are not enrolled in the same</span>
+<span class="sd">                  branch.</span>
+
+<span class="sd">            metric_list: A list of columns that aggregate and compute</span>
+<span class="sd">                metrics over data grouped by ``(client_id, branch)``, e.g.::</span>
+
+<span class="sd">                    [F.coalesce(F.sum(</span>
+<span class="sd">                        data_source.metric_name</span>
+<span class="sd">                    ), F.lit(0)).alias(&#39;metric_name&#39;)]</span>
+
+<span class="sd">            last_date_full_data (str): The most recent date for which we</span>
+<span class="sd">                have complete data, e.g. &#39;20190322&#39;. If you want to ignore</span>
+<span class="sd">                all data collected after a certain date (e.g. when the</span>
+<span class="sd">                experiment recipe was deactivated), then do that here.</span>
+<span class="sd">            time_series_period (&#39;daily&#39; or &#39;weekly&#39;): How long each</span>
+<span class="sd">                analysis window should be.</span>
+<span class="sd">            keep_client_id (bool): Whether to return a ``client_id`` column.</span>
+<span class="sd">                Defaults to False to reduce memory usage of the results.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A ``dict`` of data per analysis window. Each key is an ``int``:</span>
+<span class="sd">            the number of days between enrollment and the start of the</span>
+<span class="sd">            analysis window. Each value is a pandas DataFrame in &quot;the</span>
+<span class="sd">            standard format&quot;: one row per client, some metadata columns,</span>
+<span class="sd">            plus one column per metric and sanity-check metric.</span>
+<span class="sd">            Columns:</span>
+
+<span class="sd">                * client_id (str, optional): Not necessary for</span>
+<span class="sd">                  &quot;happy path&quot; analyses.</span>
+<span class="sd">                * branch (str): The client&#39;s branch</span>
+<span class="sd">                * [metric 1]: The client&#39;s value for the first metric in</span>
+<span class="sd">                  ``metric_list``.</span>
+<span class="sd">                * ...</span>
+<span class="sd">                * [metric n]: The client&#39;s value for the nth (final)</span>
+<span class="sd">                  metric in ``metric_list``.</span>
+<span class="sd">                * [sanity check 1]: The client&#39;s value for the first</span>
+<span class="sd">                  sanity check metric.</span>
+<span class="sd">                * ...</span>
+<span class="sd">                * [sanity check n]: The client&#39;s value for the last</span>
+<span class="sd">                  sanity check metric.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_ts</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">time_series_period</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span>
+        <span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_per_client_data</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mozanalysis_analysis_window_end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">:</span> <span class="n">res</span><span class="p">[</span>
+                <span class="n">res</span><span class="p">[</span><span class="s1">&#39;mozanalysis_analysis_window_start&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">aw</span><span class="o">.</span><span class="n">start</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mozanalysis_analysis_window_start&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;columns&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
+        <span class="p">}</span></div>
+
+<div class="viewcode-block" id="Experiment.get_time_series_data_lazy"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data_lazy">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data_lazy</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span><span class="p">,</span> <span class="n">keep_client_id</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Like ``get_time_series_data()`` but with Spark DataFrames.</span>
+
+<span class="sd">        See docs for ``get_time_series_data()``.</span>
+
+<span class="sd">        Sometimes the results of ``get_time_series_data()`` do not fit</span>
+<span class="sd">        in memory. This method returns a dict of Spark DataFrames,</span>
+<span class="sd">        instead of a dict of pandas DataFrames. This allows for</span>
+<span class="sd">        subsequent processing to be done in Spark, or for smaller</span>
+<span class="sd">        portions of data to be loaded into memory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_ts</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">time_series_period</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span>
+        <span class="p">)</span>
+
+        <span class="n">master_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_per_client_data</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mozanalysis_analysis_window_end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cache</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+                <span class="n">master_df</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="n">master_df</span><span class="o">.</span><span class="n">mozanalysis_analysis_window_start</span> <span class="o">==</span> <span class="n">aw</span><span class="o">.</span><span class="n">start</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mozanalysis_analysis_window_start&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
+        <span class="p">}</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_per_client_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a Spark DataFrame with metric values per-client-and-analysis-window.</span>
+
+<span class="sd">        Each row contains the metric data for a (client, analysis window)</span>
+<span class="sd">        pair.</span>
+
+<span class="sd">        End users should prefer calling the public convenience methods</span>
+<span class="sd">        ``get_per_client_data()`` and ``get_time_series_data()``,</span>
+<span class="sd">        because they have simplified task-specific inputs, and output</span>
+<span class="sd">        DataFrames in the standard format (one row per client).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_enrollments</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
+
+        <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_analysis_windows_to_enrollments</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span>
+        <span class="p">)</span>
 
         <span class="n">data_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_data_source</span><span class="p">(</span><span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
 
@@ -462,14 +609,14 @@
             <span class="n">join_on</span><span class="p">,</span>
             <span class="s1">&#39;left&#39;</span>
         <span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">branch</span>
+            <span class="o">*</span><span class="p">[</span><span class="n">enrollments</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>  <span class="c1"># Yes, really.</span>
         <span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
             <span class="o">*</span><span class="p">(</span><span class="n">metric_list</span> <span class="o">+</span> <span class="n">sanity_metrics</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">keep_client_id</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">res</span>
 
-        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_join_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a list of join conditions.</span>
@@ -484,6 +631,11 @@
 <span class="sd">        ``data_source`` for enrolled clients that were submitted during</span>
 <span class="sd">        the analysis window.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">days_since_enrollment</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">F</span><span class="o">.</span><span class="n">unix_timestamp</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">),</span> <span class="s1">&#39;yyyyMMdd&#39;</span><span class="p">)</span>
+            <span class="o">-</span> <span class="n">F</span><span class="o">.</span><span class="n">unix_timestamp</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span><span class="p">,</span> <span class="s1">&#39;yyyyMMdd&#39;</span><span class="p">)</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
         <span class="n">join_on</span> <span class="o">=</span> <span class="p">[</span>
             <span class="c1"># TODO perf: would it be faster if we enforce a join on sample_id?</span>
             <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span> <span class="o">==</span> <span class="n">data_source</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span>
@@ -500,16 +652,10 @@
             <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">),</span>
 
             <span class="c1"># Now do a more thorough pass filtering out irrelevant data:</span>
-            <span class="c1"># TODO perf: what is a more efficient way to do this?</span>
-            <span class="p">(</span>
-                <span class="p">(</span>
-                    <span class="n">F</span><span class="o">.</span><span class="n">unix_timestamp</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">),</span> <span class="s1">&#39;yyyyMMdd&#39;</span><span class="p">)</span>
-                    <span class="o">-</span> <span class="n">F</span><span class="o">.</span><span class="n">unix_timestamp</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span><span class="p">,</span> <span class="s1">&#39;yyyyMMdd&#39;</span><span class="p">)</span>
-                <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">between</span><span class="p">(</span>
-                <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_window_start</span><span class="p">,</span>
-                <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_window_end</span>
-            <span class="p">),</span>
+            <span class="n">days_since_enrollment</span><span class="o">.</span><span class="n">between</span><span class="p">(</span>
+                <span class="n">enrollments</span><span class="o">.</span><span class="n">mozanalysis_analysis_window_start</span><span class="p">,</span>
+                <span class="n">enrollments</span><span class="o">.</span><span class="n">mozanalysis_analysis_window_end</span>
+            <span class="p">)</span>
         <span class="p">]</span>
 
         <span class="k">if</span> <span class="s1">&#39;experiments&#39;</span> <span class="ow">in</span> <span class="n">data_source</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
@@ -523,6 +669,45 @@
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">join_on</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_add_analysis_windows_to_enrollments</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``enrollments`` cross joined on analysis windows.</span>
+
+<span class="sd">        When querying time series, we need to query an extra dimension</span>
+<span class="sd">        of data (time!): each datum/value is identified by the tuple::</span>
+
+<span class="sd">            (client, analysis window, metric)</span>
+
+<span class="sd">        where &quot;analysis window&quot; identifies a point in the time series.</span>
+
+<span class="sd">        In order to get 3 dimensions of data from a DB that returns</span>
+<span class="sd">        2-dimensional ``DataFrames``, we move from a &quot;one row per</span>
+<span class="sd">        client&quot; regime to a &quot;one row per (client, analysis window)&quot;</span>
+<span class="sd">        regime.</span>
+
+<span class="sd">        This method converts a &quot;one row per client&quot; ``enrollments``</span>
+<span class="sd">        ``DataFrame`` to a &quot;one row per (client, period)&quot;</span>
+<span class="sd">        ``enrollments`` ``DataFrame``, returning the Cartesian product</span>
+<span class="sd">        of clients and analysis windows.</span>
+
+<span class="sd">        An analysis window is identified in the returned ``DataFrame``</span>
+<span class="sd">        by the pair of columns:</span>
+
+<span class="sd">            * ``mozanalysis_analysis_window_start`` (int)</span>
+<span class="sd">            * ``mozanalysis_analysis_window_end`` (int)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">analysis_windows</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">aw</span><span class="o">.</span><span class="n">end</span><span class="p">]</span> <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
+        <span class="p">]</span>
+
+        <span class="n">analysis_window_df</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">sql_ctx</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span>
+            <span class="n">analysis_windows</span><span class="p">,</span>
+            <span class="s1">&#39;mozanalysis_analysis_window_start: int, &#39;</span>
+            <span class="s1">&#39;mozanalysis_analysis_window_end: int&#39;</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">crossJoin</span><span class="p">(</span><span class="n">analysis_window_df</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_enrollments_view_normandy</span><span class="p">(</span><span class="n">spark</span><span class="p">):</span>
@@ -569,19 +754,21 @@
             <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">addon_version</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;addon_version&#39;</span><span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_process_enrollments</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_process_enrollments</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return ``enrollments``, filtered to the relevant dates.</span>
 
 <span class="sd">        Ignore enrollments that were received after the enrollment</span>
 <span class="sd">        period (if one was specified), else ignore enrollments for</span>
-<span class="sd">        whom we do not have data for the entire analysis window.</span>
+<span class="sd">        whom we do not have complete data for all analysis windows.</span>
 
 <span class="sd">        Name the returned ``DataFrame`` &#39;enrollments&#39;, for consistency.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
             <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollments&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollments&#39;</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_process_data_source</span><span class="p">(</span><span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
@@ -635,14 +822,14 @@
         <span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="TimeLimits"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeLimits">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="TimeLimits"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeLimits">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TimeLimits</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Internal object containing various time limits.</span>
 
 <span class="sd">    Instantiated and used by the ``Experiment`` class; end users</span>
 <span class="sd">    should not need to interact with it.</span>
 
-<span class="sd">    Do not directly instantiate: use ``TimeLimits.create()``.</span>
+<span class="sd">    Do not directly instantiate: use the constructors provided.</span>
 
 <span class="sd">    There are several time constraints needed to specify a valid query</span>
 <span class="sd">    for experiment data:</span>
@@ -675,24 +862,13 @@
     <span class="n">first_enrollment_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
 
-    <span class="n">analysis_window_start</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
-    <span class="sd">&quot;&quot;&quot;The integer number of days between enrollment and the start of</span>
-<span class="sd">    the analysis window, represented either as an ``int`` or as a</span>
-<span class="sd">    Column of integers in the ``enrollments`` DataFrame.&quot;&quot;&quot;</span>
-
-    <span class="n">analysis_window_end</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
-    <span class="sd">&quot;&quot;&quot;The integer number of days between enrollment and the end of</span>
-<span class="sd">    the analysis window, represented either as an ``int`` or as a</span>
-<span class="sd">    Column of integers in the ``enrollments`` DataFrame.&quot;&quot;&quot;</span>
-
-    <span class="n">analysis_window_length_dates</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;The number of dates in the analysis window&quot;&quot;&quot;</span>
-
     <span class="n">first_date_data_required</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">last_date_data_required</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TimeLimits.create"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeLimits.create">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span>
+    <span class="n">analysis_windows</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>  <span class="c1"># type: tuple[AnalysisWindow]</span>
+
+<div class="viewcode-block" id="TimeLimits.for_single_analysis_window"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeLimits.for_single_analysis_window">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">for_single_analysis_window</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">first_enrollment_date</span><span class="p">,</span>
         <span class="n">last_date_full_data</span><span class="p">,</span>
@@ -718,44 +894,106 @@
 <span class="sd">                of enrollments. If ``None`` then use the maximum number of days</span>
 <span class="sd">                as determined by the metric&#39;s analysis window and</span>
 <span class="sd">                ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The</span>
-<span class="sd">                factor &#39;7&#39; removes weekly seasonality, and the ``+1`` accounts</span>
-<span class="sd">                for the fact that enrollment typically starts a few hours</span>
-<span class="sd">                before UTC midnight.</span>
+<span class="sd">                factor ``7`` removes weekly seasonality, and the ``+1``</span>
+<span class="sd">                accounts for the fact that enrollment typically starts a few</span>
+<span class="sd">                hours before UTC midnight.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">analysis_end_days</span> <span class="o">=</span> <span class="n">analysis_start_days</span> <span class="o">+</span> <span class="n">analysis_length_dates</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">analysis_window</span> <span class="o">=</span> <span class="n">AnalysisWindow</span><span class="p">(</span>
+            <span class="n">analysis_start_days</span><span class="p">,</span> <span class="n">analysis_start_days</span> <span class="o">+</span> <span class="n">analysis_length_dates</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">num_dates_enrollment</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="o">-</span><span class="n">analysis_end_days</span><span class="p">)</span>
+            <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="o">-</span><span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
                 <span class="n">first_enrollment_date</span><span class="p">,</span> <span class="n">num_dates_enrollment</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">add_days</span><span class="p">(</span><span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">analysis_end_days</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">last_date_full_data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">add_days</span><span class="p">(</span>
+                <span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span>
+            <span class="p">)</span> <span class="o">&gt;</span> <span class="n">last_date_full_data</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">&quot;You said you wanted </span><span class="si">{}</span><span class="s2"> dates of enrollment, &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                         <span class="n">num_dates_enrollment</span>
                     <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;and need data from the </span><span class="si">{}</span><span class="s2">th day after enrollment. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">analysis_end_days</span>
+                        <span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span>
                     <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;For that, you need to wait until we have data for </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                         <span class="n">last_enrollment_date</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
 
-        <span class="n">first_date_data_required</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span><span class="n">first_enrollment_date</span><span class="p">,</span> <span class="n">analysis_start_days</span><span class="p">)</span>
-        <span class="n">last_date_data_required</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span><span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">analysis_end_days</span><span class="p">)</span>
+        <span class="n">first_date_data_required</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
+            <span class="n">first_enrollment_date</span><span class="p">,</span> <span class="n">analysis_window</span><span class="o">.</span><span class="n">start</span>
+        <span class="p">)</span>
+        <span class="n">last_date_data_required</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span><span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
 
         <span class="n">tl</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">first_enrollment_date</span><span class="p">,</span>
             <span class="n">last_enrollment_date</span><span class="o">=</span><span class="n">last_enrollment_date</span><span class="p">,</span>
-            <span class="n">analysis_window_start</span><span class="o">=</span><span class="n">analysis_start_days</span><span class="p">,</span>
-            <span class="n">analysis_window_end</span><span class="o">=</span><span class="n">analysis_end_days</span><span class="p">,</span>
-            <span class="n">analysis_window_length_dates</span><span class="o">=</span><span class="n">analysis_length_dates</span><span class="p">,</span>
             <span class="n">first_date_data_required</span><span class="o">=</span><span class="n">first_date_data_required</span><span class="p">,</span>
-            <span class="n">last_date_data_required</span><span class="o">=</span><span class="n">last_date_data_required</span>
+            <span class="n">last_date_data_required</span><span class="o">=</span><span class="n">last_date_data_required</span><span class="p">,</span>
+            <span class="n">analysis_windows</span><span class="o">=</span><span class="p">(</span><span class="n">analysis_window</span><span class="p">,),</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">tl</span></div>
+
+<div class="viewcode-block" id="TimeLimits.for_ts"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeLimits.for_ts">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">for_ts</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">first_enrollment_date</span><span class="p">,</span>
+        <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="n">time_series_period</span><span class="p">,</span>
+        <span class="n">num_dates_enrollment</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a ``TimeLimits`` instance for a time series.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            first_enrollment_date (str): First date on which enrollment</span>
+<span class="sd">                events were received; the start date of the experiment.</span>
+<span class="sd">            last_date_full_data (str): The most recent date for which we</span>
+<span class="sd">                have complete data, e.g. &#39;20190322&#39;. If you want to ignore</span>
+<span class="sd">                all data collected after a certain date (e.g. when the</span>
+<span class="sd">                experiment recipe was deactivated), then do that here.</span>
+<span class="sd">            time_series_period: &#39;daily&#39; or &#39;weekly&#39;.</span>
+<span class="sd">            num_dates_enrollment (int): Take this many days of client</span>
+<span class="sd">                enrollments. This is a mandatory argument because it</span>
+<span class="sd">                determines the number of points in the time series.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">time_series_period</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;daily&#39;</span><span class="p">,</span> <span class="s1">&#39;weekly&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported time series period </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">time_series_period</span>
+            <span class="p">))</span>
+
+        <span class="n">analysis_window_length_dates</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">time_series_period</span> <span class="o">==</span> <span class="s1">&#39;daily&#39;</span> <span class="k">else</span> <span class="mi">7</span>
+
+        <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
+            <span class="n">first_enrollment_date</span><span class="p">,</span> <span class="n">num_dates_enrollment</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="n">max_dates_of_data</span> <span class="o">=</span> <span class="n">date_sub</span><span class="p">(</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">last_enrollment_date</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">num_periods</span> <span class="o">=</span> <span class="n">max_dates_of_data</span> <span class="o">//</span> <span class="n">analysis_window_length_dates</span>
+
+        <span class="k">if</span> <span class="n">num_periods</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Insufficient data&quot;</span><span class="p">)</span>
+
+        <span class="n">analysis_windows</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span>
+            <span class="n">AnalysisWindow</span><span class="p">(</span>
+                <span class="n">i</span> <span class="o">*</span> <span class="n">analysis_window_length_dates</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">analysis_window_length_dates</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_periods</span><span class="p">)</span>
+        <span class="p">])</span>
+
+        <span class="n">last_date_data_required</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
+            <span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">analysis_windows</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">end</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">first_enrollment_date</span><span class="p">,</span>
+            <span class="n">last_enrollment_date</span><span class="o">=</span><span class="n">last_enrollment_date</span><span class="p">,</span>
+            <span class="n">first_date_data_required</span><span class="o">=</span><span class="n">first_enrollment_date</span><span class="p">,</span>
+            <span class="n">last_date_data_required</span><span class="o">=</span><span class="n">last_date_data_required</span><span class="p">,</span>
+            <span class="n">analysis_windows</span><span class="o">=</span><span class="n">analysis_windows</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
     <span class="nd">@first_enrollment_date</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">_validate_first_enrollment_date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
@@ -771,27 +1009,43 @@
     <span class="k">def</span> <span class="nf">_validate_first_date_data_required</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_date_data_required</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span>
 
-    <span class="nd">@analysis_window_start</span><span class="o">.</span><span class="n">validator</span>
-    <span class="k">def</span> <span class="nf">_validate_analysis_window_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_window_start</span><span class="p">,</span> <span class="n">Column</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_window_end</span><span class="p">,</span> <span class="n">Column</span><span class="p">)</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_window_start</span> <span class="o">&gt;=</span> <span class="mi">0</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_date_data_required</span> <span class="o">==</span> <span class="n">add_days</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_window_start</span>
-            <span class="p">)</span>
+        <span class="n">min_analysis_window_start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_windows</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_date_data_required</span> <span class="o">==</span> <span class="n">add_days</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span> <span class="n">min_analysis_window_start</span>
+        <span class="p">)</span>
 
-    <span class="nd">@analysis_window_length_dates</span><span class="o">.</span><span class="n">validator</span>
-    <span class="k">def</span> <span class="nf">_validate_analysis_window_length_dates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_window_length_dates</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+    <span class="nd">@last_date_data_required</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_validate_last_date_data_required</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">max_analysis_window_end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">aw</span><span class="o">.</span><span class="n">end</span> <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_windows</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span> <span class="o">==</span> <span class="n">add_days</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">max_analysis_window_end</span>
+        <span class="p">)</span></div>
 
-    <span class="nd">@analysis_window_end</span><span class="o">.</span><span class="n">validator</span>
-    <span class="k">def</span> <span class="nf">_validate_analysis_window_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_window_end</span><span class="p">,</span> <span class="n">Column</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_window_end</span> <span class="o">==</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">analysis_window_start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_window_length_dates</span> <span class="o">-</span> <span class="mi">1</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span> <span class="o">==</span> <span class="n">add_days</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_window_end</span>
-            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="AnalysisWindow"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.AnalysisWindow">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">AnalysisWindow</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents the range of days in which to measure a metric.</span>
+
+<span class="sd">    The range is measured in &quot;days after enrollment&quot;, and is inclusive.</span>
+
+<span class="sd">    For example, ``AnalysisWindow(0, 6)`` is the first week after enrollment.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        start (int): First day of the analysis window, in days since</span>
+<span class="sd">            enrollment.</span>
+<span class="sd">        end (int): Final day of the analysis window, in days since</span>
+<span class="sd">            enrollment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@start</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_validate_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+
+    <span class="nd">@end</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_validate_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span></div>
 </pre></div>
 
            </div>

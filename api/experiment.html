@@ -165,6 +165,24 @@
   <div class="section" id="module-mozanalysis.experiment">
 <span id="mozanalysis-experiment"></span><h1><a class="reference internal" href="#module-mozanalysis.experiment" title="mozanalysis.experiment"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a><a class="headerlink" href="#module-mozanalysis.experiment" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
+<dt id="mozanalysis.experiment.AnalysisWindow">
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">AnalysisWindow</code><span class="sig-paren">(</span><em class="sig-param">start: int</em>, <em class="sig-param">end: int</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#AnalysisWindow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.AnalysisWindow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the range of days in which to measure a metric.</p>
+<p>The range is measured in “days after enrollment”, and is inclusive.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">AnalysisWindow(0,</span> <span class="pre">6)</span></code> is the first week after enrollment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<em>int</em>) – First day of the analysis window, in days since
+enrollment.</p></li>
+<li><p><strong>end</strong> (<em>int</em>) – Final day of the analysis window, in days since
+enrollment.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
 <dt id="mozanalysis.experiment.Experiment">
 <em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">Experiment</code><span class="sig-paren">(</span><em class="sig-param">experiment_slug</em>, <em class="sig-param">start_date</em>, <em class="sig-param">num_dates_enrollment=None</em>, <em class="sig-param">addon_version=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get DataFrames of experiment data; store experiment metadata.</p>
@@ -438,15 +456,112 @@ standard format for queried experimental data.</p>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="mozanalysis.experiment.Experiment.get_time_series_data">
+<code class="sig-name descname">get_time_series_data</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">data_source</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dict containing DataFrames with per-client metric values.</p>
+<p>Equivalent to looping over <code class="docutils literal notranslate"><span class="pre">get_per_client_data</span></code> with
+different analysis windows, calling <code class="docutils literal notranslate"><span class="pre">.toPandas()</span></code>, and
+putting the resulting pandas DataFrames into a dictionary keyed
+by the day the analysis window starts; but this should be more
+efficient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>enrollments</strong> – A spark DataFrame of enrollments, like the one
+returned by <code class="docutils literal notranslate"><span class="pre">self.get_enrollments()</span></code>.</p></li>
+<li><p><strong>data_source</strong> – <p>A spark DataFrame containing the data needed to
+calculate the metrics. Could be <code class="docutils literal notranslate"><span class="pre">main_summary</span></code> or
+<code class="docutils literal notranslate"><span class="pre">clients_daily</span></code>. <em>Don’t</em> use <code class="docutils literal notranslate"><span class="pre">experiments</span></code>; as of 2019/04/02
+it drops data collected after people self-unenroll, so
+unenrolling users will appear to churn. Must have at least
+the following columns:</p>
+<ul>
+<li><p>client_id (str)</p></li>
+<li><p>submission_date_s3 (str)</p></li>
+<li><p>data columns referred to in <code class="docutils literal notranslate"><span class="pre">metric_list</span></code></p></li>
+</ul>
+<p>Ideally also has:</p>
+<ul>
+<li><p>experiments (map): At present this is used to exclude
+pre-enrollment ping data collected on enrollment
+day. Once it or its successor reliably tags data
+from all enrolled users, even post-unenroll, we’ll
+also join on it to exclude data from duplicate
+<code class="docutils literal notranslate"><span class="pre">client_id</span></code>s that are not enrolled in the same
+branch.</p></li>
+</ul>
+</p></li>
+<li><p><strong>metric_list</strong> – <p>A list of columns that aggregate and compute
+metrics over data grouped by <code class="docutils literal notranslate"><span class="pre">(client_id,</span> <span class="pre">branch)</span></code>, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">.</span><span class="n">metric_name</span>
+<span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;metric_name&#39;</span><span class="p">)]</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
+have complete data, e.g. ‘20190322’. If you want to ignore
+all data collected after a certain date (e.g. when the
+experiment recipe was deactivated), then do that here.</p></li>
+<li><p><strong>time_series_period</strong> (<em>'daily'</em><em> or </em><em>'weekly'</em>) – How long each
+analysis window should be.</p></li>
+<li><p><strong>keep_client_id</strong> (<em>bool</em>) – Whether to return a <code class="docutils literal notranslate"><span class="pre">client_id</span></code> column.
+Defaults to False to reduce memory usage of the results.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>the number of days between enrollment and the start of the
+analysis window. Each value is a pandas DataFrame in “the
+standard format”: one row per client, some metadata columns,
+plus one column per metric and sanity-check metric.
+Columns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>client_id (str, optional): Not necessary for
+“happy path” analyses.</p></li>
+<li><p>branch (str): The client’s branch</p></li>
+<li><p>[metric 1]: The client’s value for the first metric in
+<code class="docutils literal notranslate"><span class="pre">metric_list</span></code>.</p></li>
+<li><p>…</p></li>
+<li><p>[metric n]: The client’s value for the nth (final)
+metric in <code class="docutils literal notranslate"><span class="pre">metric_list</span></code>.</p></li>
+<li><p>[sanity check 1]: The client’s value for the first
+sanity check metric.</p></li>
+<li><p>…</p></li>
+<li><p>[sanity check n]: The client’s value for the last
+sanity check metric.</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>A <code class="docutils literal notranslate"><span class="pre">dict</span></code> of data per analysis window. Each key is an <code class="docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mozanalysis.experiment.Experiment.get_time_series_data_lazy">
+<code class="sig-name descname">get_time_series_data_lazy</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">data_source</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data_lazy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data_lazy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <code class="docutils literal notranslate"><span class="pre">get_time_series_data()</span></code> but with Spark DataFrames.</p>
+<p>See docs for <code class="docutils literal notranslate"><span class="pre">get_time_series_data()</span></code>.</p>
+<p>Sometimes the results of <code class="docutils literal notranslate"><span class="pre">get_time_series_data()</span></code> do not fit
+in memory. This method returns a dict of Spark DataFrames,
+instead of a dict of pandas DataFrames. This allows for
+subsequent processing to be done in Spark, or for smaller
+portions of data to be loaded into memory.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="mozanalysis.experiment.TimeLimits">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">TimeLimits</code><span class="sig-paren">(</span><em class="sig-param">first_enrollment_date: str</em>, <em class="sig-param">last_enrollment_date: str</em>, <em class="sig-param">analysis_window_start</em>, <em class="sig-param">analysis_window_end</em>, <em class="sig-param">analysis_window_length_dates: int</em>, <em class="sig-param">first_date_data_required: str</em>, <em class="sig-param">last_date_data_required: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">TimeLimits</code><span class="sig-paren">(</span><em class="sig-param">first_enrollment_date: str</em>, <em class="sig-param">last_enrollment_date: str</em>, <em class="sig-param">first_date_data_required: str</em>, <em class="sig-param">last_date_data_required: str</em>, <em class="sig-param">analysis_windows</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits" title="Permalink to this definition">¶</a></dt>
 <dd><p>Internal object containing various time limits.</p>
 <p>Instantiated and used by the <code class="docutils literal notranslate"><span class="pre">Experiment</span></code> class; end users
 should not need to interact with it.</p>
-<p>Do not directly instantiate: use <code class="docutils literal notranslate"><span class="pre">TimeLimits.create()</span></code>.</p>
+<p>Do not directly instantiate: use the constructors provided.</p>
 <p>There are several time constraints needed to specify a valid query
 for experiment data:</p>
 <blockquote>
@@ -476,31 +591,9 @@ to make sure that they’re consistent. The “store lots of overlapping
 state and validate” strategy was chosen over “store minimal state
 and compute on the fly” because different state is supplied in
 different contexts.</p>
-<dl class="attribute">
-<dt id="mozanalysis.experiment.TimeLimits.analysis_window_end">
-<code class="sig-name descname">analysis_window_end</code><em class="property"> = None</em><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.analysis_window_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>The integer number of days between enrollment and the end of
-the analysis window, represented either as an <code class="docutils literal notranslate"><span class="pre">int</span></code> or as a
-Column of integers in the <code class="docutils literal notranslate"><span class="pre">enrollments</span></code> DataFrame.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="mozanalysis.experiment.TimeLimits.analysis_window_length_dates">
-<code class="sig-name descname">analysis_window_length_dates</code><em class="property"> = None</em><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.analysis_window_length_dates" title="Permalink to this definition">¶</a></dt>
-<dd><p>The number of dates in the analysis window</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="mozanalysis.experiment.TimeLimits.analysis_window_start">
-<code class="sig-name descname">analysis_window_start</code><em class="property"> = None</em><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.analysis_window_start" title="Permalink to this definition">¶</a></dt>
-<dd><p>The integer number of days between enrollment and the start of
-the analysis window, represented either as an <code class="docutils literal notranslate"><span class="pre">int</span></code> or as a
-Column of integers in the <code class="docutils literal notranslate"><span class="pre">enrollments</span></code> DataFrame.</p>
-</dd></dl>
-
 <dl class="method">
-<dt id="mozanalysis.experiment.TimeLimits.create">
-<em class="property">classmethod </em><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">first_enrollment_date</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_dates</em>, <em class="sig-param">num_dates_enrollment=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.create" title="Permalink to this definition">¶</a></dt>
+<dt id="mozanalysis.experiment.TimeLimits.for_single_analysis_window">
+<em class="property">classmethod </em><code class="sig-name descname">for_single_analysis_window</code><span class="sig-paren">(</span><em class="sig-param">first_enrollment_date</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_dates</em>, <em class="sig-param">num_dates_enrollment=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.for_single_analysis_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.for_single_analysis_window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a <code class="docutils literal notranslate"><span class="pre">TimeLimits</span></code> instance with the following parameters</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -520,9 +613,31 @@ measured in days.</p></li>
 of enrollments. If <code class="docutils literal notranslate"><span class="pre">None</span></code> then use the maximum number of days
 as determined by the metric’s analysis window and
 <code class="docutils literal notranslate"><span class="pre">last_date_full_data</span></code>. Typically <code class="docutils literal notranslate"><span class="pre">7n+1</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">8</span></code>. The
-factor ‘7’ removes weekly seasonality, and the <code class="docutils literal notranslate"><span class="pre">+1</span></code> accounts
-for the fact that enrollment typically starts a few hours
-before UTC midnight.</p></li>
+factor <code class="docutils literal notranslate"><span class="pre">7</span></code> removes weekly seasonality, and the <code class="docutils literal notranslate"><span class="pre">+1</span></code>
+accounts for the fact that enrollment typically starts a few
+hours before UTC midnight.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mozanalysis.experiment.TimeLimits.for_ts">
+<em class="property">classmethod </em><code class="sig-name descname">for_ts</code><span class="sig-paren">(</span><em class="sig-param">first_enrollment_date</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period</em>, <em class="sig-param">num_dates_enrollment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.for_ts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.for_ts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <code class="docutils literal notranslate"><span class="pre">TimeLimits</span></code> instance for a time series.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>first_enrollment_date</strong> (<em>str</em>) – First date on which enrollment
+events were received; the start date of the experiment.</p></li>
+<li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
+have complete data, e.g. ‘20190322’. If you want to ignore
+all data collected after a certain date (e.g. when the
+experiment recipe was deactivated), then do that here.</p></li>
+<li><p><strong>time_series_period</strong> – ‘daily’ or ‘weekly’.</p></li>
+<li><p><strong>num_dates_enrollment</strong> (<em>int</em>) – Take this many days of client
+enrollments. This is a mandatory argument because it
+determines the number of points in the time series.</p></li>
 </ul>
 </dd>
 </dl>
