@@ -715,7 +715,7 @@ class TimeLimits(object):
     first_date_data_required = attr.ib(type=str)
     last_date_data_required = attr.ib(type=str)
 
-    analysis_windows = attr.ib(type=tuple)
+    analysis_windows = attr.ib()  # type: tuple[AnalysisWindow]
 
     @classmethod
     def for_single_analysis_window(
