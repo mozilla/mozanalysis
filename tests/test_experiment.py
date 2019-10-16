@@ -1,9 +1,10 @@
+import numpy as np
 import pyspark.sql.functions as F
 import pytest
 
 from pyspark.sql.utils import AnalysisException
 
-from mozanalysis.experiment import Experiment, TimeLimits
+from mozanalysis.experiment import Experiment, TimeLimits, AnalysisWindow
 from mozanalysis.utils import add_days
 
 
@@ -17,9 +18,7 @@ def test_time_limits_validates():
         TimeLimits(
             first_enrollment_date='20190105',
             last_enrollment_date='20190105',
-            analysis_window_start=1,
-            analysis_window_end=1,
-            analysis_window_length_dates=1,
+            analysis_windows=(AnalysisWindow(1, 1),),
             first_date_data_required='20190101',  # Before enrollments
             last_date_data_required='20190101',
         )
@@ -28,7 +27,7 @@ def test_time_limits_validates():
 def test_time_limits_create1():
     # When we have complete data for 20190114...
     # ...We have 14 dates of data for those who enrolled on the 1st
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date='20190101',
         last_date_full_data='20190114',
         analysis_start_days=0,
@@ -37,9 +36,9 @@ def test_time_limits_create1():
 
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190101'
-    assert tl.analysis_window_start == 0
-    assert tl.analysis_window_end == 13
-    assert tl.analysis_window_length_dates == 14
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 13
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
 
@@ -47,7 +46,7 @@ def test_time_limits_create1():
 def test_time_limits_create2():
     # We don't have 14 dates of data for an 8-day cohort:
     with pytest.raises(ValueError):
-        TimeLimits.create(
+        TimeLimits.for_single_analysis_window(
             first_enrollment_date='20190101',
             last_date_full_data='20190114',
             analysis_start_days=0,
@@ -57,7 +56,7 @@ def test_time_limits_create2():
 
     # We don't have 15 full dates of data for any users
     with pytest.raises(AssertionError):
-        TimeLimits.create(
+        TimeLimits.for_single_analysis_window(
             first_enrollment_date='20190101',
             last_date_full_data='20190114',
             analysis_start_days=0,
@@ -67,7 +66,7 @@ def test_time_limits_create2():
 
 def test_time_limits_create3():
     # For the 8-day cohort We have enough data for a 7 day window
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date='20190101',
         last_date_full_data='20190114',
         analysis_start_days=0,
@@ -76,16 +75,16 @@ def test_time_limits_create3():
     )
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190108'
-    assert tl.analysis_window_start == 0
-    assert tl.analysis_window_end == 6
-    assert tl.analysis_window_length_dates == 7
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 6
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
 
 
 def test_time_limits_create4():
     # Or a 2 day window
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date='20190101',
         last_date_full_data='20190114',
         analysis_start_days=0,
@@ -94,9 +93,9 @@ def test_time_limits_create4():
     )
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190108'
-    assert tl.analysis_window_start == 0
-    assert tl.analysis_window_end == 1
-    assert tl.analysis_window_length_dates == 2
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 1
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190109'
 
@@ -104,7 +103,7 @@ def test_time_limits_create4():
 def test_time_limits_create5():
     # But not an 8 day window
     with pytest.raises(ValueError):
-        TimeLimits.create(
+        TimeLimits.for_single_analysis_window(
             first_enrollment_date='20190101',
             last_date_full_data='20190114',
             analysis_start_days=0,
@@ -115,7 +114,7 @@ def test_time_limits_create5():
 
 def test_time_limits_create6():
     # Of course the flexi-experiment has data for a 1 day window
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date='20190101',
         last_date_full_data='20190114',
         analysis_start_days=0,
@@ -123,16 +122,16 @@ def test_time_limits_create6():
     )
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190114'
-    assert tl.analysis_window_start == 0
-    assert tl.analysis_window_end == 0
-    assert tl.analysis_window_length_dates == 1
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 0
     assert tl.first_date_data_required == '20190101'
     assert tl.last_date_data_required == '20190114'
 
 
 def test_time_limits_create7():
     # If the analysis starts later, so does the data source
-    tl = TimeLimits.create(
+    tl = TimeLimits.for_single_analysis_window(
         first_enrollment_date='20190101',
         last_date_full_data='20190114',
         analysis_start_days=7,
@@ -140,11 +139,86 @@ def test_time_limits_create7():
     )
     assert tl.first_enrollment_date == '20190101'
     assert tl.last_enrollment_date == '20190107'
-    assert tl.analysis_window_start == 7
-    assert tl.analysis_window_end == 7
-    assert tl.analysis_window_length_dates == 1
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 7
+    assert tl.analysis_windows[0].end == 7
     assert tl.first_date_data_required == '20190108'
     assert tl.last_date_data_required == '20190114'
+
+
+def test_ts_time_limits_create1():
+    tl = TimeLimits.for_ts(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190114',
+        time_series_period='daily',
+        num_dates_enrollment=8
+    )
+
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190108'
+    assert len(tl.analysis_windows) == 7
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 0
+    assert tl.analysis_windows[6].start == 6
+    assert tl.analysis_windows[6].end == 6
+    assert tl.first_date_data_required == '20190101'
+    assert tl.last_date_data_required == '20190114'
+
+
+def test_ts_time_limits_create2():
+    tl = TimeLimits.for_ts(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190114',
+        time_series_period='weekly',
+        num_dates_enrollment=8
+    )
+
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190108'
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 6
+    assert tl.first_date_data_required == '20190101'
+    assert tl.last_date_data_required == '20190114'
+
+
+def test_ts_time_limits_create3():
+    tl = TimeLimits.for_ts(
+        first_enrollment_date='20190101',
+        last_date_full_data='20190115',
+        time_series_period='weekly',
+        num_dates_enrollment=8
+    )
+
+    assert tl.first_enrollment_date == '20190101'
+    assert tl.last_enrollment_date == '20190108'
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 6
+    assert tl.first_date_data_required == '20190101'
+    assert tl.last_date_data_required == '20190114'
+
+
+def test_ts_time_limits_create_not_enough_data():
+    with pytest.raises(ValueError):
+        TimeLimits.for_ts(
+            first_enrollment_date='20190101',
+            last_date_full_data='20190113',
+            time_series_period='weekly',
+            num_dates_enrollment=8
+        )
+
+
+def test_analysis_window_validates_start():
+    AnalysisWindow(0, 1)
+    with pytest.raises(AssertionError):
+        AnalysisWindow(-1, 1)
+
+
+def test_analysis_window_validates_end():
+    AnalysisWindow(5, 5)
+    with pytest.raises(AssertionError):
+        AnalysisWindow(5, 4)
 
 
 def _get_data_source(spark):
@@ -191,7 +265,7 @@ def test_process_data_source(spark):
     assert _simple_return_agg_date(F.min, data_source) < start_date
     assert _simple_return_agg_date(F.max, data_source) > end_date
 
-    tl_03 = TimeLimits.create(
+    tl_03 = TimeLimits.for_single_analysis_window(
         first_enrollment_date=exp_8d.start_date,
         last_date_full_data=end_date,
         analysis_start_days=0,
@@ -206,7 +280,7 @@ def test_process_data_source(spark):
     assert _simple_return_agg_date(F.min, proc_ds) == tl_03.first_date_data_required
     assert _simple_return_agg_date(F.max, proc_ds) == tl_03.last_date_data_required
 
-    tl_23 = TimeLimits.create(
+    tl_23 = TimeLimits.for_single_analysis_window(
         first_enrollment_date=exp_8d.start_date,
         last_date_full_data=end_date,
         analysis_start_days=2,
@@ -250,36 +324,6 @@ def _get_enrollment_view(slug):
     return inner
 
 
-def test_process_enrollments(spark):
-    exp = Experiment('a-stub', '20190101')
-    enrollments = exp.get_enrollments(
-        spark,
-        _get_enrollment_view(slug="a-stub")
-    )
-    assert enrollments.count() == 4
-
-    # With final data collected on '20190114', we have 7 dates of data
-    # for 'cccc' enrolled on '20190108' but not for 'dddd' enrolled on
-    # '20190109'.
-    tl = TimeLimits.create(
-        first_enrollment_date=exp.start_date,
-        last_date_full_data='20190114',
-        analysis_start_days=0,
-        analysis_length_dates=7,
-        num_dates_enrollment=exp.num_dates_enrollment
-    )
-    assert tl.last_enrollment_date == '20190108'
-    assert tl.analysis_window_end == 6
-
-    fe = exp._process_enrollments(enrollments, tl)
-    assert fe.count() == 3
-
-    fe = exp._process_enrollments(enrollments.alias('main_summary'), tl)
-    assert fe.select(F.col('enrollments.enrollment_date'))
-    with pytest.raises(AnalysisException):
-        assert fe.select(F.col('main_summary.enrollment_date'))
-
-
 def test_get_enrollments(spark):
     exp = Experiment('a-stub', '20190101')
     view_method = _get_enrollment_view("a-stub")
@@ -314,21 +358,208 @@ def test_get_enrollments_debug_dupes(spark):
     assert (penrl2['num_events'] == 1).all()
 
 
+def test_add_analysis_windows_to_enrollments(spark):
+    exp = Experiment('a-stub', '20190101', num_dates_enrollment=8)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    assert enrollments.count() == 3
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date=exp.start_date,
+        last_date_full_data='20190114',
+        time_series_period='daily',
+        num_dates_enrollment=exp.num_dates_enrollment,
+    )
+    assert len(tl.analysis_windows) == 7
+
+    new_enrollments = exp._add_analysis_windows_to_enrollments(enrollments, tl)
+
+    nep = new_enrollments.toPandas()
+    assert len(nep) == enrollments.count() * len(tl.analysis_windows)
+
+    a = nep[nep['client_id'] == 'aaaa']
+    assert len(a) == len(tl.analysis_windows)
+    assert (a.mozanalysis_analysis_window_start.sort_values() == np.arange(
+        len(tl.analysis_windows))
+    ).all()
+    assert (a.mozanalysis_analysis_window_end.sort_values() == np.arange(
+        len(tl.analysis_windows))
+    ).all()
+
+
+def test_process_enrollments(spark):
+    exp = Experiment('a-stub', '20190101')
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    assert enrollments.count() == 4
+
+    # With final data collected on '20190114', we have 7 dates of data
+    # for 'cccc' enrolled on '20190108' but not for 'dddd' enrolled on
+    # '20190109'.
+    tl = TimeLimits.for_single_analysis_window(
+        first_enrollment_date=exp.start_date,
+        last_date_full_data='20190114',
+        analysis_start_days=0,
+        analysis_length_dates=7,
+        num_dates_enrollment=exp.num_dates_enrollment
+    )
+    assert tl.last_enrollment_date == '20190108'
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].end == 6
+
+    pe = exp._process_enrollments(enrollments, tl)
+    assert pe.count() == 3
+
+    pe = exp._process_enrollments(enrollments.alias('main_summary'), tl)
+    assert pe.select(F.col('enrollments.enrollment_date'))
+    with pytest.raises(AnalysisException):
+        assert pe.select(F.col('main_summary.enrollment_date'))
+
+
 def test_get_per_client_data_doesnt_crash(spark):
     exp = Experiment('a-stub', '20190101', 8)
-    enrollments = _get_enrollment_view(exp.experiment_slug)(spark)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
     data_source = _get_data_source(spark)
 
     exp.get_per_client_data(
         enrollments,
         data_source,
         [
-            F.sum(data_source.constant_one).alias('something_meaningless'),
+            F.coalesce(F.sum(
+                data_source.constant_one
+            ), F.lit(0)).alias('something_meaningless'),
         ],
         '20190114',
         0,
         3
     )
+
+
+def test_get_time_series_data(spark):
+    exp = Experiment('a-stub', '20190101', 8)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    data_source = _get_data_source(spark)
+
+    res = exp.get_time_series_data(
+        enrollments,
+        data_source,
+        [
+            F.coalesce(F.sum(
+                data_source.constant_one
+            ), F.lit(0)).alias('how_many_ones'),
+        ],
+        '20190128',
+        time_series_period='weekly',
+        keep_client_id=True,
+    )
+
+    assert len(res) == 3
+    df = res[0]
+    assert df.client_id.nunique() == 3
+    assert len(df) == 3
+
+    df = df.set_index('client_id')
+
+    assert df.loc['aaaa', 'how_many_ones'] == 7
+    assert df.loc['bbbb', 'how_many_ones'] == 7
+    assert df.loc['cccc', 'how_many_ones'] == 0
+    assert (df['has_contradictory_branch'] == 0).all()
+    assert (df['has_non_enrolled_data'] == 0).all()
+
+    df = res[14]
+    assert df.client_id.nunique() == 3
+    assert len(df) == 3
+
+    df = df.set_index('client_id')
+
+    assert df.loc['aaaa', 'how_many_ones'] == 1
+    assert df.loc['bbbb', 'how_many_ones'] == 1
+    assert df.loc['cccc', 'how_many_ones'] == 0
+    assert (df['has_contradictory_branch'] == 0).all()
+    assert (df['has_non_enrolled_data'] == 0).all()
+
+
+def test_get_time_series_data_daily(spark):
+    exp = Experiment('a-stub', '20190101', 8)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    data_source = _get_data_source(spark)
+
+    res = exp.get_time_series_data(
+        enrollments,
+        data_source,
+        [
+            F.coalesce(F.sum(
+                data_source.constant_one
+            ), F.lit(0)).alias('should_be_1'),
+        ],
+        '20190114',
+        time_series_period='daily',
+        keep_client_id=True,
+    )
+
+    assert len(res) == 7
+
+    for df in res.values():
+        assert df.client_id.nunique() == 3
+        assert len(df) == 3
+
+        df = df.set_index('client_id')
+
+        assert df.loc['aaaa', 'should_be_1'] == 1
+        assert df.loc['bbbb', 'should_be_1'] == 1
+        assert df.loc['cccc', 'should_be_1'] == 0
+        assert (df['has_contradictory_branch'] == 0).all()
+        assert (df['has_non_enrolled_data'] == 0).all()
+
+
+def test_get_time_series_data_lazy_daily(spark):
+    exp = Experiment('a-stub', '20190101', 8)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+    data_source = _get_data_source(spark)
+
+    res = exp.get_time_series_data_lazy(
+        enrollments,
+        data_source,
+        [
+            F.coalesce(F.sum(
+                data_source.constant_one
+            ), F.lit(0)).alias('should_be_1'),
+        ],
+        '20190114',
+        time_series_period='daily',
+        keep_client_id=True,
+    )
+
+    assert len(res) == 7
+
+    for df in res.values():
+        pdf = df.toPandas()
+        assert pdf.client_id.nunique() == 3
+        assert len(pdf) == 3
+
+        pdf = pdf.set_index('client_id')
+
+        assert pdf.loc['aaaa', 'should_be_1'] == 1
+        assert pdf.loc['bbbb', 'should_be_1'] == 1
+        assert pdf.loc['cccc', 'should_be_1'] == 0
+        assert (pdf['has_contradictory_branch'] == 0).all()
+        assert (pdf['has_non_enrolled_data'] == 0).all()
 
 
 def test_get_per_client_data_join(spark):
@@ -403,14 +634,14 @@ def test_get_per_client_data_join(spark):
     assert bob_badtiming.first()['some_value'] == 0
     # Check that _process_data_source didn't do the
     # heavy lifting above
-    time_limits = TimeLimits.create(
+    time_limits = TimeLimits.for_single_analysis_window(
         exp.start_date, '20190114', 1, 3, exp.num_dates_enrollment
     )
-    fds = exp._process_data_source(data_source, time_limits)
-    assert fds.filter(
-        fds.client_id == 'bob-badtiming'
+    pds = exp._process_data_source(data_source, time_limits)
+    assert pds.filter(
+        pds.client_id == 'bob-badtiming'
     ).select(
-        F.sum(fds.some_value).alias('agg_val')
+        F.sum(pds.some_value).alias('agg_val')
     ).first()['agg_val'] == 3
 
     # Check that relevant data was included appropriately
