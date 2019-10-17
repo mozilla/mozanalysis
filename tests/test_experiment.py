@@ -719,7 +719,6 @@ def test_get_results_for_one_data_source(spark):
         3,
     )
 
-    # FIXME: update fixtures so this is unnecessary?
     enrollments = exp._add_analysis_windows_to_enrollments(enrollments, time_limits)
 
     res = exp._get_results_for_one_data_source(
@@ -728,7 +727,6 @@ def test_get_results_for_one_data_source(spark):
         [
             F.coalesce(F.sum(data_source.some_value), F.lit(0)).alias('some_value'),
         ],
-        time_limits
     )
 
     # Check that the dataframe has the correct number of rows
@@ -760,7 +758,6 @@ def test_get_results_for_one_data_source(spark):
         [
             F.coalesce(F.sum(data_source.some_value), F.lit(0)).alias('some_value'),
         ],
-        time_limits
     )
 
     assert res2.count() == enrollments.count()
@@ -804,7 +801,6 @@ def test_no_analysis_exception_when_shared_parent_dataframe(spark):
         [
             F.max(F.col('some_value'))
         ],
-        time_limits
     )
 
 
