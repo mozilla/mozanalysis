@@ -30,7 +30,7 @@ def test_agg_any(spark):
 
 
 def register_fixture(spark, name='simple_fixture'):
-    """Register a clients_daily fixture as a table"""
+    """Register a data source fixture as a table"""
     df = spark.createDataFrame(
         [
             ('aaaa', 1, True),
