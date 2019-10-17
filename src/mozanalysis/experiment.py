@@ -44,7 +44,8 @@ class Experiment(object):
 
     Example usage::
 
-        cd = spark.table('clients_daily')
+        from mozanalysis.metrics.desktop import active_hours, uri_count
+
 
         experiment = Experiment(
             experiment_slug='pref-flip-defaultoncookierestrictions-1506704',
@@ -55,15 +56,9 @@ class Experiment(object):
 
         res = experiment.get_per_client_data(
             enrollments,
-            cd,
             [
-                F.sum(F.coalesce(
-                    cd.active_hours_sum, F.lit(0)
-                )).alias('active_hours'),
-                F.sum(F.coalesce(
-                    cd.scalar_parent_browser_engagement_total_uri_count_sum,
-                    F.lit(0)
-                )).alias('uri_count'),
+                active_hours,
+                uri_count
             ],
             last_date_full_data='20190107',
             analysis_start_days=0,
@@ -229,8 +224,8 @@ class Experiment(object):
         Args:
             enrollments: A spark DataFrame of enrollments, like the one
                 returned by ``self.get_enrollments()``.
-            metric_list (list of mozanalysis.metric.Metric):
-                The metrics to analyze.
+            metric_list (list of mozanalysis.metric.Metric): The metrics
+                to analyze.
             last_date_full_data (str): The most recent date for which we
                 have complete data, e.g. '20190322'. If you want to ignore
                 all data collected after a certain date (e.g. when the
@@ -245,23 +240,26 @@ class Experiment(object):
 
         Returns:
             A spark DataFrame of experiment data. One row per ``client_id``.
-            One or two metadata columns, then one column per metric in
-            ``metric_list``. Then one column per sanity-check metric.
-            Columns:
+            Some metadata columns, then one column per metric in
+            ``metric_list``, and one column per sanity-check metric.
+            Columns (not necessarily in order):
 
                 * client_id (str, optional): Not necessary for
                   "happy path" analyses.
                 * branch (str): The client's branch
+                * other columns of ``enrollments``.
                 * [metric 1]: The client's value for the first metric in
                   ``metric_list``.
                 * ...
                 * [metric n]: The client's value for the nth (final)
                   metric in ``metric_list``.
                 * [sanity check 1]: The client's value for the first
-                  sanity check metric.
+                  sanity check metric for the first data source that
+                  supports sanity checks.
                 * ...
                 * [sanity check n]: The client's value for the last
-                  sanity check metric.
+                  sanity check metric for the last data source that
+                  supports sanity checks.
 
             This format - the schema plus there being one row per
             enrolled client, regardless of whether the client has data
@@ -314,21 +312,24 @@ class Experiment(object):
             analysis window. Each value is a pandas DataFrame in "the
             standard format": one row per client, some metadata columns,
             plus one column per metric and sanity-check metric.
-            Columns:
+            Columns (not necessarily in order):
 
                 * client_id (str, optional): Not necessary for
                   "happy path" analyses.
                 * branch (str): The client's branch
+                * other columns of ``enrollments``.
                 * [metric 1]: The client's value for the first metric in
                   ``metric_list``.
                 * ...
                 * [metric n]: The client's value for the nth (final)
                   metric in ``metric_list``.
                 * [sanity check 1]: The client's value for the first
-                  sanity check metric.
+                  sanity check metric for the first data source that
+                  supports sanity checks.
                 * ...
                 * [sanity check n]: The client's value for the last
-                  sanity check metric.
+                  sanity check metric for the last data source that
+                  supports sanity checks.
         """
         time_limits = TimeLimits.for_ts(
             self.start_date, last_date_full_data, time_series_period,
