@@ -250,7 +250,7 @@ def _get_data_source_df(spark):
 
 def _get_metrics(spark):
     ds_df = _get_data_source_df(spark)
-    ds = DataSource.from_dataframe('bla', ds_df)
+    ds = DataSource.from_dataframe('bla_ds', ds_df)
 
     return {
         'how_many_ones':
@@ -472,12 +472,13 @@ def test_get_time_series_data(spark):
     assert len(df) == 3
 
     df = df.set_index('client_id')
+    print(df.columns)
 
     assert df.loc['aaaa', 'how_many_ones'] == 7
     assert df.loc['bbbb', 'how_many_ones'] == 7
     assert df.loc['cccc', 'how_many_ones'] == 0
-    assert (df['has_contradictory_branch'] == 0).all()
-    assert (df['has_non_enrolled_data'] == 0).all()
+    assert (df['bla_ds_has_contradictory_branch'] == 0).all()
+    assert (df['bla_ds_has_non_enrolled_data'] == 0).all()
 
     df = res[14]
     assert df.client_id.nunique() == 3
@@ -488,8 +489,8 @@ def test_get_time_series_data(spark):
     assert df.loc['aaaa', 'how_many_ones'] == 1
     assert df.loc['bbbb', 'how_many_ones'] == 1
     assert df.loc['cccc', 'how_many_ones'] == 0
-    assert (df['has_contradictory_branch'] == 0).all()
-    assert (df['has_non_enrolled_data'] == 0).all()
+    assert (df['bla_ds_has_contradictory_branch'] == 0).all()
+    assert (df['bla_ds_has_non_enrolled_data'] == 0).all()
 
 
 def test_get_time_series_data_daily(spark):
@@ -520,8 +521,8 @@ def test_get_time_series_data_daily(spark):
         assert df.loc['aaaa', 'how_many_ones'] == 1
         assert df.loc['bbbb', 'how_many_ones'] == 1
         assert df.loc['cccc', 'how_many_ones'] == 0
-        assert (df['has_contradictory_branch'] == 0).all()
-        assert (df['has_non_enrolled_data'] == 0).all()
+        assert (df['bla_ds_has_contradictory_branch'] == 0).all()
+        assert (df['bla_ds_has_non_enrolled_data'] == 0).all()
 
 
 def test_get_time_series_data_lazy_daily(spark):
@@ -553,8 +554,8 @@ def test_get_time_series_data_lazy_daily(spark):
         assert pdf.loc['aaaa', 'how_many_ones'] == 1
         assert pdf.loc['bbbb', 'how_many_ones'] == 1
         assert pdf.loc['cccc', 'how_many_ones'] == 0
-        assert (pdf['has_contradictory_branch'] == 0).all()
-        assert (pdf['has_non_enrolled_data'] == 0).all()
+        assert (pdf['bla_ds_has_contradictory_branch'] == 0).all()
+        assert (pdf['bla_ds_has_non_enrolled_data'] == 0).all()
 
 
 def test_get_per_client_data_join(spark):
@@ -824,6 +825,12 @@ def register_data_source_fixture(spark, name='simple_fixture'):
 
 
 def test_process_metrics(spark):
+    exp = Experiment('a-stub', '20190101', num_dates_enrollment=8)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+
     ds_df_A = register_data_source_fixture(spark, name='ds_df_A')
     ds_df_B = register_data_source_fixture(spark, name='ds_df_B')
 
@@ -838,7 +845,7 @@ def test_process_metrics(spark):
 
     exp = Experiment('a-stub', '20190101')
 
-    data_sources_and_metrics = exp._process_metrics(spark, metric_list)
+    data_sources_and_metrics = exp._process_metrics(enrollments, metric_list)
 
     assert len(data_sources_and_metrics) == 2
 
@@ -850,6 +857,12 @@ def test_process_metrics(spark):
 
 
 def test_process_metrics_dupe_data_source(spark):
+    exp = Experiment('a-stub', '20190101', num_dates_enrollment=8)
+    enrollments = exp.get_enrollments(
+        spark,
+        _get_enrollment_view(slug="a-stub")
+    )
+
     ds_df = register_data_source_fixture(spark, name='ds_df_A')
 
     ds_1 = DataSource.from_dataframe('ds_df_A', ds_df)
@@ -862,7 +875,7 @@ def test_process_metrics_dupe_data_source(spark):
 
     exp = Experiment('a-stub', '20190101')
 
-    data_sources_and_metrics = exp._process_metrics(spark, metric_list)
+    data_sources_and_metrics = exp._process_metrics(enrollments, metric_list)
 
     assert len(data_sources_and_metrics) == 1
 

@@ -427,10 +427,6 @@ class Experiment(object):
         """
         join_on = self._get_join_conditions(enrollments, data_source_df)
 
-        sanity_metrics = self._get_telemetry_sanity_check_metrics(
-            enrollments, data_source_df
-        )
-
         res = enrollments.join(
             data_source_df,
             join_on,
@@ -438,7 +434,7 @@ class Experiment(object):
         ).groupBy(
             *[enrollments[c] for c in enrollments.columns]  # Yes, really.
         ).agg(
-            *(metric_column_list + sanity_metrics)
+            *metric_column_list
         )
 
         return res
@@ -588,19 +584,21 @@ class Experiment(object):
 
         return enrollments.alias('enrollments')
 
-    def _process_metrics(self, spark, metric_list):
+    def _process_metrics(self, enrollments, metric_list):
         """Return a dict of lists of Columns, representing metrics.
 
         Each key is the DataFrame to which the Columns belong.
         """
+        spark = enrollments.sql_ctx.sparkSession
+
         res = {}
-        for m in metric_list:
+        for m in reversed(metric_list):
             ds_df = m.data_source.get_dataframe(spark, self)
 
             if ds_df not in res:
-                res[ds_df] = []  # This looks clunky but we're augmenting it soon
+                res[ds_df] = m.data_source.get_sanity_metric_cols(self, enrollments)
 
-            res[ds_df].append(m.get_col(spark, self))
+            res[ds_df].insert(0, m.get_col(spark, self))
 
         return res
 
@@ -624,36 +622,6 @@ class Experiment(object):
                 time_limits.last_date_data_required
             )
         ).alias('data_source')
-
-    def _get_telemetry_sanity_check_metrics(self, enrollments, data_source):
-        """Return aggregations that check for problems with a client."""
-
-        # TODO: Once we know what form the metrics library will take,
-        # we should move the below metric definitions and documentation
-        # into it.
-
-        if dict(data_source.dtypes).get('experiments') != 'map<string,string>':
-            # Not all tables have an experiments map - can't make these checks.
-            return []
-
-        return [
-
-            # Check to see whether the client_id is also enrolled in other branches
-            # E.g. indicates cloned profiles. Fraction of such users should be
-            # small, and similar between branches.
-            F.max(F.coalesce((
-                data_source.experiments[self.experiment_slug] != enrollments.branch
-            ).astype('int'), F.lit(0))).alias('has_contradictory_branch'),
-
-            # Check to see whether the client_id was sending data in the analysis
-            # window that wasn't tagged as being part of the experiment. Indicates
-            # either a client_id clash, or the client unenrolling. Fraction of such
-            # users should be small, and similar between branches.
-            F.max(F.coalesce((
-                ~F.isnull(data_source.experiments)
-                & F.isnull(data_source.experiments[self.experiment_slug])
-            ).astype('int'), F.lit(0))).alias('has_non_enrolled_data'),
-        ]
 
 
 @attr.s(frozen=True, slots=True)

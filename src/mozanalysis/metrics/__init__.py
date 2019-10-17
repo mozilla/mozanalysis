@@ -129,6 +129,56 @@ class DataSource(object):
 
         return spark._MOZANALYSIS_DATA_SOURCE_CACHE[key]
 
+    def get_sanity_metric_cols(self, experiment, enrollments):
+        """Return a list of sanity metric Spark Columns.
+
+        Args:
+            experiment (Experiment): The experiment being analysed.
+            enrollments (DataFrame): The DataFrame of enrollments,
+                typically obtained from ``Experiment.get_enrollments()``
+        """
+        if 'branch' not in enrollments.columns:
+            # Not running in an experiment context; the below are meaningless
+            return []
+
+        spark = enrollments.sql_ctx.sparkSession
+        ds_df = self.get_dataframe(spark, experiment)
+
+        if dict(ds_df.dtypes).get('experiments') == 'map<string,string>':
+            # Regular desktop telemetry
+            experiments_col = ds_df.experiments
+            reported_branch = ds_df.experiments[experiment.experiment_slug]
+
+        elif 'ping_info' in ds_df.schema and len(
+            x
+            for x in ds_df.schema['ping_info'].jsonValue(
+            ).get('type', {}).get('fields', {})
+            if x.get('name') == 'experiments'
+        ):
+            # Glean
+            experiments_col = ds_df.ping_info.experiments
+            reported_branch = experiments_col[experiment.experiment_slug].branch
+
+        else:
+            return []
+
+        return [
+            # Check to see whether the client_id was sending data in the analysis
+            # window that wasn't tagged as being part of the experiment. Indicates
+            # either a client_id clash, or the client unenrolling. The fraction of
+            # such users should be small, and similar between branches.
+            agg_any(
+                experiments_col.isNotNull()
+                & experiments_col[experiment.experiment_slug].isNull()
+            ).alias(self.name + '_has_non_enrolled_data'),
+            # Check to see whether the client_id is also enrolled in other branches.
+            # Indicates problems, e.g. cloned profiles. The fraction of such users
+            # should be small, and similar between branches.
+            agg_any(reported_branch != enrollments.branch).alias(
+                self.name + '_has_contradictory_branch'
+            ),
+        ]
+
 
 @attr.s(frozen=True, slots=True)
 class Metric(object):
