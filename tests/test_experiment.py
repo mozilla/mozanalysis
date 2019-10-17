@@ -852,8 +852,12 @@ def test_process_metrics(spark):
     assert len(data_sources_and_metrics[ds_df_A]) == 2
     assert len(data_sources_and_metrics[ds_df_B]) == 1
 
-    assert repr(data_sources_and_metrics[ds_df_B][0]) == \
-        "Column<b'numeric_col AS `m3`'>"
+    assert 'numeric_col' in repr(data_sources_and_metrics[ds_df_B][0])
+    assert '`m3`' in repr(data_sources_and_metrics[ds_df_B][0])
+    assert repr(data_sources_and_metrics[ds_df_B][0]) in {
+        "Column<b'numeric_col AS `m3`'>",  # py3
+        "Column<numeric_col AS `m3`>",  # py2
+    }
 
 
 def test_process_metrics_dupe_data_source(spark):
