@@ -86,6 +86,10 @@ class DataSource(object):
     def from_dataframe(cls, name, dataframe):
         """Return a ``DataSource`` for a DataFrame.
 
+        Don't repeatedly call this with the same ``dataframe``, because
+        we won't recognise that the different ``DataSource`` instances
+        are equal.
+
         Args:
             name (str): Name for the ``DataSource``.
             dataframe (DataFrame): The DataFrame to wrap.
@@ -203,30 +207,24 @@ class Metric(object):
         return f
 
     @classmethod
-    def from_col(cls, metric_name, col, df_name, df):
+    def from_col(cls, metric_name, col, data_source):
         """Return a ``Metric`` defined by ``col``.
 
         Args:
             metric_name (str): Name for the resulting Column.
             col (Column): Spark Column representing the computed metric.
-            df_name (str): Name for the source DataFrame.
-            df (DataFrame): Source DataFrame, needed to compute Column.
+            data_source (DataSource): DataSource wrapper for the source
+                DataFrame for the Column.
 
         Example::
-            cd = spark.table('clients_daily')
+            cd_ds = DataSource.from_table_name('clients_daily')
 
             active_hours = Metric.from_col(
                 name='active_hours',
                 col=agg_sum(cd.active_hours_sum),
-                df_name='cd',
-                df=cd,
+                data_source=cd_ds
             )
         """
-        data_source = DataSource.from_dataframe(
-            name=df_name,
-            dataframe=df
-        )
-
         return cls(
             name=metric_name,
             data_source=data_source,

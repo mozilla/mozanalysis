@@ -108,11 +108,12 @@ def test_metric_from_func(spark):
 def test_metric_from_col(spark):
     orig_df = register_fixture(spark)
 
+    ds = mm.DataSource.from_dataframe('an_ordinary_data_source', orig_df)
+
     metric = mm.Metric.from_col(
         'a_special_metric',
         mm.agg_sum(orig_df.numeric_col),
-        'an_ordinary_data_source',
-        orig_df
+        ds
     )
 
     assert metric.name == 'a_special_metric'
