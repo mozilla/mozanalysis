@@ -669,6 +669,105 @@ def test_get_per_client_data_join(spark):
     assert res2.count() == enrollments.count()
 
 
+def test_get_results_for_one_data_source(spark):
+    exp = Experiment('a-stub', '20190101')
+
+    enrollments = spark.createDataFrame(
+        [
+            ['aaaa', 'control', '20190101'],
+            ['bbbb', 'test', '20190101'],
+            ['cccc', 'control', '20190108'],
+            ['dddd', 'test', '20190109'],
+            ['annie-nodata', 'control', '20190101'],
+            ['bob-badtiming', 'test', '20190102'],
+            ['carol-gooddata', 'test', '20190101'],
+            ['derek-lateisok', 'control', '20190110'],
+        ],
+        [
+            "client_id",
+            "branch",
+            "enrollment_date",
+        ],
+    )
+
+    ex_d = {'a-stub': 'fake-branch-lifes-too-short'}
+    data_source = spark.createDataFrame(
+        [
+            # bob-badtiming only has data before/after analysis window
+            # but missed by `process_data_source`
+            ['bob-badtiming', '20190102', ex_d, 1],
+            ['bob-badtiming', '20190106', ex_d, 2],
+            # carol-gooddata has data on two days (including a dupe day)
+            ['carol-gooddata', '20190102', ex_d, 3],
+            ['carol-gooddata', '20190102', ex_d, 2],
+            ['carol-gooddata', '20190104', ex_d, 6],
+            # derek-lateisok has data before and during the analysis window
+            ['derek-lateisok', '20190110', ex_d, 1000],
+            ['derek-lateisok', '20190111', ex_d, 1],
+            # TODO: exercise the last condition on the join
+        ],
+        [
+            "client_id",
+            "submission_date_s3",
+            "experiments",
+            "some_value",
+        ],
+    )
+
+    time_limits = TimeLimits.for_single_analysis_window(
+        exp.start_date,
+        '20190114',
+        1,
+        3,
+    )
+
+    # FIXME: update fixtures so this is unnecessary?
+    enrollments = exp._add_analysis_windows_to_enrollments(enrollments, time_limits)
+
+    res = exp._get_results_for_one_data_source(
+        enrollments,
+        data_source,
+        [
+            F.coalesce(F.sum(data_source.some_value), F.lit(0)).alias('some_value'),
+        ],
+        time_limits
+    )
+
+    # Check that the dataframe has the correct number of rows
+    assert res.count() == enrollments.count()
+
+    # Check that dataless enrollments are handled correctly
+    annie_nodata = res.filter(res.client_id == 'annie-nodata')
+    assert annie_nodata.count() == 1
+    assert annie_nodata.first()['some_value'] == 0
+
+    # Check that early and late data were ignored
+    bob_badtiming = res.filter(res.client_id == 'bob-badtiming')
+    assert bob_badtiming.count() == 1
+    assert bob_badtiming.first()['some_value'] == 0
+
+    # Check that relevant data was included appropriately
+    carol_gooddata = res.filter(res.client_id == 'carol-gooddata')
+    assert carol_gooddata.count() == 1
+    assert carol_gooddata.first()['some_value'] == 11
+
+    derek_lateisok = res.filter(res.client_id == 'derek-lateisok')
+    assert derek_lateisok.count() == 1
+    assert derek_lateisok.first()['some_value'] == 1
+
+    # Check that it still works for `data_source`s without an experiments map
+    res2 = exp._get_results_for_one_data_source(
+        enrollments,
+        data_source.drop('experiments'),
+        [
+            F.coalesce(F.sum(data_source.some_value), F.lit(0)).alias('some_value'),
+        ],
+        time_limits
+    )
+
+    assert res2.count() == enrollments.count()
+
+
 def test_no_analysis_exception_when_shared_parent_dataframe(spark):
     # Check that we don't fall victim to
     # https://issues.apache.org/jira/browse/SPARK-10925

@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import attr
+
+from functools import reduce
 from pyspark.sql import functions as F
 
 from mozanalysis.utils import add_days, date_sub
@@ -446,8 +448,34 @@ class Experiment(object):
             enrollments, time_limits
         )
 
-        data_source = self._process_data_source(data_source, time_limits)
+        data_sources_and_metrics = {data_source: metric_list}  # FIXME: Temporary hack
 
+        res_per_ds = [
+            self._get_results_for_one_data_source(
+                enrollments,
+                self._process_data_source(ds, time_limits),
+                ml,
+                time_limits
+            )
+            for ds, ml in data_sources_and_metrics.items()
+        ]
+
+        res = reduce(lambda x, y: x.join(y, enrollments.columns), res_per_ds)
+
+        if keep_client_id:
+            return res
+
+        return res.drop(enrollments.client_id)
+
+    def _get_results_for_one_data_source(
+        self, enrollments, data_source, metric_list, time_limits
+    ):
+        """Return a DataFrame of aggregated per-client metrics.
+
+        Left join ``data_source`` to ``enrollments`` to get per-client
+        data within the ``time_limits``, then aggregate to compute the
+        requested metrics plus some sanity checks.
+        """
         join_on = self._get_join_conditions(enrollments, data_source, time_limits)
 
         sanity_metrics = self._get_telemetry_sanity_check_metrics(
@@ -463,10 +491,8 @@ class Experiment(object):
         ).agg(
             *(metric_list + sanity_metrics)
         )
-        if keep_client_id:
-            return res
 
-        return res.drop(enrollments.client_id)
+        return res
 
     def _get_join_conditions(self, enrollments, data_source, time_limits):
         """Return a list of join conditions.
