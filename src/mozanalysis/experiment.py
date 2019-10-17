@@ -646,6 +646,22 @@ class Experiment(object):
 
         return enrollments.alias('enrollments')
 
+    def _process_metrics(self, spark, metric_list):
+        """Return a dict of lists of Columns, representing metrics.
+
+        Each key is the DataFrame to which the Columns belong.
+        """
+        res = {}
+        for m in metric_list:
+            ds_df = m.data_source.get_dataframe(spark, self)
+
+            if ds_df not in res:
+                res[ds_df] = []  # This looks clunky but we're augmenting it soon
+
+            res[ds_df].append(m.get_col(spark, self))
+
+        return res
+
     @staticmethod
     def _process_data_source(data_source, time_limits):
         """Return ``data_source``, filtered to the relevant dates.

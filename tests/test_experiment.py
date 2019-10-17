@@ -3,8 +3,10 @@ import pyspark.sql.functions as F
 import pytest
 
 from pyspark.sql.utils import AnalysisException
+from pyspark.sql import DataFrame, Column
 
 from mozanalysis.experiment import Experiment, TimeLimits, AnalysisWindow
+from mozanalysis.metrics import Metric, DataSource
 from mozanalysis.utils import add_days
 
 
@@ -801,3 +803,68 @@ def test_no_analysis_exception_when_shared_parent_dataframe(spark):
         analysis_start_days=28,
         analysis_length_days=7
     )
+
+
+def register_data_source_fixture(spark, name='simple_fixture'):
+    """Register a data source fixture as a table"""
+    df = spark.createDataFrame(
+        [
+            ('aaaa', 1, True),
+            ('aaaa', 1, True),
+            ('aaaa', None, None),
+            ('aaaa', 0, False),
+            ('bb', None, None),
+            ('ccc', 5, True),
+            ('dd', 0, False),
+        ],
+        ["client_id", "numeric_col", "bool_col"]
+    )
+    df.createOrReplaceTempView(name)
+
+    return df
+
+
+def test_process_metrics(spark):
+    ds_df_A = register_data_source_fixture(spark, name='ds_df_A')
+    ds_df_B = register_data_source_fixture(spark, name='ds_df_B')
+
+    ds_A = DataSource.from_dataframe('ds_df_A', ds_df_A)
+    ds_B = DataSource.from_dataframe('ds_df_B', ds_df_B)
+
+    m1 = Metric.from_col('m1', ds_df_A.numeric_col, ds_A)
+    m2 = Metric.from_col('m2', ds_df_A.bool_col, ds_A)
+    m3 = Metric.from_col('m3', ds_df_B.numeric_col, ds_B)
+
+    metric_list = [m1, m2, m3]
+
+    exp = Experiment('a-stub', '20190101')
+
+    data_sources_and_metrics = exp._process_metrics(spark, metric_list)
+
+    assert len(data_sources_and_metrics) == 2
+
+    assert len(data_sources_and_metrics[ds_df_A]) == 2
+    assert len(data_sources_and_metrics[ds_df_B]) == 1
+
+    assert repr(data_sources_and_metrics[ds_df_B][0]) == \
+        "Column<b'numeric_col AS `m3`'>"
+
+
+def test_process_metrics_dupe_data_source(spark):
+    ds_df = register_data_source_fixture(spark, name='ds_df_A')
+
+    ds_1 = DataSource.from_dataframe('ds_df_A', ds_df)
+    ds_2 = DataSource.from_dataframe('ds_df_A', ds_df)
+
+    m1 = Metric.from_col('m1', ds_df.numeric_col, ds_1)
+    m2 = Metric.from_col('m2', ds_df.bool_col, ds_2)
+
+    metric_list = [m1, m2]
+
+    exp = Experiment('a-stub', '20190101')
+
+    data_sources_and_metrics = exp._process_metrics(spark, metric_list)
+
+    assert len(data_sources_and_metrics) == 1
+
+    assert len(data_sources_and_metrics[ds_df]) == 2
