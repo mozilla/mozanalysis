@@ -3,10 +3,9 @@ import pyspark.sql.functions as F
 import pytest
 
 from pyspark.sql.utils import AnalysisException
-from pyspark.sql import DataFrame, Column
 
 from mozanalysis.experiment import Experiment, TimeLimits, AnalysisWindow
-from mozanalysis.metrics import Metric, DataSource
+from mozanalysis.metrics import Metric, DataSource, agg_sum
 from mozanalysis.utils import add_days
 
 
@@ -223,7 +222,7 @@ def test_analysis_window_validates_end():
         AnalysisWindow(5, 4)
 
 
-def _get_data_source(spark):
+def _get_data_source_df(spark):
     clients_branches = [
         ('aaaa', 'control'),
         ('bbbb', 'test'),
@@ -249,23 +248,33 @@ def _get_data_source(spark):
     )
 
 
+def _get_metrics(spark):
+    ds_df = _get_data_source_df(spark)
+    ds = DataSource.from_dataframe('bla', ds_df)
+
+    return {
+        'how_many_ones':
+            Metric.from_col('how_many_ones', agg_sum(ds_df.constant_one), ds),
+    }
+
+
 def _simple_return_agg_date(agg_fn, data_source):
     return data_source.select(
         agg_fn(data_source.submission_date_s3).alias('b')
     ).first()['b']
 
 
-def test_process_data_source(spark):
+def test_process_data_source_df(spark):
     start_date = '20190101'
     exp_8d = Experiment('experiment-with-8-day-cohort', start_date, 8)
-    data_source = _get_data_source(spark)
+    data_source_df = _get_data_source_df(spark)
 
     end_date = '20190114'
 
     # Are the fixtures sufficiently complicated that we're actually testing
     # things?
-    assert _simple_return_agg_date(F.min, data_source) < start_date
-    assert _simple_return_agg_date(F.max, data_source) > end_date
+    assert _simple_return_agg_date(F.min, data_source_df) < start_date
+    assert _simple_return_agg_date(F.max, data_source_df) > end_date
 
     tl_03 = TimeLimits.for_single_analysis_window(
         first_enrollment_date=exp_8d.start_date,
@@ -277,7 +286,7 @@ def test_process_data_source(spark):
     assert tl_03.first_date_data_required == start_date
     assert tl_03.last_date_data_required == '20190110'
 
-    proc_ds = exp_8d._process_data_source(data_source, tl_03)
+    proc_ds = exp_8d._process_data_source_df(data_source_df, tl_03)
 
     assert _simple_return_agg_date(F.min, proc_ds) == tl_03.first_date_data_required
     assert _simple_return_agg_date(F.max, proc_ds) == tl_03.last_date_data_required
@@ -292,14 +301,14 @@ def test_process_data_source(spark):
     assert tl_23.first_date_data_required == add_days(start_date, 2)
     assert tl_23.last_date_data_required == '20190112'
 
-    p_ds_2 = exp_8d._process_data_source(data_source, tl_23)
+    p_ds_2 = exp_8d._process_data_source_df(data_source_df, tl_23)
 
     assert _simple_return_agg_date(F.min, p_ds_2) == tl_23.first_date_data_required
     assert _simple_return_agg_date(F.max, p_ds_2) == tl_23.last_date_data_required
 
     assert proc_ds.select(F.col('data_source.client_id'))
     with pytest.raises(AnalysisException):
-        assert data_source.select(F.col('data_source.client_id'))
+        assert data_source_df.select(F.col('data_source.client_id'))
 
 
 def _get_enrollment_view(slug):
@@ -428,16 +437,12 @@ def test_get_per_client_data_doesnt_crash(spark):
         spark,
         _get_enrollment_view(slug="a-stub")
     )
-    data_source = _get_data_source(spark)
+    metrics = _get_metrics(spark)
+    metric__how_many_ones = metrics['how_many_ones']
 
     exp.get_per_client_data(
         enrollments,
-        data_source,
-        [
-            F.coalesce(F.sum(
-                data_source.constant_one
-            ), F.lit(0)).alias('something_meaningless'),
-        ],
+        [metric__how_many_ones],
         '20190114',
         0,
         3
@@ -450,16 +455,12 @@ def test_get_time_series_data(spark):
         spark,
         _get_enrollment_view(slug="a-stub")
     )
-    data_source = _get_data_source(spark)
+    metrics = _get_metrics(spark)
+    metric__how_many_ones = metrics['how_many_ones']
 
     res = exp.get_time_series_data(
         enrollments,
-        data_source,
-        [
-            F.coalesce(F.sum(
-                data_source.constant_one
-            ), F.lit(0)).alias('how_many_ones'),
-        ],
+        [metric__how_many_ones],
         '20190128',
         time_series_period='weekly',
         keep_client_id=True,
@@ -497,16 +498,12 @@ def test_get_time_series_data_daily(spark):
         spark,
         _get_enrollment_view(slug="a-stub")
     )
-    data_source = _get_data_source(spark)
+    metrics = _get_metrics(spark)
+    metric__how_many_ones = metrics['how_many_ones']
 
     res = exp.get_time_series_data(
         enrollments,
-        data_source,
-        [
-            F.coalesce(F.sum(
-                data_source.constant_one
-            ), F.lit(0)).alias('should_be_1'),
-        ],
+        [metric__how_many_ones],
         '20190114',
         time_series_period='daily',
         keep_client_id=True,
@@ -520,9 +517,9 @@ def test_get_time_series_data_daily(spark):
 
         df = df.set_index('client_id')
 
-        assert df.loc['aaaa', 'should_be_1'] == 1
-        assert df.loc['bbbb', 'should_be_1'] == 1
-        assert df.loc['cccc', 'should_be_1'] == 0
+        assert df.loc['aaaa', 'how_many_ones'] == 1
+        assert df.loc['bbbb', 'how_many_ones'] == 1
+        assert df.loc['cccc', 'how_many_ones'] == 0
         assert (df['has_contradictory_branch'] == 0).all()
         assert (df['has_non_enrolled_data'] == 0).all()
 
@@ -533,16 +530,12 @@ def test_get_time_series_data_lazy_daily(spark):
         spark,
         _get_enrollment_view(slug="a-stub")
     )
-    data_source = _get_data_source(spark)
+    metrics = _get_metrics(spark)
+    metric__how_many_ones = metrics['how_many_ones']
 
     res = exp.get_time_series_data_lazy(
         enrollments,
-        data_source,
-        [
-            F.coalesce(F.sum(
-                data_source.constant_one
-            ), F.lit(0)).alias('should_be_1'),
-        ],
+        [metric__how_many_ones],
         '20190114',
         time_series_period='daily',
         keep_client_id=True,
@@ -557,9 +550,9 @@ def test_get_time_series_data_lazy_daily(spark):
 
         pdf = pdf.set_index('client_id')
 
-        assert pdf.loc['aaaa', 'should_be_1'] == 1
-        assert pdf.loc['bbbb', 'should_be_1'] == 1
-        assert pdf.loc['cccc', 'should_be_1'] == 0
+        assert pdf.loc['aaaa', 'how_many_ones'] == 1
+        assert pdf.loc['bbbb', 'how_many_ones'] == 1
+        assert pdf.loc['cccc', 'how_many_ones'] == 0
         assert (pdf['has_contradictory_branch'] == 0).all()
         assert (pdf['has_non_enrolled_data'] == 0).all()
 
@@ -586,7 +579,7 @@ def test_get_per_client_data_join(spark):
     )
 
     ex_d = {'a-stub': 'fake-branch-lifes-too-short'}
-    data_source = spark.createDataFrame(
+    data_source_df = spark.createDataFrame(
         [
             # bob-badtiming only has data before/after analysis window
             # but missed by `process_data_source`
@@ -609,12 +602,12 @@ def test_get_per_client_data_join(spark):
         ],
     )
 
+    ds = DataSource.from_dataframe('ds', data_source_df)
+    metric = Metric.from_col('some_value', agg_sum(data_source_df.some_value), ds)
+
     res = exp.get_per_client_data(
         enrollments,
-        data_source,
-        [
-            F.coalesce(F.sum(data_source.some_value), F.lit(0)).alias('some_value'),
-        ],
+        [metric],
         '20190114',
         1,
         3,
@@ -630,16 +623,16 @@ def test_get_per_client_data_join(spark):
     assert annie_nodata.first()['some_value'] == 0
 
     # Check that early and late data were ignored
-    # i.e. check the join, not just _process_data_source
+    # i.e. check the join, not just _process_data_source_df
     bob_badtiming = res.filter(res.client_id == 'bob-badtiming')
     assert bob_badtiming.count() == 1
     assert bob_badtiming.first()['some_value'] == 0
-    # Check that _process_data_source didn't do the
+    # Check that _process_data_source_df didn't do the
     # heavy lifting above
     time_limits = TimeLimits.for_single_analysis_window(
         exp.start_date, '20190114', 1, 3, exp.num_dates_enrollment
     )
-    pds = exp._process_data_source(data_source, time_limits)
+    pds = exp._process_data_source_df(data_source_df, time_limits)
     assert pds.filter(
         pds.client_id == 'bob-badtiming'
     ).select(
@@ -656,12 +649,15 @@ def test_get_per_client_data_join(spark):
     assert derek_lateisok.first()['some_value'] == 1
 
     # Check that it still works for `data_source`s without an experiments map
+    ds_df_noexp = data_source_df.drop('experiments')
+    ds_noexp = DataSource.from_dataframe('ds_noexp', ds_df_noexp)
+    metric_noexp = Metric.from_col(
+        'some_value', agg_sum(ds_df_noexp.some_value), ds_noexp
+    )
+
     res2 = exp.get_per_client_data(
         enrollments,
-        data_source.drop('experiments'),
-        [
-            F.coalesce(F.sum(data_source.some_value), F.lit(0)).alias('some_value'),
-        ],
+        [metric_noexp],
         '20190114',
         1,
         3,
@@ -793,15 +789,22 @@ def test_no_analysis_exception_when_shared_parent_dataframe(spark):
 
     exp = Experiment('a-stub', '20180101')
 
-    exp.get_per_client_data(
+    time_limits = TimeLimits.for_single_analysis_window(
+        exp.start_date,
+        last_date_full_data='20190522',
+        analysis_start_days=28,
+        analysis_length_dates=7
+    )
+
+    enrollments = exp._add_analysis_windows_to_enrollments(enrollments, time_limits)
+
+    exp._get_results_for_one_data_source(
         enrollments,
         df,
         [
             F.max(F.col('some_value'))
         ],
-        last_date_full_data='20190522',
-        analysis_start_days=28,
-        analysis_length_days=7
+        time_limits
     )
 
 

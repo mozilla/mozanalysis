@@ -221,7 +221,7 @@ class Experiment(object):
         return enrollments
 
     def get_per_client_data(
-        self, enrollments, data_source, metric_list, last_date_full_data,
+        self, enrollments, metric_list, last_date_full_data,
         analysis_start_days, analysis_length_days, keep_client_id=False
     ):
         """Return a DataFrame containing per-client metric values.
@@ -229,34 +229,8 @@ class Experiment(object):
         Args:
             enrollments: A spark DataFrame of enrollments, like the one
                 returned by ``self.get_enrollments()``.
-            data_source: A spark DataFrame containing the data needed to
-                calculate the metrics. Could be ``main_summary`` or
-                ``clients_daily``. *Don't* use ``experiments``; as of 2019/04/02
-                it drops data collected after people self-unenroll, so
-                unenrolling users will appear to churn. Must have at least
-                the following columns:
-
-                * client_id (str)
-                * submission_date_s3 (str)
-                * data columns referred to in ``metric_list``
-
-                Ideally also has:
-
-                * experiments (map): At present this is used to exclude
-                  pre-enrollment ping data collected on enrollment
-                  day. Once it or its successor reliably tags data
-                  from all enrolled users, even post-unenroll, we'll
-                  also join on it to exclude data from duplicate
-                  ``client_id``\\s that are not enrolled in the same
-                  branch.
-
-            metric_list: A list of columns that aggregate and compute
-                metrics over data grouped by ``(client_id, branch)``, e.g.::
-
-                    [F.coalesce(F.sum(
-                        data_source.metric_name
-                    ), F.lit(0)).alias('metric_name')]
-
+            metric_list (list of mozanalysis.metric.Metric):
+                The metrics to analyze.
             last_date_full_data (str): The most recent date for which we
                 have complete data, e.g. '20190322'. If you want to ignore
                 all data collected after a certain date (e.g. when the
@@ -300,7 +274,7 @@ class Experiment(object):
         )
 
         return self._get_per_client_data(
-            enrollments, data_source, metric_list, time_limits, keep_client_id
+            enrollments, metric_list, time_limits, keep_client_id
         ).drop(
             'mozanalysis_analysis_window_start'
         ).drop(
@@ -308,7 +282,7 @@ class Experiment(object):
         )
 
     def get_time_series_data(
-        self, enrollments, data_source, metric_list, last_date_full_data,
+        self, enrollments, metric_list, last_date_full_data,
         time_series_period='weekly', keep_client_id=False
     ):
         """Return a dict containing DataFrames with per-client metric values.
@@ -323,34 +297,8 @@ class Experiment(object):
             enrollments: A spark DataFrame of enrollments, like the one
                 returned by ``self.get_enrollments()``.
 
-            data_source: A spark DataFrame containing the data needed to
-                calculate the metrics. Could be ``main_summary`` or
-                ``clients_daily``. *Don't* use ``experiments``; as of 2019/04/02
-                it drops data collected after people self-unenroll, so
-                unenrolling users will appear to churn. Must have at least
-                the following columns:
-
-                * client_id (str)
-                * submission_date_s3 (str)
-                * data columns referred to in ``metric_list``
-
-                Ideally also has:
-
-                * experiments (map): At present this is used to exclude
-                  pre-enrollment ping data collected on enrollment
-                  day. Once it or its successor reliably tags data
-                  from all enrolled users, even post-unenroll, we'll
-                  also join on it to exclude data from duplicate
-                  ``client_id``\\s that are not enrolled in the same
-                  branch.
-
-            metric_list: A list of columns that aggregate and compute
-                metrics over data grouped by ``(client_id, branch)``, e.g.::
-
-                    [F.coalesce(F.sum(
-                        data_source.metric_name
-                    ), F.lit(0)).alias('metric_name')]
-
+            metric_list (list of mozanalysis.metric.Metric):
+                The metrics to analyze.
             last_date_full_data (str): The most recent date for which we
                 have complete data, e.g. '20190322'. If you want to ignore
                 all data collected after a certain date (e.g. when the
@@ -388,7 +336,7 @@ class Experiment(object):
         )
 
         res = self._get_per_client_data(
-            enrollments, data_source, metric_list, time_limits, keep_client_id
+            enrollments, metric_list, time_limits, keep_client_id
         ).drop('mozanalysis_analysis_window_end').toPandas()
 
         return {
@@ -399,7 +347,7 @@ class Experiment(object):
         }
 
     def get_time_series_data_lazy(
-        self, enrollments, data_source, metric_list, last_date_full_data,
+        self, enrollments, metric_list, last_date_full_data,
         time_series_period='weekly', keep_client_id=False
     ):
         """Like ``get_time_series_data()`` but with Spark DataFrames.
@@ -418,7 +366,7 @@ class Experiment(object):
         )
 
         master_df = self._get_per_client_data(
-            enrollments, data_source, metric_list, time_limits, keep_client_id
+            enrollments, metric_list, time_limits, keep_client_id
         ).drop('mozanalysis_analysis_window_end').cache()
 
         return {
@@ -430,7 +378,7 @@ class Experiment(object):
         }
 
     def _get_per_client_data(
-        self, enrollments, data_source, metric_list, time_limits, keep_client_id
+        self, enrollments, metric_list, time_limits, keep_client_id
     ):
         """Return a Spark DataFrame with metric values per-client-and-analysis-window.
 
@@ -448,16 +396,18 @@ class Experiment(object):
             enrollments, time_limits
         )
 
-        data_sources_and_metrics = {data_source: metric_list}  # FIXME: Temporary hack
+        data_source_dfs_and_metric_col_lists = self._process_metrics(
+            enrollments, metric_list
+        )
 
         res_per_ds = [
             self._get_results_for_one_data_source(
                 enrollments,
-                self._process_data_source(ds, time_limits),
-                ml,
+                self._process_data_source_df(ds_df, time_limits),
+                mcl,
                 time_limits
             )
-            for ds, ml in data_sources_and_metrics.items()
+            for ds_df, mcl in data_source_dfs_and_metric_col_lists.items()
         ]
 
         res = reduce(lambda x, y: x.join(y, enrollments.columns), res_per_ds)
@@ -468,28 +418,28 @@ class Experiment(object):
         return res.drop(enrollments.client_id)
 
     def _get_results_for_one_data_source(
-        self, enrollments, data_source, metric_list, time_limits
+        self, enrollments, data_source_df, metric_column_list, time_limits
     ):
         """Return a DataFrame of aggregated per-client metrics.
 
-        Left join ``data_source`` to ``enrollments`` to get per-client
+        Left join ``data_source_df`` to ``enrollments`` to get per-client
         data within the ``time_limits``, then aggregate to compute the
         requested metrics plus some sanity checks.
         """
-        join_on = self._get_join_conditions(enrollments, data_source, time_limits)
+        join_on = self._get_join_conditions(enrollments, data_source_df, time_limits)
 
         sanity_metrics = self._get_telemetry_sanity_check_metrics(
-            enrollments, data_source
+            enrollments, data_source_df
         )
 
         res = enrollments.join(
-            data_source,
+            data_source_df,
             join_on,
             'left'
         ).groupBy(
             *[enrollments[c] for c in enrollments.columns]  # Yes, really.
         ).agg(
-            *(metric_list + sanity_metrics)
+            *(metric_column_list + sanity_metrics)
         )
 
         return res
@@ -663,7 +613,7 @@ class Experiment(object):
         return res
 
     @staticmethod
-    def _process_data_source(data_source, time_limits):
+    def _process_data_source_df(data_source, time_limits):
         """Return ``data_source``, filtered to the relevant dates.
 
         Ignore data before the analysis window of the first enrollment,
