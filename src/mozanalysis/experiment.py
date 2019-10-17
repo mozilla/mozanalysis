@@ -405,7 +405,6 @@ class Experiment(object):
                 enrollments,
                 self._process_data_source_df(ds_df, time_limits),
                 mcl,
-                time_limits
             )
             for ds_df, mcl in data_source_dfs_and_metric_col_lists.items()
         ]
@@ -418,15 +417,15 @@ class Experiment(object):
         return res.drop(enrollments.client_id)
 
     def _get_results_for_one_data_source(
-        self, enrollments, data_source_df, metric_column_list, time_limits
+        self, enrollments, data_source_df, metric_column_list
     ):
         """Return a DataFrame of aggregated per-client metrics.
 
         Left join ``data_source_df`` to ``enrollments`` to get per-client
-        data within the ``time_limits``, then aggregate to compute the
+        data within the analysis windows, then aggregate to compute the
         requested metrics plus some sanity checks.
         """
-        join_on = self._get_join_conditions(enrollments, data_source_df, time_limits)
+        join_on = self._get_join_conditions(enrollments, data_source_df)
 
         sanity_metrics = self._get_telemetry_sanity_check_metrics(
             enrollments, data_source_df
@@ -444,7 +443,7 @@ class Experiment(object):
 
         return res
 
-    def _get_join_conditions(self, enrollments, data_source, time_limits):
+    def _get_join_conditions(self, enrollments, data_source):
         """Return a list of join conditions.
 
         Returns a list of boolean ``Column``s representing join
@@ -457,24 +456,17 @@ class Experiment(object):
         ``data_source`` for enrolled clients that were submitted during
         the analysis window.
         """
+        # Use F.col() to avoid a bug in spark when `enrollments` is built
+        # from `data_source` (SPARK-10925)
         days_since_enrollment = (
             F.unix_timestamp(F.col('submission_date_s3'), 'yyyyMMdd')
             - F.unix_timestamp(enrollments.enrollment_date, 'yyyyMMdd')
         ) / (24 * 60 * 60)
 
         join_on = [
-            # TODO perf: would it be faster if we enforce a join on sample_id?
             enrollments.client_id == data_source.client_id,
 
-            # TODO accuracy: once we can rely on
-            #   `data_source.experiments[self.experiment_slug]`
-            # existing even after unenrollment, we could start joining on
-            # branch to reduce problems associated with split client_ids:
-            # enrollments.branch == data_source.experiments[self.experiment_slug]
-
             # Do a quick pass aiming to efficiently filter out lots of rows:
-            # Use F.col() to avoid a bug in spark when `enrollments` is built
-            # from `data_source` (SPARK-10925)
             enrollments.enrollment_date <= F.col('submission_date_s3'),
 
             # Now do a more thorough pass filtering out irrelevant data:
@@ -580,8 +572,8 @@ class Experiment(object):
             tssp.payload.addon_version.alias('addon_version'),
         )
 
-    @classmethod
-    def _process_enrollments(cls, enrollments, time_limits):
+    @staticmethod
+    def _process_enrollments(enrollments, time_limits):
         """Return ``enrollments``, filtered to the relevant dates.
 
         Ignore enrollments that were received after the enrollment
