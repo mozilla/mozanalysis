@@ -28,7 +28,7 @@ class DataSource(object):
             clients_daily_df = spark.table('clients_daily')
             clients_daily_ds = DataSource('clients_daily', clients_daily_df)
 
-    Avoid instantiating duplicate ``DataSource``s - if multiple metrics
+    Avoid instantiating duplicate ``DataSource`` s - if multiple metrics
     require the same source of data but use different ``DataSource``
     instances, then in some circumstances ``mozanalysis`` will not
     recognise that the metrics could share a DataFrame, and Spark will
@@ -113,7 +113,7 @@ class DataSource(object):
                 is preloaded into every notebook as the variable
                 ``spark``.
             experiment (Experiment): The Experiment being analysed. Some
-                ``DataSource``s require the experiment slug in order to
+                ``DataSource`` s require the experiment slug in order to
                 identify the correct data.
         """
         key = (self, experiment)
@@ -267,6 +267,7 @@ class Metric(object):
                 DataFrame for the Column.
 
         Example::
+
             cd_ds = DataSource.from_table_name('clients_daily')
 
             active_hours = Metric.from_col(
