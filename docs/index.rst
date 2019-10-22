@@ -1,4 +1,4 @@
-Welcome to mozanalysis's documentation!
+mozanalysis docs
 =======================================
 
 .. toctree::
@@ -7,8 +7,7 @@ Welcome to mozanalysis's documentation!
 
    about
 
-.. toctree::
-   :maxdepth: 1
+   guide
 
    api
 

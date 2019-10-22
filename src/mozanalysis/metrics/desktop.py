@@ -32,6 +32,11 @@ def telemetry_shield_study_parquet(spark, experiment):
 
 @Metric.from_func(clients_daily)
 def active_hours(cd):
+    """Active hours, from ``active_ticks``
+
+    At any given moment, a client is "active" if there was a keyboard or
+    mouse interaction (click, scroll, move) in the previous 5 seconds.
+    """
     return agg_sum(cd.active_hours_sum)
 
 
