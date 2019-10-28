@@ -16,6 +16,12 @@ events = DataSource.from_table_name('events')
 
 @DataSource.from_func()
 def telemetry_shield_study_parquet(spark, experiment):
+    """DataSource commonly used with addon studies.
+
+    Used when we need to collect experiment-specific telemetry. We
+    filter to just include the data submitted by this experiment's
+    addon.
+    """
     tssp = spark.table('telemetry_shield_study_parquet')
 
     this_exp = tssp.filter(

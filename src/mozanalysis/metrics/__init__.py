@@ -36,6 +36,7 @@ class DataSource(object):
     """
     name = attr.ib(validator=attr.validators.instance_of(str))
     _dataframe_getter = attr.ib(validator=attr.validators.is_callable())
+    description = attr.ib(type=str, default=None)
 
     @classmethod
     def from_table_name(cls, name):
@@ -77,7 +78,8 @@ class DataSource(object):
         def f(dataframe_getter):
             return cls(
                 name=dataframe_getter.__name__,
-                dataframe_getter=dataframe_getter
+                dataframe_getter=dataframe_getter,
+                description=dataframe_getter.__doc__
             )
 
         return f
@@ -129,6 +131,25 @@ class DataSource(object):
 
         return spark._MOZANALYSIS_DATA_SOURCE_CACHE[key]
 
+    @staticmethod
+    def _has_experiments_map(dataframe):
+        return dict(dataframe.dtypes).get('experiments') == 'map<string,string>'
+
+    @staticmethod
+    def _has_glean_style_experiments_field(dataframe):
+        if 'ping_info' not in dataframe.columns:
+            return False
+
+        ping_info_fields = dataframe.schema[
+            'ping_info'
+        ].jsonValue().get('type', {}).get('fields', [])
+
+        for f in ping_info_fields:
+            if f.get('name') == 'experiments':
+                return True
+
+        return False
+
     def get_sanity_metric_cols(self, experiment, enrollments):
         """Return a list of sanity metric Spark Columns.
 
@@ -136,6 +157,23 @@ class DataSource(object):
             experiment (Experiment): The experiment being analysed.
             enrollments (DataFrame): The DataFrame of enrollments,
                 typically obtained from ``Experiment.get_enrollments()``
+
+        The sanity metrics depend on the data source.
+
+        Could return:
+            * ``[data_source_name]_has_non_enrolled_data``: Check to see
+              whether the client_id was sending data in the analysis
+              window that wasn't tagged as being part of the experiment.
+              Indicates either a client_id clash, or the client
+              unenrolling. The fraction of such users should be small,
+              and similar between branches.
+            * ``[data_source_name]_has_contradictory_branch``: Check to
+              see whether the client_id is also enrolled in other
+              branches. Indicates problems, e.g. cloned profiles. The
+              fraction of such users should be small, and similar
+              between branches.
+
+
         """
         if 'branch' not in enrollments.columns:
             # Not running in an experiment context; the below are meaningless
@@ -144,17 +182,12 @@ class DataSource(object):
         spark = enrollments.sql_ctx.sparkSession
         ds_df = self.get_dataframe(spark, experiment)
 
-        if dict(ds_df.dtypes).get('experiments') == 'map<string,string>':
+        if self._has_experiments_map(ds_df):
             # Regular desktop telemetry
             experiments_col = ds_df.experiments
             reported_branch = ds_df.experiments[experiment.experiment_slug]
 
-        elif 'ping_info' in ds_df.schema and len(
-            x
-            for x in ds_df.schema['ping_info'].jsonValue(
-            ).get('type', {}).get('fields', {})
-            if x.get('name') == 'experiments'
-        ):
+        elif self._has_glean_style_experiments_field(ds_df):
             # Glean
             experiments_col = ds_df.ping_info.experiments
             reported_branch = experiments_col[experiment.experiment_slug].branch
@@ -163,17 +196,12 @@ class DataSource(object):
             return []
 
         return [
-            # Check to see whether the client_id was sending data in the analysis
-            # window that wasn't tagged as being part of the experiment. Indicates
-            # either a client_id clash, or the client unenrolling. The fraction of
-            # such users should be small, and similar between branches.
+
             agg_any(
                 experiments_col.isNotNull()
                 & experiments_col[experiment.experiment_slug].isNull()
             ).alias(self.name + '_has_non_enrolled_data'),
-            # Check to see whether the client_id is also enrolled in other branches.
-            # Indicates problems, e.g. cloned profiles. The fraction of such users
-            # should be small, and similar between branches.
+
             agg_any(reported_branch != enrollments.branch).alias(
                 self.name + '_has_contradictory_branch'
             ),
@@ -222,7 +250,7 @@ class Metric(object):
     """
     name = attr.ib(type=str)
     data_source = attr.ib(validator=attr.validators.instance_of(DataSource))
-    _col_getter = attr.ib(type=callable)
+    _col_getter = attr.ib(validator=attr.validators.is_callable())
     description = attr.ib(type=str, default=None)
 
     @classmethod

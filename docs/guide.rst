@@ -39,7 +39,7 @@ The :class:`mozanalysis.experiment.Experiment` instance has a method that gives 
     >>> enrollments.columns
     ['client_id', 'branch', 'enrollment_date']
 
-Having obtained our list of who was enrolled in what branch and when, we now try to quantify what happened to each client. In many cases, the metrics in which you're interested will already be in a metrics library, a submodule of :mod:`mozanalysis.metrics`. If not, then you can define your own - see :meth:`mozanalysis.metrics.Metric.from_col` and :meth:`mozanalysis.metrics.Metric.from_func` - and ideally submit a PR to add them to the library for the next experiment. In this example, we'll compute four metrics:
+Having obtained our list of who was enrolled in what branch and when, we now try to quantify what happened to each client. In many cases, the metrics in which you're interested will already be in a metrics library, a submodule of :mod:`mozanalysis.metrics`. If not, then you can define your own - see :meth:`mozanalysis.metrics.Metric` for examples - and ideally submit a PR to add them to the library for the next experiment. In this example, we'll compute four metrics:
 
 * :const:`mozanalysis.metrics.desktop.active_hours`
 * uri count
