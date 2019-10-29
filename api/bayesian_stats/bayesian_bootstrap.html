@@ -82,10 +82,9 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
-</ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide.html">Guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../bayesian_stats.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
@@ -93,6 +92,10 @@
 <li class="toctree-l2"><a class="reference internal" href="survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics/firetv.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firetv</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics/firetv.html#mozanalysis-metrics-desktop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../udf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
 </ul>
 </li>
@@ -185,42 +188,34 @@ each value.</p></li>
 </dd></dl>
 
 <dl class="function">
-<dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch">
-<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">bootstrap_one_branch</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#bootstrap_one_branch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bootstrap <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for one branch on its own.</p>
-<p>Computes <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for <code class="docutils literal notranslate"><span class="pre">num_samples</span></code> resamples of <code class="docutils literal notranslate"><span class="pre">data</span></code>,
-then returns summary statistics for the results.</p>
+<dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure">
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">make_bb_quantile_closure</code><span class="sig-paren">(</span><em class="sig-param">quantiles</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#make_bb_quantile_closure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a function to calculate quantiles for a bootstrap replicate.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sc</strong> – The spark context</p></li>
-<li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas Series</p></li>
-<li><p><strong>stat_fn</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A function that either:</p>
-<ul>
-<li><p>Aggregates each resampled population to a scalar (e.g.
-the default, <code class="docutils literal notranslate"><span class="pre">bb_mean</span></code>), or</p></li>
-<li><p>Aggregates each resampled population to a dict of
-scalars (e.g. the func returned by
-<code class="docutils literal notranslate"><span class="pre">make_bb_quantile_closure</span></code> when given multiple
-quantiles.</p></li>
-</ul>
-<p>In both cases, this function must accept two parameters:</p>
-<ul>
-<li><p>a one-dimensional ndarray or pandas Series of values,</p></li>
-<li><p>an identically shaped object of weights for these values</p></li>
-</ul>
-</p></li>
-<li><p><strong>num_samples</strong> – The number of bootstrap iterations to perform</p></li>
-<li><p><strong>seed_start</strong> – An int with which to seed numpy’s RNG. It must
-be unique within this set of calculations.</p></li>
-<li><p><strong>threshold_quantile</strong> (<em>float</em><em>, </em><em>optional</em>) – An optional threshold
-quantile, above which to discard outliers. E.g. <code class="docutils literal notranslate"><span class="pre">0.9999</span></code>.</p></li>
-<li><p><strong>summary_quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – Quantiles to determine the
-confidence bands on the branch statistics. Change these
-when making Bonferroni corrections.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>quantiles</strong> (<em>float</em><em>, </em><em>list of floats</em>) – Quantiles to compute</p>
 </dd>
 </dl>
+<p>Returns a function that calculates quantiles for a bootstrap replicate:</p>
+<blockquote>
+<div><p>Args:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>values (pd.Series, ndarray):</dt><dd><p>One dimensional array of observed values</p>
+</dd>
+<dt>prob_weights (pd.Series, ndarray):</dt><dd><p>Equally shaped array of the probability weight associated with
+each value.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A quantile as a np.float, or</p></li>
+<li><p>several quantiles as a dict keyed by the quantiles</p></li>
+</ul>
+</div></blockquote>
+</div></blockquote>
 </dd></dl>
 
 <dl class="function">
@@ -292,6 +287,45 @@ of <code class="docutils literal notranslate"><span class="pre">stat_fn</span></
 </dd></dl>
 
 <dl class="function">
+<dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch">
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">bootstrap_one_branch</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#bootstrap_one_branch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bootstrap <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for one branch on its own.</p>
+<p>Computes <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for <code class="docutils literal notranslate"><span class="pre">num_samples</span></code> resamples of <code class="docutils literal notranslate"><span class="pre">data</span></code>,
+then returns summary statistics for the results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sc</strong> – The spark context</p></li>
+<li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas Series</p></li>
+<li><p><strong>stat_fn</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A function that either:</p>
+<ul>
+<li><p>Aggregates each resampled population to a scalar (e.g.
+the default, <code class="docutils literal notranslate"><span class="pre">bb_mean</span></code>), or</p></li>
+<li><p>Aggregates each resampled population to a dict of
+scalars (e.g. the func returned by
+<code class="docutils literal notranslate"><span class="pre">make_bb_quantile_closure</span></code> when given multiple
+quantiles.</p></li>
+</ul>
+<p>In both cases, this function must accept two parameters:</p>
+<ul>
+<li><p>a one-dimensional ndarray or pandas Series of values,</p></li>
+<li><p>an identically shaped object of weights for these values</p></li>
+</ul>
+</p></li>
+<li><p><strong>num_samples</strong> – The number of bootstrap iterations to perform</p></li>
+<li><p><strong>seed_start</strong> – An int with which to seed numpy’s RNG. It must
+be unique within this set of calculations.</p></li>
+<li><p><strong>threshold_quantile</strong> (<em>float</em><em>, </em><em>optional</em>) – An optional threshold
+quantile, above which to discard outliers. E.g. <code class="docutils literal notranslate"><span class="pre">0.9999</span></code>.</p></li>
+<li><p><strong>summary_quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – Quantiles to determine the
+confidence bands on the branch statistics. Change these
+when making Bonferroni corrections.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples">
 <code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">get_bootstrap_samples</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#get_bootstrap_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> evaluated on resampled data.</p>
@@ -338,37 +372,6 @@ per output of <code class="docutils literal notranslate"><span class="pre">stat_
 <dt>Rubin, Donald B. The Bayesian Bootstrap. Ann. Statist. 9 (1981),</dt><dd><p>no. 1, 130–134. <a class="reference external" href="https://dx.doi.org/10.1214/aos/1176345338">https://dx.doi.org/10.1214/aos/1176345338</a></p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure">
-<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">make_bb_quantile_closure</code><span class="sig-paren">(</span><em class="sig-param">quantiles</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#make_bb_quantile_closure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a function to calculate quantiles for a bootstrap replicate.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>quantiles</strong> (<em>float</em><em>, </em><em>list of floats</em>) – Quantiles to compute</p>
-</dd>
-</dl>
-<p>Returns a function that calculates quantiles for a bootstrap replicate:</p>
-<blockquote>
-<div><p>Args:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>values (pd.Series, ndarray):</dt><dd><p>One dimensional array of observed values</p>
-</dd>
-<dt>prob_weights (pd.Series, ndarray):</dt><dd><p>Equally shaped array of the probability weight associated with
-each value.</p>
-</dd>
-</dl>
-</div></blockquote>
-<p>Returns:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>A quantile as a np.float, or</p></li>
-<li><p>several quantiles as a dict keyed by the quantiles</p></li>
-</ul>
-</div></blockquote>
-</div></blockquote>
 </dd></dl>
 
 </div>

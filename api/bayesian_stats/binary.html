@@ -82,10 +82,9 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
-</ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide.html">Guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../bayesian_stats.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
@@ -93,6 +92,10 @@
 <li class="toctree-l2"><a class="reference internal" href="survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics/firetv.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firetv</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics/firetv.html#mozanalysis-metrics-desktop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../udf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
 </ul>
 </li>
@@ -165,33 +168,6 @@
   <div class="section" id="module-mozanalysis.bayesian_stats.binary">
 <span id="mozanalysis-bayesian-stats-binary"></span><h1><a class="reference internal" href="#module-mozanalysis.bayesian_stats.binary" title="mozanalysis.bayesian_stats.binary"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a><a class="headerlink" href="#module-mozanalysis.bayesian_stats.binary" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
-<dt id="mozanalysis.bayesian_stats.binary.aggregate_col">
-<code class="sig-prename descclassname">mozanalysis.bayesian_stats.binary.</code><code class="sig-name descname">aggregate_col</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">col_label</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/binary.html#aggregate_col"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.binary.aggregate_col" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the number of enrollments and conversions per branch.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>df</strong> (<em>pd.DataFrame</em>) – Queried experiment data in the standard
-format.</p></li>
-<li><p><strong>col_label</strong> (<em>str</em>) – Label for the df column contaning the metric
-to be analyzed.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>A DataFrame. The index is the list of branches. It has the
-following columns:</p>
-<ul class="simple">
-<li><p>num_enrollments: The number of experiment subjects enrolled in
-this branch who were eligible for the metric.</p></li>
-<li><p>num_conversions: The number of these enrolled experiment subjects
-who met the metric’s conversion criteria.</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
 <dt id="mozanalysis.bayesian_stats.binary.compare_branches">
 <code class="sig-prename descclassname">mozanalysis.bayesian_stats.binary.</code><code class="sig-name descname">compare_branches</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">col_label</em>, <em class="sig-param">ref_branch_label='control'</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">individual_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">comparative_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/binary.html#compare_branches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.binary.compare_branches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Jointly sample conversion rates for branches then compare them.</p>
@@ -231,6 +207,59 @@ for
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.stats.summarize_samples.summarize_joint_samples()</span></code>.</p></li>
 </ul>
 </div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.bayesian_stats.binary.aggregate_col">
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.binary.</code><code class="sig-name descname">aggregate_col</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">col_label</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/binary.html#aggregate_col"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.binary.aggregate_col" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of enrollments and conversions per branch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<em>pd.DataFrame</em>) – Queried experiment data in the standard
+format.</p></li>
+<li><p><strong>col_label</strong> (<em>str</em>) – Label for the df column contaning the metric
+to be analyzed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A DataFrame. The index is the list of branches. It has the
+following columns:</p>
+<ul class="simple">
+<li><p>num_enrollments: The number of experiment subjects enrolled in
+this branch who were eligible for the metric.</p></li>
+<li><p>num_conversions: The number of these enrolled experiment subjects
+who met the metric’s conversion criteria.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mozanalysis.bayesian_stats.binary.summarize_one_branch_from_agg">
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.binary.</code><code class="sig-name descname">summarize_one_branch_from_agg</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">num_enrollments_label='num_enrollments'</em>, <em class="sig-param">num_conversions_label='num_conversions'</em>, <em class="sig-param">quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/binary.html#summarize_one_branch_from_agg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.binary.summarize_one_branch_from_agg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return stats about a branch’s conversion rate.</p>
+<p>Calculate and return a Series of summary stats for the posterior
+distribution over the branch’s conversion rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> (<em>pd.Series</em>) – Holds the number of enrollments and number of
+conversions for this branch and metric.</p></li>
+<li><p><strong>num_enrollments_label</strong> (<em>str</em><em>, </em><em>optional</em>) – The label in this Series
+for the number of enrollments</p></li>
+<li><p><strong>num_conversions_label</strong> (<em>str</em><em>, </em><em>optional</em>) – The label in this Series
+for the number of conversions</p></li>
+<li><p><strong>quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – The quantiles to return as summary
+statistics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A pandas Series; the index contains the stringified
+<code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus <code class="docutils literal notranslate"><span class="pre">'mean'</span></code>.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -307,32 +336,6 @@ number of conversions in each branch.</p></li>
 <li><p>index: enumeration of samples</p></li>
 </ul>
 </div></blockquote>
-</dd></dl>
-
-<dl class="function">
-<dt id="mozanalysis.bayesian_stats.binary.summarize_one_branch_from_agg">
-<code class="sig-prename descclassname">mozanalysis.bayesian_stats.binary.</code><code class="sig-name descname">summarize_one_branch_from_agg</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">num_enrollments_label='num_enrollments'</em>, <em class="sig-param">num_conversions_label='num_conversions'</em>, <em class="sig-param">quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/binary.html#summarize_one_branch_from_agg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.binary.summarize_one_branch_from_agg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return stats about a branch’s conversion rate.</p>
-<p>Calculate and return a Series of summary stats for the posterior
-distribution over the branch’s conversion rate.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>s</strong> (<em>pd.Series</em>) – Holds the number of enrollments and number of
-conversions for this branch and metric.</p></li>
-<li><p><strong>num_enrollments_label</strong> (<em>str</em><em>, </em><em>optional</em>) – The label in this Series
-for the number of enrollments</p></li>
-<li><p><strong>num_conversions_label</strong> (<em>str</em><em>, </em><em>optional</em>) – The label in this Series
-for the number of conversions</p></li>
-<li><p><strong>quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – The quantiles to return as summary
-statistics.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A pandas Series; the index contains the stringified
-<code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus <code class="docutils literal notranslate"><span class="pre">'mean'</span></code>.</p>
-</dd>
-</dl>
 </dd></dl>
 
 </div>

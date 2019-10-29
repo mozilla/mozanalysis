@@ -82,8 +82,7 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
-</ul>
-<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guide.html">Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
 </ul>
 
@@ -152,6 +151,8 @@
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
 <span class="kn">import</span> <span class="nn">attr</span>
+
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
 <span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="k">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
 
 <span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="k">import</span> <span class="n">add_days</span><span class="p">,</span> <span class="n">date_sub</span>
@@ -192,7 +193,8 @@
 
 <span class="sd">    Example usage::</span>
 
-<span class="sd">        cd = spark.table(&#39;clients_daily&#39;)</span>
+<span class="sd">        from mozanalysis.metrics.desktop import active_hours, uri_count</span>
+
 
 <span class="sd">        experiment = Experiment(</span>
 <span class="sd">            experiment_slug=&#39;pref-flip-defaultoncookierestrictions-1506704&#39;,</span>
@@ -203,15 +205,9 @@
 
 <span class="sd">        res = experiment.get_per_client_data(</span>
 <span class="sd">            enrollments,</span>
-<span class="sd">            cd,</span>
 <span class="sd">            [</span>
-<span class="sd">                F.sum(F.coalesce(</span>
-<span class="sd">                    cd.active_hours_sum, F.lit(0)</span>
-<span class="sd">                )).alias(&#39;active_hours&#39;),</span>
-<span class="sd">                F.sum(F.coalesce(</span>
-<span class="sd">                    cd.scalar_parent_browser_engagement_total_uri_count_sum,</span>
-<span class="sd">                    F.lit(0)</span>
-<span class="sd">                )).alias(&#39;uri_count&#39;),</span>
+<span class="sd">                active_hours,</span>
+<span class="sd">                uri_count</span>
 <span class="sd">            ],</span>
 <span class="sd">            last_date_full_data=&#39;20190107&#39;,</span>
 <span class="sd">            analysis_start_days=0,</span>
@@ -369,7 +365,7 @@
         <span class="k">return</span> <span class="n">enrollments</span></div>
 
 <div class="viewcode-block" id="Experiment.get_per_client_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_per_client_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_per_client_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
         <span class="n">analysis_start_days</span><span class="p">,</span> <span class="n">analysis_length_days</span><span class="p">,</span> <span class="n">keep_client_id</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a DataFrame containing per-client metric values.</span>
@@ -377,34 +373,8 @@
 <span class="sd">        Args:</span>
 <span class="sd">            enrollments: A spark DataFrame of enrollments, like the one</span>
 <span class="sd">                returned by ``self.get_enrollments()``.</span>
-<span class="sd">            data_source: A spark DataFrame containing the data needed to</span>
-<span class="sd">                calculate the metrics. Could be ``main_summary`` or</span>
-<span class="sd">                ``clients_daily``. *Don&#39;t* use ``experiments``; as of 2019/04/02</span>
-<span class="sd">                it drops data collected after people self-unenroll, so</span>
-<span class="sd">                unenrolling users will appear to churn. Must have at least</span>
-<span class="sd">                the following columns:</span>
-
-<span class="sd">                * client_id (str)</span>
-<span class="sd">                * submission_date_s3 (str)</span>
-<span class="sd">                * data columns referred to in ``metric_list``</span>
-
-<span class="sd">                Ideally also has:</span>
-
-<span class="sd">                * experiments (map): At present this is used to exclude</span>
-<span class="sd">                  pre-enrollment ping data collected on enrollment</span>
-<span class="sd">                  day. Once it or its successor reliably tags data</span>
-<span class="sd">                  from all enrolled users, even post-unenroll, we&#39;ll</span>
-<span class="sd">                  also join on it to exclude data from duplicate</span>
-<span class="sd">                  ``client_id``\\s that are not enrolled in the same</span>
-<span class="sd">                  branch.</span>
-
-<span class="sd">            metric_list: A list of columns that aggregate and compute</span>
-<span class="sd">                metrics over data grouped by ``(client_id, branch)``, e.g.::</span>
-
-<span class="sd">                    [F.coalesce(F.sum(</span>
-<span class="sd">                        data_source.metric_name</span>
-<span class="sd">                    ), F.lit(0)).alias(&#39;metric_name&#39;)]</span>
-
+<span class="sd">            metric_list (list of mozanalysis.metric.Metric): The metrics</span>
+<span class="sd">                to analyze.</span>
 <span class="sd">            last_date_full_data (str): The most recent date for which we</span>
 <span class="sd">                have complete data, e.g. &#39;20190322&#39;. If you want to ignore</span>
 <span class="sd">                all data collected after a certain date (e.g. when the</span>
@@ -419,23 +389,26 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A spark DataFrame of experiment data. One row per ``client_id``.</span>
-<span class="sd">            One or two metadata columns, then one column per metric in</span>
-<span class="sd">            ``metric_list``. Then one column per sanity-check metric.</span>
-<span class="sd">            Columns:</span>
+<span class="sd">            Some metadata columns, then one column per metric in</span>
+<span class="sd">            ``metric_list``, and one column per sanity-check metric.</span>
+<span class="sd">            Columns (not necessarily in order):</span>
 
 <span class="sd">                * client_id (str, optional): Not necessary for</span>
 <span class="sd">                  &quot;happy path&quot; analyses.</span>
 <span class="sd">                * branch (str): The client&#39;s branch</span>
+<span class="sd">                * other columns of ``enrollments``.</span>
 <span class="sd">                * [metric 1]: The client&#39;s value for the first metric in</span>
 <span class="sd">                  ``metric_list``.</span>
 <span class="sd">                * ...</span>
 <span class="sd">                * [metric n]: The client&#39;s value for the nth (final)</span>
 <span class="sd">                  metric in ``metric_list``.</span>
 <span class="sd">                * [sanity check 1]: The client&#39;s value for the first</span>
-<span class="sd">                  sanity check metric.</span>
+<span class="sd">                  sanity check metric for the first data source that</span>
+<span class="sd">                  supports sanity checks.</span>
 <span class="sd">                * ...</span>
 <span class="sd">                * [sanity check n]: The client&#39;s value for the last</span>
-<span class="sd">                  sanity check metric.</span>
+<span class="sd">                  sanity check metric for the last data source that</span>
+<span class="sd">                  supports sanity checks.</span>
 
 <span class="sd">            This format - the schema plus there being one row per</span>
 <span class="sd">            enrolled client, regardless of whether the client has data</span>
@@ -448,7 +421,7 @@
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_per_client_data</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
         <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
             <span class="s1">&#39;mozanalysis_analysis_window_start&#39;</span>
         <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
@@ -456,7 +429,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Experiment.get_time_series_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
         <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span><span class="p">,</span> <span class="n">keep_client_id</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a dict containing DataFrames with per-client metric values.</span>
@@ -471,34 +444,8 @@
 <span class="sd">            enrollments: A spark DataFrame of enrollments, like the one</span>
 <span class="sd">                returned by ``self.get_enrollments()``.</span>
 
-<span class="sd">            data_source: A spark DataFrame containing the data needed to</span>
-<span class="sd">                calculate the metrics. Could be ``main_summary`` or</span>
-<span class="sd">                ``clients_daily``. *Don&#39;t* use ``experiments``; as of 2019/04/02</span>
-<span class="sd">                it drops data collected after people self-unenroll, so</span>
-<span class="sd">                unenrolling users will appear to churn. Must have at least</span>
-<span class="sd">                the following columns:</span>
-
-<span class="sd">                * client_id (str)</span>
-<span class="sd">                * submission_date_s3 (str)</span>
-<span class="sd">                * data columns referred to in ``metric_list``</span>
-
-<span class="sd">                Ideally also has:</span>
-
-<span class="sd">                * experiments (map): At present this is used to exclude</span>
-<span class="sd">                  pre-enrollment ping data collected on enrollment</span>
-<span class="sd">                  day. Once it or its successor reliably tags data</span>
-<span class="sd">                  from all enrolled users, even post-unenroll, we&#39;ll</span>
-<span class="sd">                  also join on it to exclude data from duplicate</span>
-<span class="sd">                  ``client_id``\\s that are not enrolled in the same</span>
-<span class="sd">                  branch.</span>
-
-<span class="sd">            metric_list: A list of columns that aggregate and compute</span>
-<span class="sd">                metrics over data grouped by ``(client_id, branch)``, e.g.::</span>
-
-<span class="sd">                    [F.coalesce(F.sum(</span>
-<span class="sd">                        data_source.metric_name</span>
-<span class="sd">                    ), F.lit(0)).alias(&#39;metric_name&#39;)]</span>
-
+<span class="sd">            metric_list (list of mozanalysis.metric.Metric):</span>
+<span class="sd">                The metrics to analyze.</span>
 <span class="sd">            last_date_full_data (str): The most recent date for which we</span>
 <span class="sd">                have complete data, e.g. &#39;20190322&#39;. If you want to ignore</span>
 <span class="sd">                all data collected after a certain date (e.g. when the</span>
@@ -514,21 +461,24 @@
 <span class="sd">            analysis window. Each value is a pandas DataFrame in &quot;the</span>
 <span class="sd">            standard format&quot;: one row per client, some metadata columns,</span>
 <span class="sd">            plus one column per metric and sanity-check metric.</span>
-<span class="sd">            Columns:</span>
+<span class="sd">            Columns (not necessarily in order):</span>
 
 <span class="sd">                * client_id (str, optional): Not necessary for</span>
 <span class="sd">                  &quot;happy path&quot; analyses.</span>
 <span class="sd">                * branch (str): The client&#39;s branch</span>
+<span class="sd">                * other columns of ``enrollments``.</span>
 <span class="sd">                * [metric 1]: The client&#39;s value for the first metric in</span>
 <span class="sd">                  ``metric_list``.</span>
 <span class="sd">                * ...</span>
 <span class="sd">                * [metric n]: The client&#39;s value for the nth (final)</span>
 <span class="sd">                  metric in ``metric_list``.</span>
 <span class="sd">                * [sanity check 1]: The client&#39;s value for the first</span>
-<span class="sd">                  sanity check metric.</span>
+<span class="sd">                  sanity check metric for the first data source that</span>
+<span class="sd">                  supports sanity checks.</span>
 <span class="sd">                * ...</span>
 <span class="sd">                * [sanity check n]: The client&#39;s value for the last</span>
-<span class="sd">                  sanity check metric.</span>
+<span class="sd">                  sanity check metric for the last data source that</span>
+<span class="sd">                  supports sanity checks.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_ts</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">time_series_period</span><span class="p">,</span>
@@ -536,7 +486,7 @@
         <span class="p">)</span>
 
         <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_per_client_data</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
         <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mozanalysis_analysis_window_end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="p">{</span>
@@ -547,7 +497,7 @@
         <span class="p">}</span></div>
 
 <div class="viewcode-block" id="Experiment.get_time_series_data_lazy"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data_lazy">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data_lazy</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
         <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span><span class="p">,</span> <span class="n">keep_client_id</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Like ``get_time_series_data()`` but with Spark DataFrames.</span>
@@ -566,7 +516,7 @@
         <span class="p">)</span>
 
         <span class="n">master_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_per_client_data</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
         <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mozanalysis_analysis_window_end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cache</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="p">{</span>
@@ -578,7 +528,7 @@
         <span class="p">}</span></div>
 
     <span class="k">def</span> <span class="nf">_get_per_client_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a Spark DataFrame with metric values per-client-and-analysis-window.</span>
 
@@ -596,29 +546,50 @@
             <span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span>
         <span class="p">)</span>
 
-        <span class="n">data_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_data_source</span><span class="p">(</span><span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
-
-        <span class="n">join_on</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_join_conditions</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
-
-        <span class="n">sanity_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telemetry_sanity_check_metrics</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span>
+        <span class="n">data_source_dfs_and_metric_col_lists</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_metrics</span><span class="p">(</span>
+            <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span>
         <span class="p">)</span>
 
-        <span class="n">res</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="n">data_source</span><span class="p">,</span>
-            <span class="n">join_on</span><span class="p">,</span>
-            <span class="s1">&#39;left&#39;</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span>
-            <span class="o">*</span><span class="p">[</span><span class="n">enrollments</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>  <span class="c1"># Yes, really.</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
-            <span class="o">*</span><span class="p">(</span><span class="n">metric_list</span> <span class="o">+</span> <span class="n">sanity_metrics</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">res_per_ds</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_results_for_one_data_source</span><span class="p">(</span>
+                <span class="n">enrollments</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_process_data_source_df</span><span class="p">(</span><span class="n">ds_df</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">),</span>
+                <span class="n">mcl</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">ds_df</span><span class="p">,</span> <span class="n">mcl</span> <span class="ow">in</span> <span class="n">data_source_dfs_and_metric_col_lists</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">]</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span> <span class="n">res_per_ds</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">keep_client_id</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">res</span>
 
         <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_join_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_results_for_one_data_source</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source_df</span><span class="p">,</span> <span class="n">metric_column_list</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a DataFrame of aggregated per-client metrics.</span>
+
+<span class="sd">        Left join ``data_source_df`` to ``enrollments`` to get per-client</span>
+<span class="sd">        data within the analysis windows, then aggregate to compute the</span>
+<span class="sd">        requested metrics plus some sanity checks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">join_on</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_join_conditions</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source_df</span><span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">data_source_df</span><span class="p">,</span>
+            <span class="n">join_on</span><span class="p">,</span>
+            <span class="s1">&#39;left&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">[</span><span class="n">enrollments</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>  <span class="c1"># Yes, really.</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">metric_column_list</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">def</span> <span class="nf">_get_join_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a list of join conditions.</span>
 
 <span class="sd">        Returns a list of boolean ``Column``s representing join</span>
@@ -631,24 +602,17 @@
 <span class="sd">        ``data_source`` for enrolled clients that were submitted during</span>
 <span class="sd">        the analysis window.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Use F.col() to avoid a bug in spark when `enrollments` is built</span>
+        <span class="c1"># from `data_source` (SPARK-10925)</span>
         <span class="n">days_since_enrollment</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">F</span><span class="o">.</span><span class="n">unix_timestamp</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">),</span> <span class="s1">&#39;yyyyMMdd&#39;</span><span class="p">)</span>
             <span class="o">-</span> <span class="n">F</span><span class="o">.</span><span class="n">unix_timestamp</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span><span class="p">,</span> <span class="s1">&#39;yyyyMMdd&#39;</span><span class="p">)</span>
         <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
 
         <span class="n">join_on</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="c1"># TODO perf: would it be faster if we enforce a join on sample_id?</span>
             <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span> <span class="o">==</span> <span class="n">data_source</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span>
 
-            <span class="c1"># TODO accuracy: once we can rely on</span>
-            <span class="c1">#   `data_source.experiments[self.experiment_slug]`</span>
-            <span class="c1"># existing even after unenrollment, we could start joining on</span>
-            <span class="c1"># branch to reduce problems associated with split client_ids:</span>
-            <span class="c1"># enrollments.branch == data_source.experiments[self.experiment_slug]</span>
-
             <span class="c1"># Do a quick pass aiming to efficiently filter out lots of rows:</span>
-            <span class="c1"># Use F.col() to avoid a bug in spark when `enrollments` is built</span>
-            <span class="c1"># from `data_source` (SPARK-10925)</span>
             <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">),</span>
 
             <span class="c1"># Now do a more thorough pass filtering out irrelevant data:</span>
@@ -754,8 +718,8 @@
             <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">addon_version</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;addon_version&#39;</span><span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_process_enrollments</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_process_enrollments</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return ``enrollments``, filtered to the relevant dates.</span>
 
 <span class="sd">        Ignore enrollments that were received after the enrollment</span>
@@ -770,8 +734,26 @@
 
         <span class="k">return</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollments&#39;</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_process_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dict of lists of Columns, representing metrics.</span>
+
+<span class="sd">        Each key is the DataFrame to which the Columns belong.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spark</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">sql_ctx</span><span class="o">.</span><span class="n">sparkSession</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">metric_list</span><span class="p">):</span>
+            <span class="n">ds_df</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">get_dataframe</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">ds_df</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">ds_df</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">get_sanity_metric_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">)</span>
+
+            <span class="n">res</span><span class="p">[</span><span class="n">ds_df</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">get_col</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">res</span>
+
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_process_data_source</span><span class="p">(</span><span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_process_data_source_df</span><span class="p">(</span><span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return ``data_source``, filtered to the relevant dates.</span>
 
 <span class="sd">        Ignore data before the analysis window of the first enrollment,</span>
@@ -789,37 +771,7 @@
                 <span class="n">time_limits</span><span class="o">.</span><span class="n">first_date_data_required</span><span class="p">,</span>
                 <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span>
             <span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;data_source&#39;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_get_telemetry_sanity_check_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return aggregations that check for problems with a client.&quot;&quot;&quot;</span>
-
-        <span class="c1"># TODO: Once we know what form the metrics library will take,</span>
-        <span class="c1"># we should move the below metric definitions and documentation</span>
-        <span class="c1"># into it.</span>
-
-        <span class="k">if</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data_source</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;experiments&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;map&lt;string,string&gt;&#39;</span><span class="p">:</span>
-            <span class="c1"># Not all tables have an experiments map - can&#39;t make these checks.</span>
-            <span class="k">return</span> <span class="p">[]</span>
-
-        <span class="k">return</span> <span class="p">[</span>
-
-            <span class="c1"># Check to see whether the client_id is also enrolled in other branches</span>
-            <span class="c1"># E.g. indicates cloned profiles. Fraction of such users should be</span>
-            <span class="c1"># small, and similar between branches.</span>
-            <span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">((</span>
-                <span class="n">data_source</span><span class="o">.</span><span class="n">experiments</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">]</span> <span class="o">!=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">branch</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;has_contradictory_branch&#39;</span><span class="p">),</span>
-
-            <span class="c1"># Check to see whether the client_id was sending data in the analysis</span>
-            <span class="c1"># window that wasn&#39;t tagged as being part of the experiment. Indicates</span>
-            <span class="c1"># either a client_id clash, or the client unenrolling. Fraction of such</span>
-            <span class="c1"># users should be small, and similar between branches.</span>
-            <span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">((</span>
-                <span class="o">~</span><span class="n">F</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">data_source</span><span class="o">.</span><span class="n">experiments</span><span class="p">)</span>
-                <span class="o">&amp;</span> <span class="n">F</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">data_source</span><span class="o">.</span><span class="n">experiments</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">])</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;has_non_enrolled_data&#39;</span><span class="p">),</span>
-        <span class="p">]</span></div>
+        <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;data_source&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TimeLimits"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeLimits">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

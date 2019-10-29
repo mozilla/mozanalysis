@@ -1,0 +1,537 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.metrics &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide.html">Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>mozanalysis.metrics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mozanalysis.metrics</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
+<span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
+<span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="k">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+
+<div class="viewcode-block" id="DataSource"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DataSource</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wrapper for a Spark DataFrame.</span>
+
+<span class="sd">    This class is lazy: no Spark activity takes place until</span>
+<span class="sd">    ``get_dataframe()`` is called.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        There are three ways to instantiate a ``DataSource``::</span>
+
+<span class="sd">            clients_daily = DataSource.from_table_name(&#39;clients_daily&#39;)</span>
+
+<span class="sd">        or::</span>
+
+<span class="sd">            @DataSource.from_func()</span>
+<span class="sd">            def clients_daily(spark, experiment):</span>
+<span class="sd">                return spark.table(&#39;clients_daily&#39;)</span>
+
+<span class="sd">        or (for interactive use)::</span>
+
+<span class="sd">            clients_daily_df = spark.table(&#39;clients_daily&#39;)</span>
+<span class="sd">            clients_daily_ds = DataSource(&#39;clients_daily&#39;, clients_daily_df)</span>
+
+<span class="sd">    Avoid instantiating duplicate ``DataSource`` s - if multiple metrics</span>
+<span class="sd">    require the same source of data but use different ``DataSource``</span>
+<span class="sd">    instances, then in some circumstances ``mozanalysis`` will not</span>
+<span class="sd">    recognise that the metrics could share a DataFrame, and Spark will</span>
+<span class="sd">    do extra work.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+    <span class="n">_dataframe_getter</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">is_callable</span><span class="p">())</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DataSource.from_table_name"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.from_table_name">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_table_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a ``DataSource`` from a Spark table name.</span>
+
+<span class="sd">        Don&#39;t repeatedly call this with the same ``name``, because</span>
+<span class="sd">        we won&#39;t recognise that the different ``DataSource`` instances</span>
+<span class="sd">        are equal.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): Supplied to ``spark.table()``</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            clients_daily = DataSource.from_table_name(&#39;clients_daily&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">dataframe_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">spark</span><span class="p">,</span> <span class="n">experiment</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DataSource.from_func"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.from_func">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_func</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decorator method to turn a function into a ``DataSource``.</span>
+
+<span class="sd">        The function must take two arguments: ``spark`` and</span>
+<span class="sd">        ``experiment``. The function&#39;s name is used as the</span>
+<span class="sd">        ``DataSource`` name.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            from mozanalysis.experiment import Experiment</span>
+<span class="sd">            from pyspark.sql.session import SparkSession</span>
+
+<span class="sd">            DataSource.from_func()</span>
+<span class="sd">            def clients_daily(spark: SparkSession, experiment: Experiment):</span>
+<span class="sd">                return spark.table(&#39;clients_daily&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">dataframe_getter</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">dataframe_getter</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                <span class="n">dataframe_getter</span><span class="o">=</span><span class="n">dataframe_getter</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="n">dataframe_getter</span><span class="o">.</span><span class="vm">__doc__</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">f</span></div>
+
+<div class="viewcode-block" id="DataSource.from_dataframe"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.from_dataframe">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dataframe</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a ``DataSource`` for a DataFrame.</span>
+
+<span class="sd">        Don&#39;t repeatedly call this with the same ``dataframe``, because</span>
+<span class="sd">        we won&#39;t recognise that the different ``DataSource`` instances</span>
+<span class="sd">        are equal.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): Name for the ``DataSource``.</span>
+<span class="sd">            dataframe (DataFrame): The DataFrame to wrap.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">dataframe_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">spark</span><span class="p">,</span> <span class="n">experiment</span><span class="p">:</span> <span class="n">dataframe</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DataSource.get_dataframe"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.get_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">get_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spark</span><span class="p">,</span> <span class="n">experiment</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the DataFrame for this ``DataSource``.</span>
+
+<span class="sd">        We cache the results so that repeated calls to</span>
+<span class="sd">        ``get_dataframe()`` return the same DataFrame, which makes it</span>
+<span class="sd">        easier to compute multiple metrics from one DataFrame. The</span>
+<span class="sd">        results are cached on the SparkSession, keyed by the</span>
+<span class="sd">        ``DataSource`` instance and the ``Experiment``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            spark (SparkSession): The SparkSession - in DataBricks this</span>
+<span class="sd">                is preloaded into every notebook as the variable</span>
+<span class="sd">                ``spark``.</span>
+<span class="sd">            experiment (Experiment): The Experiment being analysed. Some</span>
+<span class="sd">                ``DataSource`` s require the experiment slug in order to</span>
+<span class="sd">                identify the correct data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">spark</span><span class="o">.</span><span class="n">_MOZANALYSIS_DATA_SOURCE_CACHE</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">spark</span><span class="o">.</span><span class="n">_MOZANALYSIS_DATA_SOURCE_CACHE</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataframe_getter</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>
+        <span class="n">spark</span><span class="o">.</span><span class="n">_MOZANALYSIS_DATA_SOURCE_CACHE</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span>
+
+        <span class="k">return</span> <span class="n">spark</span><span class="o">.</span><span class="n">_MOZANALYSIS_DATA_SOURCE_CACHE</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_has_experiments_map</span><span class="p">(</span><span class="n">dataframe</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;experiments&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;map&lt;string,string&gt;&#39;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_has_glean_style_experiments_field</span><span class="p">(</span><span class="n">dataframe</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;ping_info&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">ping_info_fields</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">schema</span><span class="p">[</span>
+            <span class="s1">&#39;ping_info&#39;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">jsonValue</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;fields&#39;</span><span class="p">,</span> <span class="p">[])</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">ping_info_fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;experiments&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="DataSource.get_sanity_metric_cols"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.get_sanity_metric_cols">[docs]</a>    <span class="k">def</span> <span class="nf">get_sanity_metric_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of sanity metric Spark Columns.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment (Experiment): The experiment being analysed.</span>
+<span class="sd">            enrollments (DataFrame): The DataFrame of enrollments,</span>
+<span class="sd">                typically obtained from ``Experiment.get_enrollments()``</span>
+
+<span class="sd">        The sanity metrics depend on the data source.</span>
+
+<span class="sd">        Could return:</span>
+<span class="sd">            * ``[data_source_name]_has_non_enrolled_data``: Check to see</span>
+<span class="sd">              whether the client_id was sending data in the analysis</span>
+<span class="sd">              window that wasn&#39;t tagged as being part of the experiment.</span>
+<span class="sd">              Indicates either a client_id clash, or the client</span>
+<span class="sd">              unenrolling. The fraction of such users should be small,</span>
+<span class="sd">              and similar between branches.</span>
+<span class="sd">            * ``[data_source_name]_has_contradictory_branch``: Check to</span>
+<span class="sd">              see whether the client_id is also enrolled in other</span>
+<span class="sd">              branches. Indicates problems, e.g. cloned profiles. The</span>
+<span class="sd">              fraction of such users should be small, and similar</span>
+<span class="sd">              between branches.</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;branch&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="c1"># Not running in an experiment context; the below are meaningless</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="n">spark</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">sql_ctx</span><span class="o">.</span><span class="n">sparkSession</span>
+        <span class="n">ds_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dataframe</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_experiments_map</span><span class="p">(</span><span class="n">ds_df</span><span class="p">):</span>
+            <span class="c1"># Regular desktop telemetry</span>
+            <span class="n">experiments_col</span> <span class="o">=</span> <span class="n">ds_df</span><span class="o">.</span><span class="n">experiments</span>
+            <span class="n">reported_branch</span> <span class="o">=</span> <span class="n">ds_df</span><span class="o">.</span><span class="n">experiments</span><span class="p">[</span><span class="n">experiment</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_glean_style_experiments_field</span><span class="p">(</span><span class="n">ds_df</span><span class="p">):</span>
+            <span class="c1"># Glean</span>
+            <span class="n">experiments_col</span> <span class="o">=</span> <span class="n">ds_df</span><span class="o">.</span><span class="n">ping_info</span><span class="o">.</span><span class="n">experiments</span>
+            <span class="n">reported_branch</span> <span class="o">=</span> <span class="n">experiments_col</span><span class="p">[</span><span class="n">experiment</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">]</span><span class="o">.</span><span class="n">branch</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+
+            <span class="n">agg_any</span><span class="p">(</span>
+                <span class="n">experiments_col</span><span class="o">.</span><span class="n">isNotNull</span><span class="p">()</span>
+                <span class="o">&amp;</span> <span class="n">experiments_col</span><span class="p">[</span><span class="n">experiment</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">]</span><span class="o">.</span><span class="n">isNull</span><span class="p">()</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_has_non_enrolled_data&#39;</span><span class="p">),</span>
+
+            <span class="n">agg_any</span><span class="p">(</span><span class="n">reported_branch</span> <span class="o">!=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">branch</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_has_contradictory_branch&#39;</span>
+            <span class="p">),</span>
+        <span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="Metric"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.Metric">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Metric</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents an experiment metric.</span>
+
+<span class="sd">    Needs to be combined with an analysis window to be measurable!</span>
+
+<span class="sd">    Essentially this wraps a Spark Column and a reference to a</span>
+<span class="sd">    DataSource that can be used to obtain the DataFrame the column</span>
+<span class="sd">    belongs to.</span>
+
+<span class="sd">    These wrappers are needed in order for the metrics modules to be</span>
+<span class="sd">    lazy.</span>
+
+<span class="sd">    When defining metrics in the metric library, use the</span>
+<span class="sd">    ``Metric.from_func()`` decorator.</span>
+
+<span class="sd">    When defining metrics in interactive mode (i.e. in a notebook</span>
+<span class="sd">    where you already have the Spark Column and DataFrame, and</span>
+<span class="sd">    don&#39;t need to be lazy), use ``Metric.from_col()``.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        In the metrics library::</span>
+
+<span class="sd">            clients_daily = DataSource.from_table_name(&#39;clients_daily&#39;)</span>
+
+<span class="sd">            @Metric.from_func(clients_daily)</span>
+<span class="sd">            def active_hours(cd):</span>
+<span class="sd">                return agg_sum(cd.active_hours_sum)</span>
+
+<span class="sd">        In interactive mode::</span>
+
+<span class="sd">            cd = spark.table(&#39;clients_daily&#39;)</span>
+
+<span class="sd">            active_hours = Metric.from_col(</span>
+<span class="sd">                name=&#39;active_hours&#39;,</span>
+<span class="sd">                col=agg_sum(cd.active_hours_sum),</span>
+<span class="sd">                df_name=&#39;cd&#39;,</span>
+<span class="sd">                df=cd,</span>
+<span class="sd">            )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">DataSource</span><span class="p">))</span>
+    <span class="n">_col_getter</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">is_callable</span><span class="p">())</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Metric.from_func"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.Metric.from_func">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_func</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data_source</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decorator method to instantiate a ``Metric``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_source (DataSource): A ``DataSource`` that may be used</span>
+<span class="sd">                to obtain a DataFrame with the data required to compute</span>
+<span class="sd">                this ``Metric``.</span>
+
+<span class="sd">        The wrapped function needs to have one argument (the DataFrame</span>
+<span class="sd">        output by ``data_source.get_dataframe()``), and return a Column.</span>
+<span class="sd">        The function&#39;s name is taken as the ``Metric``&#39;s name.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            clients_daily = DataSource.from_table_name(&#39;clients_daily&#39;)</span>
+
+<span class="sd">            @Metric.from_func(clients_daily)</span>
+<span class="sd">            def active_hours(cd: DataFrame) -&gt; Column:</span>
+<span class="sd">                return agg_sum(cd.active_hours_sum)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">col_getter</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">col_getter</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                <span class="n">data_source</span><span class="o">=</span><span class="n">data_source</span><span class="p">,</span>
+                <span class="n">col_getter</span><span class="o">=</span><span class="n">col_getter</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="n">col_getter</span><span class="o">.</span><span class="vm">__doc__</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">f</span></div>
+
+<div class="viewcode-block" id="Metric.from_col"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.Metric.from_col">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_col</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">metric_name</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">data_source</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a ``Metric`` defined by ``col``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metric_name (str): Name for the resulting Column.</span>
+<span class="sd">            col (Column): Spark Column representing the computed metric.</span>
+<span class="sd">            data_source (DataSource): DataSource wrapper for the source</span>
+<span class="sd">                DataFrame for the Column.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            cd_ds = DataSource.from_table_name(&#39;clients_daily&#39;)</span>
+
+<span class="sd">            active_hours = Metric.from_col(</span>
+<span class="sd">                name=&#39;active_hours&#39;,</span>
+<span class="sd">                col=agg_sum(cd.active_hours_sum),</span>
+<span class="sd">                data_source=cd_ds</span>
+<span class="sd">            )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">metric_name</span><span class="p">,</span>
+            <span class="n">data_source</span><span class="o">=</span><span class="n">data_source</span><span class="p">,</span>
+            <span class="n">col_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="n">col</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Metric.get_col"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.Metric.get_col">[docs]</a>    <span class="k">def</span> <span class="nf">get_col</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spark</span><span class="p">,</span> <span class="n">experiment</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a ``Column`` representing this metric.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            spark (SparkSession): The Spark Session.</span>
+<span class="sd">            experiment (Experiment): The experiment for which this</span>
+<span class="sd">                metric is being computed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: will this ever need access to ``enrollments``?</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">get_dataframe</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_getter</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_getter</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">col</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="agg_sum"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.agg_sum">[docs]</a><span class="k">def</span> <span class="nf">agg_sum</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the sum over the data, with 0-filled nulls.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        col (Column): A Spark Column of a numeric type</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="agg_any"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.agg_any">[docs]</a><span class="k">def</span> <span class="nf">agg_any</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the bitwise OR, as an int, with 0-filled nulls.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        col (Column): A Spark Column of bools</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -82,10 +82,9 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About Mozanalysis</a></li>
-</ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About Mozanalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide.html">Guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
@@ -93,6 +92,10 @@
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics/firetv.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firetv</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics/firetv.html#mozanalysis-metrics-desktop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
 </ul>
 </li>
@@ -165,24 +168,6 @@
   <div class="section" id="module-mozanalysis.experiment">
 <span id="mozanalysis-experiment"></span><h1><a class="reference internal" href="#module-mozanalysis.experiment" title="mozanalysis.experiment"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a><a class="headerlink" href="#module-mozanalysis.experiment" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="mozanalysis.experiment.AnalysisWindow">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">AnalysisWindow</code><span class="sig-paren">(</span><em class="sig-param">start: int</em>, <em class="sig-param">end: int</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#AnalysisWindow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.AnalysisWindow" title="Permalink to this definition">¶</a></dt>
-<dd><p>Represents the range of days in which to measure a metric.</p>
-<p>The range is measured in “days after enrollment”, and is inclusive.</p>
-<p>For example, <code class="docutils literal notranslate"><span class="pre">AnalysisWindow(0,</span> <span class="pre">6)</span></code> is the first week after enrollment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>start</strong> (<em>int</em>) – First day of the analysis window, in days since
-enrollment.</p></li>
-<li><p><strong>end</strong> (<em>int</em>) – Final day of the analysis window, in days since
-enrollment.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
 <dt id="mozanalysis.experiment.Experiment">
 <em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">Experiment</code><span class="sig-paren">(</span><em class="sig-param">experiment_slug</em>, <em class="sig-param">start_date</em>, <em class="sig-param">num_dates_enrollment=None</em>, <em class="sig-param">addon_version=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get DataFrames of experiment data; store experiment metadata.</p>
@@ -215,7 +200,8 @@ this analysis window. We can only analyze data for a client
 if we have data covering their entire analysis window.</p></li>
 </ul>
 <p>Example usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mozanalysis.metrics.desktop</span> <span class="k">import</span> <span class="n">active_hours</span><span class="p">,</span> <span class="n">uri_count</span>
+
 
 <span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span>
     <span class="n">experiment_slug</span><span class="o">=</span><span class="s1">&#39;pref-flip-defaultoncookierestrictions-1506704&#39;</span><span class="p">,</span>
@@ -226,15 +212,9 @@ if we have data covering their entire analysis window.</p></li>
 
 <span class="n">res</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get_per_client_data</span><span class="p">(</span>
     <span class="n">enrollments</span><span class="p">,</span>
-    <span class="n">cd</span><span class="p">,</span>
     <span class="p">[</span>
-        <span class="n">F</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span>
-            <span class="n">cd</span><span class="o">.</span><span class="n">active_hours_sum</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;active_hours&#39;</span><span class="p">),</span>
-        <span class="n">F</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span>
-            <span class="n">cd</span><span class="o">.</span><span class="n">scalar_parent_browser_engagement_total_uri_count_sum</span><span class="p">,</span>
-            <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;uri_count&#39;</span><span class="p">),</span>
+        <span class="n">active_hours</span><span class="p">,</span>
+        <span class="n">uri_count</span>
     <span class="p">],</span>
     <span class="n">last_date_full_data</span><span class="o">=</span><span class="s1">&#39;20190107&#39;</span><span class="p">,</span>
     <span class="n">analysis_start_days</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -375,43 +355,15 @@ enrollment. Columns:</p>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.get_per_client_data">
-<code class="sig-name descname">get_per_client_data</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">data_source</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_days</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_per_client_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_per_client_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_per_client_data</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_days</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_per_client_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_per_client_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a DataFrame containing per-client metric values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>enrollments</strong> – A spark DataFrame of enrollments, like the one
 returned by <code class="docutils literal notranslate"><span class="pre">self.get_enrollments()</span></code>.</p></li>
-<li><p><strong>data_source</strong> – <p>A spark DataFrame containing the data needed to
-calculate the metrics. Could be <code class="docutils literal notranslate"><span class="pre">main_summary</span></code> or
-<code class="docutils literal notranslate"><span class="pre">clients_daily</span></code>. <em>Don’t</em> use <code class="docutils literal notranslate"><span class="pre">experiments</span></code>; as of 2019/04/02
-it drops data collected after people self-unenroll, so
-unenrolling users will appear to churn. Must have at least
-the following columns:</p>
-<ul>
-<li><p>client_id (str)</p></li>
-<li><p>submission_date_s3 (str)</p></li>
-<li><p>data columns referred to in <code class="docutils literal notranslate"><span class="pre">metric_list</span></code></p></li>
-</ul>
-<p>Ideally also has:</p>
-<ul>
-<li><p>experiments (map): At present this is used to exclude
-pre-enrollment ping data collected on enrollment
-day. Once it or its successor reliably tags data
-from all enrolled users, even post-unenroll, we’ll
-also join on it to exclude data from duplicate
-<code class="docutils literal notranslate"><span class="pre">client_id</span></code>s that are not enrolled in the same
-branch.</p></li>
-</ul>
-</p></li>
-<li><p><strong>metric_list</strong> – <p>A list of columns that aggregate and compute
-metrics over data grouped by <code class="docutils literal notranslate"><span class="pre">(client_id,</span> <span class="pre">branch)</span></code>, e.g.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-    <span class="n">data_source</span><span class="o">.</span><span class="n">metric_name</span>
-<span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;metric_name&#39;</span><span class="p">)]</span>
-</pre></div>
-</div>
-</p></li>
+<li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics
+to analyze.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
 have complete data, e.g. ‘20190322’. If you want to ignore
 all data collected after a certain date (e.g. when the
@@ -427,24 +379,27 @@ Defaults to False to reduce memory usage of the results.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>A spark DataFrame of experiment data. One row per <code class="docutils literal notranslate"><span class="pre">client_id</span></code>.
-One or two metadata columns, then one column per metric in
-<code class="docutils literal notranslate"><span class="pre">metric_list</span></code>. Then one column per sanity-check metric.
-Columns:</p>
+Some metadata columns, then one column per metric in
+<code class="docutils literal notranslate"><span class="pre">metric_list</span></code>, and one column per sanity-check metric.
+Columns (not necessarily in order):</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>client_id (str, optional): Not necessary for
 “happy path” analyses.</p></li>
 <li><p>branch (str): The client’s branch</p></li>
+<li><p>other columns of <code class="docutils literal notranslate"><span class="pre">enrollments</span></code>.</p></li>
 <li><p>[metric 1]: The client’s value for the first metric in
 <code class="docutils literal notranslate"><span class="pre">metric_list</span></code>.</p></li>
 <li><p>…</p></li>
 <li><p>[metric n]: The client’s value for the nth (final)
 metric in <code class="docutils literal notranslate"><span class="pre">metric_list</span></code>.</p></li>
 <li><p>[sanity check 1]: The client’s value for the first
-sanity check metric.</p></li>
+sanity check metric for the first data source that
+supports sanity checks.</p></li>
 <li><p>…</p></li>
 <li><p>[sanity check n]: The client’s value for the last
-sanity check metric.</p></li>
+sanity check metric for the last data source that
+supports sanity checks.</p></li>
 </ul>
 </div></blockquote>
 <p>This format - the schema plus there being one row per
@@ -458,7 +413,7 @@ standard format for queried experimental data.</p>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.get_time_series_data">
-<code class="sig-name descname">get_time_series_data</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">data_source</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_time_series_data</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a dict containing DataFrames with per-client metric values.</p>
 <p>Equivalent to looping over <code class="docutils literal notranslate"><span class="pre">get_per_client_data</span></code> with
 different analysis windows, calling <code class="docutils literal notranslate"><span class="pre">.toPandas()</span></code>, and
@@ -470,36 +425,7 @@ efficient.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>enrollments</strong> – A spark DataFrame of enrollments, like the one
 returned by <code class="docutils literal notranslate"><span class="pre">self.get_enrollments()</span></code>.</p></li>
-<li><p><strong>data_source</strong> – <p>A spark DataFrame containing the data needed to
-calculate the metrics. Could be <code class="docutils literal notranslate"><span class="pre">main_summary</span></code> or
-<code class="docutils literal notranslate"><span class="pre">clients_daily</span></code>. <em>Don’t</em> use <code class="docutils literal notranslate"><span class="pre">experiments</span></code>; as of 2019/04/02
-it drops data collected after people self-unenroll, so
-unenrolling users will appear to churn. Must have at least
-the following columns:</p>
-<ul>
-<li><p>client_id (str)</p></li>
-<li><p>submission_date_s3 (str)</p></li>
-<li><p>data columns referred to in <code class="docutils literal notranslate"><span class="pre">metric_list</span></code></p></li>
-</ul>
-<p>Ideally also has:</p>
-<ul>
-<li><p>experiments (map): At present this is used to exclude
-pre-enrollment ping data collected on enrollment
-day. Once it or its successor reliably tags data
-from all enrolled users, even post-unenroll, we’ll
-also join on it to exclude data from duplicate
-<code class="docutils literal notranslate"><span class="pre">client_id</span></code>s that are not enrolled in the same
-branch.</p></li>
-</ul>
-</p></li>
-<li><p><strong>metric_list</strong> – <p>A list of columns that aggregate and compute
-metrics over data grouped by <code class="docutils literal notranslate"><span class="pre">(client_id,</span> <span class="pre">branch)</span></code>, e.g.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-    <span class="n">data_source</span><span class="o">.</span><span class="n">metric_name</span>
-<span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;metric_name&#39;</span><span class="p">)]</span>
-</pre></div>
-</div>
-</p></li>
+<li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics to analyze.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
 have complete data, e.g. ‘20190322’. If you want to ignore
 all data collected after a certain date (e.g. when the
@@ -515,22 +441,25 @@ Defaults to False to reduce memory usage of the results.</p></li>
 analysis window. Each value is a pandas DataFrame in “the
 standard format”: one row per client, some metadata columns,
 plus one column per metric and sanity-check metric.
-Columns:</p>
+Columns (not necessarily in order):</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>client_id (str, optional): Not necessary for
 “happy path” analyses.</p></li>
 <li><p>branch (str): The client’s branch</p></li>
+<li><p>other columns of <code class="docutils literal notranslate"><span class="pre">enrollments</span></code>.</p></li>
 <li><p>[metric 1]: The client’s value for the first metric in
 <code class="docutils literal notranslate"><span class="pre">metric_list</span></code>.</p></li>
 <li><p>…</p></li>
 <li><p>[metric n]: The client’s value for the nth (final)
 metric in <code class="docutils literal notranslate"><span class="pre">metric_list</span></code>.</p></li>
 <li><p>[sanity check 1]: The client’s value for the first
-sanity check metric.</p></li>
+sanity check metric for the first data source that
+supports sanity checks.</p></li>
 <li><p>…</p></li>
 <li><p>[sanity check n]: The client’s value for the last
-sanity check metric.</p></li>
+sanity check metric for the last data source that
+supports sanity checks.</p></li>
 </ul>
 </div></blockquote>
 </p>
@@ -543,7 +472,7 @@ sanity check metric.</p></li>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.get_time_series_data_lazy">
-<code class="sig-name descname">get_time_series_data_lazy</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">data_source</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data_lazy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data_lazy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_time_series_data_lazy</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data_lazy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data_lazy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Like <code class="docutils literal notranslate"><span class="pre">get_time_series_data()</span></code> but with Spark DataFrames.</p>
 <p>See docs for <code class="docutils literal notranslate"><span class="pre">get_time_series_data()</span></code>.</p>
 <p>Sometimes the results of <code class="docutils literal notranslate"><span class="pre">get_time_series_data()</span></code> do not fit
@@ -643,6 +572,24 @@ determines the number of points in the time series.</p></li>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="mozanalysis.experiment.AnalysisWindow">
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">AnalysisWindow</code><span class="sig-paren">(</span><em class="sig-param">start: int</em>, <em class="sig-param">end: int</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#AnalysisWindow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.AnalysisWindow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the range of days in which to measure a metric.</p>
+<p>The range is measured in “days after enrollment”, and is inclusive.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">AnalysisWindow(0,</span> <span class="pre">6)</span></code> is the first week after enrollment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<em>int</em>) – First day of the analysis window, in days since
+enrollment.</p></li>
+<li><p><strong>end</strong> (<em>int</em>) – Final day of the analysis window, in days since
+enrollment.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

@@ -82,10 +82,9 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About Mozanalysis</a></li>
-</ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About Mozanalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide.html">Guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
@@ -93,6 +92,10 @@
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics/firetv.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firetv</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics/firetv.html#mozanalysis-metrics-desktop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
 </ul>
 </li>
@@ -213,6 +216,38 @@ the columns of a value of <code class="docutils literal notranslate"><span class
 </dd></dl>
 
 <dl class="function">
+<dt id="mozanalysis.bayesian_stats.summarize_one_branch_samples">
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.</code><code class="sig-name descname">summarize_one_branch_samples</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#summarize_one_branch_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.summarize_one_branch_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return descriptive statistics for sampled population-level stats.</p>
+<p>Given samples from one or more distributions, calculate some
+quantiles and the mean.</p>
+<p>The intended primary use-case is for calculating credible intervals
+for stats when bootstrapping, or credible intervals around Bayesian
+model parameters; in both cases <code class="docutils literal notranslate"><span class="pre">samples</span></code> are from a posterior
+concerning one branch of an experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Samples over which
+to compute the mean and quantiles.</p></li>
+<li><p><strong>quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – The quantiles to compute - a good
+reason to override the defaults would be when Bonferroni
+corrections are required.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>If <code class="docutils literal notranslate"><span class="pre">samples</span></code> is a Series, then returns a pandas Series;
+the index contains the stringified <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus
+<code class="docutils literal notranslate"><span class="pre">'mean'</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">samples</span></code> is a DataFrame, then returns a pandas DataFrame;
+the columns contain the stringified <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus
+<code class="docutils literal notranslate"><span class="pre">'mean'</span></code>. The index matches the columns of <code class="docutils literal notranslate"><span class="pre">samples</span></code>.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="mozanalysis.bayesian_stats.summarize_joint_samples">
 <code class="sig-prename descclassname">mozanalysis.bayesian_stats.</code><code class="sig-name descname">summarize_joint_samples</code><span class="sig-paren">(</span><em class="sig-param">focus</em>, <em class="sig-param">reference</em>, <em class="sig-param">quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#summarize_joint_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.summarize_joint_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return descriptive statistics for uplifts.</p>
@@ -273,38 +308,6 @@ branch.</p></li>
 </ul>
 <p>If returning a DataFrame, this MultiIndex is for the columns, and
 the index matches the columns of <code class="docutils literal notranslate"><span class="pre">focus</span></code>.</p>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="mozanalysis.bayesian_stats.summarize_one_branch_samples">
-<code class="sig-prename descclassname">mozanalysis.bayesian_stats.</code><code class="sig-name descname">summarize_one_branch_samples</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#summarize_one_branch_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.summarize_one_branch_samples" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return descriptive statistics for sampled population-level stats.</p>
-<p>Given samples from one or more distributions, calculate some
-quantiles and the mean.</p>
-<p>The intended primary use-case is for calculating credible intervals
-for stats when bootstrapping, or credible intervals around Bayesian
-model parameters; in both cases <code class="docutils literal notranslate"><span class="pre">samples</span></code> are from a posterior
-concerning one branch of an experiment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>samples</strong> (<em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Samples over which
-to compute the mean and quantiles.</p></li>
-<li><p><strong>quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – The quantiles to compute - a good
-reason to override the defaults would be when Bonferroni
-corrections are required.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>If <code class="docutils literal notranslate"><span class="pre">samples</span></code> is a Series, then returns a pandas Series;
-the index contains the stringified <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus
-<code class="docutils literal notranslate"><span class="pre">'mean'</span></code>.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">samples</span></code> is a DataFrame, then returns a pandas DataFrame;
-the columns contain the stringified <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus
-<code class="docutils literal notranslate"><span class="pre">'mean'</span></code>. The index matches the columns of <code class="docutils literal notranslate"><span class="pre">samples</span></code>.</p>
 </p>
 </dd>
 </dl>
