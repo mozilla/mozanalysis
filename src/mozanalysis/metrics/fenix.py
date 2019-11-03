@@ -5,7 +5,7 @@
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
 
-from mozanalysis.metrics import Metric, DataSource
+from mozanalysis.metrics import Metric, DataSource, agg_sum
 from mozanalysis.utils import all_
 
 
@@ -24,7 +24,7 @@ def fenix_baseline(spark, experiment):
 @DataSource.from_func()
 def fenix_metrics(spark, experiment):
     met = spark.table('org_mozilla_fenix_metrics_parquet')
-    return met.m.withColumn('client_id', met.client_info.client_id)
+    return met.withColumn('client_id', met.client_info.client_id)
 
 
 @DataSource.from_func()
@@ -33,7 +33,7 @@ def fenix_events(spark, experiment):
     return ev.select(
         ev.client_info.client_id.alias('client_id'),
         ev.submission_date_s3,
-        F.explode_outer(e.events).alias('event')
+        F.explode_outer(ev.events).alias('event')
     ).select(
         'event.*',
         '*'
@@ -45,12 +45,12 @@ def fenix_events(spark, experiment):
 
 @Metric.from_func(fenix_metrics)
 def uri_count(met):
-    return met.agg_sum(met.metrics.counter['events.total_uri_count'])
+    return agg_sum(met.metrics.counter['events.total_uri_count'])
 
 
 @Metric.from_func(fenix_baseline)
 def duration(bs):
-    return bs.agg_sum(bs.duration)
+    return agg_sum(bs.duration)
 
 
 @Metric.from_func(fenix_events)
@@ -72,6 +72,6 @@ def extract_search_counts(x):
 
 @Metric.from_func(fenix_metrics)
 def search_count(met):
-    return met.agg_sum(
+    return agg_sum(
         extract_search_counts(met.metrics.labeled_counter['metrics.search_count'])
     )
