@@ -103,7 +103,7 @@ def fx_page_load_ms_2_mean(ms):
 
 @Metric.from_func(main_summary)
 def fx_tab_switch_total_e10s_ms_mean(ms):
-    return pings_histogram_mean(F.collect_list(ms.fx_tab_switch_total_e10s_ms_mean))
+    return pings_histogram_mean(F.collect_list(ms.histogram_parent_fx_tab_switch_total_e10s_ms))
 
 
 @Metric.from_func(main_summary)
