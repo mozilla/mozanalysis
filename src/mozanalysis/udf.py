@@ -109,10 +109,10 @@ def generate_quantile_udf(sdf, grouping_fields, bucket_field, count_field, quant
     """
     schema = (
         sdf
-        .select(*grouping_fields)
-        .schema
-        .add(StructField("quantile", DoubleType(), False))
-        .add(StructField("value", DoubleType(), True))
+            .select(*grouping_fields)
+            .schema
+            .add(StructField("quantile", DoubleType(), False))
+            .add(StructField("value", DoubleType(), True))
     )
 
     @F.pandas_udf(schema, F.PandasUDFType.GROUPED_MAP)
@@ -190,10 +190,10 @@ def generate_threshold_udf(sdf, grouping_fields, bucket_field, count_field, thre
     """
     schema = (
         sdf
-        .select(*grouping_fields)
-        .schema
-        .add(StructField("threshold", IntegerType(), False))
-        .add(StructField("fraction_exceeding", DoubleType(), True))
+            .select(*grouping_fields)
+            .schema
+            .add(StructField("threshold", IntegerType(), False))
+            .add(StructField("fraction_exceeding", DoubleType(), True))
     )
 
     @F.pandas_udf(schema, F.PandasUDFType.GROUPED_MAP)
@@ -202,7 +202,7 @@ def generate_threshold_udf(sdf, grouping_fields, bucket_field, count_field, thre
         all_sum = float(df[count_field].sum())
         for tx in thresholds:
             fraction = (
-                df.loc[df[bucket_field].astype(int) >= tx, count_field].sum() / all_sum
+                    df.loc[df[bucket_field].astype(int) >= tx, count_field].sum() / all_sum
             )
             rows.append({"threshold": tx, "fraction_exceeding": fraction})
         data = pd.DataFrame(rows).assign(_dummy=1)
@@ -211,3 +211,32 @@ def generate_threshold_udf(sdf, grouping_fields, bucket_field, count_field, thre
         return result
 
     return udf
+
+
+@F.udf(DoubleType())
+def pings_histogram_mean(hists):
+    """Returns the mean of values in a histogram.
+    This mean relies on the sum *post*-quantization, which amounts to a
+    left-hand-rule discrete integral of the histogram. It is therefore
+    likely to be an underestimate of the true mean.
+    """
+    numerator = 0
+    denominator = 0
+    for values in hists:
+        if values is not None:
+            for k, v in values.items():
+                numerator += int(k) * v
+                denominator += v
+    if denominator != 0:
+        hist_mean = numerator / float(denominator)
+    else:
+        hist_mean = None
+    return hist_mean
+
+
+@F.udf(returnType=IntegerType())
+def extract_search_counts(x):
+    counts = 0
+    if x is not None:
+        counts = sum(x.values())
+    return counts

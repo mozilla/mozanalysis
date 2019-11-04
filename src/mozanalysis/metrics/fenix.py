@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from pyspark.sql import functions as F
-from pyspark.sql import types as T
 
 from mozanalysis.metrics import Metric, DataSource, agg_sum
 from mozanalysis.utils import all_
+from mozanalysis.udf import extract_search_counts
 
 
 @DataSource.from_func()
@@ -60,14 +60,6 @@ def user_reports_site_issue(ev):
         ev.key == 'item',
         ev.value == 'report_site_issue'
     ]).astype('int'))
-
-
-@F.udf(returnType=T.IntegerType())
-def extract_search_counts(x):
-    counts = 0
-    if x is not None:
-        counts = sum(x.values())
-    return counts
 
 
 @Metric.from_func(fenix_metrics)

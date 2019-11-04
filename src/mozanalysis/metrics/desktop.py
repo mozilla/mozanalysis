@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# from pyspark.sql import functions as F
+from pyspark.sql import functions as F
 
 from mozanalysis.metrics import Metric, DataSource, agg_sum, agg_any
 from mozanalysis.utils import all_  # , any_
-
+from mozanalysis.udf import pings_histogram_mean
 
 clients_daily = DataSource.from_table_name('clients_daily')
 main_summary = DataSource.from_table_name('main_summary')
@@ -94,3 +94,23 @@ def view_about_protections(events):
         events.event_object == 'protection_report',
         events.event_method == 'show',
     ]))
+
+
+@Metric.from_func(main_summary)
+def fx_page_load_ms_2_mean(ms):
+    return pings_histogram_mean(F.collect_list(ms.histogram_parent_fx_page_load_ms_2))
+
+
+@Metric.from_func(main_summary)
+def fx_tab_switch_total_e10s_ms_mean(ms):
+    return pings_histogram_mean(F.collect_list(ms.fx_tab_switch_total_e10s_ms_mean))
+
+
+@Metric.from_func(main_summary)
+def about_home_topsites_first_paint(ms):
+    return agg_sum(ms.scalar_parent_timestamps_about_home_topsites_first_paint)
+
+
+@Metric.from_func(main_summary)
+def first_paint(ms):
+    return agg_sum(ms.first_paint)
