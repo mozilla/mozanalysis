@@ -43,7 +43,7 @@ def fenix_events(spark, experiment):
     ).drop('event', 'extra')
 
 
-@Metric.from_func(fenix_metrics)
+@Metric.from_func(fenix_baseline)
 def uri_count(met):
     return agg_sum(met.metrics.counter['events.total_uri_count'])
 
@@ -53,17 +53,26 @@ def duration(bs):
     return agg_sum(bs.duration)
 
 
-@Metric.from_func(fenix_events)
-def user_reports_site_issue(ev):
-    return F.sum(all_([
-        ev.name == 'browser_menu_action',
-        ev.key == 'item',
-        ev.value == 'report_site_issue'
-    ]).astype('int'))
-
-
 @Metric.from_func(fenix_metrics)
 def search_count(met):
     return agg_sum(
         extract_search_counts(met.metrics.labeled_counter['metrics.search_count'])
     )
+
+
+def calc_num_events(ev, name, key, value):
+    return F.sum(all_([
+        ev.name == name,
+        ev.key == key,
+        ev.value == value
+    ]).astype('int'))
+
+
+@Metric.from_func(fenix_events)
+def user_reports_site_issue_count(ev):
+    return calc_num_events(ev, 'browser_menu_action', 'item', 'report_site_issue')
+
+
+@Metric.from_func(fenix_events)
+def user_reload_count(ev):
+    return calc_num_events(ev, 'browser_menu_action', 'item', 'reload')

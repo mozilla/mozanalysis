@@ -215,10 +215,14 @@ def generate_threshold_udf(sdf, grouping_fields, bucket_field, count_field, thre
 
 @F.udf(DoubleType())
 def pings_histogram_mean(hists):
-    """Returns the mean of values in a histogram.
-    This mean relies on the sum *post*-quantization, which amounts to a
-    left-hand-rule discrete integral of the histogram. It is therefore
-    likely to be an underestimate of the true mean.
+    """ Returns the mean of a list of histograms
+
+    Args:
+        hists: list of dict
+
+    Returns:
+        mean: float
+
     """
     numerator = 0
     denominator = 0
@@ -240,3 +244,13 @@ def extract_search_counts(x):
     if x is not None:
         counts = sum(x.values())
     return counts
+
+
+@F.udf(returnType=DoubleType())
+def mean_narm(x):
+    values = [float(value) for value in x if x is not None]
+    if values:
+        avg = sum(values) / len(values)
+    else:
+        avg = None
+    return avg

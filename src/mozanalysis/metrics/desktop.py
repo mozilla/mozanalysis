@@ -6,7 +6,8 @@ from pyspark.sql import functions as F
 
 from mozanalysis.metrics import Metric, DataSource, agg_sum, agg_any
 from mozanalysis.utils import all_  # , any_
-from mozanalysis.udf import pings_histogram_mean
+from mozanalysis.udf import pings_histogram_mean, mean_narm
+
 
 clients_daily = DataSource.from_table_name('clients_daily')
 main_summary = DataSource.from_table_name('main_summary')
@@ -34,6 +35,18 @@ def telemetry_shield_study_parquet(spark, experiment):
         return this_exp.filter(
             tssp.payload.addon_version == experiment.addon_version
         )
+
+
+# @DataSource.from_func()
+# def crash_summary(spark, experiment):
+#     cs = spark.table('crash_summary_v2')
+#     cs = cs.select(
+#         F.regexp_replace(cs.submission_date, '-', '').alias('submission_date_s3'),
+#         cs.client_id,
+#         'payload.*',
+#         cs.experiments)
+#     # cs = cs.filter(cs.experiments[experiment.experiment_slug].isNotNull())
+#     return cs
 
 
 @Metric.from_func(clients_daily)
@@ -108,9 +121,21 @@ def fx_tab_switch_total_e10s_ms_mean(ms):
 
 @Metric.from_func(main_summary)
 def about_home_topsites_first_paint(ms):
-    return agg_sum(ms.scalar_parent_timestamps_about_home_topsites_first_paint)
+    return mean_narm(
+        F.collect_list(
+            F.when(ms.scalar_parent_timestamps_about_home_topsites_first_paint >= 0,
+                   ms.scalar_parent_timestamps_about_home_topsites_first_paint)
+        )
+    )
 
 
 @Metric.from_func(main_summary)
 def first_paint(ms):
-    return agg_sum(ms.first_paint)
+    return mean_narm(
+        F.collect_list(
+            F.when(ms.first_paint >= 0,
+                   ms.first_paint)
+        )
+    )
+
+
