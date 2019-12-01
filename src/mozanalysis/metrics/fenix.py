@@ -76,3 +76,18 @@ def user_reports_site_issue_count(ev):
 @Metric.from_func(fenix_events)
 def user_reload_count(ev):
     return calc_num_events(ev, 'browser_menu_action', 'item', 'reload')
+
+
+@Metric.from_func(fenix_baseline)
+def baseline_ping_count(bs):
+    return F.count(bs.metrics)
+
+
+@Metric.from_func(fenix_metrics)
+def metric_ping_count(met):
+    return F.count(met.metrics)
+
+
+@Metric.from_func(fenix_baseline)
+def first_run_date(bs):
+    return F.min(bs.first_run_date)
