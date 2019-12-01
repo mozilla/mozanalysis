@@ -18,6 +18,8 @@ def fenix_baseline(spark, experiment):
         'b_dur', bs.metrics.timespan['glean.baseline.duration']
     ).withColumn(
         'duration', F.col('b_dur.value')
+    ).withColumn(
+        'first_run_date', bs.client_info.first_run_date
     ).drop('b_dur')
 
 
