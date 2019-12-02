@@ -242,10 +242,9 @@ class Metric(object):
             cd = spark.table('clients_daily')
 
             active_hours = Metric.from_col(
-                name='active_hours',
+                metric_name='active_hours',
                 col=agg_sum(cd.active_hours_sum),
-                df_name='cd',
-                df=cd,
+                data_source=cd,
             )
     """
     name = attr.ib(type=str)
@@ -299,9 +298,9 @@ class Metric(object):
             cd_ds = DataSource.from_table_name('clients_daily')
 
             active_hours = Metric.from_col(
-                name='active_hours',
+                metric_name='active_hours',
                 col=agg_sum(cd.active_hours_sum),
-                data_source=cd_ds
+                data_source=cd,
             )
         """
         return cls(
