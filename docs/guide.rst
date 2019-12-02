@@ -269,4 +269,4 @@ Each stats technique has a module in :mod:`mozanalysis.bayesian_stats` or :mod:`
 
     mafsboot.compare_branches(gpcd_res, 'active_hours', threshold_quantile=0.9999)
 
-    sf_search_week_2 = mabssf.compare_branches(gpcd_res, 'search_count')
+    sf_search_week_2 = mabssf.compare_branches(sc, gpcd_res, 'search_count')
