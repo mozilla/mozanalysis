@@ -5,32 +5,6 @@ import datetime
 import numpy as np
 from functools import reduce
 
-import pyspark.sql.functions as F
-from pyspark.sql.column import Column
-
-
-def dedupe_columns(columns):
-    """
-    Given a list of columns, returns a list with duplicates removed.
-
-    These can be either from `F.col` or `F.expr`.
-
-    NOTE: Because of the underlying way `Column`s are coded using Python
-    magic methods, the usual methods for comparing or deduping don't work
-    here. They aren't hashable so we can't use sets and they aren't
-    comparable by normal methods. So we fall back to comparing the underlying
-    Java object ids instead.
-
-    """
-    d = {}
-
-    for col in columns:
-        if not isinstance(col, Column):
-            col = F.col(col)
-        d[col._jc] = col
-
-    return list(d.values())
-
 
 def all_(l):
     """Return the element-wise logical AND of `Column`s.
@@ -67,16 +41,16 @@ def any_(l):
 
 
 def add_days(date_string, n_days):
-    """Add `n_days` days to a date string like '20190101'."""
-    original_date = datetime.datetime.strptime(date_string, '%Y%m%d')
+    """Add `n_days` days to a date string like '2019-01-01'."""
+    original_date = datetime.datetime.strptime(date_string, '%Y-%m-%d')
     new_date = original_date + datetime.timedelta(days=n_days)
-    return datetime.datetime.strftime(new_date, '%Y%m%d')
+    return datetime.datetime.strftime(new_date, '%Y-%m-%d')
 
 
 def date_sub(date_string_l, date_string_r):
-    """Return the number of days between two date strings like '20190101'"""
-    date_l = datetime.datetime.strptime(date_string_l, '%Y%m%d')
-    date_r = datetime.datetime.strptime(date_string_r, '%Y%m%d')
+    """Return the number of days between two date strings like '2019-01-01'"""
+    date_l = datetime.datetime.strptime(date_string_l, '%Y-%m-%d')
+    date_r = datetime.datetime.strptime(date_string_r, '%Y-%m-%d')
     return (date_l - date_r).days
 
 
