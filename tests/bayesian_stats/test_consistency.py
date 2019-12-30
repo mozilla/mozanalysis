@@ -15,7 +15,7 @@ def test_bootstrap_vs_beta(spark_context):
     fake_data = pd.Series(np.zeros(num_enrollments))
     fake_data[:300] = 1
 
-    boot_res = mafsb.bootstrap_one_branch(spark_context, fake_data)
+    boot_res = mafsb.bootstrap_one_branch(fake_data, sc=spark_context)
     beta_res = mabsbin.summarize_one_branch_from_agg(pd.Series({
         # `-1` to simulate Beta(0, 0) improper prior, closer to
         # bootstrap for quantiles (i think?)
@@ -40,6 +40,10 @@ def test_bootstrap_vs_beta(spark_context):
         ), l
 
 
+def test_bootstrap_vs_beta_no_spark():
+    test_bootstrap_vs_beta(None)
+
+
 def test_bayesian_bootstrap_vs_beta(spark_context):
     # The two distributions should be mathematically identical for binary data
     # like this; differences could emerge from
@@ -49,7 +53,7 @@ def test_bayesian_bootstrap_vs_beta(spark_context):
     fake_data = pd.Series(np.zeros(num_enrollments))
     fake_data[:300] = 1
 
-    boot_res = mabsbb.bootstrap_one_branch(spark_context, fake_data)
+    boot_res = mabsbb.bootstrap_one_branch(fake_data, sc=spark_context)
     beta_res = mabsbin.summarize_one_branch_from_agg(pd.Series({
         # `-1` to simulate Beta(0, 0) improper prior, closer to
         # bootstrap for quantiles (i think?)
@@ -66,14 +70,18 @@ def test_bayesian_bootstrap_vs_beta(spark_context):
         ), (l, boot_res, beta_res)
 
 
+def test_bayesian_bootstrap_vs_beta_no_spark():
+    test_bayesian_bootstrap_vs_beta(None)
+
+
 def test_bayesian_bootstrap_vs_bootstrap_geometric(spark_context):
     num_enrollments = 20000
 
     rs = np.random.RandomState(42)
     data = rs.geometric(p=0.1, size=num_enrollments)
 
-    bb_res = mabsbb.bootstrap_one_branch(spark_context, data)
-    pboot_res = mafsb.bootstrap_one_branch(spark_context, data)
+    bb_res = mabsbb.bootstrap_one_branch(data, sc=spark_context)
+    pboot_res = mafsb.bootstrap_one_branch(data, sc=spark_context)
 
     assert bb_res['mean'] == pytest.approx(10, rel=1e-2)
     assert bb_res['0.5'] == pytest.approx(10, rel=1e-2)
@@ -83,6 +91,10 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric(spark_context):
             pboot_res.loc[l],
             rel=5e-3
         ), (l, bb_res, pboot_res)
+
+
+def test_bayesian_bootstrap_vs_bootstrap_geometric_no_spark():
+    test_bayesian_bootstrap_vs_bootstrap_geometric(None)
 
 
 def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(spark_context):
@@ -99,10 +111,13 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(spark_context):
         ))
 
     bb_res = mabsbb.bootstrap_one_branch(
-        spark_context, data,
-        stat_fn=mabsbb.make_bb_quantile_closure(quantiles)
+        data,
+        stat_fn=mabsbb.make_bb_quantile_closure(quantiles),
+        sc=spark_context
     )
-    pboot_res = mafsb.bootstrap_one_branch(spark_context, data, stat_fn=calc_quantiles)
+    pboot_res = mafsb.bootstrap_one_branch(
+        data, stat_fn=calc_quantiles, sc=spark_context
+    )
 
     for q in bb_res.index:
         for l in bb_res.columns:
@@ -112,14 +127,18 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(spark_context):
             ), (q, l, bb_res, pboot_res)
 
 
+def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles_no_spark():
+    test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(None)
+
+
 def test_bayesian_bootstrap_vs_bootstrap_poisson(spark_context):
     num_enrollments = 10001
 
     rs = np.random.RandomState(42)
     data = rs.poisson(lam=10, size=num_enrollments)
 
-    bb_res = mabsbb.bootstrap_one_branch(spark_context, data)
-    pboot_res = mafsb.bootstrap_one_branch(spark_context, data)
+    bb_res = mabsbb.bootstrap_one_branch(data, sc=spark_context)
+    pboot_res = mafsb.bootstrap_one_branch(data, sc=spark_context)
 
     assert bb_res['mean'] == pytest.approx(10, rel=1e-2)
     assert bb_res['0.5'] == pytest.approx(10, rel=1e-2)
@@ -129,6 +148,10 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson(spark_context):
             pboot_res.loc[l],
             rel=5e-3
         ), (l, bb_res, pboot_res)
+
+
+def test_bayesian_bootstrap_vs_bootstrap_poisson_no_spark():
+    test_bayesian_bootstrap_vs_bootstrap_poisson(None)
 
 
 def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles(spark_context):
@@ -145,10 +168,13 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles(spark_context):
         ))
 
     bb_res = mabsbb.bootstrap_one_branch(
-        spark_context, data,
-        stat_fn=mabsbb.make_bb_quantile_closure(quantiles)
+        data,
+        stat_fn=mabsbb.make_bb_quantile_closure(quantiles),
+        sc=spark_context
     )
-    pboot_res = mafsb.bootstrap_one_branch(spark_context, data, stat_fn=calc_quantiles)
+    pboot_res = mafsb.bootstrap_one_branch(
+        data, stat_fn=calc_quantiles, sc=spark_context
+    )
 
     for q in bb_res.index:
         for l in bb_res.columns:
@@ -156,3 +182,7 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles(spark_context):
                 pboot_res.loc[q, l],
                 rel=5e-3
             ), (q, l, bb_res, pboot_res)
+
+
+def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles_no_spark():
+    test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles(None)
