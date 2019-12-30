@@ -343,7 +343,7 @@ class Experiment(object):
         enrollments_query = custom_enrollments_query or \
             self._build_enrollments_query(time_limits, enrollments_query_type)
 
-        metrics_columns, metrics_queries = self._build_metrics_query_bits(
+        metrics_columns, metrics_joins = self._build_metrics_query_bits(
             metric_list, time_limits
         )
 
@@ -363,12 +363,12 @@ class Experiment(object):
         enrollments.*,
         {metrics_columns}
     FROM enrollments
-    {metrics_queries}
+    {metrics_joins}
         """.format(
             analysis_windows_query=analysis_windows_query,
             enrollments_query=enrollments_query,
             metrics_columns=',\n        '.join(metrics_columns),
-            metrics_queries='\n'.join(metrics_queries)
+            metrics_joins='\n'.join(metrics_joins)
         )
 
     @staticmethod
@@ -453,13 +453,13 @@ class Experiment(object):
         ds_metrics = self._partition_metrics_by_data_source(metric_list)
 
         metrics_columns = []
-        metrics_queries = []
+        metrics_joins = []
 
         for i, ds in enumerate(ds_metrics.keys()):
             query_for_metrics = ds.build_query(
                 ds_metrics[ds], time_limits, self.experiment_slug
             )
-            metrics_queries.append(
+            metrics_joins.append(
                 """    LEFT JOIN (
         {query}
         ) ds_{i} USING (client_id, analysis_window_start, analysis_window_end)
@@ -474,7 +474,7 @@ class Experiment(object):
                     i=i, metric_name=m.name
                 ))
 
-        return metrics_columns, metrics_queries
+        return metrics_columns, metrics_joins
 
     def _partition_metrics_by_data_source(self, metric_list):
         """Return a dict mapping data sources to metric lists.
