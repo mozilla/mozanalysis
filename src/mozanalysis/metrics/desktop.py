@@ -68,7 +68,7 @@ unenroll = Metric(
 
 view_about_logins = Metric(
     name='view_about_logins',
-    data_source='events',
+    data_source=events,
     select_expr=agg_any("""
             event_method = 'open_management'
             AND event_category = 'pwmgr'
@@ -77,7 +77,7 @@ view_about_logins = Metric(
 
 view_about_protections = Metric(
     name='view_about_protections',
-    data_source='events',
+    data_source=events,
     select_expr=agg_any("""
             event_method = 'show'
             AND event_object = 'protection_report'
