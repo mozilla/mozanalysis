@@ -2,61 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import attr
-import re
 
-from google.cloud import bigquery
-from google.api_core.exceptions import Conflict
-
+from mozanalysis.bq_util import sanitize_table_name_for_bq
 from mozanalysis.utils import add_days, date_sub
-
-
-def sanitize_table_name_for_bq(table_name):
-    of_good_character_but_possibly_verbose = re.sub(r'[^a-zA-Z_0-9]', '_', table_name)
-
-    if len(of_good_character_but_possibly_verbose) <= 1024:
-        return of_good_character_but_possibly_verbose
-
-    return of_good_character_but_possibly_verbose[:500] + '___' \
-        + of_good_character_but_possibly_verbose[-500:]
-
-
-class BigqueryStuff(object):
-    def __init__(self, dataset_id, project_id='moz-fx-data-bq-data-science'):
-        self.dataset_id = dataset_id
-        self.project_id = project_id
-        self.client = bigquery.Client(project=project_id)
-
-
-def run_query(bq_stuff, sql, results_table=None):
-    """Run a query and return the result.
-
-    If ``results_table`` is provided, then save the results
-    into there (or just query from there if it already exists).
-    """
-    if not results_table:
-        return bq_stuff.client.query(sql).result()
-
-    try:
-        full_res = bq_stuff.client.query(
-            sql,
-            job_config=bigquery.QueryJobConfig(
-                destination=bq_stuff.client.dataset(
-                    bq_stuff.dataset_id
-                ).table(results_table)
-            )
-        ).result()
-        print('Saved into', results_table)
-        return full_res
-
-    except Conflict:
-        print("Full results table already exists. Reusing", results_table)
-        return bq_stuff.client.query(
-            "SELECT * FROM `{project_id}.{dataset_id}.{full_table_name}`".format(
-                project_id=bq_stuff.project_id,
-                dataset_id=bq_stuff.dataset_id,
-                full_table_name=results_table,
-            )
-        ).result()
 
 
 @attr.s(frozen=True, slots=True)
@@ -101,7 +49,8 @@ class Experiment(object):
         project_id = 'moz-fx-data-bq-data-science'
         dataset_id = 'your-dataset-name'
 
-        from mozanalysis.experiment import Experiment, BigqueryStuff
+        from mozanalysis.experiment import Experiment
+        from mozanalysis.bq_util import BigqueryStuff
         from mozanalysis.metrics.desktop import active_hours, uri_count
 
         bq_stuff = BigqueryStuff(dataset_id, project_id)
@@ -238,7 +187,7 @@ class Experiment(object):
             [last_date_full_data, self.experiment_slug, str(hash(full_sql))]
         ))
 
-        return run_query(bq_stuff, full_sql, full_res_table_name)
+        return bq_stuff.run_query(full_sql, full_res_table_name)
 
     def get_time_series_data(
         self, bq_stuff, metric_list, last_date_full_data,
@@ -312,12 +261,11 @@ class Experiment(object):
             [last_date_full_data, self.experiment_slug, str(hash(full_sql))]
         ))
 
-        full_res = run_query(bq_stuff, full_sql, full_res_table_name)
+        full_res = bq_stuff.run_query(full_sql, full_res_table_name)
 
         ts_res = {
 
-            aw.start: run_query(
-                bq_stuff,
+            aw.start: bq_stuff.run_query(
                 self._build_analysis_window_subset_query(
                     bq_stuff, aw, full_res_table_name
                 ),
