@@ -35,3 +35,20 @@ def spark():
 @pytest.fixture()
 def spark_context(spark):
     return _spark_context
+
+
+def pytest_generate_tests(metafunc):
+    if 'spark_context_or_none' in metafunc.fixturenames:
+        metafunc.parametrize(
+            "spark_context_or_none", ["spark", "no spark"], indirect=True
+        )
+
+
+@pytest.fixture()
+def spark_context_or_none(request):
+    if request.param == 'spark':
+        return _spark_context
+    elif request.param == 'no spark':
+        return None
+    else:
+        raise ValueError("invalid internal test config")

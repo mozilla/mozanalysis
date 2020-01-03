@@ -9,10 +9,10 @@ from mozanalysis.utils import filter_outliers
 
 
 def compare_branches(
-    sc, df, col_label, ref_branch_label='control', stat_fn=np.mean,
+    df, col_label, ref_branch_label='control', stat_fn=np.mean,
     num_samples=10000, threshold_quantile=None,
     individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
-    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES
+    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES, sc=None
 ):
     """Jointly sample bootstrapped statistics then compare them.
 
@@ -21,7 +21,6 @@ def compare_branches(
     regardless of what you may read on Stack Overflow.
 
     Args:
-        sc: The Spark context
         df: a pandas DataFrame of queried experiment data in the
             standard format (see ``mozanalysis.experiment``).
         col_label (str): Label for the df column contaning the metric
@@ -50,6 +49,7 @@ def compare_branches(
             statistics (i.e. the change relative to the reference
             branch, probably the control). Change these when making
             Bonferroni corrections.
+        sc (optional): The Spark context, if available
 
     Returns a dictionary:
         If ``stat_fn`` returns a scalar (this is the default), then
@@ -79,11 +79,11 @@ def compare_branches(
     samples = {
         # TODO: do we need to control seed_start? If so then we must be careful here
         b: get_bootstrap_samples(
-            sc,
             df[col_label][df.branch == b],
             stat_fn,
             num_samples,
-            threshold_quantile=threshold_quantile
+            threshold_quantile=threshold_quantile,
+            sc=sc,
         ) for b in branch_list
     }
 
@@ -94,8 +94,9 @@ def compare_branches(
 
 
 def bootstrap_one_branch(
-    sc, data, stat_fn=np.mean, num_samples=10000, seed_start=None,
-    threshold_quantile=None, summary_quantiles=mabs.DEFAULT_QUANTILES
+    data, stat_fn=np.mean, num_samples=10000, seed_start=None,
+    threshold_quantile=None, summary_quantiles=mabs.DEFAULT_QUANTILES,
+    sc=None
 ):
     """Run a bootstrap for one branch on its own.
 
@@ -104,7 +105,6 @@ def bootstrap_one_branch(
     of the outputs of ``stat_fn``.
 
     Args:
-        sc: The spark context
         data: The data as a list, 1D numpy array, or pandas Series
         stat_fn: Either a function that aggregates each resampled
             population to a scalar (e.g. the default value ``np.mean``
@@ -120,9 +120,10 @@ def bootstrap_one_branch(
         summary_quantiles (list, optional): Quantiles to determine the
             confidence bands on the branch statistics. Change these
             when making Bonferroni corrections.
+        sc (optional): The Spark context, if available
     """
     samples = get_bootstrap_samples(
-        sc, data, stat_fn, num_samples, seed_start, threshold_quantile
+        data, stat_fn, num_samples, seed_start, threshold_quantile, sc
     )
 
     return mabs.summarize_one_branch_samples(
@@ -131,15 +132,14 @@ def bootstrap_one_branch(
 
 
 def get_bootstrap_samples(
-    sc, data, stat_fn=np.mean, num_samples=10000, seed_start=None,
-    threshold_quantile=None
+    data, stat_fn=np.mean, num_samples=10000, seed_start=None,
+    threshold_quantile=None, sc=None
 ):
     """Return ``stat_fn`` evaluated on resampled and original data.
 
     Do the resampling in parallel over the cluster.
 
     Args:
-        sc: The spark context
         data: The data as a list, 1D numpy array, or pandas series
         stat_fn: Either a function that aggregates each resampled
             population to a scalar (e.g. the default value ``np.mean``
@@ -157,6 +157,7 @@ def get_bootstrap_samples(
             in this calculation. By default, use a random seed.
         threshold_quantile (float, optional): An optional threshold
             quantile, above which to discard outliers. E.g. ``0.9999``.
+        sc (optional): The Spark context, if available
 
     Returns:
         ``stat_fn`` evaluated over ``num_samples`` samples.
@@ -182,20 +183,26 @@ def get_bootstrap_samples(
     # Need to ensure every call has a unique, deterministic seed.
     seed_range = range(seed_start, seed_start + num_samples)
 
-    # TODO: run locally `if sc is None`?
-    try:
-        broadcast_data = sc.broadcast(data)
+    if sc is None:
+        summary_stat_samples = [
+            _resample_and_agg_once(data, stat_fn, unique_seed)
+            for unique_seed in seed_range
+        ]
 
-        summary_stat_samples = sc.parallelize(seed_range).map(
-            lambda seed: _resample_and_agg_once_bcast(
-                broadcast_data=broadcast_data,
-                stat_fn=stat_fn,
-                unique_seed=seed % np.iinfo(np.uint32).max,
-            )
-        ).collect()
+    else:
+        try:
+            broadcast_data = sc.broadcast(data)
 
-    finally:
-        broadcast_data.unpersist()
+            summary_stat_samples = sc.parallelize(seed_range).map(
+                lambda seed: _resample_and_agg_once_bcast(
+                    broadcast_data=broadcast_data,
+                    stat_fn=stat_fn,
+                    unique_seed=seed % np.iinfo(np.uint32).max,
+                )
+            ).collect()
+
+        finally:
+            broadcast_data.unpersist()
 
     summary_df = pd.DataFrame(summary_stat_samples)
     if len(summary_df.columns) == 1:

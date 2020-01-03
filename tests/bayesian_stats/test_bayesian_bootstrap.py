@@ -49,24 +49,28 @@ def test_resample_and_agg_once_bcast(spark_context):
 
 def test_get_bootstrap_samples(spark_context):
     res = mabsbb.get_bootstrap_samples(
-        spark_context, np.array([3., 3., 3.]), num_samples=2
+        np.array([3., 3., 3.]), num_samples=2, sc=spark_context
     )
     assert res.shape == (2,)
     assert res[0] == pytest.approx(3.)
     assert res[1] == pytest.approx(3.)
 
 
+def test_get_bootstrap_samples_no_spark():
+    test_get_bootstrap_samples(None)
+
+
 def test_get_bootstrap_samples_multistat(spark_context, stack_depth=0):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
     res = mabsbb.get_bootstrap_samples(
-        spark_context,
         data,
         lambda x, y: {
             'min': np.min(x),
             'max': np.max(x),
             'mean': np.dot(x, y),
         },
-        num_samples=2
+        num_samples=2,
+        sc=spark_context
     )
 
     assert res.shape == (2, 3)
@@ -86,10 +90,14 @@ def test_get_bootstrap_samples_multistat(spark_context, stack_depth=0):
         test_get_bootstrap_samples_multistat(spark_context, stack_depth + 1)
 
 
+def test_get_bootstrap_samples_multistat_no_spark():
+    test_get_bootstrap_samples_multistat(None)
+
+
 def test_bootstrap_one_branch(spark_context):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
     res = mabsbb.bootstrap_one_branch(
-        spark_context, data, num_samples=100, summary_quantiles=(0.5, 0.61)
+        data, num_samples=100, summary_quantiles=(0.5, 0.61), sc=spark_context
     )
 
     assert res['mean'] == pytest.approx(0.5, rel=1e-1)
@@ -97,17 +105,22 @@ def test_bootstrap_one_branch(spark_context):
     assert res['0.61'] == pytest.approx(0.5, rel=1e-1)
 
 
+def test_bootstrap_one_branch_no_spark():
+    test_bootstrap_one_branch(None)
+
+
 def test_bootstrap_one_branch_multistat(spark_context):
     data = np.concatenate([np.zeros(10000), np.ones(10000), [1e20]])
     res = mabsbb.bootstrap_one_branch(
-        spark_context, data,
+        data,
         stat_fn=lambda x, y: {
             'max': np.max(x),
             'mean': np.dot(x, y),
         },
         num_samples=5,
         summary_quantiles=(0.5, 0.61),
-        threshold_quantile=0.9999
+        threshold_quantile=0.9999,
+        sc=spark_context,
     )
 
     assert res.shape == (2, 3)
@@ -120,7 +133,11 @@ def test_bootstrap_one_branch_multistat(spark_context):
     assert res.loc['mean', '0.61'] == pytest.approx(0.5, rel=1e-1)
 
 
-def test_compare_branches(spark_context):
+def test_bootstrap_one_branch_multistat_no_spark():
+    test_bootstrap_one_branch_multistat(None)
+
+
+def test_compare_branches(spark_context_or_none):
     data = pd.DataFrame(
         index=range(60000),
         columns=['branch', 'val'],
@@ -138,7 +155,7 @@ def test_compare_branches(spark_context):
     assert data.val[data.branch != 'bigger'].mean() == 0.5
     assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
 
-    res = mabsbb.compare_branches(spark_context, data, 'val', num_samples=2)
+    res = mabsbb.compare_branches(data, 'val', num_samples=2, sc=spark_context_or_none)
 
     assert res['individual']['control']['mean'] == pytest.approx(0.5, rel=1e-1)
     assert res['individual']['same']['mean'] == pytest.approx(0.5, rel=1e-1)
@@ -156,7 +173,7 @@ def test_compare_branches(spark_context):
         pytest.approx(1, abs=0.01)
 
 
-def test_compare_branches_multistat(spark_context):
+def test_compare_branches_multistat(spark_context_or_none):
     data = pd.DataFrame(
         index=range(60000),
         columns=['branch', 'val'],
@@ -175,14 +192,14 @@ def test_compare_branches_multistat(spark_context):
     assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
 
     res = mabsbb.compare_branches(
-        spark_context,
         data,
         'val',
         stat_fn=lambda x, y: {
             'max': np.max(x),
             'mean': np.dot(x, y),
         },
-        num_samples=2
+        num_samples=2,
+        sc=spark_context_or_none,
     )
 
     assert res['individual']['control'].loc['mean', 'mean'] \
