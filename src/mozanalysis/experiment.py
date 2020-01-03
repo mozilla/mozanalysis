@@ -63,7 +63,7 @@ class Experiment(object):
 
         # Run the query and store the results into a table
         res = experiment.get_single_window_data(
-            enrollments,
+            bq_stuff,
             [
                 active_hours,
                 uri_count
