@@ -40,9 +40,9 @@ def test_resample_and_agg_once_bcast(spark_context):
     assert mafsb._resample_and_agg_once_bcast(b_data, np.mean, 42) == 3.
 
 
-def test_get_bootstrap_samples(spark_context):
+def test_get_bootstrap_samples(spark_context_or_none):
     res = mafsb.get_bootstrap_samples(
-        np.array([3., 3., 3.]), num_samples=2, sc=spark_context
+        np.array([3., 3., 3.]), num_samples=2, sc=spark_context_or_none
     )
     assert res.shape == (2,)
 
@@ -50,11 +50,7 @@ def test_get_bootstrap_samples(spark_context):
     assert res[1] == 3.
 
 
-def test_get_bootstrap_samples_no_spark():
-    test_get_bootstrap_samples(None)
-
-
-def test_get_bootstrap_samples_multistat(spark_context, stack_depth=0):
+def test_get_bootstrap_samples_multistat(spark_context_or_none, stack_depth=0):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
     res = mafsb.get_bootstrap_samples(
         data,
@@ -64,7 +60,7 @@ def test_get_bootstrap_samples_multistat(spark_context, stack_depth=0):
             'mean': np.mean(x),
         },
         num_samples=2,
-        sc=spark_context,
+        sc=spark_context_or_none,
     )
 
     assert res.shape == (2, 3)
@@ -81,17 +77,13 @@ def test_get_bootstrap_samples_multistat(spark_context, stack_depth=0):
         assert (res['mean'] != np.mean(data)).any()  # Extremely unlikely
     elif (res['mean'] == np.mean(data)).any():
         # Re-roll the dice a few times to make sure this was a fluke.
-        test_get_bootstrap_samples_multistat(spark_context, stack_depth + 1)
+        test_get_bootstrap_samples_multistat(spark_context_or_none, stack_depth + 1)
 
 
-def test_get_bootstrap_samples_multistat_no_spark():
-    test_get_bootstrap_samples_multistat(None)
-
-
-def test_bootstrap_one_branch(spark_context):
+def test_bootstrap_one_branch(spark_context_or_none):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
     res = mafsb.bootstrap_one_branch(
-        data, num_samples=100, summary_quantiles=(0.5, 0.61), sc=spark_context
+        data, num_samples=100, summary_quantiles=(0.5, 0.61), sc=spark_context_or_none
     )
 
     assert res['mean'] == pytest.approx(0.5, rel=1e-1)
@@ -99,11 +91,7 @@ def test_bootstrap_one_branch(spark_context):
     assert res['0.61'] == pytest.approx(0.5, rel=1e-1)
 
 
-def test_bootstrap_one_branch_no_spark():
-    test_bootstrap_one_branch(None)
-
-
-def test_bootstrap_one_branch_multistat(spark_context):
+def test_bootstrap_one_branch_multistat(spark_context_or_none):
     data = np.concatenate([np.zeros(10000), np.ones(10000), [1e20]])
     res = mafsb.bootstrap_one_branch(
         data,
@@ -114,7 +102,7 @@ def test_bootstrap_one_branch_multistat(spark_context):
         num_samples=5,
         summary_quantiles=(0.5, 0.61),
         threshold_quantile=0.9999,
-        sc=spark_context
+        sc=spark_context_or_none
     )
 
     assert res.shape == (2, 3)
@@ -127,11 +115,7 @@ def test_bootstrap_one_branch_multistat(spark_context):
     assert res.loc['mean', '0.61'] == pytest.approx(0.5, rel=1e-1)
 
 
-def test_bootstrap_one_branch_multistat_no_spark():
-    test_bootstrap_one_branch_multistat(None)
-
-
-def test_compare_branches(spark_context):
+def test_compare_branches(spark_context_or_none):
     data = pd.DataFrame(
         index=range(60000),
         columns=['branch', 'val'],
@@ -149,7 +133,7 @@ def test_compare_branches(spark_context):
     assert data.val[data.branch != 'bigger'].mean() == 0.5
     assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
 
-    res = mafsb.compare_branches(data, 'val', num_samples=2, sc=spark_context)
+    res = mafsb.compare_branches(data, 'val', num_samples=2, sc=spark_context_or_none)
 
     assert res['individual']['control']['mean'] == pytest.approx(0.5, rel=1e-1)
     assert res['individual']['same']['mean'] == pytest.approx(0.5, rel=1e-1)
@@ -167,11 +151,7 @@ def test_compare_branches(spark_context):
         pytest.approx(1, abs=0.01)
 
 
-def test_compare_branches_no_spark():
-    test_compare_branches(None)
-
-
-def test_compare_branches_multistat(spark_context):
+def test_compare_branches_multistat(spark_context_or_none):
     data = pd.DataFrame(
         index=range(60000),
         columns=['branch', 'val'],
@@ -197,7 +177,7 @@ def test_compare_branches_multistat(spark_context):
             'mean': np.mean(x),
         },
         num_samples=2,
-        sc=spark_context,
+        sc=spark_context_or_none,
     )
 
     assert res['individual']['control'].loc['mean', 'mean'] \
@@ -221,7 +201,3 @@ def test_compare_branches_multistat(spark_context):
 
     assert res['comparative']['same'].loc['max', ('rel_uplift', 'exp')] == 0
     assert res['comparative']['bigger'].loc['max', ('rel_uplift', 'exp')] == 0
-
-
-def test_compare_branches_multistat_no_spark():
-    test_compare_branches_multistat(None)

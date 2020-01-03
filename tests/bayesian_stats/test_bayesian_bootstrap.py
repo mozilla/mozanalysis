@@ -137,7 +137,7 @@ def test_bootstrap_one_branch_multistat_no_spark():
     test_bootstrap_one_branch_multistat(None)
 
 
-def test_compare_branches(spark_context):
+def test_compare_branches(spark_context_or_none):
     data = pd.DataFrame(
         index=range(60000),
         columns=['branch', 'val'],
@@ -155,7 +155,7 @@ def test_compare_branches(spark_context):
     assert data.val[data.branch != 'bigger'].mean() == 0.5
     assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
 
-    res = mabsbb.compare_branches(data, 'val', num_samples=2, sc=spark_context)
+    res = mabsbb.compare_branches(data, 'val', num_samples=2, sc=spark_context_or_none)
 
     assert res['individual']['control']['mean'] == pytest.approx(0.5, rel=1e-1)
     assert res['individual']['same']['mean'] == pytest.approx(0.5, rel=1e-1)
@@ -173,11 +173,7 @@ def test_compare_branches(spark_context):
         pytest.approx(1, abs=0.01)
 
 
-def test_compare_branches_no_spark():
-    test_compare_branches(None)
-
-
-def test_compare_branches_multistat(spark_context):
+def test_compare_branches_multistat(spark_context_or_none):
     data = pd.DataFrame(
         index=range(60000),
         columns=['branch', 'val'],
@@ -203,7 +199,7 @@ def test_compare_branches_multistat(spark_context):
             'mean': np.dot(x, y),
         },
         num_samples=2,
-        sc=spark_context,
+        sc=spark_context_or_none,
     )
 
     assert res['individual']['control'].loc['mean', 'mean'] \
@@ -227,10 +223,6 @@ def test_compare_branches_multistat(spark_context):
 
     assert res['comparative']['same'].loc['max', ('rel_uplift', 'exp')] == 0
     assert res['comparative']['bigger'].loc['max', ('rel_uplift', 'exp')] == 0
-
-
-def test_compare_branches_multistat_no_spark():
-    test_compare_branches_multistat(None)
 
 
 def test_bb_mean():
