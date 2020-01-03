@@ -171,7 +171,7 @@
 <p>Then we import the necessary classes for getting the data, and for analysing the data:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mozanalysis.metrics.desktop</span> <span class="k">as</span> <span class="nn">mmd</span>
 <span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.binary</span> <span class="k">as</span> <span class="nn">mabsbin</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="k">import</span> <span class="n">Experiment</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">Experiment</span>
 </pre></div>
 </div>
 <p>For querying data, the general approach of <code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis</span></code> is to start by obtaining a list of who was enrolled in what branch, when. This list is the <code class="docutils literal notranslate"><span class="pre">enrollments</span></code> Spark DataFrame; it has one row per client. Then we try to quantify what happened to each client: for a given analysis window (a specified period of time defined with respect to the client’s experiment results.date), we seek to obtain a value for each client for each metric. So we end up with a results (pandas) DataFrame with one row per client and one column per metric.</p>
@@ -341,7 +341,7 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dbutils</span><span class="o">.</span><span class="n">library</span><span class="o">.</span><span class="n">installPyPI</span><span class="p">(</span><span class="s2">&quot;mozanalysis&quot;</span><span class="p">,</span> <span class="s2">&quot;[current version]&quot;</span><span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">mozanalysis.metrics.desktop</span> <span class="k">as</span> <span class="nn">mmd</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="k">import</span> <span class="n">Experiment</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">Experiment</span>
 
 <span class="n">exp</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span>
     <span class="n">experiment_slug</span><span class="o">=</span><span class="s1">&#39;pref-flip-defaultoncookierestrictions-1506704&#39;</span><span class="p">,</span>
@@ -368,7 +368,7 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dbutils</span><span class="o">.</span><span class="n">library</span><span class="o">.</span><span class="n">installPyPI</span><span class="p">(</span><span class="s2">&quot;mozanalysis&quot;</span><span class="p">,</span> <span class="s2">&quot;[current version]&quot;</span><span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">mozanalysis.metrics.desktop</span> <span class="k">as</span> <span class="nn">mmd</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="k">import</span> <span class="n">Experiment</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">Experiment</span>
 
 <span class="n">exp</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span>
     <span class="n">experiment_slug</span><span class="o">=</span><span class="s1">&#39;pref-flip-defaultoncookierestrictions-1506704&#39;</span><span class="p">,</span>

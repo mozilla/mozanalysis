@@ -220,12 +220,11 @@ each value.</p>
 
 <dl class="function">
 <dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.compare_branches">
-<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">compare_branches</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">df</em>, <em class="sig-param">col_label</em>, <em class="sig-param">ref_branch_label='control'</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">individual_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">comparative_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#compare_branches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.compare_branches" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">compare_branches</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">col_label</em>, <em class="sig-param">ref_branch_label='control'</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">individual_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">comparative_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">sc=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#compare_branches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.compare_branches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Jointly sample bootstrapped statistics then compare them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sc</strong> – The Spark context</p></li>
 <li><p><strong>df</strong> – a pandas DataFrame of queried experiment data in the
 standard format (see <cite>mozanalysis.experiment</cite>).</p></li>
 <li><p><strong>col_label</strong> (<em>str</em>) – Label for the df column contaning the metric
@@ -260,6 +259,7 @@ determine the credible intervals on comparative branch
 statistics (i.e. the change relative to the reference
 branch, probably the control). Change these when making
 Bonferroni corrections.</p></li>
+<li><p><strong>sc</strong> (<em>optional</em>) – The Spark context, if available</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -288,14 +288,13 @@ of <code class="docutils literal notranslate"><span class="pre">stat_fn</span></
 
 <dl class="function">
 <dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch">
-<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">bootstrap_one_branch</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#bootstrap_one_branch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">bootstrap_one_branch</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">sc=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#bootstrap_one_branch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bootstrap <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for one branch on its own.</p>
 <p>Computes <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for <code class="docutils literal notranslate"><span class="pre">num_samples</span></code> resamples of <code class="docutils literal notranslate"><span class="pre">data</span></code>,
 then returns summary statistics for the results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sc</strong> – The spark context</p></li>
 <li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas Series</p></li>
 <li><p><strong>stat_fn</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A function that either:</p>
 <ul>
@@ -320,6 +319,7 @@ quantile, above which to discard outliers. E.g. <code class="docutils literal no
 <li><p><strong>summary_quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – Quantiles to determine the
 confidence bands on the branch statistics. Change these
 when making Bonferroni corrections.</p></li>
+<li><p><strong>sc</strong> (<em>optional</em>) – The Spark context, if available</p></li>
 </ul>
 </dd>
 </dl>
@@ -327,12 +327,11 @@ when making Bonferroni corrections.</p></li>
 
 <dl class="function">
 <dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples">
-<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">get_bootstrap_samples</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#get_bootstrap_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">get_bootstrap_samples</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">sc=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#get_bootstrap_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> evaluated on resampled data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sc</strong> – The spark context</p></li>
 <li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas series</p></li>
 <li><p><strong>stat_fn</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A function that either:</p>
 <ul>
@@ -360,6 +359,7 @@ in this calculation. By default, use a random seed.</p>
 </p></li>
 <li><p><strong>threshold_quantile</strong> (<em>float</em><em>, </em><em>optional</em>) – An optional threshold
 quantile, above which to discard outliers. E.g. <code class="docutils literal notranslate"><span class="pre">0.9999</span></code>.</p></li>
+<li><p><strong>sc</strong> (<em>optional</em>) – The Spark context, if available</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

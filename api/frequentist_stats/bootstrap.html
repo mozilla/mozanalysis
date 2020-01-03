@@ -169,7 +169,7 @@
 <span id="mozanalysis-frequentist-stats-bootstrap"></span><h1><a class="reference internal" href="#module-mozanalysis.frequentist_stats.bootstrap" title="mozanalysis.frequentist_stats.bootstrap"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a><a class="headerlink" href="#module-mozanalysis.frequentist_stats.bootstrap" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="mozanalysis.frequentist_stats.bootstrap.compare_branches">
-<code class="sig-prename descclassname">mozanalysis.frequentist_stats.bootstrap.</code><code class="sig-name descname">compare_branches</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">df</em>, <em class="sig-param">col_label</em>, <em class="sig-param">ref_branch_label='control'</em>, <em class="sig-param">stat_fn=&lt;function mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">individual_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">comparative_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#compare_branches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.compare_branches" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.frequentist_stats.bootstrap.</code><code class="sig-name descname">compare_branches</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">col_label</em>, <em class="sig-param">ref_branch_label='control'</em>, <em class="sig-param">stat_fn=&lt;function mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">individual_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">comparative_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">sc=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#compare_branches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.compare_branches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Jointly sample bootstrapped statistics then compare them.</p>
 <p>Performs a percentile bootstrap, which, according to Efron,
 is not significantly more distasteful than a basic bootstrap,
@@ -177,7 +177,6 @@ regardless of what you may read on Stack Overflow.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sc</strong> – The Spark context</p></li>
 <li><p><strong>df</strong> – a pandas DataFrame of queried experiment data in the
 standard format (see <code class="docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code>).</p></li>
 <li><p><strong>col_label</strong> (<em>str</em>) – Label for the df column contaning the metric
@@ -213,6 +212,7 @@ determine the confidence bands on comparative branch
 statistics (i.e. the change relative to the reference
 branch, probably the control). Change these when making
 Bonferroni corrections.</p></li>
+<li><p><strong>sc</strong> (<em>optional</em>) – The Spark context, if available</p></li>
 </ul>
 </dd>
 </dl>
@@ -241,7 +241,7 @@ computed only this statistic.</p>
 
 <dl class="function">
 <dt id="mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch">
-<code class="sig-prename descclassname">mozanalysis.frequentist_stats.bootstrap.</code><code class="sig-name descname">bootstrap_one_branch</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#bootstrap_one_branch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.frequentist_stats.bootstrap.</code><code class="sig-name descname">bootstrap_one_branch</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">sc=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#bootstrap_one_branch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a bootstrap for one branch on its own.</p>
 <p>Resamples the data <code class="docutils literal notranslate"><span class="pre">num_samples</span></code> times, computes <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for
 each sample, then returns summary statistics for the distribution
@@ -249,7 +249,6 @@ of the outputs of <code class="docutils literal notranslate"><span class="pre">s
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sc</strong> – The spark context</p></li>
 <li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas Series</p></li>
 <li><p><strong>stat_fn</strong> – Either a function that aggregates each resampled
 population to a scalar (e.g. the default value <code class="docutils literal notranslate"><span class="pre">np.mean</span></code>
@@ -265,6 +264,7 @@ quantile, above which to discard outliers. E.g. <code class="docutils literal no
 <li><p><strong>summary_quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – Quantiles to determine the
 confidence bands on the branch statistics. Change these
 when making Bonferroni corrections.</p></li>
+<li><p><strong>sc</strong> (<em>optional</em>) – The Spark context, if available</p></li>
 </ul>
 </dd>
 </dl>
@@ -272,13 +272,12 @@ when making Bonferroni corrections.</p></li>
 
 <dl class="function">
 <dt id="mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples">
-<code class="sig-prename descclassname">mozanalysis.frequentist_stats.bootstrap.</code><code class="sig-name descname">get_bootstrap_samples</code><span class="sig-paren">(</span><em class="sig-param">sc</em>, <em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#get_bootstrap_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.frequentist_stats.bootstrap.</code><code class="sig-name descname">get_bootstrap_samples</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">sc=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#get_bootstrap_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> evaluated on resampled and original data.</p>
 <p>Do the resampling in parallel over the cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sc</strong> – The spark context</p></li>
 <li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas series</p></li>
 <li><p><strong>stat_fn</strong> – Either a function that aggregates each resampled
 population to a scalar (e.g. the default value <code class="docutils literal notranslate"><span class="pre">np.mean</span></code>
@@ -297,6 +296,7 @@ in this calculation. By default, use a random seed.</p>
 </p></li>
 <li><p><strong>threshold_quantile</strong> (<em>float</em><em>, </em><em>optional</em>) – An optional threshold
 quantile, above which to discard outliers. E.g. <code class="docutils literal notranslate"><span class="pre">0.9999</span></code>.</p></li>
+<li><p><strong>sc</strong> (<em>optional</em>) – The Spark context, if available</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

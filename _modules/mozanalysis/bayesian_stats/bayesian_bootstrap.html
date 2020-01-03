@@ -156,7 +156,7 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats</span> <span class="k">as</span> <span class="nn">mabs</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="k">import</span> <span class="n">filter_outliers</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="kn">import</span> <span class="n">filter_outliers</span>
 
 
 <div class="viewcode-block" id="bb_mean"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.bb_mean">[docs]</a><span class="k">def</span> <span class="nf">bb_mean</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">prob_weights</span><span class="p">):</span>
@@ -248,15 +248,15 @@
 
 
 <div class="viewcode-block" id="compare_branches"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.compare_branches">[docs]</a><span class="k">def</span> <span class="nf">compare_branches</span><span class="p">(</span>
-    <span class="n">sc</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="s1">&#39;control&#39;</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">bb_mean</span><span class="p">,</span>
+    <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="s1">&#39;control&#39;</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">bb_mean</span><span class="p">,</span>
     <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
-    <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span>
+    <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+    <span class="n">sc</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Jointly sample bootstrapped statistics then compare them.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        sc: The Spark context</span>
 <span class="sd">        df: a pandas DataFrame of queried experiment data in the</span>
 <span class="sd">            standard format (see `mozanalysis.experiment`).</span>
 <span class="sd">        col_label (str): Label for the df column contaning the metric</span>
@@ -290,6 +290,7 @@
 <span class="sd">            statistics (i.e. the change relative to the reference</span>
 <span class="sd">            branch, probably the control). Change these when making</span>
 <span class="sd">            Bonferroni corrections.</span>
+<span class="sd">        sc (optional): The Spark context, if available</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        If ``stat_fn`` returns a scalar (this is the default), then</span>
@@ -319,11 +320,11 @@
     <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span>
         <span class="c1"># TODO: do we need to control seed_start? If so then we must be careful here</span>
         <span class="n">b</span><span class="p">:</span> <span class="n">get_bootstrap_samples</span><span class="p">(</span>
-            <span class="n">sc</span><span class="p">,</span>
             <span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">][</span><span class="n">df</span><span class="o">.</span><span class="n">branch</span> <span class="o">==</span> <span class="n">b</span><span class="p">],</span>
             <span class="n">stat_fn</span><span class="p">,</span>
             <span class="n">num_samples</span><span class="p">,</span>
-            <span class="n">threshold_quantile</span><span class="o">=</span><span class="n">threshold_quantile</span>
+            <span class="n">threshold_quantile</span><span class="o">=</span><span class="n">threshold_quantile</span><span class="p">,</span>
+            <span class="n">sc</span><span class="o">=</span><span class="n">sc</span><span class="p">,</span>
         <span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">branch_list</span>
     <span class="p">}</span>
 
@@ -334,8 +335,9 @@
 
 
 <div class="viewcode-block" id="bootstrap_one_branch"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch">[docs]</a><span class="k">def</span> <span class="nf">bootstrap_one_branch</span><span class="p">(</span>
-    <span class="n">sc</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">bb_mean</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">bb_mean</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+    <span class="n">sc</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Bootstrap ``stat_fn`` for one branch on its own.</span>
 
@@ -343,7 +345,6 @@
 <span class="sd">    then returns summary statistics for the results.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        sc: The spark context</span>
 <span class="sd">        data: The data as a list, 1D numpy array, or pandas Series</span>
 <span class="sd">        stat_fn (callable, optional): A function that either:</span>
 
@@ -367,22 +368,22 @@
 <span class="sd">        summary_quantiles (list, optional): Quantiles to determine the</span>
 <span class="sd">            confidence bands on the branch statistics. Change these</span>
 <span class="sd">            when making Bonferroni corrections.</span>
+<span class="sd">        sc (optional): The Spark context, if available</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">samples</span> <span class="o">=</span> <span class="n">get_bootstrap_samples</span><span class="p">(</span>
-        <span class="n">sc</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">seed_start</span><span class="p">,</span> <span class="n">threshold_quantile</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">seed_start</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="p">,</span> <span class="n">sc</span>
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">mabs</span><span class="o">.</span><span class="n">summarize_one_branch_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">summary_quantiles</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="get_bootstrap_samples"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples">[docs]</a><span class="k">def</span> <span class="nf">get_bootstrap_samples</span><span class="p">(</span>
-    <span class="n">sc</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">bb_mean</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">bb_mean</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sc</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return ``stat_fn`` evaluated on resampled data.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        sc: The spark context</span>
 <span class="sd">        data: The data as a list, 1D numpy array, or pandas series</span>
 <span class="sd">        stat_fn (callable, optional): A function that either:</span>
 
@@ -409,6 +410,7 @@
 
 <span class="sd">        threshold_quantile (float, optional): An optional threshold</span>
 <span class="sd">            quantile, above which to discard outliers. E.g. ``0.9999``.</span>
+<span class="sd">        sc (optional): The Spark context, if available</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A Series or DataFrame with one row per sample and one column</span>
@@ -440,24 +442,29 @@
     <span class="c1"># Need to ensure every call has a unique, deterministic seed.</span>
     <span class="n">seed_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">seed_start</span><span class="p">,</span> <span class="n">seed_start</span> <span class="o">+</span> <span class="n">num_samples</span><span class="p">)</span>
 
-    <span class="c1"># TODO: run locally `if sc is None`?</span>
-    <span class="c1"># TODO: maybe we can just run locally anyway? It&#39;s efficient...</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">broadcast_data_values</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">data_values</span><span class="p">)</span>
-        <span class="n">broadcast_data_counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">data_counts</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">summary_stat_samples</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">_resample_and_agg_once</span><span class="p">(</span><span class="n">data_values</span><span class="p">,</span> <span class="n">data_counts</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">unique_seed</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">unique_seed</span> <span class="ow">in</span> <span class="n">seed_range</span>
+        <span class="p">]</span>
 
-        <span class="n">summary_stat_samples</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">(</span><span class="n">seed_range</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">seed</span><span class="p">:</span> <span class="n">_resample_and_agg_once_bcast</span><span class="p">(</span>
-                <span class="n">broadcast_data_values</span><span class="o">=</span><span class="n">broadcast_data_values</span><span class="p">,</span>
-                <span class="n">broadcast_data_counts</span><span class="o">=</span><span class="n">broadcast_data_counts</span><span class="p">,</span>
-                <span class="n">stat_fn</span><span class="o">=</span><span class="n">stat_fn</span><span class="p">,</span>
-                <span class="n">unique_seed</span><span class="o">=</span><span class="n">seed</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">broadcast_data_values</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">data_values</span><span class="p">)</span>
+            <span class="n">broadcast_data_counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">data_counts</span><span class="p">)</span>
 
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">broadcast_data_values</span><span class="o">.</span><span class="n">unpersist</span><span class="p">()</span>
-        <span class="n">broadcast_data_counts</span><span class="o">.</span><span class="n">unpersist</span><span class="p">()</span>
+            <span class="n">summary_stat_samples</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">(</span><span class="n">seed_range</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">seed</span><span class="p">:</span> <span class="n">_resample_and_agg_once_bcast</span><span class="p">(</span>
+                    <span class="n">broadcast_data_values</span><span class="o">=</span><span class="n">broadcast_data_values</span><span class="p">,</span>
+                    <span class="n">broadcast_data_counts</span><span class="o">=</span><span class="n">broadcast_data_counts</span><span class="p">,</span>
+                    <span class="n">stat_fn</span><span class="o">=</span><span class="n">stat_fn</span><span class="p">,</span>
+                    <span class="n">unique_seed</span><span class="o">=</span><span class="n">seed</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">broadcast_data_values</span><span class="o">.</span><span class="n">unpersist</span><span class="p">()</span>
+            <span class="n">broadcast_data_counts</span><span class="o">.</span><span class="n">unpersist</span><span class="p">()</span>
 
     <span class="n">summary_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">summary_stat_samples</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">summary_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
