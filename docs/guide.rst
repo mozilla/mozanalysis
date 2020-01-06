@@ -7,39 +7,42 @@ Basic experiment: get the data & crunch the stats
 
 Let's start by analysing a straightforward pref-flip experiment on the desktop browser.
 
-If we're using Databricks, we begin by installing the latest version of :mod:`mozanalysis` into the notebook (we don't install for the whole cluster, because then upgrades require restarting the entire cluster)::
+If we're using a Colab notebook, we begin by installing the latest version of :mod:`mozanalysis` into the notebook. It's a good idea to specify the specific version, for reproducibility::
 
-    dbutils.library.installPyPI("mozanalysis", "[current version]")
+    !pip install mozanalysis=='{current_version}'
 
-Then we import the necessary classes for getting the data, and for analysing the data::
+We take the per-notebook daily trudge::
+
+    from google.colab import auth
+    auth.authenticate_user()
+    print('Authenticated')
+
+Then we import the necessary classes for getting the data, and for analysing the data, and for interacting with BigQuery::
 
     import mozanalysis.metrics.desktop as mmd
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
+    from mozanalysis.bq_util import BigqueryStuff
 
-For querying data, the general approach of :mod:`mozanalysis` is to start by obtaining a list of who was enrolled in what branch, when. This list is the ``enrollments`` Spark DataFrame; it has one row per client. Then we try to quantify what happened to each client: for a given analysis window (a specified period of time defined with respect to the client's experiment results.date), we seek to obtain a value for each client for each metric. So we end up with a results (pandas) DataFrame with one row per client and one column per metric.
+    bq_stuff = BigqueryStuff(dataset_id='{your_dataset_id}')
+
+If you're not part of ``moz-fx-data-bq-data-science``, then you'll also need to pass a ``project_id`` argument when initializing ``BigqueryStuff()``.
+
+For querying data, the internal approach of :mod:`mozanalysis` is to start by obtaining a list of who was enrolled in what branch, when. Then we try to quantify what happened to each client: for a given analysis window (a specified period of time defined with respect to the client's enrollment date), we seek to obtain a value for each client for each metric. We end up with a results (pandas) DataFrame with one row per client and one column per metric.
 
 
 We start by instantiating our :class:`mozanalysis.experiment.Experiment` object::
 
     exp = Experiment(
-        experiment_slug='pref-flip-defaultoncookierestrictions-1506704',
-        start_date='20181217',
+        experiment_slug='pref-fingerprinting-protections-retention-study-release-70',
+        start_date='2019-10-29',
         num_dates_enrollment=8
     )
 
-``start_date`` is the ``submission_date_s3`` of the first enrollment (``submission_date_s3`` is in UTC). If you intended to study one week's worth of enrollments, then set ``num_dates_enrollment=8``: Normandy experiments typically go live in the evening UTC-time, so 8 days of data is a better approximation than 7.
+``start_date`` is the ``submission_date`` of the first enrollment (``submission_date`` is in UTC). If you intended to study one week's worth of enrollments, then set ``num_dates_enrollment=8``: Normandy experiments typically go live in the evening UTC-time, so 8 days of data is a better approximation than 7.
 
-The :class:`mozanalysis.experiment.Experiment` instance has a method that gives us the ``enrollments`` Spark DataFrame. It's a good idea to cache it - we may use it multiple times::
 
-    enrollments = exp.get_enrollments(spark).cache()
-
-``enrollments`` has one row per enrolled client, and three columns::
-
-    >>> enrollments.columns
-    ['client_id', 'branch', 'enrollment_date']
-
-Having obtained our list of who was enrolled in what branch and when, we now try to quantify what happened to each client. In many cases, the metrics in which you're interested will already be in a metrics library, a submodule of :mod:`mozanalysis.metrics`. If not, then you can define your own - see :meth:`mozanalysis.metrics.Metric` for examples - and ideally submit a PR to add them to the library for the next experiment. In this example, we'll compute four metrics:
+We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you're interested will already be in a metrics library, a submodule of :mod:`mozanalysis.metrics`. If not, then you can define your own - see :meth:`mozanalysis.metrics.Metric` for examples - and ideally submit a PR to add them to the library for the next experiment. In this example, we'll compute four metrics:
 
 * :const:`mozanalysis.metrics.desktop.active_hours`
 * uri count
@@ -48,38 +51,43 @@ Having obtained our list of who was enrolled in what branch and when, we now try
 
 As it happens, the first three metrics all come from the ``clients_daily`` dataset, whereas "search count" comes from ``search_clients_daily``. These details are taken care of in the :class:`mozanalysis.metrics.Metric` definitions so that we don't have to think about them here.
 
-A metric must be computed over some `analysis window`, a period of time defined with respect to the enrollment date. We could use :meth:`mozanalysis.experiment.Experiment.get_per_client_data()` to compute our metrics over a specific analysis window. But here, let's create time series data: let's have an analysis window for each of the first three weeks of the experiment, and measure the data for each of these analysis windows::
+A metric must be computed over some `analysis window`, a period of time defined with respect to the enrollment date. We could use :meth:`mozanalysis.experiment.Experiment.get_single_window_data()` to compute our metrics over a specific analysis window. But here, let's create time series data: let's have an analysis window for each of the first three weeks of the experiment, and measure the data for each of these analysis windows::
 
-    res = exp.get_time_series_data(
-        enrollments=enrollments,
+    ts_res, full_res = exp.get_time_series_data(
+        bq_stuff=bq_stuff,
         metric_list=[
             mmd.active_hours,
             mmd.uri_count,
             mmd.ad_clicks,
             mmd.search_count,
         ],
-        last_date_full_data='20190107',
+        last_date_full_data='2019-11-28',
         time_series_period='weekly'
     )
 
-The first two arguments to :meth:`mozanalysis.experiment.Experiment.get_time_series_data()` should be clear by this point. ``last_date_full_data`` is the last date for which we want to use data. For a currently-running experiment, it would typically be yesterday's date (we have incomplete data for incomplete days!). Here I chose a date that gives us two weeks of data for the last eligible enrollees, who enrolled on '20181224' (yes, this experiment ran over the holidays...).
+The first two arguments to :meth:`mozanalysis.experiment.Experiment.get_time_series_data()` should be clear by this point. ``last_date_full_data`` is the last date for which we want to use data. For a currently-running experiment, it would typically be yesterday's date (we have incomplete data for incomplete days!).
 
 ``time_series_period`` can be ``'daily'`` or ``'weekly'``. A ``'weekly'`` time series neatly sidesteps/masks weekly seasonality issues: most of the experiment subjects will enroll within a day of the experiment launching - typically a Tuesday, leading to ``'daily'`` time series reflecting a non-uniform convolution of the metrics' weekly seasonalities with the uneven enrollment numbers across the week.
 
 :meth:`mozanalysis.experiment.Experiment.get_time_series_data()` returns a ``dict`` keyed by the start of the analysis window (measured in days after enrollment)::
 
-    >>> res.keys()
-    dict_keys([0, 7])
+    >>> ts_res.keys()
+    dict_keys([0, 7, 14])
 
-Each value is a pandas DataFrame in "the standard format", with one row per client from the ``enrollments`` Spark DataFrame, and one column per metric::
+Each value is a ``google.cloud.bigquery.table.RowIterator``. You can call ``.to_dataframe()`` to obtain a pandas DataFrame in "the standard format", with one row per enrolled client and one column per metric. If RAM permits, then you can do this for the entire results time series::
+
+    res = {k: v.to_dataframe() for k, v in ts_res.items()}
+
+Otherwise you might want to load one analysis window at a time, by calling ``.to_dataframe()`` on one value, doing your analysis, then moving to the next.
+
+Here are the columns of each result DataFrame::
 
     >>> res[7].columns
-     Index(['branch', 'enrollment_date', 'active_hours', 'uri_count',
-       'ad_clicks', 'clients_daily_has_contradictory_branch',
-       'clients_daily_has_non_enrolled_data', 'search_count',
-       'search_clients_daily_has_contradictory_branch',
-       'search_clients_daily_has_non_enrolled_data'],
-      dtype='object')
+    Index(['branch', 'enrollment_date', 'num_enrollment_events', 'ad_clicks',
+           'search_count', 'active_hours', 'uri_count',
+           'clients_daily_has_contradictory_branch',
+           'clients_daily_has_non_enrolled_data'],
+          dtype='object')
 
 The 'branch' column contains the client's branch::
 
@@ -194,28 +202,32 @@ Time series (of analysis windows)
 ---------------------------------
 Condensing the above example for simpler copying and pasting::
 
-    dbutils.library.installPyPI("mozanalysis", "[current version]")
+    !pip install -U git+https://github.com/felixlawrence/mozanalysis.git@move-to-bigquery dscontrib==20191216132201
+
+    from google.colab import auth
+    auth.authenticate_user()
+    print('Authenticated')
 
     import mozanalysis.metrics.desktop as mmd
+    import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
+    from mozanalysis.bq_util import BigqueryStuff
 
-    exp = Experiment(
-        experiment_slug='pref-flip-defaultoncookierestrictions-1506704',
-        start_date='20181217',
-        num_dates_enrollment=8
-    )
+    bq_stuff = BigqueryStuff(dataset_id='flawrence')
 
-    enrollments = exp.get_enrollments(spark).cache()
-
-    res = exp.get_time_series_data(
-        enrollments=enrollments,
+    ts_res, full_res = exp.get_time_series_data(
+        bq_stuff=bq_stuff,
         metric_list=[
             mmd.active_hours,
+            mmd.uri_count,
+            mmd.ad_clicks,
+            mmd.search_count,
         ],
-        last_date_full_data='20190107',
+        last_date_full_data='2019-11-28',
         time_series_period='weekly'
     )
 
+    res = {k: v.to_dataframe() for k, v in ts_res.items()}
 
 One analysis window
 -------------------
@@ -223,30 +235,30 @@ One analysis window
 If we're only interested in users' (say) second week in the experiment, then we don't need to get a full time series.
 ::
 
-    dbutils.library.installPyPI("mozanalysis", "[current version]")
+    !pip install -U git+https://github.com/felixlawrence/mozanalysis.git@move-to-bigquery dscontrib==20191216132201
+
+    from google.colab import auth
+    auth.authenticate_user()
+    print('Authenticated')
 
     import mozanalysis.metrics.desktop as mmd
+    import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
+    from mozanalysis.bq_util import BigqueryStuff
 
-    exp = Experiment(
-        experiment_slug='pref-flip-defaultoncookierestrictions-1506704',
-        start_date='20181217',
-        num_dates_enrollment=8
-    )
+    bq_stuff = BigqueryStuff(dataset_id='flawrence')
 
-    enrollments = exp.get_enrollments(spark).cache()
-
-    res = exp.get_per_client_data(
-        enrollments=enrollments,
+    res = exp.get_single_window_data(
+        bq_stuff=bq_stuff,
         metric_list=[
             mmd.active_hours,
         ],
         last_date_full_data='20190107',
         analysis_start_days=7,
         analysis_length_days=7
-    )
+    ).to_dataframe()
 
-``last_date_full_data`` is less important for :meth:`mozanalysis.experiment.Experiment.get_per_client_data` than for :meth:`mozanalysis.experiment.Experiment.get_time_series_data`: while ``last_date_full_data`` determines the length of the time series, here it simply sanity checks that the specified analysis window doesn't stretch into the future for any enrolled users.
+``last_date_full_data`` is less important for :meth:`mozanalysis.experiment.Experiment.get_single_window_data` than for :meth:`mozanalysis.experiment.Experiment.get_time_series_data`: while ``last_date_full_data`` determines the length of the time series, here it simply sanity checks that the specified analysis window doesn't stretch into the future for any enrolled users.
 
 
 Crunch the stats
@@ -260,9 +272,9 @@ Each stats technique has a module in :mod:`mozanalysis.bayesian_stats` or :mod:`
     import mozanalysis.bayesian_stats.survival_func as mabssf
     import mozanalysis.frequentist_stats.bootstrap as mafsboot
 
-    ts_res[7]['active_hours_gt_0'] = ts_res[7].active_hours_gt_0 > 0
-    mabsbin.compare_branches(ts_res[7], 'active_hours_gt_0')
-    mabsbin.compare_branches(ts_res[7], 'active_hours_gt_0', ref_branch_label='Cohort_1')
+    res_from_ts[7]['active_hours_gt_0'] = res_from_ts[7].active_hours_gt_0 > 0
+    mabsbin.compare_branches(res_from_ts[7], 'active_hours_gt_0')
+    mabsbin.compare_branches(res_from_ts[7], 'active_hours_gt_0', ref_branch_label='Cohort_1')
 
     gpcd_res['active_hours_gt_0'] = gpcd_res.active_hours_gt_0 > 0
     mabsbin.compare_branches(gpcd_res, 'active_hours_gt_0')
