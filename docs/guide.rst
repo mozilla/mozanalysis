@@ -53,7 +53,7 @@ As it happens, the first three metrics all come from the ``clients_daily`` datas
 
 A metric must be computed over some `analysis window`, a period of time defined with respect to the enrollment date. We could use :meth:`mozanalysis.experiment.Experiment.get_single_window_data()` to compute our metrics over a specific analysis window. But here, let's create time series data: let's have an analysis window for each of the first three weeks of the experiment, and measure the data for each of these analysis windows::
 
-    ts_res, full_res = exp.get_time_series_data(
+    ts_res = exp.get_time_series_data(
         bq_stuff=bq_stuff,
         metric_list=[
             mmd.active_hours,
@@ -69,16 +69,18 @@ The first two arguments to :meth:`mozanalysis.experiment.Experiment.get_time_ser
 
 ``time_series_period`` can be ``'daily'`` or ``'weekly'``. A ``'weekly'`` time series neatly sidesteps/masks weekly seasonality issues: most of the experiment subjects will enroll within a day of the experiment launching - typically a Tuesday, leading to ``'daily'`` time series reflecting a non-uniform convolution of the metrics' weekly seasonalities with the uneven enrollment numbers across the week.
 
-:meth:`mozanalysis.experiment.Experiment.get_time_series_data()` returns a ``dict`` keyed by the start of the analysis window (measured in days after enrollment)::
+:meth:`mozanalysis.experiment.Experiment.get_time_series_data()` returns a :class:`TimeSeriesResult` object, which can return DataFrames keyed by the start of their analysis windows (measured in days after enrollment)::
 
     >>> ts_res.keys()
-    dict_keys([0, 7, 14])
+    [0, 7, 14]
 
-Each value is a ``google.cloud.bigquery.table.RowIterator``. You can call ``.to_dataframe()`` to obtain a pandas DataFrame in "the standard format", with one row per enrolled client and one column per metric. If RAM permits, then you can do this for the entire results time series::
+If RAM permits, we can dump all the results into a ``dict`` of DataFrames keyed by the start of their analysis windows::
 
-    res = {k: v.to_dataframe() for k, v in ts_res.items()}
+    res = dict(ts_res.items(bq_stuff))
 
-Otherwise you might want to load one analysis window at a time, by calling ``.to_dataframe()`` on one value, doing your analysis, then moving to the next.
+Each value in ``res`` is a pandas DataFrame in "the standard format", with one row per enrolled client and one column per metric.
+
+Otherwise you might want to load one analysis window at a time, by calling ``ts_res.get(bq_stuff, analysis_window_start)`` for each analysis window in ``ts_res.keys()``, processing the resulting DataFrame, then discarding the DataFrame from RAM before moving onto the next analysis window.
 
 Here are the columns of each result DataFrame::
 
@@ -215,7 +217,7 @@ Condensing the above example for simpler copying and pasting::
 
     bq_stuff = BigqueryStuff(dataset_id='flawrence')
 
-    ts_res, full_res = exp.get_time_series_data(
+    ts_res = exp.get_time_series_data(
         bq_stuff=bq_stuff,
         metric_list=[
             mmd.active_hours,
@@ -227,7 +229,7 @@ Condensing the above example for simpler copying and pasting::
         time_series_period='weekly'
     )
 
-    res = {k: v.to_dataframe() for k, v in ts_res.items()}
+    res = dict(ts_res.items(bq_stuff))
 
 One analysis window
 -------------------
@@ -256,7 +258,7 @@ If we're only interested in users' (say) second week in the experiment, then we 
         last_date_full_data='20190107',
         analysis_start_days=7,
         analysis_length_days=7
-    ).to_dataframe()
+    )
 
 ``last_date_full_data`` is less important for :meth:`mozanalysis.experiment.Experiment.get_single_window_data` than for :meth:`mozanalysis.experiment.Experiment.get_time_series_data`: while ``last_date_full_data`` determines the length of the time series, here it simply sanity checks that the specified analysis window doesn't stretch into the future for any enrolled users.
 

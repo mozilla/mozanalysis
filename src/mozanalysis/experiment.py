@@ -61,7 +61,7 @@ class Experiment(object):
             num_dates_enrollment=8
         )
 
-        # Run the query and store the results into a table
+        # Run the query and get the results as a DataFrame
         res = experiment.get_single_window_data(
             bq_stuff,
             [
@@ -72,9 +72,6 @@ class Experiment(object):
             analysis_start_days=0,
             analysis_length_days=7
         )
-
-        # Pull data into a pandas df, ready for running stats
-        pres = res.to_dataframe()
 
     Args:
         experiment_slug (str): Name of the study, used to identify
@@ -112,12 +109,11 @@ class Experiment(object):
         analysis_start_days, analysis_length_days, enrollments_query_type='normandy',
         custom_enrollments_query=None
     ):
-        """Query per-client metric values.
+        """Return a DataFrame containing per-client metric values.
 
-        It will return the results, but it will also store them in a
-        permanent table in BigQuery. The name of this table will be
-        printed. Subsequent calls to this function will simply read
-        the results from this table.
+        Also store them in a permanent table in BigQuery. The name of
+        this table will be printed. Subsequent calls to this function
+        will simply read the results from this table.
 
         Args:
             bq_stuff (BigqueryStuff): BigQuery configuration and client.
@@ -141,19 +137,12 @@ class Experiment(object):
                     WITH raw_enrollments AS ({custom_enrollments_query})
 
         Returns:
-            A ``google.cloud.bigquery.table.RowIterator`` for the query
-            results. What is that? I don't know either, but it is
-            what you get when you construct a BigQuery ``query()`` then
-            call ``.result()`` on it. You can call ``to_dataframe()``
-            on this object to get a Pandas DataFrame.
-
-            There is one row per ``client_id``. There are some metadata
-            columns, then one column per metric in ``metric_list``,
-            and one column per sanity-check metric.
+            A pandas DataFrame of experiment data. One row per ``client_id``.
+            Some metadata columns, then one column per metric in
+            ``metric_list``, and one column per sanity-check metric.
             Columns (not necessarily in order):
 
-                * client_id (str, optional): Not necessary for
-                  "happy path" analyses.
+                * client_id (str): Not necessary for "happy path" analyses.
                 * branch (str): The client's branch
                 * other columns of ``enrollments``.
                 * [metric 1]: The client's value for the first metric in
@@ -187,17 +176,17 @@ class Experiment(object):
             [last_date_full_data, self.experiment_slug, str(hash(full_sql))]
         ))
 
-        return bq_stuff.run_query(full_sql, full_res_table_name)
+        return bq_stuff.run_query(full_sql, full_res_table_name).to_dataframe()
 
     def get_time_series_data(
         self, bq_stuff, metric_list, last_date_full_data,
         time_series_period='weekly', enrollments_query_type='normandy',
         custom_enrollments_query=None
     ):
-        """Query per-client metric values over a time series.
+        """Return a TimeSeriesResult with per-client metric values.
 
         Roughly equivalent to looping over ``get_single_window_data``
-        with different analysis windows and reorganising the results.
+        with different analysis windows, and reorganising the results.
 
         Args:
             bq_stuff (BigqueryStuff): BigQuery configuration and client.
@@ -218,16 +207,13 @@ class Experiment(object):
                     WITH raw_enrollments AS ({custom_enrollments_query})
 
         Returns:
-            A ``dict`` of data per analysis window. Each key is an ``int``:
-            the number of days between enrollment and the start of the
-            analysis window. Each value is a
-            ``google.cloud.bigquery.table.RowIterator`` of results in "the
-            standard format": one row per client, some metadata columns,
-            plus one column per metric and sanity-check metric.
-            Columns (not necessarily in order):
+            A TimeSeriesResult object, which may be used to obtain a
+            pandas DataFrame of per-client metric data, for each
+            analysis window. Each DataFrame is a pandas DataFrame in
+            "the standard format": one row per client, some metadata
+            columns, plus one column per metric and sanity-check metric.
+            Its columns (not necessarily in order):
 
-                * client_id (str, optional): Not necessary for
-                  "happy path" analyses.
                 * branch (str): The client's branch
                 * other columns of ``enrollments``.
                 * [metric 1]: The client's value for the first metric in
@@ -261,20 +247,12 @@ class Experiment(object):
             [last_date_full_data, self.experiment_slug, str(hash(full_sql))]
         ))
 
-        full_res = bq_stuff.run_query(full_sql, full_res_table_name)
+        bq_stuff.run_query(full_sql, full_res_table_name).result()
 
-        ts_res = {
-
-            aw.start: bq_stuff.run_query(
-                self._build_analysis_window_subset_query(
-                    bq_stuff, aw, full_res_table_name
-                ),
-            )
-
-            for aw in time_limits.analysis_windows
-        }
-
-        return ts_res, full_res
+        return TimeSeriesResult(
+            full_res_table_name=full_res_table_name,
+            analysis_windows=time_limits.analysis_windows
+        )
 
     def _build_query(
         self, metric_list, time_limits, enrollments_query_type,
@@ -317,31 +295,6 @@ class Experiment(object):
             enrollments_query=enrollments_query,
             metrics_columns=',\n        '.join(metrics_columns),
             metrics_joins='\n'.join(metrics_joins)
-        )
-
-    @staticmethod
-    def _build_analysis_window_subset_query(
-        bq_stuff, analysis_window, full_res_table_name
-    ):
-        """Return SQL for partitioning time series results.
-
-        When we query data for a time series, we query it for all
-        points of the time series, and we store this in a table.
-
-        This method returns SQL to query this table to obtain results
-        in "the standard format" for a single analysis window.
-        """
-        return """
-            SELECT * EXCEPT (client_id, analysis_window_start, analysis_window_end)
-            FROM `{project_id}.{dataset_id}.{full_table_name}`
-            WHERE analysis_window_start = {aws}
-            AND analysis_window_end = {awe}
-        """.format(
-            project_id=bq_stuff.project_id,
-            dataset_id=bq_stuff.dataset_id,
-            full_table_name=full_res_table_name,
-            aws=analysis_window.start,
-            awe=analysis_window.end,
         )
 
     @staticmethod
@@ -662,3 +615,90 @@ class AnalysisWindow(object):
     @end.validator
     def _validate_end(self, attribute, value):
         assert value >= self.start
+
+
+@attr.s(frozen=True, slots=True)
+class TimeSeriesResult(object):
+    """Result from a time series query.
+
+    For each analysis window, this object lets us get a dataframe in
+    "the standard format" (one row per client).
+
+    Example usage::
+
+        result_dict = dict(time_series_result.items(bq_stuff))
+        window_0 = result_dict[0]
+
+    ``window_0`` would then be a pandas DataFrame of results for the
+    analysis window starting at day 0. ``result_dict`` would be a
+    dictionary of all such DataFrames, keyed by the start days of
+    their analysis windows.
+
+    Or, to load only one analysis window into RAM::
+
+        window_0 = time_series_result.get(bq_stuff, 0)
+    """
+    full_res_table_name = attr.ib(type=str)
+    analysis_windows = attr.ib(type=list)
+
+    def get(self, bq_stuff, analysis_window):
+        """Get the DataFrame for a specific analysis window.
+
+        N.B. this makes a BigQuery query each time it is run; caching
+        results is your responsibility.
+
+        Args:
+            bq_stuff (BigqueryStuff)
+            analysis_window (AnalysisWindow or int): The analysis
+                window, or its start day as an int.
+        """
+        if isinstance(analysis_window, int):
+            try:
+                analysis_window = next(
+                    aw for aw in self.analysis_windows if aw.start == analysis_window
+                )
+            except StopIteration:
+                raise KeyError(
+                    "AnalysisWindow not found with start of {}".format(analysis_window)
+                )
+
+        return bq_stuff.run_query(
+            self._build_analysis_window_subset_query(bq_stuff, analysis_window)
+        ).to_dataframe()
+
+    def keys(self):
+        return [aw.start for aw in self.analysis_windows]
+
+    def items(self, bq_stuff):
+        for aw in self.analysis_windows:
+            yield (aw.start, self.get(bq_stuff, aw))
+
+    def _build_analysis_window_subset_query(
+        self, bq_stuff, analysis_window
+    ):
+        """Return SQL for partitioning time series results.
+
+        When we query data for a time series, we query it for all
+        points of the time series, and we store this in a table.
+
+        This method returns SQL to query this table to obtain results
+        in "the standard format" for a single analysis window.
+        """
+        # TODO: full_table_name should be fully qualified!
+        return """
+            SELECT * EXCEPT (client_id, analysis_window_start, analysis_window_end)
+            FROM `{project_id}.{dataset_id}.{full_table_name}`
+            WHERE analysis_window_start = {aws}
+            AND analysis_window_end = {awe}
+        """.format(
+            project_id=bq_stuff.project_id,
+            dataset_id=bq_stuff.dataset_id,
+            full_table_name=self.full_res_table_name,
+            aws=analysis_window.start,
+            awe=analysis_window.end,
+        )
+
+    @analysis_windows.validator
+    def _check_analysis_windows(self, attribute, value):
+        if len(value) != len({aw.start for aw in value}):
+            raise ValueError("Each analysis window must start on a different day")
