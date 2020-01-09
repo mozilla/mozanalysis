@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import attr
 
-from mozanalysis.bq_util import sanitize_table_name_for_bq
+from mozanalysis.bq import sanitize_table_name_for_bq
 from mozanalysis.utils import add_days, date_sub
 
 
@@ -50,10 +50,10 @@ class Experiment(object):
         dataset_id = 'your-dataset-name'
 
         from mozanalysis.experiment import Experiment
-        from mozanalysis.bq_util import BigqueryStuff
+        from mozanalysis.bq import BigQueryContext
         from mozanalysis.metrics.desktop import active_hours, uri_count
 
-        bq_stuff = BigqueryStuff(dataset_id, project_id)
+        bq_context = BigQueryContext(dataset_id, project_id)
 
         experiment = Experiment(
             experiment_slug='pref-fingerprinting-protections-retention-study-release-70',
@@ -63,7 +63,7 @@ class Experiment(object):
 
         # Run the query and get the results as a DataFrame
         res = experiment.get_single_window_data(
-            bq_stuff,
+            bq_context,
             [
                 active_hours,
                 uri_count
@@ -105,7 +105,7 @@ class Experiment(object):
     num_dates_enrollment = attr.ib(default=None)
 
     def get_single_window_data(
-        self, bq_stuff, metric_list, last_date_full_data,
+        self, bq_context, metric_list, last_date_full_data,
         analysis_start_days, analysis_length_days, enrollments_query_type='normandy',
         custom_enrollments_query=None
     ):
@@ -116,7 +116,7 @@ class Experiment(object):
         will simply read the results from this table.
 
         Args:
-            bq_stuff (BigqueryStuff): BigQuery configuration and client.
+            bq_context (BigQueryContext): BigQuery configuration and client.
             metric_list (list of mozanalysis.metric.Metric): The metrics
                 to analyze.
             last_date_full_data (str): The most recent date for which we
@@ -176,10 +176,10 @@ class Experiment(object):
             [last_date_full_data, self.experiment_slug, str(hash(full_sql))]
         ))
 
-        return bq_stuff.run_query(full_sql, full_res_table_name).to_dataframe()
+        return bq_context.run_query(full_sql, full_res_table_name).to_dataframe()
 
     def get_time_series_data(
-        self, bq_stuff, metric_list, last_date_full_data,
+        self, bq_context, metric_list, last_date_full_data,
         time_series_period='weekly', enrollments_query_type='normandy',
         custom_enrollments_query=None
     ):
@@ -189,7 +189,7 @@ class Experiment(object):
         with different analysis windows, and reorganising the results.
 
         Args:
-            bq_stuff (BigqueryStuff): BigQuery configuration and client.
+            bq_context (BigQueryContext): BigQuery configuration and client.
             metric_list (list of mozanalysis.metric.Metric):
                 The metrics to analyze.
             last_date_full_data (str): The most recent date for which we
@@ -247,7 +247,7 @@ class Experiment(object):
             [last_date_full_data, self.experiment_slug, str(hash(full_sql))]
         ))
 
-        bq_stuff.run_query(full_sql, full_res_table_name).result()
+        bq_context.run_query(full_sql, full_res_table_name).result()
 
         return TimeSeriesResult(
             full_res_table_name=full_res_table_name,
@@ -626,7 +626,7 @@ class TimeSeriesResult(object):
 
     Example usage::
 
-        result_dict = dict(time_series_result.items(bq_stuff))
+        result_dict = dict(time_series_result.items(bq_context))
         window_0 = result_dict[0]
 
     ``window_0`` would then be a pandas DataFrame of results for the
@@ -636,19 +636,19 @@ class TimeSeriesResult(object):
 
     Or, to load only one analysis window into RAM::
 
-        window_0 = time_series_result.get(bq_stuff, 0)
+        window_0 = time_series_result.get(bq_context, 0)
     """
     full_res_table_name = attr.ib(type=str)
     analysis_windows = attr.ib(type=list)
 
-    def get(self, bq_stuff, analysis_window):
+    def get(self, bq_context, analysis_window):
         """Get the DataFrame for a specific analysis window.
 
         N.B. this makes a BigQuery query each time it is run; caching
         results is your responsibility.
 
         Args:
-            bq_stuff (BigqueryStuff)
+            bq_context (BigQueryContext)
             analysis_window (AnalysisWindow or int): The analysis
                 window, or its start day as an int.
         """
@@ -662,19 +662,19 @@ class TimeSeriesResult(object):
                     "AnalysisWindow not found with start of {}".format(analysis_window)
                 )
 
-        return bq_stuff.run_query(
-            self._build_analysis_window_subset_query(bq_stuff, analysis_window)
+        return bq_context.run_query(
+            self._build_analysis_window_subset_query(bq_context, analysis_window)
         ).to_dataframe()
 
     def keys(self):
         return [aw.start for aw in self.analysis_windows]
 
-    def items(self, bq_stuff):
+    def items(self, bq_context):
         for aw in self.analysis_windows:
-            yield (aw.start, self.get(bq_stuff, aw))
+            yield (aw.start, self.get(bq_context, aw))
 
     def _build_analysis_window_subset_query(
-        self, bq_stuff, analysis_window
+        self, bq_context, analysis_window
     ):
         """Return SQL for partitioning time series results.
 
@@ -691,8 +691,8 @@ class TimeSeriesResult(object):
             WHERE analysis_window_start = {aws}
             AND analysis_window_end = {awe}
         """.format(
-            project_id=bq_stuff.project_id,
-            dataset_id=bq_stuff.dataset_id,
+            project_id=bq_context.project_id,
+            dataset_id=bq_context.dataset_id,
             full_table_name=self.full_res_table_name,
             aws=analysis_window.start,
             awe=analysis_window.end,

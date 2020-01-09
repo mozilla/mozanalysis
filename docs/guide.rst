@@ -22,11 +22,11 @@ Then we import the necessary classes for getting the data, and for analysing the
     import mozanalysis.metrics.desktop as mmd
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
-    from mozanalysis.bq_util import BigqueryStuff
+    from mozanalysis.bq_util import BigQueryContext
 
-    bq_stuff = BigqueryStuff(dataset_id='{your_dataset_id}')
+    bq_context = BigQueryContext(dataset_id='{your_dataset_id}')
 
-If you're not part of ``moz-fx-data-bq-data-science``, then you'll also need to pass a ``project_id`` argument when initializing ``BigqueryStuff()``.
+If you're not part of ``moz-fx-data-bq-data-science``, then you'll also need to pass a ``project_id`` argument when initializing ``BigQueryContext()``.
 
 For querying data, the internal approach of :mod:`mozanalysis` is to start by obtaining a list of who was enrolled in what branch, when. Then we try to quantify what happened to each client: for a given analysis window (a specified period of time defined with respect to the client's enrollment date), we seek to obtain a value for each client for each metric. We end up with a results (pandas) DataFrame with one row per client and one column per metric.
 
@@ -54,7 +54,7 @@ As it happens, the first three metrics all come from the ``clients_daily`` datas
 A metric must be computed over some `analysis window`, a period of time defined with respect to the enrollment date. We could use :meth:`mozanalysis.experiment.Experiment.get_single_window_data()` to compute our metrics over a specific analysis window. But here, let's create time series data: let's have an analysis window for each of the first three weeks of the experiment, and measure the data for each of these analysis windows::
 
     ts_res = exp.get_time_series_data(
-        bq_stuff=bq_stuff,
+        bq_context=bq_context,
         metric_list=[
             mmd.active_hours,
             mmd.uri_count,
@@ -76,11 +76,11 @@ The first two arguments to :meth:`mozanalysis.experiment.Experiment.get_time_ser
 
 If RAM permits, we can dump all the results into a ``dict`` of DataFrames keyed by the start of their analysis windows::
 
-    res = dict(ts_res.items(bq_stuff))
+    res = dict(ts_res.items(bq_context))
 
 Each value in ``res`` is a pandas DataFrame in "the standard format", with one row per enrolled client and one column per metric.
 
-Otherwise you might want to load one analysis window at a time, by calling ``ts_res.get(bq_stuff, analysis_window_start)`` for each analysis window in ``ts_res.keys()``, processing the resulting DataFrame, then discarding the DataFrame from RAM before moving onto the next analysis window.
+Otherwise you might want to load one analysis window at a time, by calling ``ts_res.get(bq_context, analysis_window_start)`` for each analysis window in ``ts_res.keys()``, processing the resulting DataFrame, then discarding the DataFrame from RAM before moving onto the next analysis window.
 
 Here are the columns of each result DataFrame::
 
@@ -213,12 +213,12 @@ Condensing the above example for simpler copying and pasting::
     import mozanalysis.metrics.desktop as mmd
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
-    from mozanalysis.bq_util import BigqueryStuff
+    from mozanalysis.bq_util import BigQueryContext
 
-    bq_stuff = BigqueryStuff(dataset_id='flawrence')
+    bq_context = BigQueryContext(dataset_id='flawrence')
 
     ts_res = exp.get_time_series_data(
-        bq_stuff=bq_stuff,
+        bq_context=bq_context,
         metric_list=[
             mmd.active_hours,
             mmd.uri_count,
@@ -229,7 +229,7 @@ Condensing the above example for simpler copying and pasting::
         time_series_period='weekly'
     )
 
-    res = dict(ts_res.items(bq_stuff))
+    res = dict(ts_res.items(bq_context))
 
 One analysis window
 -------------------
@@ -246,12 +246,12 @@ If we're only interested in users' (say) second week in the experiment, then we 
     import mozanalysis.metrics.desktop as mmd
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
-    from mozanalysis.bq_util import BigqueryStuff
+    from mozanalysis.bq_util import BigQueryContext
 
-    bq_stuff = BigqueryStuff(dataset_id='flawrence')
+    bq_context = BigQueryContext(dataset_id='flawrence')
 
     res = exp.get_single_window_data(
-        bq_stuff=bq_stuff,
+        bq_context=bq_context,
         metric_list=[
             mmd.active_hours,
         ],

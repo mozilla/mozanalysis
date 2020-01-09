@@ -16,7 +16,7 @@ def sanitize_table_name_for_bq(table_name):
         + of_good_character_but_possibly_verbose[-500:]
 
 
-class BigqueryStuff(object):
+class BigQueryContext(object):
     def __init__(self, dataset_id, project_id='moz-fx-data-bq-data-science'):
         self.dataset_id = dataset_id
         self.project_id = project_id
