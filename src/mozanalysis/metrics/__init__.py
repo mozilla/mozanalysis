@@ -115,5 +115,5 @@ def agg_sum(select_expr):
 
 
 def agg_any(select_expr):
-    """Return the bitwise OR, as an int, with 0-filled nulls."""
-    return "COALESCE(CAST(MAX({}) AS INT64), 0)".format(select_expr)
+    """Return the logical OR, with FALSE-filled nulls."""
+    return "COALESCE(LOGICAL_OR({}), FALSE)".format(select_expr)
