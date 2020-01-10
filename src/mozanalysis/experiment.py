@@ -46,14 +46,14 @@ class Experiment(object):
         auth.authenticate_user()
         print('Authenticated')
 
-        project_id = 'moz-fx-data-bq-data-science'
-        dataset_id = 'your-dataset-name'
-
         from mozanalysis.experiment import Experiment
         from mozanalysis.bq import BigQueryContext
         from mozanalysis.metrics.desktop import active_hours, uri_count
 
-        bq_context = BigQueryContext(dataset_id, project_id)
+        bq_context = BigQueryContext(
+            dataset_id='your-dataset-id',  # e.g. mine's flawrence
+            project_id='moz-fx-data-bq-data-science'  # this is the default anyway
+        )
 
         experiment = Experiment(
             experiment_slug='pref-fingerprinting-protections-retention-study-release-70',
@@ -247,7 +247,7 @@ class Experiment(object):
             [last_date_full_data, self.experiment_slug, str(hash(full_sql))]
         ))
 
-        bq_context.run_query(full_sql, full_res_table_name).result()
+        bq_context.run_query(full_sql, full_res_table_name)
 
         return TimeSeriesResult(
             full_res_table_name=full_res_table_name,

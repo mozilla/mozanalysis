@@ -22,9 +22,14 @@ Then we import the necessary classes for getting the data, and for analysing the
     import mozanalysis.metrics.desktop as mmd
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
-    from mozanalysis.bq_util import BigQueryContext
+    from mozanalysis.bq import BigQueryContext
 
-    bq_context = BigQueryContext(dataset_id='{your_dataset_id}')
+
+And get a BigQuery context (a client, and some config)::
+
+    bq_context = BigQueryContext(
+        dataset_id='{your_dataset_id}',  # e.g. mine's 'flawrence'
+    )
 
 If you're not part of ``moz-fx-data-bq-data-science``, then you'll also need to pass a ``project_id`` argument when initializing ``BigQueryContext()``.
 
@@ -213,7 +218,7 @@ Condensing the above example for simpler copying and pasting::
     import mozanalysis.metrics.desktop as mmd
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
-    from mozanalysis.bq_util import BigQueryContext
+    from mozanalysis.bq import BigQueryContext
 
     bq_context = BigQueryContext(dataset_id='flawrence')
 
@@ -246,7 +251,7 @@ If we're only interested in users' (say) second week in the experiment, then we 
     import mozanalysis.metrics.desktop as mmd
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
-    from mozanalysis.bq_util import BigQueryContext
+    from mozanalysis.bq import BigQueryContext
 
     bq_context = BigQueryContext(dataset_id='flawrence')
 
