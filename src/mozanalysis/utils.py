@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import datetime
+import hashlib
 import numpy as np
 from functools import reduce
 
@@ -79,3 +80,8 @@ def filter_outliers(branch_data, threshold_quantile):
     threshold_val = np.quantile(branch_data, threshold_quantile)
 
     return branch_data[branch_data <= threshold_val]
+
+
+def hash_ish(string, hex_chars=12):
+    """Return a crude hash of a string."""
+    return hashlib.sha256(string.encode('utf-8')).hexdigest()[:hex_chars]

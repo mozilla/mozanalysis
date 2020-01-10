@@ -90,16 +90,15 @@ Otherwise you might want to load one analysis window at a time, by calling ``ts_
 Here are the columns of each result DataFrame::
 
     >>> res[7].columns
-    Index(['branch', 'enrollment_date', 'num_enrollment_events', 'ad_clicks',
-           'search_count', 'active_hours', 'uri_count',
-           'clients_daily_has_contradictory_branch',
-           'clients_daily_has_non_enrolled_data'],
+    Index(['branch', 'enrollment_date', 'num_enrollment_events', 'active_hours',
+           'uri_count', 'clients_daily_has_contradictory_branch',
+           'clients_daily_has_non_enrolled_data', 'ad_clicks', 'search_count'],
           dtype='object')
 
 The 'branch' column contains the client's branch::
 
     >>> res[7].branch.unique()
-    array(['Cohort_1', 'Cohort_3', 'Cohort_2'], dtype=object)
+    array(['treatment', 'control'], dtype=object)
 
 And we can do the usual pandas DataFrame things - e.g. calculate the mean active hours per branch::
 

@@ -4,7 +4,7 @@
 import attr
 
 from mozanalysis.bq import sanitize_table_name_for_bq
-from mozanalysis.utils import add_days, date_sub
+from mozanalysis.utils import add_days, date_sub, hash_ish
 
 
 @attr.s(frozen=True, slots=True)
@@ -173,7 +173,7 @@ class Experiment(object):
         )
 
         full_res_table_name = sanitize_table_name_for_bq('_'.join(
-            [last_date_full_data, self.experiment_slug, str(hash(full_sql))]
+            [last_date_full_data, self.experiment_slug, hash_ish(full_sql)]
         ))
 
         return bq_context.run_query(full_sql, full_res_table_name).to_dataframe()
@@ -244,7 +244,7 @@ class Experiment(object):
         )
 
         full_res_table_name = sanitize_table_name_for_bq('_'.join(
-            [last_date_full_data, self.experiment_slug, str(hash(full_sql))]
+            [last_date_full_data, self.experiment_slug, hash_ish(full_sql)]
         ))
 
         bq_context.run_query(full_sql, full_res_table_name)
