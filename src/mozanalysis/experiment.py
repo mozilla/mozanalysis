@@ -684,7 +684,6 @@ class TimeSeriesResult(object):
         This method returns SQL to query this table to obtain results
         in "the standard format" for a single analysis window.
         """
-        # TODO: full_table_name should be fully qualified!
         return """
             SELECT * EXCEPT (client_id, analysis_window_start, analysis_window_end)
             FROM `{project_id}.{dataset_id}.{full_table_name}`

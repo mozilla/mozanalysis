@@ -17,6 +17,15 @@ def sanitize_table_name_for_bq(table_name):
 
 
 class BigQueryContext(object):
+    """Holds a BigQuery client, and some configuration.
+
+    Args:
+        dataset_id (str): Your `BigQuery dataset id`_.
+        project_id (str, optional): Your BigQuery project_id.
+            Defaults to the DS team's project.
+
+    .. _BigQuery dataset id: https://cloud.google.com/bigquery/docs/datasets
+    """
     def __init__(self, dataset_id, project_id='moz-fx-data-bq-data-science'):
         self.dataset_id = dataset_id
         self.project_id = project_id
