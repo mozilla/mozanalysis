@@ -208,7 +208,7 @@ Time series (of analysis windows)
 ---------------------------------
 Condensing the above example for simpler copying and pasting::
 
-    !pip install -U git+https://github.com/felixlawrence/mozanalysis.git@move-to-bigquery dscontrib==20191216132201
+    !pip install mozanalysis=='{current_version}'
 
     from google.colab import auth
     auth.authenticate_user()
@@ -241,7 +241,7 @@ One analysis window
 If we're only interested in users' (say) second week in the experiment, then we don't need to get a full time series.
 ::
 
-    !pip install -U git+https://github.com/felixlawrence/mozanalysis.git@move-to-bigquery dscontrib==20191216132201
+    !pip install mozanalysis=='{current_version}'
 
     from google.colab import auth
     auth.authenticate_user()
