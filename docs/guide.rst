@@ -219,7 +219,7 @@ Condensing the above example for simpler copying and pasting::
     from mozanalysis.experiment import Experiment
     from mozanalysis.bq import BigQueryContext
 
-    bq_context = BigQueryContext(dataset_id='flawrence')
+    bq_context = BigQueryContext(dataset_id='{your_dataset_id}')
 
     ts_res = exp.get_time_series_data(
         bq_context=bq_context,
@@ -252,7 +252,7 @@ If we're only interested in users' (say) second week in the experiment, then we 
     from mozanalysis.experiment import Experiment
     from mozanalysis.bq import BigQueryContext
 
-    bq_context = BigQueryContext(dataset_id='flawrence')
+    bq_context = BigQueryContext(dataset_id='{your_dataset_id}')
 
     res = exp.get_single_window_data(
         bq_context=bq_context,
