@@ -2,21 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import numpy as np
-import pyspark.sql.functions as F
 import pytest
 
-from mozanalysis.utils import dedupe_columns, all_, any_, add_days, filter_outliers, \
+from mozanalysis.utils import all_, any_, add_days, filter_outliers, \
     date_sub
-
-
-def test_dedupe_columns(spark):
-    # NOTE: We are limited in the amount of testing we can do here b/c things
-    # like `sorted([F.col(...)])` and checking for equality fail b/c of the
-    # overridden magic methods on `Column` types.
-    assert len(dedupe_columns(["a", "b", "a"])) == 2
-    assert len(dedupe_columns(["a", "b", F.col("a")])) == 2
-    assert len(dedupe_columns([F.col("a"), F.col("b"), F.col("a")])) == 2
-    assert len(dedupe_columns([F.expr("a"), F.col("b"), F.col("a")])) == 2
 
 
 def test_all_(spark):
@@ -82,15 +71,15 @@ def test_any_(spark):
 
 
 def test_add_days():
-    assert add_days('20190101', 0) == '20190101'
-    assert add_days('20190101', 1) == '20190102'
-    assert add_days('20190101', -1) == '20181231'
+    assert add_days('2019-01-01', 0) == '2019-01-01'
+    assert add_days('2019-01-01', 1) == '2019-01-02'
+    assert add_days('2019-01-01', -1) == '2018-12-31'
 
 
 def test_date_sub():
-    assert date_sub('20190101', '20190101') == 0
-    assert date_sub('20190102', '20190101') == 1
-    assert date_sub('20190101', '20190102') == -1
+    assert date_sub('2019-01-01', '2019-01-01') == 0
+    assert date_sub('2019-01-02', '2019-01-01') == 1
+    assert date_sub('2019-01-01', '2019-01-02') == -1
 
 
 def test_filter_outliers():
