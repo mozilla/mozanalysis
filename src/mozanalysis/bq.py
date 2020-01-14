@@ -36,6 +36,8 @@ class BigQueryContext(object):
 
         If ``results_table`` is provided, then save the results
         into there (or just query from there if it already exists).
+
+        Returns a ``google.cloud.bigquery.table.RowIterator``
         """
         if not results_table:
             return self.client.query(sql).result()
