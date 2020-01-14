@@ -28,7 +28,7 @@ Then we import the necessary classes for getting the data, and for analysing the
 And get a BigQuery context (a client, and some config)::
 
     bq_context = BigQueryContext(
-        dataset_id='{your_dataset_id}',  # e.g. mine's 'flawrence'
+        dataset_id='your_dataset_id',  # e.g. mine's 'flawrence'
     )
 
 If you're not part of ``moz-fx-data-bq-data-science``, then you'll also need to pass a ``project_id`` argument when initializing ``BigQueryContext()``.
@@ -219,7 +219,7 @@ Condensing the above example for simpler copying and pasting::
     from mozanalysis.experiment import Experiment
     from mozanalysis.bq import BigQueryContext
 
-    bq_context = BigQueryContext(dataset_id='{your_dataset_id}')
+    bq_context = BigQueryContext(dataset_id='your_dataset_id')
 
     ts_res = exp.get_time_series_data(
         bq_context=bq_context,
@@ -252,7 +252,7 @@ If we're only interested in users' (say) second week in the experiment, then we 
     from mozanalysis.experiment import Experiment
     from mozanalysis.bq import BigQueryContext
 
-    bq_context = BigQueryContext(dataset_id='{your_dataset_id}')
+    bq_context = BigQueryContext(dataset_id='your_dataset_id')
 
     res = exp.get_single_window_data(
         bq_context=bq_context,
