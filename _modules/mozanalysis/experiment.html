@@ -152,15 +152,13 @@
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
 <span class="kn">import</span> <span class="nn">attr</span>
 
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
-<span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-
-<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="kn">import</span> <span class="n">add_days</span><span class="p">,</span> <span class="n">date_sub</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">sanitize_table_name_for_bq</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="kn">import</span> <span class="n">add_days</span><span class="p">,</span> <span class="n">date_sub</span><span class="p">,</span> <span class="n">hash_ish</span>
 
 
 <div class="viewcode-block" id="Experiment"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Experiment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get DataFrames of experiment data; store experiment metadata.</span>
+    <span class="sd">&quot;&quot;&quot;Query experiment data; store experiment metadata.</span>
 
 <span class="sd">    The methods here query data in a way compatible with the following</span>
 <span class="sd">    principles, which are important for experiment analysis:</span>
@@ -191,31 +189,38 @@
 <span class="sd">      if we have data covering their entire analysis window.</span>
 
 
-<span class="sd">    Example usage::</span>
+<span class="sd">    Example usage (in a colab notebook)::</span>
 
+<span class="sd">        from google.colab import auth</span>
+<span class="sd">        auth.authenticate_user()</span>
+<span class="sd">        print(&#39;Authenticated&#39;)</span>
+
+<span class="sd">        from mozanalysis.experiment import Experiment</span>
+<span class="sd">        from mozanalysis.bq import BigQueryContext</span>
 <span class="sd">        from mozanalysis.metrics.desktop import active_hours, uri_count</span>
 
+<span class="sd">        bq_context = BigQueryContext(</span>
+<span class="sd">            dataset_id=&#39;your-dataset-id&#39;,  # e.g. mine&#39;s flawrence</span>
+<span class="sd">            project_id=&#39;moz-fx-data-bq-data-science&#39;  # this is the default anyway</span>
+<span class="sd">        )</span>
 
 <span class="sd">        experiment = Experiment(</span>
-<span class="sd">            experiment_slug=&#39;pref-flip-defaultoncookierestrictions-1506704&#39;,</span>
-<span class="sd">            start_date=&#39;20181215&#39;,</span>
+<span class="sd">            experiment_slug=&#39;pref-fingerprinting-protections-retention-study-release-70&#39;,</span>
+<span class="sd">            start_date=&#39;2019-10-29&#39;,</span>
 <span class="sd">            num_dates_enrollment=8</span>
 <span class="sd">        )</span>
-<span class="sd">        enrollments = experiment.get_enrollments(spark)</span>
 
-<span class="sd">        res = experiment.get_per_client_data(</span>
-<span class="sd">            enrollments,</span>
+<span class="sd">        # Run the query and get the results as a DataFrame</span>
+<span class="sd">        res = experiment.get_single_window_data(</span>
+<span class="sd">            bq_context,</span>
 <span class="sd">            [</span>
 <span class="sd">                active_hours,</span>
 <span class="sd">                uri_count</span>
 <span class="sd">            ],</span>
-<span class="sd">            last_date_full_data=&#39;20190107&#39;,</span>
+<span class="sd">            last_date_full_data=&#39;2019-12-01&#39;,</span>
 <span class="sd">            analysis_start_days=0,</span>
 <span class="sd">            analysis_length_days=7</span>
 <span class="sd">        )</span>
-
-<span class="sd">        # Pull data into a pandas df, ready for running stats</span>
-<span class="sd">        pres = res.toPandas()</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        experiment_slug (str): Name of the study, used to identify</span>
@@ -229,9 +234,6 @@
 <span class="sd">            factor &#39;7&#39; removes weekly seasonality, and the ``+1`` accounts</span>
 <span class="sd">            for the fact that enrollment typically starts a few hours</span>
 <span class="sd">            before UTC midnight.</span>
-<span class="sd">        addon_version (str, optional): The version of the experiment addon.</span>
-<span class="sd">            Some addon experiment slugs get reused - in those cases we need</span>
-<span class="sd">            to filter on the addon version also.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        experiment_slug (str): Name of the study, used to identify</span>
@@ -245,134 +247,25 @@
 <span class="sd">            factor &#39;7&#39; removes weekly seasonality, and the ``+1`` accounts</span>
 <span class="sd">            for the fact that enrollment typically starts a few hours</span>
 <span class="sd">            before UTC midnight.</span>
-<span class="sd">        addon_version (str, optional): The version of the experiment addon.</span>
-<span class="sd">            Some addon experiment slugs get reused - in those cases we need</span>
-<span class="sd">            to filter on the addon version also.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">experiment_slug</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
     <span class="n">start_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
     <span class="n">num_dates_enrollment</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">addon_version</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Experiment.get_enrollments"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_enrollments">[docs]</a>    <span class="k">def</span> <span class="nf">get_enrollments</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">spark</span><span class="p">,</span> <span class="n">study_type</span><span class="o">=</span><span class="s1">&#39;pref_flip&#39;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">debug_dupes</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a DataFrame of enrolled clients.</span>
-
-<span class="sd">        This works for pref-flip and addon studies.</span>
-
-<span class="sd">        The underlying queries are different for pref-flip vs addon</span>
-<span class="sd">        studies, because as of 2019/04/02, branch information isn&#39;t</span>
-<span class="sd">        reliably available in the ``events`` table for addon experiments:</span>
-<span class="sd">        branch may be NULL for all enrollments. The enrollment</span>
-<span class="sd">        information for them is most reliably available in</span>
-<span class="sd">        ``telemetry_shield_study_parquet``. Once this issue is resolved,</span>
-<span class="sd">        we will probably start using normandy events for all desktop</span>
-<span class="sd">        studies.</span>
-<span class="sd">        Ref: https://bugzilla.mozilla.org/show_bug.cgi?id=1536644</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            spark: The spark context.</span>
-<span class="sd">            study_type (str): One of the following strings:</span>
-
-<span class="sd">                * &#39;pref_flip&#39;</span>
-<span class="sd">                * &#39;addon&#39;</span>
-
-<span class="sd">                or a callable that accepts a spark context as an argument</span>
-<span class="sd">                and returns a Spark DataFrame containing all enrollment events</span>
-<span class="sd">                ever conducted using that method, with columns ``client_id``,</span>
-<span class="sd">                ``experiment_slug``, ``branch``, ``enrollment_date``,</span>
-<span class="sd">                and ``addon_version`` if it&#39;s relevant.</span>
-
-<span class="sd">            end_date (str, optional): Ignore enrollments after this</span>
-<span class="sd">                date: for faster queries on stale experiments. If you</span>
-<span class="sd">                set ``num_dates_enrollment`` then do not set this; at best</span>
-<span class="sd">                it would be redundant, at worst it&#39;s contradictory.</span>
-
-<span class="sd">            debug_dupes (bool, optional): Include a column ``num_events``</span>
-<span class="sd">                giving the number of enrollment events associated with</span>
-<span class="sd">                the ``client_id`` and ``branch``.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            A Spark DataFrame of enrollment data. One row per</span>
-<span class="sd">            enrollment. Columns:</span>
-
-<span class="sd">                * client_id (str)</span>
-<span class="sd">                * enrollment_date (str): e.g. &#39;20190329&#39;</span>
-<span class="sd">                * branch (str)</span>
-<span class="sd">                * num_events (int, optional)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">study_type</span><span class="p">):</span>
-            <span class="n">enrollments</span> <span class="o">=</span> <span class="n">study_type</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">study_type</span> <span class="o">==</span> <span class="s1">&#39;pref_flip&#39;</span><span class="p">:</span>
-            <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_enrollments_view_normandy</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">study_type</span> <span class="o">==</span> <span class="s1">&#39;addon&#39;</span><span class="p">:</span>
-            <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_enrollments_view_addon</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
-        <span class="c1"># elif study_type == &#39;glean&#39;:</span>
-        <span class="c1">#     raise NotImplementedError</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized study_type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">study_type</span><span class="p">))</span>
-
-        <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="o">.</span><span class="n">experiment_slug</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">addon_version</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s2">&quot;addon_version&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="p">(</span><span class="s2">&quot;Experiment constructed with an addon_version but your  &quot;</span>
-                     <span class="s2">&quot;study_type (</span><span class="si">%s</span><span class="s2">) is incompatible with addon versions.&quot;</span>
-                     <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">study_type</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-                <span class="n">enrollments</span><span class="o">.</span><span class="n">addon_version</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">addon_version</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">addon_version</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">end_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Don&#39;t specify both &#39;end_date&#39; and &quot;</span>
-                    <span class="s2">&quot;&#39;num_dates_enrollment&#39;; you might contradict yourself.&quot;</span>
-                <span class="p">)</span>
-            <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-                <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="n">add_days</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="o">-</span> <span class="mi">1</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">end_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-                <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="n">end_date</span>
-            <span class="p">)</span>
-
-        <span class="c1"># Deduplicate enrollment events. Optionally keep track of what</span>
-        <span class="c1"># had to be deduplicated. Deduplicating a client who enrolls in</span>
-        <span class="c1"># multiple branches is left as an exercise to the reader :|</span>
-        <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">branch</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollment_date&#39;</span><span class="p">)]</span>
-            <span class="o">+</span> <span class="p">(</span>
-                <span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;num_events&#39;</span><span class="p">)]</span>
-                <span class="k">if</span> <span class="n">debug_dupes</span> <span class="k">else</span> <span class="p">[]</span>
-            <span class="p">)</span>
-        <span class="p">))</span>
-
-        <span class="n">enrollments</span><span class="o">.</span><span class="n">cache</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="n">enrollments</span></div>
-
-<div class="viewcode-block" id="Experiment.get_per_client_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_per_client_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_per_client_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
-        <span class="n">analysis_start_days</span><span class="p">,</span> <span class="n">analysis_length_days</span><span class="p">,</span> <span class="n">keep_client_id</span><span class="o">=</span><span class="kc">False</span>
+<div class="viewcode-block" id="Experiment.get_single_window_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_single_window_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_window_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="n">analysis_start_days</span><span class="p">,</span> <span class="n">analysis_length_days</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s1">&#39;normandy&#39;</span><span class="p">,</span>
+        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a DataFrame containing per-client metric values.</span>
 
+<span class="sd">        Also store them in a permanent table in BigQuery. The name of</span>
+<span class="sd">        this table will be printed. Subsequent calls to this function</span>
+<span class="sd">        will simply read the results from this table.</span>
+
 <span class="sd">        Args:</span>
-<span class="sd">            enrollments: A spark DataFrame of enrollments, like the one</span>
-<span class="sd">                returned by ``self.get_enrollments()``.</span>
+<span class="sd">            bq_context (BigQueryContext): BigQuery configuration and client.</span>
 <span class="sd">            metric_list (list of mozanalysis.metric.Metric): The metrics</span>
 <span class="sd">                to analyze.</span>
 <span class="sd">            last_date_full_data (str): The most recent date for which we</span>
@@ -384,17 +277,21 @@
 <span class="sd">                collected outside this analysis window.</span>
 <span class="sd">            analysis_length_days (int): the length of the analysis window,</span>
 <span class="sd">                measured in days.</span>
-<span class="sd">            keep_client_id (bool): Whether to return a ``client_id`` column.</span>
-<span class="sd">                Defaults to False to reduce memory usage of the results.</span>
+<span class="sd">            enrollments_query_type (str): Specifies the query to use to</span>
+<span class="sd">                get the experiment&#39;s enrollments, unless overridden by</span>
+<span class="sd">                custom_enrollments_query.</span>
+<span class="sd">            custom_enrollments_query (str): A full SQL query to be used</span>
+<span class="sd">                in the main query::</span>
+
+<span class="sd">                    WITH raw_enrollments AS ({custom_enrollments_query})</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            A spark DataFrame of experiment data. One row per ``client_id``.</span>
+<span class="sd">            A pandas DataFrame of experiment data. One row per ``client_id``.</span>
 <span class="sd">            Some metadata columns, then one column per metric in</span>
 <span class="sd">            ``metric_list``, and one column per sanity-check metric.</span>
 <span class="sd">            Columns (not necessarily in order):</span>
 
-<span class="sd">                * client_id (str, optional): Not necessary for</span>
-<span class="sd">                  &quot;happy path&quot; analyses.</span>
+<span class="sd">                * client_id (str): Not necessary for &quot;happy path&quot; analyses.</span>
 <span class="sd">                * branch (str): The client&#39;s branch</span>
 <span class="sd">                * other columns of ``enrollments``.</span>
 <span class="sd">                * [metric 1]: The client&#39;s value for the first metric in</span>
@@ -420,30 +317,28 @@
             <span class="n">analysis_length_days</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_per_client_data</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
-            <span class="s1">&#39;mozanalysis_analysis_window_start&#39;</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
-            <span class="s1">&#39;mozanalysis_analysis_window_end&#39;</span>
-        <span class="p">)</span></div>
+        <span class="n">sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_query</span><span class="p">(</span>
+            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">,</span> <span class="n">custom_enrollments_query</span>
+        <span class="p">)</span>
+
+        <span class="n">res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">sql</span><span class="p">)]</span>
+        <span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">res_table_name</span><span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Experiment.get_time_series_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
-        <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span><span class="p">,</span> <span class="n">keep_client_id</span><span class="o">=</span><span class="kc">False</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s1">&#39;normandy&#39;</span><span class="p">,</span>
+        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a dict containing DataFrames with per-client metric values.</span>
+        <span class="sd">&quot;&quot;&quot;Return a TimeSeriesResult with per-client metric values.</span>
 
-<span class="sd">        Equivalent to looping over ``get_per_client_data`` with</span>
-<span class="sd">        different analysis windows, calling ``.toPandas()``, and</span>
-<span class="sd">        putting the resulting pandas DataFrames into a dictionary keyed</span>
-<span class="sd">        by the day the analysis window starts; but this should be more</span>
-<span class="sd">        efficient.</span>
+<span class="sd">        Roughly equivalent to looping over ``get_single_window_data``</span>
+<span class="sd">        with different analysis windows, and reorganising the results.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            enrollments: A spark DataFrame of enrollments, like the one</span>
-<span class="sd">                returned by ``self.get_enrollments()``.</span>
-
+<span class="sd">            bq_context (BigQueryContext): BigQuery configuration and client.</span>
 <span class="sd">            metric_list (list of mozanalysis.metric.Metric):</span>
 <span class="sd">                The metrics to analyze.</span>
 <span class="sd">            last_date_full_data (str): The most recent date for which we</span>
@@ -452,19 +347,22 @@
 <span class="sd">                experiment recipe was deactivated), then do that here.</span>
 <span class="sd">            time_series_period (&#39;daily&#39; or &#39;weekly&#39;): How long each</span>
 <span class="sd">                analysis window should be.</span>
-<span class="sd">            keep_client_id (bool): Whether to return a ``client_id`` column.</span>
-<span class="sd">                Defaults to False to reduce memory usage of the results.</span>
+<span class="sd">            enrollments_query_type (str): Specifies the query to use to</span>
+<span class="sd">                get the experiment&#39;s enrollments, unless overridden by</span>
+<span class="sd">                custom_enrollments_query.</span>
+<span class="sd">            custom_enrollments_query (str): A full SQL query to be used</span>
+<span class="sd">                in the main query::</span>
+
+<span class="sd">                    WITH raw_enrollments AS ({custom_enrollments_query})</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            A ``dict`` of data per analysis window. Each key is an ``int``:</span>
-<span class="sd">            the number of days between enrollment and the start of the</span>
-<span class="sd">            analysis window. Each value is a pandas DataFrame in &quot;the</span>
-<span class="sd">            standard format&quot;: one row per client, some metadata columns,</span>
-<span class="sd">            plus one column per metric and sanity-check metric.</span>
-<span class="sd">            Columns (not necessarily in order):</span>
+<span class="sd">            A TimeSeriesResult object, which may be used to obtain a</span>
+<span class="sd">            pandas DataFrame of per-client metric data, for each</span>
+<span class="sd">            analysis window. Each DataFrame is a pandas DataFrame in</span>
+<span class="sd">            &quot;the standard format&quot;: one row per client, some metadata</span>
+<span class="sd">            columns, plus one column per metric and sanity-check metric.</span>
+<span class="sd">            Its columns (not necessarily in order):</span>
 
-<span class="sd">                * client_id (str, optional): Not necessary for</span>
-<span class="sd">                  &quot;happy path&quot; analyses.</span>
 <span class="sd">                * branch (str): The client&#39;s branch</span>
 <span class="sd">                * other columns of ``enrollments``.</span>
 <span class="sd">                * [metric 1]: The client&#39;s value for the first metric in</span>
@@ -480,298 +378,164 @@
 <span class="sd">                  sanity check metric for the last data source that</span>
 <span class="sd">                  supports sanity checks.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_ts</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">time_series_period</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span>
         <span class="p">)</span>
 
-        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_per_client_data</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mozanalysis_analysis_window_end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_query</span><span class="p">(</span>
+            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">,</span> <span class="n">custom_enrollments_query</span>
+        <span class="p">)</span>
+
+        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">sql</span><span class="p">)]</span>
+        <span class="p">))</span>
+
+        <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">full_res_table_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">TimeSeriesResult</span><span class="p">(</span>
+            <span class="n">fully_qualified_table_name</span><span class="o">=</span><span class="n">bq_context</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span>
+                <span class="n">full_res_table_name</span>
+            <span class="p">),</span>
+            <span class="n">analysis_windows</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_build_query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">,</span>
+        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL to query metric data for users.</span>
+
+<span class="sd">        Building this query is the main goal of this module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">analysis_windows_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_analysis_windows_query</span><span class="p">(</span>
+            <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
+        <span class="p">)</span>
+
+        <span class="n">enrollments_query</span> <span class="o">=</span> <span class="n">custom_enrollments_query</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query</span><span class="p">(</span><span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">)</span>
+
+        <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_metrics_query_bits</span><span class="p">(</span>
+            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    WITH analysis_windows AS (</span>
+<span class="s2">        </span><span class="si">{analysis_windows_query}</span><span class="s2"></span>
+<span class="s2">    ),</span>
+<span class="s2">    raw_enrollments AS (</span><span class="si">{enrollments_query}</span><span class="s2">),</span>
+<span class="s2">    enrollments AS (</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            e.*,</span>
+<span class="s2">            aw.*</span>
+<span class="s2">        FROM raw_enrollments e</span>
+<span class="s2">        CROSS JOIN analysis_windows aw</span>
+<span class="s2">    )</span>
+<span class="s2">    SELECT</span>
+<span class="s2">        enrollments.*,</span>
+<span class="s2">        </span><span class="si">{metrics_columns}</span><span class="s2"></span>
+<span class="s2">    FROM enrollments</span>
+<span class="s2">    </span><span class="si">{metrics_joins}</span><span class="s2"></span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">analysis_windows_query</span><span class="o">=</span><span class="n">analysis_windows_query</span><span class="p">,</span>
+            <span class="n">enrollments_query</span><span class="o">=</span><span class="n">enrollments_query</span><span class="p">,</span>
+            <span class="n">metrics_columns</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">        &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_columns</span><span class="p">),</span>
+            <span class="n">metrics_joins</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_build_analysis_windows_query</span><span class="p">(</span><span class="n">analysis_windows</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL to construct a table of analysis windows.</span>
+
+<span class="sd">        To query a time series, we construct a table of analysis windows</span>
+<span class="sd">        and cross join it with the enrollments table to get one row per</span>
+<span class="sd">        pair of client and analysis window.</span>
+
+<span class="sd">        This method writes the SQL to define the analysis window table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        UNION ALL</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s2">&quot;(SELECT </span><span class="si">{aws}</span><span class="s2"> AS analysis_window_start, </span><span class="si">{awe}</span><span class="s2"> AS analysis_window_end)&quot;</span>
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">aws</span><span class="o">=</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">awe</span><span class="o">=</span><span class="n">aw</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="n">analysis_windows</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_enrollments_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL to query a list of enrollments and their branches&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s1">&#39;normandy&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_normandy</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s1">&#39;glean&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+
+    <span class="k">def</span> <span class="nf">_build_enrollments_query_normandy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a normandy experiment&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            e.client_id,</span>
+<span class="s2">            `moz-fx-data-shared-prod.udf.get_key`(e.event_map_values, &#39;branch&#39;)</span>
+<span class="s2">                AS branch,</span>
+<span class="s2">            min(e.submission_date) AS enrollment_date,</span>
+<span class="s2">            count(e.submission_date) AS num_enrollment_events</span>
+<span class="s2">        FROM</span>
+<span class="s2">            `moz-fx-data-shared-prod.telemetry.events` e</span>
+<span class="s2">        WHERE</span>
+<span class="s2">            e.event_category = &#39;normandy&#39;</span>
+<span class="s2">            AND e.event_method = &#39;enroll&#39;</span>
+<span class="s2">            AND e.submission_date</span>
+<span class="s2">                BETWEEN &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39; AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
+<span class="s2">            AND e.event_string_value = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
+<span class="s2">        GROUP BY e.client_id, branch</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
+            <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span>
+            <span class="n">last_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_metrics_query_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to metrics.&quot;&quot;&quot;</span>
+        <span class="n">ds_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_metrics_by_data_source</span><span class="p">(</span><span class="n">metric_list</span><span class="p">)</span>
+
+        <span class="n">metrics_columns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">metrics_joins</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ds_metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">query_for_metrics</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
+                <span class="n">ds_metrics</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span>
+            <span class="p">)</span>
+            <span class="n">metrics_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;    LEFT JOIN (</span>
+<span class="sd">        {query}</span>
+<span class="sd">        ) ds_{i} USING (client_id, analysis_window_start, analysis_window_end)</span>
+<span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">query</span><span class="o">=</span><span class="n">query_for_metrics</span><span class="p">,</span>
+                    <span class="n">i</span><span class="o">=</span><span class="n">i</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ds_metrics</span><span class="p">[</span><span class="n">ds</span><span class="p">]:</span>
+                <span class="n">metrics_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;ds_</span><span class="si">{i}</span><span class="s2">.</span><span class="si">{metric_name}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">name</span>
+                <span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span>
+
+    <span class="k">def</span> <span class="nf">_partition_metrics_by_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dict mapping data sources to metric lists.</span>
+
+<span class="sd">        Also add sanity metrics.&quot;&quot;&quot;</span>
+        <span class="n">data_sources</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">data_source</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">:</span> <span class="n">res</span><span class="p">[</span>
-                <span class="n">res</span><span class="p">[</span><span class="s1">&#39;mozanalysis_analysis_window_start&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">aw</span><span class="o">.</span><span class="n">start</span>
-            <span class="p">]</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mozanalysis_analysis_window_start&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;columns&#39;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
+            <span class="n">ds</span><span class="p">:</span>
+                <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">data_source</span> <span class="o">==</span> <span class="n">ds</span><span class="p">]</span>
+                <span class="o">+</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_sanity_metrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="n">data_sources</span>
         <span class="p">}</span></div>
-
-<div class="viewcode-block" id="Experiment.get_time_series_data_lazy"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data_lazy">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data_lazy</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
-        <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span><span class="p">,</span> <span class="n">keep_client_id</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Like ``get_time_series_data()`` but with Spark DataFrames.</span>
-
-<span class="sd">        See docs for ``get_time_series_data()``.</span>
-
-<span class="sd">        Sometimes the results of ``get_time_series_data()`` do not fit</span>
-<span class="sd">        in memory. This method returns a dict of Spark DataFrames,</span>
-<span class="sd">        instead of a dict of pandas DataFrames. This allows for</span>
-<span class="sd">        subsequent processing to be done in Spark, or for smaller</span>
-<span class="sd">        portions of data to be loaded into memory.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_ts</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">time_series_period</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span>
-        <span class="p">)</span>
-
-        <span class="n">master_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_per_client_data</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mozanalysis_analysis_window_end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cache</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
-                <span class="n">master_df</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-                    <span class="n">master_df</span><span class="o">.</span><span class="n">mozanalysis_analysis_window_start</span> <span class="o">==</span> <span class="n">aw</span><span class="o">.</span><span class="n">start</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mozanalysis_analysis_window_start&#39;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
-        <span class="p">}</span></div>
-
-    <span class="k">def</span> <span class="nf">_get_per_client_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">keep_client_id</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a Spark DataFrame with metric values per-client-and-analysis-window.</span>
-
-<span class="sd">        Each row contains the metric data for a (client, analysis window)</span>
-<span class="sd">        pair.</span>
-
-<span class="sd">        End users should prefer calling the public convenience methods</span>
-<span class="sd">        ``get_per_client_data()`` and ``get_time_series_data()``,</span>
-<span class="sd">        because they have simplified task-specific inputs, and output</span>
-<span class="sd">        DataFrames in the standard format (one row per client).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_enrollments</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
-
-        <span class="n">enrollments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_analysis_windows_to_enrollments</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span>
-        <span class="p">)</span>
-
-        <span class="n">data_source_dfs_and_metric_col_lists</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_metrics</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span>
-        <span class="p">)</span>
-
-        <span class="n">res_per_ds</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_get_results_for_one_data_source</span><span class="p">(</span>
-                <span class="n">enrollments</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_process_data_source_df</span><span class="p">(</span><span class="n">ds_df</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">),</span>
-                <span class="n">mcl</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">for</span> <span class="n">ds_df</span><span class="p">,</span> <span class="n">mcl</span> <span class="ow">in</span> <span class="n">data_source_dfs_and_metric_col_lists</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">]</span>
-
-        <span class="n">res</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span> <span class="n">res_per_ds</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">keep_client_id</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">res</span>
-
-        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_get_results_for_one_data_source</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source_df</span><span class="p">,</span> <span class="n">metric_column_list</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a DataFrame of aggregated per-client metrics.</span>
-
-<span class="sd">        Left join ``data_source_df`` to ``enrollments`` to get per-client</span>
-<span class="sd">        data within the analysis windows, then aggregate to compute the</span>
-<span class="sd">        requested metrics plus some sanity checks.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">join_on</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_join_conditions</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source_df</span><span class="p">)</span>
-
-        <span class="n">res</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="n">data_source_df</span><span class="p">,</span>
-            <span class="n">join_on</span><span class="p">,</span>
-            <span class="s1">&#39;left&#39;</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span>
-            <span class="o">*</span><span class="p">[</span><span class="n">enrollments</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>  <span class="c1"># Yes, really.</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
-            <span class="o">*</span><span class="n">metric_column_list</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">res</span>
-
-    <span class="k">def</span> <span class="nf">_get_join_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">data_source</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a list of join conditions.</span>
-
-<span class="sd">        Returns a list of boolean ``Column``s representing join</span>
-<span class="sd">        conditions between the ``enrollments`` ``DataFrame`` and</span>
-<span class="sd">        ``data_source``.</span>
-
-<span class="sd">        In ``_get_results_for_one_data_source``, we left join</span>
-<span class="sd">        ``enrollments`` to ``data_source`` using these join conditions</span>
-<span class="sd">        to produce a ``DataFrame`` containing the rows from</span>
-<span class="sd">        ``data_source`` for enrolled clients that were submitted during</span>
-<span class="sd">        the analysis window.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Use F.col() to avoid a bug in spark when `enrollments` is built</span>
-        <span class="c1"># from `data_source` (SPARK-10925)</span>
-        <span class="n">days_since_enrollment</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">F</span><span class="o">.</span><span class="n">unix_timestamp</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">),</span> <span class="s1">&#39;yyyyMMdd&#39;</span><span class="p">)</span>
-            <span class="o">-</span> <span class="n">F</span><span class="o">.</span><span class="n">unix_timestamp</span><span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span><span class="p">,</span> <span class="s1">&#39;yyyyMMdd&#39;</span><span class="p">)</span>
-        <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-
-        <span class="n">join_on</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">enrollments</span><span class="o">.</span><span class="n">client_id</span> <span class="o">==</span> <span class="n">data_source</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span>
-
-            <span class="c1"># Do a quick pass aiming to efficiently filter out lots of rows:</span>
-            <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">),</span>
-
-            <span class="c1"># Now do a more thorough pass filtering out irrelevant data:</span>
-            <span class="n">days_since_enrollment</span><span class="o">.</span><span class="n">between</span><span class="p">(</span>
-                <span class="n">enrollments</span><span class="o">.</span><span class="n">mozanalysis_analysis_window_start</span><span class="p">,</span>
-                <span class="n">enrollments</span><span class="o">.</span><span class="n">mozanalysis_analysis_window_end</span>
-            <span class="p">)</span>
-        <span class="p">]</span>
-
-        <span class="k">if</span> <span class="s1">&#39;experiments&#39;</span> <span class="ow">in</span> <span class="n">data_source</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-            <span class="c1"># Try to filter data from day of enrollment before time of enrollment.</span>
-            <span class="c1"># If the client enrolled and unenrolled on the same day then this</span>
-            <span class="c1"># will also filter out that day&#39;s post unenrollment data but that&#39;s</span>
-            <span class="c1"># probably the smallest and most innocuous evil on the menu.</span>
-            <span class="n">join_on</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;submission_date_s3&#39;</span><span class="p">))</span>
-                <span class="o">|</span> <span class="p">(</span><span class="o">~</span><span class="n">F</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">data_source</span><span class="o">.</span><span class="n">experiments</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">]))</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">join_on</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_add_analysis_windows_to_enrollments</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``enrollments`` cross joined on analysis windows.</span>
-
-<span class="sd">        When querying time series, we need to query an extra dimension</span>
-<span class="sd">        of data (time!): each datum/value is identified by the tuple::</span>
-
-<span class="sd">            (client, analysis window, metric)</span>
-
-<span class="sd">        where &quot;analysis window&quot; identifies a point in the time series.</span>
-
-<span class="sd">        In order to get 3 dimensions of data from a DB that returns</span>
-<span class="sd">        2-dimensional ``DataFrames``, we move from a &quot;one row per</span>
-<span class="sd">        client&quot; regime to a &quot;one row per (client, analysis window)&quot;</span>
-<span class="sd">        regime.</span>
-
-<span class="sd">        This method converts a &quot;one row per client&quot; ``enrollments``</span>
-<span class="sd">        ``DataFrame`` to a &quot;one row per (client, period)&quot;</span>
-<span class="sd">        ``enrollments`` ``DataFrame``, returning the Cartesian product</span>
-<span class="sd">        of clients and analysis windows.</span>
-
-<span class="sd">        An analysis window is identified in the returned ``DataFrame``</span>
-<span class="sd">        by the pair of columns:</span>
-
-<span class="sd">            * ``mozanalysis_analysis_window_start`` (int)</span>
-<span class="sd">            * ``mozanalysis_analysis_window_end`` (int)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">analysis_windows</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">[</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">aw</span><span class="o">.</span><span class="n">end</span><span class="p">]</span> <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
-        <span class="p">]</span>
-
-        <span class="n">analysis_window_df</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">sql_ctx</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span>
-            <span class="n">analysis_windows</span><span class="p">,</span>
-            <span class="s1">&#39;mozanalysis_analysis_window_start: int, &#39;</span>
-            <span class="s1">&#39;mozanalysis_analysis_window_end: int&#39;</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">crossJoin</span><span class="p">(</span><span class="n">analysis_window_df</span><span class="p">)</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_enrollments_view_normandy</span><span class="p">(</span><span class="n">spark</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a DataFrame of all normandy enrollment events.</span>
-
-<span class="sd">        Filter the ``events`` table to enrollment events and transform it</span>
-<span class="sd">        into the standard enrollments schema.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            spark: The spark context.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">events</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;events&#39;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-            <span class="n">events</span><span class="o">.</span><span class="n">event_category</span> <span class="o">==</span> <span class="s1">&#39;normandy&#39;</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-            <span class="n">events</span><span class="o">.</span><span class="n">event_method</span> <span class="o">==</span> <span class="s1">&#39;enroll&#39;</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
-            <span class="n">events</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span>
-            <span class="n">events</span><span class="o">.</span><span class="n">event_string_value</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;experiment_slug&#39;</span><span class="p">),</span>
-            <span class="n">events</span><span class="o">.</span><span class="n">event_map_values</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;branch&#39;</span><span class="p">),</span>
-            <span class="n">events</span><span class="o">.</span><span class="n">submission_date_s3</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollment_date&#39;</span><span class="p">),</span>
-        <span class="p">)</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_enrollments_view_addon</span><span class="p">(</span><span class="n">spark</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a DataFrame of all addon study enrollment events.</span>
-
-<span class="sd">        Filter the ``telemetry_shield_study_parquet`` to enrollment events</span>
-<span class="sd">        and transform it into the standard enrollments schema.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            spark: The spark context.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">tssp</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;telemetry_shield_study_parquet&#39;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">tssp</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-            <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">study_state</span> <span class="o">==</span> <span class="s1">&#39;enter&#39;</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
-            <span class="n">tssp</span><span class="o">.</span><span class="n">client_id</span><span class="p">,</span>
-            <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">study_name</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;experiment_slug&#39;</span><span class="p">),</span>
-            <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;branch&#39;</span><span class="p">),</span>
-            <span class="n">tssp</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollment_date&#39;</span><span class="p">),</span>
-            <span class="n">tssp</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">addon_version</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;addon_version&#39;</span><span class="p">),</span>
-        <span class="p">)</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_process_enrollments</span><span class="p">(</span><span class="n">enrollments</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``enrollments``, filtered to the relevant dates.</span>
-
-<span class="sd">        Ignore enrollments that were received after the enrollment</span>
-<span class="sd">        period (if one was specified), else ignore enrollments for</span>
-<span class="sd">        whom we do not have complete data for all analysis windows.</span>
-
-<span class="sd">        Name the returned ``DataFrame`` &#39;enrollments&#39;, for consistency.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">enrollments</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-            <span class="n">enrollments</span><span class="o">.</span><span class="n">enrollment_date</span> <span class="o">&lt;=</span> <span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;enrollments&#39;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_process_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a dict of lists of Columns, representing metrics.</span>
-
-<span class="sd">        Each key is the DataFrame to which the Columns belong.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">spark</span> <span class="o">=</span> <span class="n">enrollments</span><span class="o">.</span><span class="n">sql_ctx</span><span class="o">.</span><span class="n">sparkSession</span>
-
-        <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">metric_list</span><span class="p">):</span>
-            <span class="n">ds_df</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">get_dataframe</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">ds_df</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
-                <span class="n">res</span><span class="p">[</span><span class="n">ds_df</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">get_sanity_metric_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enrollments</span><span class="p">)</span>
-
-            <span class="n">res</span><span class="p">[</span><span class="n">ds_df</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">get_col</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">res</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_process_data_source_df</span><span class="p">(</span><span class="n">data_source</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``data_source``, filtered to the relevant dates.</span>
-
-<span class="sd">        Ignore data before the analysis window of the first enrollment,</span>
-<span class="sd">        and after the analysis window of the last enrollment.  This</span>
-<span class="sd">        should not affect the results - it should just speed things up.</span>
-
-<span class="sd">        Name the returned ``DataFrame`` &#39;data_source&#39;, for consistency.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;client_id&#39;</span><span class="p">,</span> <span class="s1">&#39;submission_date_s3&#39;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data_source</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Column &#39;</span><span class="si">{}</span><span class="s2">&#39; missing from &#39;data_source&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">data_source</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-            <span class="n">data_source</span><span class="o">.</span><span class="n">submission_date_s3</span><span class="o">.</span><span class="n">between</span><span class="p">(</span>
-                <span class="n">time_limits</span><span class="o">.</span><span class="n">first_date_data_required</span><span class="p">,</span>
-                <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span>
-            <span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;data_source&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TimeLimits"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeLimits">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -998,6 +762,88 @@
     <span class="nd">@end</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">_validate_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span></div>
+
+
+<div class="viewcode-block" id="TimeSeriesResult"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeSeriesResult">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TimeSeriesResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Result from a time series query.</span>
+
+<span class="sd">    For each analysis window, this object lets us get a dataframe in</span>
+<span class="sd">    &quot;the standard format&quot; (one row per client).</span>
+
+<span class="sd">    Example usage::</span>
+
+<span class="sd">        result_dict = dict(time_series_result.items(bq_context))</span>
+<span class="sd">        window_0 = result_dict[0]</span>
+
+<span class="sd">    ``window_0`` would then be a pandas DataFrame of results for the</span>
+<span class="sd">    analysis window starting at day 0. ``result_dict`` would be a</span>
+<span class="sd">    dictionary of all such DataFrames, keyed by the start days of</span>
+<span class="sd">    their analysis windows.</span>
+
+<span class="sd">    Or, to load only one analysis window into RAM::</span>
+
+<span class="sd">        window_0 = time_series_result.get(bq_context, 0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fully_qualified_table_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">analysis_windows</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TimeSeriesResult.get"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeSeriesResult.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">,</span> <span class="n">analysis_window</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the DataFrame for a specific analysis window.</span>
+
+<span class="sd">        N.B. this makes a BigQuery query each time it is run; caching</span>
+<span class="sd">        results is your responsibility.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            bq_context (BigQueryContext)</span>
+<span class="sd">            analysis_window (AnalysisWindow or int): The analysis</span>
+<span class="sd">                window, or its start day as an int.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">analysis_window</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">analysis_window</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                    <span class="n">aw</span> <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_windows</span> <span class="k">if</span> <span class="n">aw</span><span class="o">.</span><span class="n">start</span> <span class="o">==</span> <span class="n">analysis_window</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                    <span class="s2">&quot;AnalysisWindow not found with start of </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">analysis_window</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_analysis_window_subset_query</span><span class="p">(</span><span class="n">analysis_window</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_windows</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_windows</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">bq_context</span><span class="p">,</span> <span class="n">aw</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_build_analysis_window_subset_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_window</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL for partitioning time series results.</span>
+
+<span class="sd">        When we query data for a time series, we query it for all</span>
+<span class="sd">        points of the time series, and we store this in a table.</span>
+
+<span class="sd">        This method returns SQL to query this table to obtain results</span>
+<span class="sd">        in &quot;the standard format&quot; for a single analysis window.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT * EXCEPT (client_id, analysis_window_start, analysis_window_end)</span>
+<span class="s2">            FROM </span><span class="si">{full_table_name}</span><span class="s2"></span>
+<span class="s2">            WHERE analysis_window_start = </span><span class="si">{aws}</span><span class="s2"></span>
+<span class="s2">            AND analysis_window_end = </span><span class="si">{awe}</span><span class="s2"></span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">full_table_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fully_qualified_table_name</span><span class="p">,</span>
+            <span class="n">aws</span><span class="o">=</span><span class="n">analysis_window</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+            <span class="n">awe</span><span class="o">=</span><span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@analysis_windows</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_check_analysis_windows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">({</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="n">value</span><span class="p">}):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Each analysis window must start on a different day&quot;</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

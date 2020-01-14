@@ -154,7 +154,6 @@
  <a href="#A"><strong>A</strong></a>
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
- | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
@@ -168,14 +167,12 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.addon_version">addon_version (mozanalysis.experiment.Experiment attribute)</a>
-</li>
       <li><a href="api/metrics.html#mozanalysis.metrics.agg_any">agg_any() (in module mozanalysis.metrics)</a>
+</li>
+      <li><a href="api/metrics.html#mozanalysis.metrics.agg_sum">agg_sum() (in module mozanalysis.metrics)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/metrics.html#mozanalysis.metrics.agg_sum">agg_sum() (in module mozanalysis.metrics)</a>
-</li>
       <li><a href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.aggregate_col">aggregate_col() (in module mozanalysis.bayesian_stats.binary)</a>
 </li>
       <li><a href="api/experiment.html#mozanalysis.experiment.AnalysisWindow">AnalysisWindow (class in mozanalysis.experiment)</a>
@@ -221,14 +218,6 @@
   </ul></td>
 </tr></table>
 
-<h2 id="D">D</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/metrics.html#mozanalysis.metrics.DataSource">DataSource (class in mozanalysis.metrics)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -246,21 +235,9 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/experiment.html#mozanalysis.experiment.TimeLimits.for_single_analysis_window">for_single_analysis_window() (mozanalysis.experiment.TimeLimits class method)</a>
 </li>
-      <li><a href="api/experiment.html#mozanalysis.experiment.TimeLimits.for_ts">for_ts() (mozanalysis.experiment.TimeLimits class method)</a>
-</li>
-      <li><a href="api/metrics.html#mozanalysis.metrics.Metric.from_col">from_col() (mozanalysis.metrics.Metric class method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/metrics.html#mozanalysis.metrics.DataSource.from_dataframe">from_dataframe() (mozanalysis.metrics.DataSource class method)</a>
-</li>
-      <li><a href="api/metrics.html#mozanalysis.metrics.DataSource.from_func">from_func() (mozanalysis.metrics.DataSource class method)</a>
-
-      <ul>
-        <li><a href="api/metrics.html#mozanalysis.metrics.Metric.from_func">(mozanalysis.metrics.Metric class method)</a>
-</li>
-      </ul></li>
-      <li><a href="api/metrics.html#mozanalysis.metrics.DataSource.from_table_name">from_table_name() (mozanalysis.metrics.DataSource class method)</a>
+      <li><a href="api/experiment.html#mozanalysis.experiment.TimeLimits.for_ts">for_ts() (mozanalysis.experiment.TimeLimits class method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -272,31 +249,23 @@
 </li>
       <li><a href="api/udf.html#mozanalysis.udf.generate_threshold_udf">generate_threshold_udf() (in module mozanalysis.udf)</a>
 </li>
+      <li><a href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult.get">get() (mozanalysis.experiment.TimeSeriesResult method)</a>
+</li>
       <li><a href="api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples">get_bootstrap_samples() (in module mozanalysis.bayesian_stats.bayesian_bootstrap)</a>
 
       <ul>
         <li><a href="api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples">(in module mozanalysis.frequentist_stats.bootstrap)</a>
 </li>
       </ul></li>
-      <li><a href="api/metrics.html#mozanalysis.metrics.Metric.get_col">get_col() (mozanalysis.metrics.Metric method)</a>
-</li>
-      <li><a href="api/metrics.html#mozanalysis.metrics.DataSource.get_dataframe">get_dataframe() (mozanalysis.metrics.DataSource method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.get_enrollments">get_enrollments() (mozanalysis.experiment.Experiment method)</a>
-</li>
-      <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.get_per_client_data">get_per_client_data() (mozanalysis.experiment.Experiment method)</a>
-</li>
       <li><a href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.get_samples">get_samples() (in module mozanalysis.bayesian_stats.binary)</a>
 </li>
-      <li><a href="api/metrics.html#mozanalysis.metrics.DataSource.get_sanity_metric_cols">get_sanity_metric_cols() (mozanalysis.metrics.DataSource method)</a>
+      <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.get_single_window_data">get_single_window_data() (mozanalysis.experiment.Experiment method)</a>
 </li>
       <li><a href="api/bayesian_stats/survival_func.html#mozanalysis.bayesian_stats.survival_func.get_thresholds">get_thresholds() (in module mozanalysis.bayesian_stats.survival_func)</a>
 </li>
       <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data">get_time_series_data() (mozanalysis.experiment.Experiment method)</a>
-</li>
-      <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data_lazy">get_time_series_data_lazy() (mozanalysis.experiment.Experiment method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -371,6 +340,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/experiment.html#mozanalysis.experiment.TimeLimits">TimeLimits (class in mozanalysis.experiment)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult">TimeSeriesResult (class in mozanalysis.experiment)</a>
 </li>
   </ul></td>
 </tr></table>

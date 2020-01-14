@@ -94,8 +94,6 @@
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="metrics/firetv.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firetv</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="metrics/firetv.html#mozanalysis-metrics-desktop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
 </ul>
 </li>
@@ -168,264 +166,22 @@
   <div class="section" id="module-mozanalysis.metrics">
 <span id="mozanalysis-metrics"></span><h1><a class="reference internal" href="#module-mozanalysis.metrics" title="mozanalysis.metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a><a class="headerlink" href="#module-mozanalysis.metrics" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="mozanalysis.metrics.DataSource">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">DataSource</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">dataframe_getter</em>, <em class="sig-param">description: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for a Spark DataFrame.</p>
-<p>This class is lazy: no Spark activity takes place until
-<code class="docutils literal notranslate"><span class="pre">get_dataframe()</span></code> is called.</p>
-<p class="rubric">Examples</p>
-<p>There are three ways to instantiate a <code class="docutils literal notranslate"><span class="pre">DataSource</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">clients_daily</span> <span class="o">=</span> <span class="n">DataSource</span><span class="o">.</span><span class="n">from_table_name</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>or:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@DataSource</span><span class="o">.</span><span class="n">from_func</span><span class="p">()</span>
-<span class="k">def</span> <span class="nf">clients_daily</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">experiment</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>or (for interactive use):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">clients_daily_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
-<span class="n">clients_daily_ds</span> <span class="o">=</span> <span class="n">DataSource</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">,</span> <span class="n">clients_daily_df</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Avoid instantiating duplicate <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> s - if multiple metrics
-require the same source of data but use different <code class="docutils literal notranslate"><span class="pre">DataSource</span></code>
-instances, then in some circumstances <code class="docutils literal notranslate"><span class="pre">mozanalysis</span></code> will not
-recognise that the metrics could share a DataFrame, and Spark will
-do extra work.</p>
-<dl class="method">
-<dt id="mozanalysis.metrics.DataSource.from_table_name">
-<em class="property">classmethod </em><code class="sig-name descname">from_table_name</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource.from_table_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource.from_table_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> from a Spark table name.</p>
-<p>Don’t repeatedly call this with the same <code class="docutils literal notranslate"><span class="pre">name</span></code>, because
-we won’t recognise that the different <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> instances
-are equal.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Supplied to <code class="docutils literal notranslate"><span class="pre">spark.table()</span></code></p>
-</dd>
-</dl>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">clients_daily</span> <span class="o">=</span> <span class="n">DataSource</span><span class="o">.</span><span class="n">from_table_name</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="mozanalysis.metrics.DataSource.from_func">
-<em class="property">classmethod </em><code class="sig-name descname">from_func</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource.from_func"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource.from_func" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator method to turn a function into a <code class="docutils literal notranslate"><span class="pre">DataSource</span></code>.</p>
-<p>The function must take two arguments: <code class="docutils literal notranslate"><span class="pre">spark</span></code> and
-<code class="docutils literal notranslate"><span class="pre">experiment</span></code>. The function’s name is used as the
-<code class="docutils literal notranslate"><span class="pre">DataSource</span></code> name.</p>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">Experiment</span>
-<span class="kn">from</span> <span class="nn">pyspark.sql.session</span> <span class="kn">import</span> <span class="n">SparkSession</span>
-
-<span class="n">DataSource</span><span class="o">.</span><span class="n">from_func</span><span class="p">()</span>
-<span class="k">def</span> <span class="nf">clients_daily</span><span class="p">(</span><span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span><span class="p">,</span> <span class="n">experiment</span><span class="p">:</span> <span class="n">Experiment</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="mozanalysis.metrics.DataSource.from_dataframe">
-<em class="property">classmethod </em><code class="sig-name descname">from_dataframe</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">dataframe</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource.from_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource.from_dataframe" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> for a DataFrame.</p>
-<p>Don’t repeatedly call this with the same <code class="docutils literal notranslate"><span class="pre">dataframe</span></code>, because
-we won’t recognise that the different <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> instances
-are equal.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – Name for the <code class="docutils literal notranslate"><span class="pre">DataSource</span></code>.</p></li>
-<li><p><strong>dataframe</strong> (<em>DataFrame</em>) – The DataFrame to wrap.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="mozanalysis.metrics.DataSource.get_dataframe">
-<code class="sig-name descname">get_dataframe</code><span class="sig-paren">(</span><em class="sig-param">spark</em>, <em class="sig-param">experiment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource.get_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource.get_dataframe" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the DataFrame for this <code class="docutils literal notranslate"><span class="pre">DataSource</span></code>.</p>
-<p>We cache the results so that repeated calls to
-<code class="docutils literal notranslate"><span class="pre">get_dataframe()</span></code> return the same DataFrame, which makes it
-easier to compute multiple metrics from one DataFrame. The
-results are cached on the SparkSession, keyed by the
-<code class="docutils literal notranslate"><span class="pre">DataSource</span></code> instance and the <code class="docutils literal notranslate"><span class="pre">Experiment</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>spark</strong> (<em>SparkSession</em>) – The SparkSession - in DataBricks this
-is preloaded into every notebook as the variable
-<code class="docutils literal notranslate"><span class="pre">spark</span></code>.</p></li>
-<li><p><strong>experiment</strong> (<a class="reference internal" href="experiment.html#mozanalysis.experiment.Experiment" title="mozanalysis.experiment.Experiment"><em>Experiment</em></a>) – The Experiment being analysed. Some
-<code class="docutils literal notranslate"><span class="pre">DataSource</span></code> s require the experiment slug in order to
-identify the correct data.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="mozanalysis.metrics.DataSource.get_sanity_metric_cols">
-<code class="sig-name descname">get_sanity_metric_cols</code><span class="sig-paren">(</span><em class="sig-param">experiment</em>, <em class="sig-param">enrollments</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource.get_sanity_metric_cols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource.get_sanity_metric_cols" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of sanity metric Spark Columns.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>experiment</strong> (<a class="reference internal" href="experiment.html#mozanalysis.experiment.Experiment" title="mozanalysis.experiment.Experiment"><em>Experiment</em></a>) – The experiment being analysed.</p></li>
-<li><p><strong>enrollments</strong> (<em>DataFrame</em>) – The DataFrame of enrollments,
-typically obtained from <code class="docutils literal notranslate"><span class="pre">Experiment.get_enrollments()</span></code></p></li>
-</ul>
-</dd>
-</dl>
-<p>The sanity metrics depend on the data source.</p>
-<dl class="simple">
-<dt>Could return:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">[data_source_name]_has_non_enrolled_data</span></code>: Check to see
-whether the client_id was sending data in the analysis
-window that wasn’t tagged as being part of the experiment.
-Indicates either a client_id clash, or the client
-unenrolling. The fraction of such users should be small,
-and similar between branches.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">[data_source_name]_has_contradictory_branch</span></code>: Check to
-see whether the client_id is also enrolled in other
-branches. Indicates problems, e.g. cloned profiles. The
-fraction of such users should be small, and similar
-between branches.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="mozanalysis.metrics.Metric">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">Metric</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">data_source</em>, <em class="sig-param">col_getter</em>, <em class="sig-param">description: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">Metric</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">data_source: mozanalysis.metrics.DataSource</em>, <em class="sig-param">select_expr: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an experiment metric.</p>
 <p>Needs to be combined with an analysis window to be measurable!</p>
-<p>Essentially this wraps a Spark Column and a reference to a
-DataSource that can be used to obtain the DataFrame the column
-belongs to.</p>
-<p>These wrappers are needed in order for the metrics modules to be
-lazy.</p>
-<p>When defining metrics in the metric library, use the
-<code class="docutils literal notranslate"><span class="pre">Metric.from_func()</span></code> decorator.</p>
-<p>When defining metrics in interactive mode (i.e. in a notebook
-where you already have the Spark Column and DataFrame, and
-don’t need to be lazy), use <code class="docutils literal notranslate"><span class="pre">Metric.from_col()</span></code>.</p>
-<p class="rubric">Examples</p>
-<p>In the metrics library:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">clients_daily</span> <span class="o">=</span> <span class="n">DataSource</span><span class="o">.</span><span class="n">from_table_name</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
-
-<span class="nd">@Metric</span><span class="o">.</span><span class="n">from_func</span><span class="p">(</span><span class="n">clients_daily</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">active_hours</span><span class="p">(</span><span class="n">cd</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">agg_sum</span><span class="p">(</span><span class="n">cd</span><span class="o">.</span><span class="n">active_hours_sum</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>In interactive mode:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
-
-<span class="n">active_hours</span> <span class="o">=</span> <span class="n">Metric</span><span class="o">.</span><span class="n">from_col</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;active_hours&#39;</span><span class="p">,</span>
-    <span class="n">col</span><span class="o">=</span><span class="n">agg_sum</span><span class="p">(</span><span class="n">cd</span><span class="o">.</span><span class="n">active_hours_sum</span><span class="p">),</span>
-    <span class="n">df_name</span><span class="o">=</span><span class="s1">&#39;cd&#39;</span><span class="p">,</span>
-    <span class="n">df</span><span class="o">=</span><span class="n">cd</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<dl class="method">
-<dt id="mozanalysis.metrics.Metric.from_func">
-<em class="property">classmethod </em><code class="sig-name descname">from_func</code><span class="sig-paren">(</span><em class="sig-param">data_source</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric.from_func"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric.from_func" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator method to instantiate a <code class="docutils literal notranslate"><span class="pre">Metric</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_source</strong> (<a class="reference internal" href="#mozanalysis.metrics.DataSource" title="mozanalysis.metrics.DataSource"><em>DataSource</em></a>) – A <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> that may be used
-to obtain a DataFrame with the data required to compute
-this <code class="docutils literal notranslate"><span class="pre">Metric</span></code>.</p>
-</dd>
-</dl>
-<p>The wrapped function needs to have one argument (the DataFrame
-output by <code class="docutils literal notranslate"><span class="pre">data_source.get_dataframe()</span></code>), and return a Column.
-The function’s name is taken as the <code class="docutils literal notranslate"><span class="pre">Metric</span></code>’s name.</p>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">clients_daily</span> <span class="o">=</span> <span class="n">DataSource</span><span class="o">.</span><span class="n">from_table_name</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
-
-<span class="nd">@Metric</span><span class="o">.</span><span class="n">from_func</span><span class="p">(</span><span class="n">clients_daily</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">active_hours</span><span class="p">(</span><span class="n">cd</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Column</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">agg_sum</span><span class="p">(</span><span class="n">cd</span><span class="o">.</span><span class="n">active_hours_sum</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="mozanalysis.metrics.Metric.from_col">
-<em class="property">classmethod </em><code class="sig-name descname">from_col</code><span class="sig-paren">(</span><em class="sig-param">metric_name</em>, <em class="sig-param">col</em>, <em class="sig-param">data_source</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric.from_col"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric.from_col" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a <code class="docutils literal notranslate"><span class="pre">Metric</span></code> defined by <code class="docutils literal notranslate"><span class="pre">col</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>metric_name</strong> (<em>str</em>) – Name for the resulting Column.</p></li>
-<li><p><strong>col</strong> (<em>Column</em>) – Spark Column representing the computed metric.</p></li>
-<li><p><strong>data_source</strong> (<a class="reference internal" href="#mozanalysis.metrics.DataSource" title="mozanalysis.metrics.DataSource"><em>DataSource</em></a>) – DataSource wrapper for the source
-DataFrame for the Column.</p></li>
-</ul>
-</dd>
-</dl>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd_ds</span> <span class="o">=</span> <span class="n">DataSource</span><span class="o">.</span><span class="n">from_table_name</span><span class="p">(</span><span class="s1">&#39;clients_daily&#39;</span><span class="p">)</span>
-
-<span class="n">active_hours</span> <span class="o">=</span> <span class="n">Metric</span><span class="o">.</span><span class="n">from_col</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;active_hours&#39;</span><span class="p">,</span>
-    <span class="n">col</span><span class="o">=</span><span class="n">agg_sum</span><span class="p">(</span><span class="n">cd</span><span class="o">.</span><span class="n">active_hours_sum</span><span class="p">),</span>
-    <span class="n">data_source</span><span class="o">=</span><span class="n">cd_ds</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="mozanalysis.metrics.Metric.get_col">
-<code class="sig-name descname">get_col</code><span class="sig-paren">(</span><em class="sig-param">spark</em>, <em class="sig-param">experiment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric.get_col"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric.get_col" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a <code class="docutils literal notranslate"><span class="pre">Column</span></code> representing this metric.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>spark</strong> (<em>SparkSession</em>) – The Spark Session.</p></li>
-<li><p><strong>experiment</strong> (<a class="reference internal" href="experiment.html#mozanalysis.experiment.Experiment" title="mozanalysis.experiment.Experiment"><em>Experiment</em></a>) – The experiment for which this
-metric is being computed.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="function">
 <dt id="mozanalysis.metrics.agg_sum">
-<code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">agg_sum</code><span class="sig-paren">(</span><em class="sig-param">col</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#agg_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.agg_sum" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the sum over the data, with 0-filled nulls.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – A Spark Column of a numeric type</p>
-</dd>
-</dl>
+<code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">agg_sum</code><span class="sig-paren">(</span><em class="sig-param">select_expr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#agg_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.agg_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a SQL fragment for the sum over the data, with 0-filled nulls.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="mozanalysis.metrics.agg_any">
-<code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">agg_any</code><span class="sig-paren">(</span><em class="sig-param">col</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#agg_any"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.agg_any" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the bitwise OR, as an int, with 0-filled nulls.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – A Spark Column of bools</p>
-</dd>
-</dl>
+<code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">agg_any</code><span class="sig-paren">(</span><em class="sig-param">select_expr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#agg_any"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.agg_any" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the logical OR, with FALSE-filled nulls.</p>
 </dd></dl>
 
 </div>

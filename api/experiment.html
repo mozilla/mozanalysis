@@ -94,8 +94,6 @@
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="metrics/firetv.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firetv</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="metrics/firetv.html#mozanalysis-metrics-desktop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="udf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.udf</span></code></a></li>
 </ul>
 </li>
@@ -169,8 +167,8 @@
 <span id="mozanalysis-experiment"></span><h1><a class="reference internal" href="#module-mozanalysis.experiment" title="mozanalysis.experiment"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a><a class="headerlink" href="#module-mozanalysis.experiment" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="mozanalysis.experiment.Experiment">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">Experiment</code><span class="sig-paren">(</span><em class="sig-param">experiment_slug</em>, <em class="sig-param">start_date</em>, <em class="sig-param">num_dates_enrollment=None</em>, <em class="sig-param">addon_version=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get DataFrames of experiment data; store experiment metadata.</p>
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">Experiment</code><span class="sig-paren">(</span><em class="sig-param">experiment_slug</em>, <em class="sig-param">start_date</em>, <em class="sig-param">num_dates_enrollment=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query experiment data; store experiment metadata.</p>
 <p>The methods here query data in a way compatible with the following
 principles, which are important for experiment analysis:</p>
 <ul class="simple">
@@ -199,30 +197,37 @@ enrollment dates. Each metric only uses data collected inside
 this analysis window. We can only analyze data for a client
 if we have data covering their entire analysis window.</p></li>
 </ul>
-<p>Example usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mozanalysis.metrics.desktop</span> <span class="kn">import</span> <span class="n">active_hours</span><span class="p">,</span> <span class="n">uri_count</span>
+<p>Example usage (in a colab notebook):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">auth</span>
+<span class="n">auth</span><span class="o">.</span><span class="n">authenticate_user</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Authenticated&#39;</span><span class="p">)</span>
 
+<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">Experiment</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">BigQueryContext</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.metrics.desktop</span> <span class="kn">import</span> <span class="n">active_hours</span><span class="p">,</span> <span class="n">uri_count</span>
+
+<span class="n">bq_context</span> <span class="o">=</span> <span class="n">BigQueryContext</span><span class="p">(</span>
+    <span class="n">dataset_id</span><span class="o">=</span><span class="s1">&#39;your-dataset-id&#39;</span><span class="p">,</span>  <span class="c1"># e.g. mine&#39;s flawrence</span>
+    <span class="n">project_id</span><span class="o">=</span><span class="s1">&#39;moz-fx-data-bq-data-science&#39;</span>  <span class="c1"># this is the default anyway</span>
+<span class="p">)</span>
 
 <span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span>
-    <span class="n">experiment_slug</span><span class="o">=</span><span class="s1">&#39;pref-flip-defaultoncookierestrictions-1506704&#39;</span><span class="p">,</span>
-    <span class="n">start_date</span><span class="o">=</span><span class="s1">&#39;20181215&#39;</span><span class="p">,</span>
+    <span class="n">experiment_slug</span><span class="o">=</span><span class="s1">&#39;pref-fingerprinting-protections-retention-study-release-70&#39;</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="s1">&#39;2019-10-29&#39;</span><span class="p">,</span>
     <span class="n">num_dates_enrollment</span><span class="o">=</span><span class="mi">8</span>
 <span class="p">)</span>
-<span class="n">enrollments</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get_enrollments</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
 
-<span class="n">res</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get_per_client_data</span><span class="p">(</span>
-    <span class="n">enrollments</span><span class="p">,</span>
+<span class="c1"># Run the query and get the results as a DataFrame</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get_single_window_data</span><span class="p">(</span>
+    <span class="n">bq_context</span><span class="p">,</span>
     <span class="p">[</span>
         <span class="n">active_hours</span><span class="p">,</span>
         <span class="n">uri_count</span>
     <span class="p">],</span>
-    <span class="n">last_date_full_data</span><span class="o">=</span><span class="s1">&#39;20190107&#39;</span><span class="p">,</span>
+    <span class="n">last_date_full_data</span><span class="o">=</span><span class="s1">&#39;2019-12-01&#39;</span><span class="p">,</span>
     <span class="n">analysis_start_days</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="n">analysis_length_days</span><span class="o">=</span><span class="mi">7</span>
 <span class="p">)</span>
-
-<span class="c1"># Pull data into a pandas df, ready for running stats</span>
-<span class="n">pres</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -239,9 +244,6 @@ as determined by the metric’s analysis window and
 factor ‘7’ removes weekly seasonality, and the <code class="docutils literal notranslate"><span class="pre">+1</span></code> accounts
 for the fact that enrollment typically starts a few hours
 before UTC midnight.</p></li>
-<li><p><strong>addon_version</strong> (<em>str</em><em>, </em><em>optional</em>) – The version of the experiment addon.
-Some addon experiment slugs get reused - in those cases we need
-to filter on the addon version also.</p></li>
 </ul>
 </dd>
 </dl>
@@ -286,82 +288,17 @@ before UTC midnight.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="mozanalysis.experiment.Experiment.addon_version">
-<code class="sig-name descname">addon_version</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.addon_version" title="Permalink to this definition">¶</a></dt>
-<dd><p>The version of the experiment addon.
-Some addon experiment slugs get reused - in those cases we need
-to filter on the addon version also.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str, optional</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="method">
-<dt id="mozanalysis.experiment.Experiment.get_enrollments">
-<code class="sig-name descname">get_enrollments</code><span class="sig-paren">(</span><em class="sig-param">spark</em>, <em class="sig-param">study_type='pref_flip'</em>, <em class="sig-param">end_date=None</em>, <em class="sig-param">debug_dupes=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_enrollments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_enrollments" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a DataFrame of enrolled clients.</p>
-<p>This works for pref-flip and addon studies.</p>
-<p>The underlying queries are different for pref-flip vs addon
-studies, because as of 2019/04/02, branch information isn’t
-reliably available in the <code class="docutils literal notranslate"><span class="pre">events</span></code> table for addon experiments:
-branch may be NULL for all enrollments. The enrollment
-information for them is most reliably available in
-<code class="docutils literal notranslate"><span class="pre">telemetry_shield_study_parquet</span></code>. Once this issue is resolved,
-we will probably start using normandy events for all desktop
-studies.
-Ref: <a class="reference external" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1536644">https://bugzilla.mozilla.org/show_bug.cgi?id=1536644</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>spark</strong> – The spark context.</p></li>
-<li><p><strong>study_type</strong> (<em>str</em>) – <p>One of the following strings:</p>
-<ul>
-<li><p>’pref_flip’</p></li>
-<li><p>’addon’</p></li>
-</ul>
-<p>or a callable that accepts a spark context as an argument
-and returns a Spark DataFrame containing all enrollment events
-ever conducted using that method, with columns <code class="docutils literal notranslate"><span class="pre">client_id</span></code>,
-<code class="docutils literal notranslate"><span class="pre">experiment_slug</span></code>, <code class="docutils literal notranslate"><span class="pre">branch</span></code>, <code class="docutils literal notranslate"><span class="pre">enrollment_date</span></code>,
-and <code class="docutils literal notranslate"><span class="pre">addon_version</span></code> if it’s relevant.</p>
-</p></li>
-<li><p><strong>end_date</strong> (<em>str</em><em>, </em><em>optional</em>) – Ignore enrollments after this
-date: for faster queries on stale experiments. If you
-set <code class="docutils literal notranslate"><span class="pre">num_dates_enrollment</span></code> then do not set this; at best
-it would be redundant, at worst it’s contradictory.</p></li>
-<li><p><strong>debug_dupes</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include a column <code class="docutils literal notranslate"><span class="pre">num_events</span></code>
-giving the number of enrollment events associated with
-the <code class="docutils literal notranslate"><span class="pre">client_id</span></code> and <code class="docutils literal notranslate"><span class="pre">branch</span></code>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>A Spark DataFrame of enrollment data. One row per
-enrollment. Columns:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>client_id (str)</p></li>
-<li><p>enrollment_date (str): e.g. ‘20190329’</p></li>
-<li><p>branch (str)</p></li>
-<li><p>num_events (int, optional)</p></li>
-</ul>
-</div></blockquote>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="mozanalysis.experiment.Experiment.get_per_client_data">
-<code class="sig-name descname">get_per_client_data</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_days</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_per_client_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_per_client_data" title="Permalink to this definition">¶</a></dt>
+<dt id="mozanalysis.experiment.Experiment.get_single_window_data">
+<code class="sig-name descname">get_single_window_data</code><span class="sig-paren">(</span><em class="sig-param">bq_context</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_days</em>, <em class="sig-param">enrollments_query_type='normandy'</em>, <em class="sig-param">custom_enrollments_query=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_single_window_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a DataFrame containing per-client metric values.</p>
+<p>Also store them in a permanent table in BigQuery. The name of
+this table will be printed. Subsequent calls to this function
+will simply read the results from this table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>enrollments</strong> – A spark DataFrame of enrollments, like the one
-returned by <code class="docutils literal notranslate"><span class="pre">self.get_enrollments()</span></code>.</p></li>
+<li><p><strong>bq_context</strong> (<em>BigQueryContext</em>) – BigQuery configuration and client.</p></li>
 <li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics
 to analyze.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
@@ -373,19 +310,25 @@ measured in ‘days since the client enrolled’. We ignore data
 collected outside this analysis window.</p></li>
 <li><p><strong>analysis_length_days</strong> (<em>int</em>) – the length of the analysis window,
 measured in days.</p></li>
-<li><p><strong>keep_client_id</strong> (<em>bool</em>) – Whether to return a <code class="docutils literal notranslate"><span class="pre">client_id</span></code> column.
-Defaults to False to reduce memory usage of the results.</p></li>
+<li><p><strong>enrollments_query_type</strong> (<em>str</em>) – Specifies the query to use to
+get the experiment’s enrollments, unless overridden by
+custom_enrollments_query.</p></li>
+<li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
+in the main query:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="n">raw_enrollments</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_enrollments_query</span><span class="p">})</span>
+</pre></div>
+</div>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>A spark DataFrame of experiment data. One row per <code class="docutils literal notranslate"><span class="pre">client_id</span></code>.
+<dd class="field-even"><p><p>A pandas DataFrame of experiment data. One row per <code class="docutils literal notranslate"><span class="pre">client_id</span></code>.
 Some metadata columns, then one column per metric in
 <code class="docutils literal notranslate"><span class="pre">metric_list</span></code>, and one column per sanity-check metric.
 Columns (not necessarily in order):</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>client_id (str, optional): Not necessary for
-“happy path” analyses.</p></li>
+<li><p>client_id (str): Not necessary for “happy path” analyses.</p></li>
 <li><p>branch (str): The client’s branch</p></li>
 <li><p>other columns of <code class="docutils literal notranslate"><span class="pre">enrollments</span></code>.</p></li>
 <li><p>[metric 1]: The client’s value for the first metric in
@@ -413,18 +356,14 @@ standard format for queried experimental data.</p>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.get_time_series_data">
-<code class="sig-name descname">get_time_series_data</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a dict containing DataFrames with per-client metric values.</p>
-<p>Equivalent to looping over <code class="docutils literal notranslate"><span class="pre">get_per_client_data</span></code> with
-different analysis windows, calling <code class="docutils literal notranslate"><span class="pre">.toPandas()</span></code>, and
-putting the resulting pandas DataFrames into a dictionary keyed
-by the day the analysis window starts; but this should be more
-efficient.</p>
+<code class="sig-name descname">get_time_series_data</code><span class="sig-paren">(</span><em class="sig-param">bq_context</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">enrollments_query_type='normandy'</em>, <em class="sig-param">custom_enrollments_query=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a TimeSeriesResult with per-client metric values.</p>
+<p>Roughly equivalent to looping over <code class="docutils literal notranslate"><span class="pre">get_single_window_data</span></code>
+with different analysis windows, and reorganising the results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>enrollments</strong> – A spark DataFrame of enrollments, like the one
-returned by <code class="docutils literal notranslate"><span class="pre">self.get_enrollments()</span></code>.</p></li>
+<li><p><strong>bq_context</strong> (<em>BigQueryContext</em>) – BigQuery configuration and client.</p></li>
 <li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics to analyze.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
 have complete data, e.g. ‘20190322’. If you want to ignore
@@ -432,20 +371,26 @@ all data collected after a certain date (e.g. when the
 experiment recipe was deactivated), then do that here.</p></li>
 <li><p><strong>time_series_period</strong> (<em>'daily'</em><em> or </em><em>'weekly'</em>) – How long each
 analysis window should be.</p></li>
-<li><p><strong>keep_client_id</strong> (<em>bool</em>) – Whether to return a <code class="docutils literal notranslate"><span class="pre">client_id</span></code> column.
-Defaults to False to reduce memory usage of the results.</p></li>
+<li><p><strong>enrollments_query_type</strong> (<em>str</em>) – Specifies the query to use to
+get the experiment’s enrollments, unless overridden by
+custom_enrollments_query.</p></li>
+<li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
+in the main query:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="n">raw_enrollments</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_enrollments_query</span><span class="p">})</span>
+</pre></div>
+</div>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>the number of days between enrollment and the start of the
-analysis window. Each value is a pandas DataFrame in “the
-standard format”: one row per client, some metadata columns,
-plus one column per metric and sanity-check metric.
-Columns (not necessarily in order):</p>
+<dd class="field-even"><p><p>A TimeSeriesResult object, which may be used to obtain a
+pandas DataFrame of per-client metric data, for each
+analysis window. Each DataFrame is a pandas DataFrame in
+“the standard format”: one row per client, some metadata
+columns, plus one column per metric and sanity-check metric.
+Its columns (not necessarily in order):</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>client_id (str, optional): Not necessary for
-“happy path” analyses.</p></li>
 <li><p>branch (str): The client’s branch</p></li>
 <li><p>other columns of <code class="docutils literal notranslate"><span class="pre">enrollments</span></code>.</p></li>
 <li><p>[metric 1]: The client’s value for the first metric in
@@ -464,22 +409,7 @@ supports sanity checks.</p></li>
 </div></blockquote>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>A <code class="docutils literal notranslate"><span class="pre">dict</span></code> of data per analysis window. Each key is an <code class="docutils literal notranslate"><span class="pre">int</span></code></p>
-</dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="mozanalysis.experiment.Experiment.get_time_series_data_lazy">
-<code class="sig-name descname">get_time_series_data_lazy</code><span class="sig-paren">(</span><em class="sig-param">enrollments</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">keep_client_id=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data_lazy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data_lazy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Like <code class="docutils literal notranslate"><span class="pre">get_time_series_data()</span></code> but with Spark DataFrames.</p>
-<p>See docs for <code class="docutils literal notranslate"><span class="pre">get_time_series_data()</span></code>.</p>
-<p>Sometimes the results of <code class="docutils literal notranslate"><span class="pre">get_time_series_data()</span></code> do not fit
-in memory. This method returns a dict of Spark DataFrames,
-instead of a dict of pandas DataFrames. This allows for
-subsequent processing to be done in Spark, or for smaller
-portions of data to be loaded into memory.</p>
 </dd></dl>
 
 </dd></dl>
@@ -590,6 +520,44 @@ enrollment.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="mozanalysis.experiment.TimeSeriesResult">
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">TimeSeriesResult</code><span class="sig-paren">(</span><em class="sig-param">fully_qualified_table_name: str</em>, <em class="sig-param">analysis_windows: list</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeSeriesResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.TimeSeriesResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Result from a time series query.</p>
+<p>For each analysis window, this object lets us get a dataframe in
+“the standard format” (one row per client).</p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">time_series_result</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">bq_context</span><span class="p">))</span>
+<span class="n">window_0</span> <span class="o">=</span> <span class="n">result_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">window_0</span></code> would then be a pandas DataFrame of results for the
+analysis window starting at day 0. <code class="docutils literal notranslate"><span class="pre">result_dict</span></code> would be a
+dictionary of all such DataFrames, keyed by the start days of
+their analysis windows.</p>
+<p>Or, to load only one analysis window into RAM:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">window_0</span> <span class="o">=</span> <span class="n">time_series_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">bq_context</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="mozanalysis.experiment.TimeSeriesResult.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">bq_context</em>, <em class="sig-param">analysis_window</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeSeriesResult.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.TimeSeriesResult.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the DataFrame for a specific analysis window.</p>
+<p>N.B. this makes a BigQuery query each time it is run; caching
+results is your responsibility.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bq_context</strong> (<em>BigQueryContext</em>) – </p></li>
+<li><p><strong>analysis_window</strong> (<a class="reference internal" href="#mozanalysis.experiment.AnalysisWindow" title="mozanalysis.experiment.AnalysisWindow"><em>AnalysisWindow</em></a><em> or </em><em>int</em>) – The analysis
+window, or its start day as an int.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
