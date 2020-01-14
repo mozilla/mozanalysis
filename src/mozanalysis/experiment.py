@@ -168,15 +168,15 @@ class Experiment(object):
             analysis_length_days, self.num_dates_enrollment
         )
 
-        full_sql = self._build_query(
+        sql = self._build_query(
             metric_list, time_limits, enrollments_query_type, custom_enrollments_query
         )
 
-        full_res_table_name = sanitize_table_name_for_bq('_'.join(
-            [last_date_full_data, self.experiment_slug, hash_ish(full_sql)]
+        res_table_name = sanitize_table_name_for_bq('_'.join(
+            [last_date_full_data, self.experiment_slug, hash_ish(sql)]
         ))
 
-        return bq_context.run_query(full_sql, full_res_table_name).to_dataframe()
+        return bq_context.run_query(sql, res_table_name).to_dataframe()
 
     def get_time_series_data(
         self, bq_context, metric_list, last_date_full_data,
@@ -228,10 +228,6 @@ class Experiment(object):
                 * [sanity check n]: The client's value for the last
                   sanity check metric for the last data source that
                   supports sanity checks.
-
-            Also returns a ``google.cloud.bigquery.table.RowIterator``
-            for a table with _all_ results; one row per pair of client,
-            analysis window.
         """
 
         time_limits = TimeLimits.for_ts(
@@ -239,18 +235,20 @@ class Experiment(object):
             self.num_dates_enrollment
         )
 
-        full_sql = self._build_query(
+        sql = self._build_query(
             metric_list, time_limits, enrollments_query_type, custom_enrollments_query
         )
 
         full_res_table_name = sanitize_table_name_for_bq('_'.join(
-            [last_date_full_data, self.experiment_slug, hash_ish(full_sql)]
+            [last_date_full_data, self.experiment_slug, hash_ish(sql)]
         ))
 
-        bq_context.run_query(full_sql, full_res_table_name)
+        bq_context.run_query(sql, full_res_table_name)
 
         return TimeSeriesResult(
-            full_res_table_name=full_res_table_name,
+            fully_qualified_table_name=bq_context.fully_qualify_table_name(
+                full_res_table_name
+            ),
             analysis_windows=time_limits.analysis_windows
         )
 
@@ -638,7 +636,7 @@ class TimeSeriesResult(object):
 
         window_0 = time_series_result.get(bq_context, 0)
     """
-    full_res_table_name = attr.ib(type=str)
+    fully_qualified_table_name = attr.ib(type=str)
     analysis_windows = attr.ib(type=list)
 
     def get(self, bq_context, analysis_window):
@@ -663,7 +661,7 @@ class TimeSeriesResult(object):
                 )
 
         return bq_context.run_query(
-            self._build_analysis_window_subset_query(bq_context, analysis_window)
+            self._build_analysis_window_subset_query(analysis_window)
         ).to_dataframe()
 
     def keys(self):
@@ -673,9 +671,7 @@ class TimeSeriesResult(object):
         for aw in self.analysis_windows:
             yield (aw.start, self.get(bq_context, aw))
 
-    def _build_analysis_window_subset_query(
-        self, bq_context, analysis_window
-    ):
+    def _build_analysis_window_subset_query(self, analysis_window):
         """Return SQL for partitioning time series results.
 
         When we query data for a time series, we query it for all
@@ -686,13 +682,11 @@ class TimeSeriesResult(object):
         """
         return """
             SELECT * EXCEPT (client_id, analysis_window_start, analysis_window_end)
-            FROM `{project_id}.{dataset_id}.{full_table_name}`
+            FROM {full_table_name}
             WHERE analysis_window_start = {aws}
             AND analysis_window_end = {awe}
         """.format(
-            project_id=bq_context.project_id,
-            dataset_id=bq_context.dataset_id,
-            full_table_name=self.full_res_table_name,
+            full_table_name=self.fully_qualified_table_name,
             aws=analysis_window.start,
             awe=analysis_window.end,
         )
