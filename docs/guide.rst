@@ -31,7 +31,7 @@ And get a BigQuery context (a client, and some config)::
         dataset_id='your_dataset_id',  # e.g. mine's 'flawrence'
     )
 
-If you're not part of ``moz-fx-data-bq-data-science``, then you'll also need to pass a ``project_id`` argument when initializing ``BigQueryContext()``.
+To bill queries to a project other than ``moz-fx-data-bq-data-science``, pass the ``project_id`` as an argument when initializing ``BigQueryContext()``.
 
 For querying data, the internal approach of :mod:`mozanalysis` is to start by obtaining a list of who was enrolled in what branch, when. Then we try to quantify what happened to each client: for a given analysis window (a specified period of time defined with respect to the client's enrollment date), we seek to obtain a value for each client for each metric. We end up with a results (pandas) DataFrame with one row per client and one column per metric.
 
