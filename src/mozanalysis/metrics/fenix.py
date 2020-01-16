@@ -64,19 +64,15 @@ uri_count = Metric(
 user_reports_site_issue_count = Metric(
     name='user_reports_site_issue_count',
     data_source=events,
-    select_expr=agg_sum(
-        "event.name = 'browser_menu_action' AND "
-        + get_key('event.extra', 'item') + " = 'report_site_issue'"
-    )
+    select_expr="COUNTIF(event.name = 'browser_menu_action' AND "
+    + get_key('event.extra', 'item') + " = 'report_site_issue')"
 )
 
 user_reload_count = Metric(
     name='user_reload_count',
     data_source=events,
-    select_expr=agg_sum(
-        "event.name = 'browser_menu_action' AND "
-        + get_key('event.extra', 'item') + " = 'reload'"
-    )
+    select_expr="COUNTIF(event.name = 'browser_menu_action' AND "
+    + get_key('event.extra', 'item') + " = 'reload')"
 )
 
 baseline_ping_count = Metric(
