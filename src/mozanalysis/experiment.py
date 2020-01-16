@@ -349,6 +349,8 @@ class Experiment(object):
 
     def _build_enrollments_query_fenix(self, time_limits):
         """Return SQL to query enrollments for a Fenix experiment"""
+        # Try to ignore users who enrolled early - but only consider a
+        # 7 day window
         return """
         SELECT
             b.client_info.client_id,
@@ -360,12 +362,14 @@ class Experiment(object):
         FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` b
         WHERE
             DATE(b.submission_timestamp)
-                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+                BETWEEN DATE_SUB('{first_enrollment_date}', 7)
+                AND '{last_enrollment_date}'
             AND `moz-fx-data-shared-prod`.udf.get_key(
                 b.ping_info.experiments,
                 '{experiment_slug}'
             ).branch IS NOT NULL
         GROUP BY client_id, branch
+        HAVING enrollment_date >= '{first_enrollment_date}'
             """.format(
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,

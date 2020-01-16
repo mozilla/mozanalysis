@@ -7,13 +7,13 @@ from mozanalysis.metrics import Metric, DataSource, agg_sum
 
 baseline = DataSource(
     name='baseline',
-    from_expr="""
+    from_expr="""(
         SELECT
             p.*,
             p.client_info.client_id AS client_id,
             DATE(p.submission_timestamp) AS submission_date
         FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` p
-    """
+    )"""
 )
 
 
@@ -35,13 +35,13 @@ events = DataSource(
 
 metrics = DataSource(
     name='metrics',
-    from_expr="""
+    from_expr="""(
         SELECT
             p.*,
             p.client_info.client_id AS client_id,
             DATE(p.submission_timestamp) AS submission_date
         FROM `moz-fx-data-shared-prod.org_mozilla_fenix.metrics` p
-    """
+    )"""
 )
 
 
