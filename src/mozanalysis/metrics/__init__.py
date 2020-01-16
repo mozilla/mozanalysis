@@ -141,6 +141,6 @@ def agg_any(select_expr):
 
 def get_key(select_expr, key):
     """Work around udf namespace ugliness"""
-    return "`moz-fx-data-shared-prod`.udf.get_key({se}, {k})".format(
+    return "`moz-fx-data-shared-prod`.udf.get_key({se}, '{k}')".format(
         se=select_expr, k=key
     )
