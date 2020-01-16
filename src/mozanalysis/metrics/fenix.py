@@ -51,7 +51,7 @@ metrics = DataSource(
 uri_count = Metric(
     name='uri_count',
     data_source=baseline,
-    select_expr=agg_sum('counter.events_total_uri_count')
+    select_expr=agg_sum('metrics.counter.events_total_uri_count')
 )
 
 # # TODO: work out how to deal with the potentially varying units
