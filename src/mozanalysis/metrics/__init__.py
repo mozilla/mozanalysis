@@ -26,7 +26,12 @@ class DataSource(object):
                 )"""
 
         elif self.experiments_column_type == 'glean':
-            raise NotImplementedError
+            return """AND (
+                    ds.{submission_date} != e.enrollment_date
+                    OR `moz-fx-data-shared-prod.udf.get_key`(
+                        ds.ping_info.experiments, '{experiment_slug}'
+                    ).branch IS NOT NULL
+                )"""
 
         else:
             raise ValueError
