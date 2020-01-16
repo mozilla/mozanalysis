@@ -90,5 +90,5 @@ metric_ping_count = Metric(
 first_run_date = Metric(
     name='first_run_date',
     data_source=baseline,
-    select_expr='MIN(first_run_date)'
+    select_expr='MIN(client_info.first_run_date)'
 )
