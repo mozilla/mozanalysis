@@ -23,7 +23,7 @@ events = DataSource(
         SELECT
             p.* EXCEPT (events),
             p.client_info.client_id AS client_id,
-            DATE(p.submission_timestamp) AS submission_date
+            DATE(p.submission_timestamp) AS submission_date,
             event
         FROM
             `moz-fx-data-shared-prod.org_mozilla_fenix.events` p
