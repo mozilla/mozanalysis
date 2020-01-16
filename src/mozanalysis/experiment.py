@@ -353,7 +353,7 @@ class Experiment(object):
         # 7 day window
         return """
         SELECT
-            b.client_info.client_id,
+            b.client_info.client_id AS client_id,
             `moz-fx-data-shared-prod`.udf.get_key(
                 b.ping_info.experiments,
                 '{experiment_slug}'
