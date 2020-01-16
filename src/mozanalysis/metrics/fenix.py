@@ -10,10 +10,11 @@ baseline = DataSource(
     from_expr="""(
         SELECT
             p.*,
-            p.client_info.client_id AS client_id,
             DATE(p.submission_timestamp) AS submission_date
         FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` p
-    )"""
+    )""",
+    client_id_column='ping_info.client_id',
+    experiments_column_type='glean',
 )
 
 
@@ -22,14 +23,15 @@ events = DataSource(
     from_expr="""(
         SELECT
             p.* EXCEPT (events),
-            p.client_info.client_id AS client_id,
             DATE(p.submission_timestamp) AS submission_date,
             event
         FROM
             `moz-fx-data-shared-prod.org_mozilla_fenix.events` p
         CROSS JOIN
             UNNEST(p.events) AS event
-    )"""
+    )""",
+    client_id_column='ping_info.client_id',
+    experiments_column_type='glean',
 )
 
 
@@ -38,10 +40,11 @@ metrics = DataSource(
     from_expr="""(
         SELECT
             p.*,
-            p.client_info.client_id AS client_id,
             DATE(p.submission_timestamp) AS submission_date
         FROM `moz-fx-data-shared-prod.org_mozilla_fenix.metrics` p
-    )"""
+    )""",
+    client_id_column='ping_info.client_id',
+    experiments_column_type='glean',
 )
 
 
