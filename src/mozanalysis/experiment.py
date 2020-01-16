@@ -362,7 +362,7 @@ class Experiment(object):
         FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` b
         WHERE
             DATE(b.submission_timestamp)
-                BETWEEN DATE_SUB('{first_enrollment_date}', 7)
+                BETWEEN DATE_SUB('{first_enrollment_date}', INTERVAL 7 DAY)
                 AND '{last_enrollment_date}'
             AND `moz-fx-data-shared-prod`.udf.get_key(
                 b.ping_info.experiments,
