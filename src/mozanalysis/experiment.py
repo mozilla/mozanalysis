@@ -318,8 +318,8 @@ class Experiment(object):
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == 'normandy':
             return self._build_enrollments_query_normandy(time_limits)
-        elif enrollments_query_type == 'glean':
-            raise NotImplementedError
+        elif enrollments_query_type == 'fenix':
+            return self._build_enrollments_query_fenix(time_limits)
         else:
             raise ValueError
 
@@ -341,6 +341,31 @@ class Experiment(object):
                 BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
             AND e.event_string_value = '{experiment_slug}'
         GROUP BY e.client_id, branch
+            """.format(
+            experiment_slug=self.experiment_slug,
+            first_enrollment_date=time_limits.first_enrollment_date,
+            last_enrollment_date=time_limits.last_enrollment_date,
+        )
+
+    def _build_enrollments_query_fenix(self, time_limits):
+        """Return SQL to query enrollments for a Fenix experiment"""
+        return """
+        SELECT
+            b.client_info.client_id,
+            `moz-fx-data-shared-prod`.udf.get_key(
+                b.ping_info.experiments,
+                '{experiment_slug}'
+            ).branch,
+            EXTRACT(DATE FROM MIN(b.submission_timestamp)) AS enrollment_date
+        FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` b
+        WHERE
+            DATE(b.submission_timestamp)
+                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+            AND `moz-fx-data-shared-prod`.udf.get_key(
+                b.ping_info.experiments,
+                '{experiment_slug}'
+            ).branch IS NOT NULL
+        GROUP BY client_id, branch
             """.format(
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,
