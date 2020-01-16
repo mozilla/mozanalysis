@@ -8,12 +8,12 @@ from mozanalysis.metrics import Metric, DataSource, agg_sum
 baseline = DataSource(
     name='baseline',
     from_expr="""(
-        SELECT
-            p.*,
-            DATE(p.submission_timestamp) AS submission_date
-        FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` p
-    )""",
-    client_id_column='ping_info.client_id',
+                SELECT
+                    p.*,
+                    DATE(p.submission_timestamp) AS submission_date
+                FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` p
+            )""",
+    client_id_column='client_info.client_id',
     experiments_column_type='glean',
 )
 
@@ -21,16 +21,16 @@ baseline = DataSource(
 events = DataSource(
     name='events',
     from_expr="""(
-        SELECT
-            p.* EXCEPT (events),
-            DATE(p.submission_timestamp) AS submission_date,
-            event
-        FROM
-            `moz-fx-data-shared-prod.org_mozilla_fenix.events` p
-        CROSS JOIN
-            UNNEST(p.events) AS event
-    )""",
-    client_id_column='ping_info.client_id',
+                SELECT
+                    p.* EXCEPT (events),
+                    DATE(p.submission_timestamp) AS submission_date,
+                    event
+                FROM
+                    `moz-fx-data-shared-prod.org_mozilla_fenix.events` p
+                CROSS JOIN
+                    UNNEST(p.events) AS event
+            )""",
+    client_id_column='client_info.client_id',
     experiments_column_type='glean',
 )
 
@@ -38,12 +38,12 @@ events = DataSource(
 metrics = DataSource(
     name='metrics',
     from_expr="""(
-        SELECT
-            p.*,
-            DATE(p.submission_timestamp) AS submission_date
-        FROM `moz-fx-data-shared-prod.org_mozilla_fenix.metrics` p
-    )""",
-    client_id_column='ping_info.client_id',
+                SELECT
+                    p.*,
+                    DATE(p.submission_timestamp) AS submission_date
+                FROM `moz-fx-data-shared-prod.org_mozilla_fenix.metrics` p
+            )""",
+    client_id_column='client_info.client_id',
     experiments_column_type='glean',
 )
 
