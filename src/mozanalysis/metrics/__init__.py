@@ -98,6 +98,24 @@ class DataSource(object):
                 ),
             ]
 
+        elif self.experiments_column_type == 'map_struct':
+            return [
+                Metric(
+                    name=self.name + '_has_contradictory_branch',
+                    data_source=self,
+                    select_expr=agg_any("""`moz-fx-data-shared-prod.udf.get_key`(
+                ds.experiments, '{experiment_slug}'
+            ).branch != e.branch"""),
+                ),
+                Metric(
+                    name=self.name + '_has_non_enrolled_data',
+                    data_source=self,
+                    select_expr=agg_any("""`moz-fx-data-shared-prod.udf.get_key`(
+                ds.experiments, '{experiment_slug}'
+            ).branch IS NULL""".format(experiment_slug=experiment_slug))
+                ),
+            ]
+
         elif self.experiments_column_type == 'glean':
             raise NotImplementedError
 
