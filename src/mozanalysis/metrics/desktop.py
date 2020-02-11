@@ -83,3 +83,12 @@ view_about_protections = Metric(
             AND event_object = 'protection_report'
         """)
 )
+
+connect_fxa = Metric(
+    name='connect_fxa',
+    data_source=events,
+    select_expr=agg_any("""
+            event_method = 'connect'
+            AND event_object = 'account'
+    """)
+)
