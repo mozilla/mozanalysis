@@ -25,6 +25,14 @@ class DataSource(object):
                     ) IS NOT NULL
                 )"""
 
+        elif self.experiments_column_type == 'map_struct':
+            return """AND (
+                    ds.{submission_date} != e.enrollment_date
+                    OR `moz-fx-data-shared-prod.udf.get_key`(
+                        ds.experiments, '{experiment_slug}'
+                    ).branch IS NOT NULL
+            )"""
+
         elif self.experiments_column_type == 'glean':
             raise NotImplementedError
 

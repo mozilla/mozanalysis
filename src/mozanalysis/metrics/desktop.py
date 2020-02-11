@@ -23,7 +23,8 @@ main_summary = DataSource(
 
 events = DataSource(
     name='events',
-    from_expr="`moz-fx-data-shared-prod.telemetry.events`"
+    from_expr="`moz-fx-data-shared-prod.telemetry.events`",
+    experiments_column_type='map_struct',
 )
 
 active_hours = Metric(
