@@ -23,7 +23,8 @@ main_summary = DataSource(
 
 events = DataSource(
     name='events',
-    from_expr="`moz-fx-data-shared-prod.telemetry.events`"
+    from_expr="`moz-fx-data-shared-prod.telemetry.events`",
+    experiments_column_type='native',
 )
 
 active_hours = Metric(
@@ -60,26 +61,35 @@ unenroll = Metric(
     name='unenroll',
     data_source=events,
     select_expr=agg_any("""
-            event_category = 'normandy'
-            AND event_method = 'unenroll'
-            AND event_string_value = '{experiment_slug}'
-        """)
+                event_category = 'normandy'
+                AND event_method = 'unenroll'
+                AND event_string_value = '{experiment_slug}'
+            """)
 )
 
 view_about_logins = Metric(
     name='view_about_logins',
     data_source=events,
     select_expr=agg_any("""
-            event_method = 'open_management'
-            AND event_category = 'pwmgr'
-        """)
+                event_method = 'open_management'
+                AND event_category = 'pwmgr'
+            """)
 )
 
 view_about_protections = Metric(
     name='view_about_protections',
     data_source=events,
     select_expr=agg_any("""
-            event_method = 'show'
-            AND event_object = 'protection_report'
-        """)
+                event_method = 'show'
+                AND event_object = 'protection_report'
+            """)
+)
+
+connect_fxa = Metric(
+    name='connect_fxa',
+    data_source=events,
+    select_expr=agg_any("""
+                event_method = 'connect'
+                AND event_object = 'account'
+            """)
 )
