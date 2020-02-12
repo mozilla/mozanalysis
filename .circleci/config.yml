@@ -39,11 +39,6 @@ test_settings: &test_settings
 version: 2
 jobs:
 
-  py27:
-    <<: *test_settings
-    docker:
-      - image: python:2.7-stretch
-
   py37:
     <<: *test_settings
     docker:
@@ -51,7 +46,7 @@ jobs:
 
   lint:
     docker:
-      - image: python:2.7-stretch
+      - image: python:3.7-stretch
     steps:
     - checkout
     - run:
@@ -64,7 +59,7 @@ jobs:
   # below for trigger logic.
   deploy:
     docker:
-      - image: python:2.7-stretch
+      - image: python:3.7-stretch
     steps:
       - checkout
       - run:
@@ -131,7 +126,6 @@ workflows:
   version: 2
   build:
     jobs:
-      - py27
       - py37
       - lint
       - docs

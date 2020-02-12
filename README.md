@@ -37,7 +37,7 @@ CircleCI runs for continuous integration by
 and invoking:
 
 ```bash
-circleci build --job py27
+circleci build --job py37
 ```
 
 See [.circleci/config.yml](https://github.com/mozilla/mozanalysis/blob/master/.circleci/config.yml)
