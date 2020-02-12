@@ -8,7 +8,7 @@ import attr
 class DataSource(object):
     name = attr.ib(validator=attr.validators.instance_of(str))
     from_expr = attr.ib(validator=attr.validators.instance_of(str))
-    experiments_column_type = attr.ib(default='desktop_main_ping', type=str)
+    experiments_column_type = attr.ib(default='simple', type=str)
     client_id_column = attr.ib(default='client_id', type=str)
     submission_date_column = attr.ib(default='submission_date', type=str)
 
@@ -17,7 +17,7 @@ class DataSource(object):
         if self.experiments_column_type is None:
             return ''
 
-        elif self.experiments_column_type == 'desktop_main_ping':
+        elif self.experiments_column_type == 'simple':
             return """AND (
                     ds.{submission_date} != e.enrollment_date
                     OR `moz-fx-data-shared-prod.udf.get_key`(
@@ -25,7 +25,7 @@ class DataSource(object):
                     ) IS NOT NULL
                 )"""
 
-        elif self.experiments_column_type == 'map_struct':
+        elif self.experiments_column_type == 'native':
             return """AND (
                     ds.{submission_date} != e.enrollment_date
                     OR `moz-fx-data-shared-prod.udf.get_key`(
@@ -80,7 +80,7 @@ class DataSource(object):
         if self.experiments_column_type is None:
             return []
 
-        elif self.experiments_column_type == 'desktop_main_ping':
+        elif self.experiments_column_type == 'simple':
             return [
                 Metric(
                     name=self.name + '_has_contradictory_branch',
@@ -98,7 +98,7 @@ class DataSource(object):
                 ),
             ]
 
-        elif self.experiments_column_type == 'map_struct':
+        elif self.experiments_column_type == 'native':
             return [
                 Metric(
                     name=self.name + '_has_contradictory_branch',
