@@ -26,11 +26,7 @@ setup(
         'numpy',
         'pandas',
         'scipy',
-        'statsmodels>=0.9',
         'google-cloud-bigquery',
-        # Can't use pyarrow == 0.15.0 until Spark is ready:
-        # https://stackoverflow.com/questions/58273063/pandasudf-and-pyarrow-0-15-0
-        'pyarrow>=0.8.0,<0.15',
     ],
     setup_requires=['pytest-runner', 'setuptools_scm'],
     extras_require={
