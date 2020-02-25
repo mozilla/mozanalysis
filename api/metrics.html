@@ -165,6 +165,51 @@
   <div class="section" id="module-mozanalysis.metrics">
 <span id="mozanalysis-metrics"></span><h1><a class="reference internal" href="#module-mozanalysis.metrics" title="mozanalysis.metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a><a class="headerlink" href="#module-mozanalysis.metrics" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
+<dt id="mozanalysis.metrics.DataSource">
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">DataSource</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">from_expr</em>, <em class="sig-param">experiments_column_type: str = 'simple'</em>, <em class="sig-param">client_id_column: str = 'client_id'</em>, <em class="sig-param">submission_date_column: str = 'submission_date'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a table or view, from which Metrics may be defined.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name for the Data Source. Used in sanity metric
+column names.</p></li>
+<li><p><strong>from_expr</strong> (<em>str</em>) – FROM expression - often just a fully-qualified
+table name. Sometimes a subquery.</p></li>
+<li><p><strong>experiments_column_type</strong> (<em>str</em><em> or </em><em>None</em>) – <p>Info about the schema
+of the table or view:</p>
+<ul>
+<li><p>’simple’: There is an <code class="docutils literal notranslate"><span class="pre">experiments</span></code> column, which is an
+(experiment_slug:str -&gt; branch_name:str) map.</p></li>
+<li><p>’native’: There is an <code class="docutils literal notranslate"><span class="pre">experiments</span></code> column, which is an
+(experiment_slug:str -&gt; struct) map, where the struct
+contains a <code class="docutils literal notranslate"><span class="pre">branch</span></code> field, which is the branch as a
+string.</p></li>
+<li><p>None: There is no <code class="docutils literal notranslate"><span class="pre">experiments</span></code> column, so skip the
+sanity checks that rely on it. We’ll also be unable to
+filter out pre-enrollment data from day 0 in the
+experiment.</p></li>
+</ul>
+</p></li>
+<li><p><strong>client_id_column</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the column that
+contains the <code class="docutils literal notranslate"><span class="pre">client_id</span></code> (join key). Defaults to
+‘client_id’.</p></li>
+<li><p><strong>submission_date_column</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the column
+that contains the submission date (as a date, not
+timestamp). Defaults to ‘submission_date’.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="mozanalysis.metrics.DataSource.build_query">
+<code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param">metric_list</em>, <em class="sig-param">time_limits</em>, <em class="sig-param">experiment_slug</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource.build_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource.build_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a nearly-self contained SQL query.</p>
+<p>This query does not define <code class="docutils literal notranslate"><span class="pre">enrollments</span></code> but otherwise could
+be executed to query all metrics from this data source.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="mozanalysis.metrics.Metric">
 <em class="property">class </em><code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">Metric</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">data_source: mozanalysis.metrics.DataSource</em>, <em class="sig-param">select_expr: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an experiment metric.</p>

@@ -153,8 +153,35 @@
 <span class="kn">import</span> <span class="nn">attr</span>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="DataSource"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">DataSource</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents a table or view, from which Metrics may be defined.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name (str): Name for the Data Source. Used in sanity metric</span>
+<span class="sd">            column names.</span>
+<span class="sd">        from_expr (str): FROM expression - often just a fully-qualified</span>
+<span class="sd">            table name. Sometimes a subquery.</span>
+<span class="sd">        experiments_column_type (str or None): Info about the schema</span>
+<span class="sd">            of the table or view:</span>
+
+<span class="sd">            * &#39;simple&#39;: There is an ``experiments`` column, which is an</span>
+<span class="sd">              (experiment_slug:str -&gt; branch_name:str) map.</span>
+<span class="sd">            * &#39;native&#39;: There is an ``experiments`` column, which is an</span>
+<span class="sd">              (experiment_slug:str -&gt; struct) map, where the struct</span>
+<span class="sd">              contains a ``branch`` field, which is the branch as a</span>
+<span class="sd">              string.</span>
+<span class="sd">            * None: There is no ``experiments`` column, so skip the</span>
+<span class="sd">              sanity checks that rely on it. We&#39;ll also be unable to</span>
+<span class="sd">              filter out pre-enrollment data from day 0 in the</span>
+<span class="sd">              experiment.</span>
+<span class="sd">        client_id_column (str, optional): Name of the column that</span>
+<span class="sd">            contains the ``client_id`` (join key). Defaults to</span>
+<span class="sd">            &#39;client_id&#39;.</span>
+<span class="sd">        submission_date_column (str, optional): Name of the column</span>
+<span class="sd">            that contains the submission date (as a date, not</span>
+<span class="sd">            timestamp). Defaults to &#39;submission_date&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
     <span class="n">from_expr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
     <span class="n">experiments_column_type</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;simple&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
@@ -188,7 +215,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
 
-    <span class="k">def</span> <span class="nf">build_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">experiment_slug</span><span class="p">):</span>
+<div class="viewcode-block" id="DataSource.build_query"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.build_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">experiment_slug</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a nearly-self contained SQL query.</span>
 
 <span class="sd">        This query does not define ``enrollments`` but otherwise could</span>
@@ -223,7 +250,7 @@
                 <span class="n">submission_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_date_column</span><span class="p">,</span>
                 <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">get_sanity_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_slug</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -269,7 +296,7 @@
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span></div>
 
 
 <div class="viewcode-block" id="Metric"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.Metric">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
