@@ -22,6 +22,10 @@ class DataSource(object):
               (experiment_slug:str -> struct) map, where the struct
               contains a ``branch`` field, which is the branch as a
               string.
+            * None: There is no ``experiments`` column, so skip the
+              sanity checks that rely on it. We'll also be unable to
+              filter out pre-enrollment data from day 0 in the
+              experiment.
         client_id_column (str, optional): Name of the column that
             contains the ``client_id`` (join key). Defaults to
             'client_id'.
