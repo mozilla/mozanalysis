@@ -15,12 +15,13 @@ class DataSource(object):
             table name. Sometimes a subquery.
         experiments_column_type (str or None): Info about the schema
             of the table or view:
-            * 'simple': There is an ``experiments`` column, which is a
-                (experiment_slug:str -> branch_name:str) map.
-            * 'native': There is an ``experiments`` column, which is a
-                (experiment_slug:str -> struct) map, where the struct
-                contains a ``branch`` field, which is the branch as a
-                string.
+
+            * 'simple': There is an ``experiments`` column, which is an
+              (experiment_slug:str -> branch_name:str) map.
+            * 'native': There is an ``experiments`` column, which is an
+              (experiment_slug:str -> struct) map, where the struct
+              contains a ``branch`` field, which is the branch as a
+              string.
         client_id_column (str, optional): Name of the column that
             contains the ``client_id`` (join key). Defaults to
             'client_id'.
