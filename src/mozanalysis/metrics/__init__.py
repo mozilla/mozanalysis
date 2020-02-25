@@ -6,6 +6,33 @@ import attr
 
 @attr.s(frozen=True, slots=True)
 class DataSource(object):
+    """Represents a table or view, from which Metrics may be defined.
+
+    Args:
+        name (str): Name for the Data Source. Used in sanity metric
+            column names.
+        from_expr (str): FROM expression - often just a fully-qualified
+            table name. Sometimes a subquery.
+        experiments_column_type (str or None): Info about the schema
+            of the table or view:
+
+            * 'simple': There is an ``experiments`` column, which is an
+              (experiment_slug:str -> branch_name:str) map.
+            * 'native': There is an ``experiments`` column, which is an
+              (experiment_slug:str -> struct) map, where the struct
+              contains a ``branch`` field, which is the branch as a
+              string.
+            * None: There is no ``experiments`` column, so skip the
+              sanity checks that rely on it. We'll also be unable to
+              filter out pre-enrollment data from day 0 in the
+              experiment.
+        client_id_column (str, optional): Name of the column that
+            contains the ``client_id`` (join key). Defaults to
+            'client_id'.
+        submission_date_column (str, optional): Name of the column
+            that contains the submission date (as a date, not
+            timestamp). Defaults to 'submission_date'.
+    """
     name = attr.ib(validator=attr.validators.instance_of(str))
     from_expr = attr.ib(validator=attr.validators.instance_of(str))
     experiments_column_type = attr.ib(default='simple', type=str)
