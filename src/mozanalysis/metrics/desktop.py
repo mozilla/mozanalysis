@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from textwrap import dedent
+
 from mozanalysis.metrics import Metric, DataSource, agg_sum, agg_any
 
 
@@ -25,6 +27,32 @@ events = DataSource(
     name='events',
     from_expr="`moz-fx-data-shared-prod.telemetry.events`",
     experiments_column_type='native',
+)
+
+main = DataSource(
+    name='main',
+    from_expr=dedent("""\
+        (
+            SELECT
+                *,
+                DATE(submission_timestamp) AS submission_date,
+                environment.experiments
+            FROM `moz-fx-data-shared-prod`.telemetry.main
+        )"""),
+    experiments_column_type="native",
+)
+
+crash = DataSource(
+    name='crash',
+    from_expr=dedent("""\
+        (
+            SELECT
+                *,
+                DATE(submission_timestamp) AS submission_date,
+                environment.experiments
+            FROM `moz-fx-data-shared-prod`.telemetry.crash
+        )"""),
+    experiments_column_type="native",
 )
 
 active_hours = Metric(
