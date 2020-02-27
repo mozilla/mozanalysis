@@ -180,4 +180,4 @@ def agg_histogram_mean(select_expr):
         SAFE_DIVIDE(
             SUM(CAST(JSON_EXTRACT_SCALAR({select_expr}, "$.sum") AS int64)),
             SUM((SELECT SUM(value) FROM UNNEST(`moz-fx-data-shared-prod`.udf.json_extract_histogram({select_expr}).values)))
-        )""")
+        )""")  # noqa
