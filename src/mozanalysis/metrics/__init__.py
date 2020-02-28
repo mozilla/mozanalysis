@@ -5,7 +5,7 @@ import attr
 
 
 @attr.s(frozen=True, slots=True)
-class DataSource(object):
+class DataSource:
     """Represents a table or view, from which Metrics may be defined.
 
     Args:
@@ -151,7 +151,7 @@ class DataSource(object):
 
 
 @attr.s(frozen=True, slots=True)
-class Metric(object):
+class Metric:
     """Represents an experiment metric.
 
     Needs to be combined with an analysis window to be measurable!

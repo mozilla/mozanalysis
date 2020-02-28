@@ -16,7 +16,7 @@ def sanitize_table_name_for_bq(table_name):
         + of_good_character_but_possibly_verbose[-500:]
 
 
-class BigQueryContext(object):
+class BigQueryContext:
     """Holds a BigQuery client, and some configuration.
 
     Args:

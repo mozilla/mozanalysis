@@ -8,7 +8,7 @@ from mozanalysis.utils import add_days, date_sub, hash_ish
 
 
 @attr.s(frozen=True, slots=True)
-class Experiment(object):
+class Experiment:
     """Query experiment data; store experiment metadata.
 
     The methods here query data in a way compatible with the following
@@ -390,7 +390,7 @@ class Experiment(object):
 
 
 @attr.s(frozen=True, slots=True)
-class TimeLimits(object):
+class TimeLimits:
     """Internal object containing various time limits.
 
     Instantiated and used by the ``Experiment`` class; end users
@@ -590,7 +590,7 @@ class TimeLimits(object):
 
 
 @attr.s(frozen=True, slots=True)
-class AnalysisWindow(object):
+class AnalysisWindow:
     """Represents the range of days in which to measure a metric.
 
     The range is measured in "days after enrollment", and is inclusive.
@@ -616,7 +616,7 @@ class AnalysisWindow(object):
 
 
 @attr.s(frozen=True, slots=True)
-class TimeSeriesResult(object):
+class TimeSeriesResult:
     """Result from a time series query.
 
     For each analysis window, this object lets us get a dataframe in
