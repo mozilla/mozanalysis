@@ -160,6 +160,14 @@ class Metric(object):
     data_source = attr.ib(type=DataSource)
     select_expr = attr.ib(type=str)
 
+    def from_data_source(self, data_source: DataSource) -> "Metric":
+        """Returns an instance of the Metric drawing from a different DataSource.
+
+        This is particularly useful for Glean, where pings from e.g. Fenix
+        and Fenix Nightly are sent to different tables with identical schemas.
+        """
+        return attr.evolve(self, data_source=data_source)
+
 
 def agg_sum(select_expr):
     """Return a SQL fragment for the sum over the data, with 0-filled nulls.
