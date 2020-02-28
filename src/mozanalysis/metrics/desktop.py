@@ -27,6 +27,30 @@ events = DataSource(
     experiments_column_type='native',
 )
 
+main = DataSource(
+    name='main',
+    from_expr="""(
+                SELECT
+                    *,
+                    DATE(submission_timestamp) AS submission_date,
+                    environment.experiments
+                FROM `moz-fx-data-shared-prod`.telemetry.main
+            )""",
+    experiments_column_type="native",
+)
+
+crash = DataSource(
+    name='crash',
+    from_expr="""(
+                SELECT
+                    *,
+                    DATE(submission_timestamp) AS submission_date,
+                    environment.experiments
+                FROM `moz-fx-data-shared-prod`.telemetry.crash
+            )""",
+    experiments_column_type="native",
+)
+
 active_hours = Metric(
     name='active_hours',
     data_source=clients_daily,
