@@ -1,8 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from textwrap import dedent
-
 import attr
 
 
@@ -176,8 +174,7 @@ def agg_any(select_expr):
 
 def agg_histogram_mean(select_expr):
     """Produces an expression for the mean of an unparsed histogram."""
-    return dedent(f"""\
-        SAFE_DIVIDE(
-            SUM(CAST(JSON_EXTRACT_SCALAR({select_expr}, "$.sum") AS int64)),
-            SUM((SELECT SUM(value) FROM UNNEST(`moz-fx-data-shared-prod`.udf.json_extract_histogram({select_expr}).values)))
-        )""")  # noqa
+    return f"""SAFE_DIVIDE(
+                SUM(CAST(JSON_EXTRACT_SCALAR({select_expr}, "$.sum") AS int64)),
+                SUM((SELECT SUM(value) FROM UNNEST(`moz-fx-data-shared-prod`.udf.json_extract_histogram({select_expr}).values)))
+            )"""  # noqa
