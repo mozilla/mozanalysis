@@ -157,7 +157,7 @@
 
 
 <div class="viewcode-block" id="Experiment"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">Experiment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Experiment</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Query experiment data; store experiment metadata.</span>
 
 <span class="sd">    The methods here query data in a way compatible with the following</span>
@@ -539,7 +539,7 @@
 
 
 <div class="viewcode-block" id="TimeLimits"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeLimits">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">TimeLimits</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">TimeLimits</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Internal object containing various time limits.</span>
 
 <span class="sd">    Instantiated and used by the ``Experiment`` class; end users</span>
@@ -739,7 +739,7 @@
 
 
 <div class="viewcode-block" id="AnalysisWindow"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.AnalysisWindow">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">AnalysisWindow</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">AnalysisWindow</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Represents the range of days in which to measure a metric.</span>
 
 <span class="sd">    The range is measured in &quot;days after enrollment&quot;, and is inclusive.</span>
@@ -765,7 +765,7 @@
 
 
 <div class="viewcode-block" id="TimeSeriesResult"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeSeriesResult">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">TimeSeriesResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">TimeSeriesResult</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Result from a time series query.</span>
 
 <span class="sd">    For each analysis window, this object lets us get a dataframe in</span>
