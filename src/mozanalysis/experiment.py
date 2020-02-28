@@ -168,7 +168,7 @@ class Experiment:
             analysis_length_days, self.num_dates_enrollment
         )
 
-        sql = self._build_query(
+        sql = self.build_query(
             metric_list, time_limits, enrollments_query_type, custom_enrollments_query
         )
 
@@ -235,7 +235,7 @@ class Experiment:
             self.num_dates_enrollment
         )
 
-        sql = self._build_query(
+        sql = self.build_query(
             metric_list, time_limits, enrollments_query_type, custom_enrollments_query
         )
 
@@ -252,7 +252,7 @@ class Experiment:
             analysis_windows=time_limits.analysis_windows
         )
 
-    def _build_query(
+    def build_query(
         self, metric_list, time_limits, enrollments_query_type,
         custom_enrollments_query=None,
     ):
