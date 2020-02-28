@@ -39,6 +39,16 @@ class DataSource:
     client_id_column = attr.ib(default='client_id', type=str)
     submission_date_column = attr.ib(default='submission_date', type=str)
 
+    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native")
+
+    @experiments_column_type.validator
+    def _check_experiments_column_type(self, attribute, value):
+        if value not in self.EXPERIMENT_COLUMN_TYPES:
+            raise ValueError(
+                f"experiments_column_type {repr(value)} must be one of: "
+                f"{repr(self.EXPERIMENT_COLUMN_TYPES)}"
+            )
+
     @property
     def experiments_column_expr(self):
         if self.experiments_column_type is None:
