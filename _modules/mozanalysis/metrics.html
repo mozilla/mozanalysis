@@ -319,6 +319,14 @@
 <div class="viewcode-block" id="agg_any"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.agg_any">[docs]</a><span class="k">def</span> <span class="nf">agg_any</span><span class="p">(</span><span class="n">select_expr</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return the logical OR, with FALSE-filled nulls.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="s2">&quot;COALESCE(LOGICAL_OR(</span><span class="si">{}</span><span class="s2">), FALSE)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">select_expr</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="agg_histogram_mean"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.agg_histogram_mean">[docs]</a><span class="k">def</span> <span class="nf">agg_histogram_mean</span><span class="p">(</span><span class="n">select_expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produces an expression for the mean of an unparsed histogram.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;SAFE_DIVIDE(</span>
+<span class="s2">                SUM(CAST(JSON_EXTRACT_SCALAR(</span><span class="si">{select_expr}</span><span class="s2">, &quot;$.sum&quot;) AS int64)),</span>
+<span class="s2">                SUM((SELECT SUM(value) FROM UNNEST(`moz-fx-data-shared-prod`.udf.json_extract_histogram(</span><span class="si">{select_expr}</span><span class="s2">).values)))</span>
+<span class="s2">            )&quot;&quot;&quot;</span>  <span class="c1"># noqa</span></div>
 </pre></div>
 
            </div>
