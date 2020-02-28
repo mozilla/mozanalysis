@@ -317,7 +317,15 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">data_source</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">DataSource</span><span class="p">)</span>
-    <span class="n">select_expr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span></div>
+    <span class="n">select_expr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Metric.from_data_source"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.Metric.from_data_source">[docs]</a>    <span class="k">def</span> <span class="nf">from_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source</span><span class="p">:</span> <span class="n">DataSource</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Metric&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns an instance of the Metric drawing from a different DataSource.</span>
+
+<span class="sd">        This is particularly useful for Glean, where pings from e.g. Fenix</span>
+<span class="sd">        and Fenix Nightly are sent to different tables with identical schemas.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">attr</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source</span><span class="o">=</span><span class="n">data_source</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="agg_sum"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.agg_sum">[docs]</a><span class="k">def</span> <span class="nf">agg_sum</span><span class="p">(</span><span class="n">select_expr</span><span class="p">):</span>

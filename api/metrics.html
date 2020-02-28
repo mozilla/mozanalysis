@@ -214,6 +214,14 @@ be executed to query all metrics from this data source.</p>
 <em class="property">class </em><code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">Metric</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">data_source: mozanalysis.metrics.DataSource</em>, <em class="sig-param">select_expr: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an experiment metric.</p>
 <p>Needs to be combined with an analysis window to be measurable!</p>
+<dl class="method">
+<dt id="mozanalysis.metrics.Metric.from_data_source">
+<code class="sig-name descname">from_data_source</code><span class="sig-paren">(</span><em class="sig-param">data_source: mozanalysis.metrics.DataSource</em><span class="sig-paren">)</span> &#x2192; mozanalysis.metrics.Metric<a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric.from_data_source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric.from_data_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an instance of the Metric drawing from a different DataSource.</p>
+<p>This is particularly useful for Glean, where pings from e.g. Fenix
+and Fenix Nightly are sent to different tables with identical schemas.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
