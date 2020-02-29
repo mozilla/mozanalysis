@@ -249,7 +249,7 @@ def test_query_not_detectably_malformed():
         num_dates_enrollment=8
     )
 
-    sql = exp._build_query(
+    sql = exp.build_query(
         metric_list=[],
         time_limits=tl,
         enrollments_query_type='normandy',
@@ -271,7 +271,7 @@ def test_megaquery_not_detectably_malformed():
         num_dates_enrollment=8
     )
 
-    sql = exp._build_query(
+    sql = exp.build_query(
         metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
         time_limits=tl,
         enrollments_query_type='normandy',

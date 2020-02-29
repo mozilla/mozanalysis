@@ -128,7 +128,7 @@ class Experiment:
                 collected outside this analysis window.
             analysis_length_days (int): the length of the analysis window,
                 measured in days.
-            enrollments_query_type (str): Specifies the query to use to
+            enrollments_query_type (str): Specifies the query type to use to
                 get the experiment's enrollments, unless overridden by
                 custom_enrollments_query.
             custom_enrollments_query (str): A full SQL query to be used
@@ -168,7 +168,7 @@ class Experiment:
             analysis_length_days, self.num_dates_enrollment
         )
 
-        sql = self._build_query(
+        sql = self.build_query(
             metric_list, time_limits, enrollments_query_type, custom_enrollments_query
         )
 
@@ -185,7 +185,7 @@ class Experiment:
     ):
         """Return a TimeSeriesResult with per-client metric values.
 
-        Roughly equivalent to looping over ``get_single_window_data``
+        Roughly equivalent to looping over :meth:`.get_single_window_data`
         with different analysis windows, and reorganising the results.
 
         Args:
@@ -198,7 +198,7 @@ class Experiment:
                 experiment recipe was deactivated), then do that here.
             time_series_period ('daily' or 'weekly'): How long each
                 analysis window should be.
-            enrollments_query_type (str): Specifies the query to use to
+            enrollments_query_type (str): Specifies the query type to use to
                 get the experiment's enrollments, unless overridden by
                 custom_enrollments_query.
             custom_enrollments_query (str): A full SQL query to be used
@@ -235,7 +235,7 @@ class Experiment:
             self.num_dates_enrollment
         )
 
-        sql = self._build_query(
+        sql = self.build_query(
             metric_list, time_limits, enrollments_query_type, custom_enrollments_query
         )
 
@@ -252,11 +252,32 @@ class Experiment:
             analysis_windows=time_limits.analysis_windows
         )
 
-    def _build_query(
+    def build_query(
         self, metric_list, time_limits, enrollments_query_type,
         custom_enrollments_query=None,
-    ):
-        """Return SQL to query metric data for users.
+    ) -> str:
+        """Return SQL to query metric data.
+
+        For interactive use, prefer :meth:`.get_time_series_data` or
+        :meth:`.get_single_window_data`, according to your use case,
+        which will run the query for you and return a materialized
+        dataframe.
+
+        Args:
+            metric_list (list of mozanalysis.metric.Metric):
+                The metrics to analyze.
+            time_limits (TimeLimits): An object describing the
+                interval(s) to query
+            enrollments_query_type (str): Specifies the query type to use to
+                get the experiment's enrollments, unless overridden by
+                custom_enrollments_query.
+            custom_enrollments_query (str): A full SQL query to be used
+                in the main query::
+
+                    WITH raw_enrollments AS ({custom_enrollments_query})
+
+        Returns:
+            A string containing a BigQuery SQL expression.
 
         Building this query is the main goal of this module.
         """
@@ -391,9 +412,9 @@ class Experiment:
 
 @attr.s(frozen=True, slots=True)
 class TimeLimits:
-    """Internal object containing various time limits.
+    """Expresses time limits for different kinds of analysis windows.
 
-    Instantiated and used by the ``Experiment`` class; end users
+    Instantiated and used by the :class:`Experiment` class; end users
     should not need to interact with it.
 
     Do not directly instantiate: use the constructors provided.
