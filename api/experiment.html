@@ -309,7 +309,7 @@ measured in ‘days since the client enrolled’. We ignore data
 collected outside this analysis window.</p></li>
 <li><p><strong>analysis_length_days</strong> (<em>int</em>) – the length of the analysis window,
 measured in days.</p></li>
-<li><p><strong>enrollments_query_type</strong> (<em>str</em>) – Specifies the query to use to
+<li><p><strong>enrollments_query_type</strong> (<em>str</em>) – Specifies the query type to use to
 get the experiment’s enrollments, unless overridden by
 custom_enrollments_query.</p></li>
 <li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
@@ -357,7 +357,7 @@ standard format for queried experimental data.</p>
 <dt id="mozanalysis.experiment.Experiment.get_time_series_data">
 <code class="sig-name descname">get_time_series_data</code><span class="sig-paren">(</span><em class="sig-param">bq_context</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">enrollments_query_type='normandy'</em>, <em class="sig-param">custom_enrollments_query=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a TimeSeriesResult with per-client metric values.</p>
-<p>Roughly equivalent to looping over <code class="docutils literal notranslate"><span class="pre">get_single_window_data</span></code>
+<p>Roughly equivalent to looping over <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_single_window_data()</span></code></a>
 with different analysis windows, and reorganising the results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -370,7 +370,7 @@ all data collected after a certain date (e.g. when the
 experiment recipe was deactivated), then do that here.</p></li>
 <li><p><strong>time_series_period</strong> (<em>'daily'</em><em> or </em><em>'weekly'</em>) – How long each
 analysis window should be.</p></li>
-<li><p><strong>enrollments_query_type</strong> (<em>str</em>) – Specifies the query to use to
+<li><p><strong>enrollments_query_type</strong> (<em>str</em>) – Specifies the query type to use to
 get the experiment’s enrollments, unless overridden by
 custom_enrollments_query.</p></li>
 <li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
@@ -411,13 +411,45 @@ supports sanity checks.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="mozanalysis.experiment.Experiment.build_query">
+<code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param">metric_list</em>, <em class="sig-param">time_limits</em>, <em class="sig-param">enrollments_query_type</em>, <em class="sig-param">custom_enrollments_query=None</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return SQL to query metric data.</p>
+<p>For interactive use, prefer <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="mozanalysis.experiment.Experiment.get_time_series_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_time_series_data()</span></code></a> or
+<a class="reference internal" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_single_window_data()</span></code></a>, according to your use case,
+which will run the query for you and return a materialized
+dataframe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics to analyze.</p></li>
+<li><p><strong>time_limits</strong> (<a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><em>TimeLimits</em></a>) – An object describing the
+interval(s) to query</p></li>
+<li><p><strong>enrollments_query_type</strong> (<em>str</em>) – Specifies the query type to use to
+get the experiment’s enrollments, unless overridden by
+custom_enrollments_query.</p></li>
+<li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
+in the main query:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="n">raw_enrollments</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_enrollments_query</span><span class="p">})</span>
+</pre></div>
+</div>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A string containing a BigQuery SQL expression.</p>
+</dd>
+</dl>
+<p>Building this query is the main goal of this module.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="mozanalysis.experiment.TimeLimits">
 <em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">TimeLimits</code><span class="sig-paren">(</span><em class="sig-param">first_enrollment_date: str</em>, <em class="sig-param">last_enrollment_date: str</em>, <em class="sig-param">first_date_data_required: str</em>, <em class="sig-param">last_date_data_required: str</em>, <em class="sig-param">analysis_windows</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits" title="Permalink to this definition">¶</a></dt>
-<dd><p>Internal object containing various time limits.</p>
-<p>Instantiated and used by the <code class="docutils literal notranslate"><span class="pre">Experiment</span></code> class; end users
+<dd><p>Expresses time limits for different kinds of analysis windows.</p>
+<p>Instantiated and used by the <a class="reference internal" href="#mozanalysis.experiment.Experiment" title="mozanalysis.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a> class; end users
 should not need to interact with it.</p>
 <p>Do not directly instantiate: use the constructors provided.</p>
 <p>There are several time constraints needed to specify a valid query
