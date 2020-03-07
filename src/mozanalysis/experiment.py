@@ -492,29 +492,26 @@ class TimeLimits:
 
         if num_dates_enrollment is None:
             last_enrollment_date = add_days(last_date_full_data, -analysis_window.end)
-
         else:
             last_enrollment_date = add_days(
                 first_enrollment_date, num_dates_enrollment - 1
             )
 
-            if add_days(
-                last_enrollment_date, analysis_window.end
-            ) > last_date_full_data:
-                raise ValueError(
-                    "You said you wanted {} dates of enrollment, ".format(
-                        num_dates_enrollment
-                    ) + "and need data from the {}th day after enrollment. ".format(
-                        analysis_window.end
-                    ) + "For that, you need to wait until we have data for {}.".format(
-                        last_enrollment_date
-                    )
-                )
-
         first_date_data_required = add_days(
             first_enrollment_date, analysis_window.start
         )
         last_date_data_required = add_days(last_enrollment_date, analysis_window.end)
+
+        if last_date_data_required > last_date_full_data:
+            raise ValueError(
+                "You said you wanted {} dates of enrollment, ".format(
+                    num_dates_enrollment
+                ) + "and need data from the {}th day after enrollment. ".format(
+                    analysis_window.end
+                ) + "For that, you need to wait until we have data for {}.".format(
+                    last_date_data_required
+                )
+            )
 
         tl = cls(
             first_enrollment_date=first_enrollment_date,
