@@ -76,7 +76,7 @@ class Experiment:
     Args:
         experiment_slug (str): Name of the study, used to identify
             the enrollment events specific to this study.
-        start_date (str): e.g. '20190101'. First date on which enrollment
+        start_date (str): e.g. '2019-01-01'. First date on which enrollment
             events were received.
         num_dates_enrollment (int, optional): Only include this many dates
             of enrollments. If ``None`` then use the maximum number of dates
@@ -89,7 +89,7 @@ class Experiment:
     Attributes:
         experiment_slug (str): Name of the study, used to identify
             the enrollment events specific to this study.
-        start_date (str): e.g. '20190101'. First date on which enrollment
+        start_date (str): e.g. '2019-01-01'. First date on which enrollment
             events were received.
         num_dates_enrollment (int, optional): Only include this many days
             of enrollments. If ``None`` then use the maximum number of days
@@ -120,7 +120,7 @@ class Experiment:
             metric_list (list of mozanalysis.metric.Metric): The metrics
                 to analyze.
             last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '20190322'. If you want to ignore
+                have complete data, e.g. '2019-03-22'. If you want to ignore
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
             analysis_start_days (int): the start of the analysis window,
@@ -193,7 +193,7 @@ class Experiment:
             metric_list (list of mozanalysis.metric.Metric):
                 The metrics to analyze.
             last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '20190322'. If you want to ignore
+                have complete data, e.g. '2019-03-22'. If you want to ignore
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
             time_series_period ('daily' or 'weekly'): How long each
@@ -470,7 +470,7 @@ class TimeLimits:
             first_enrollment_date (str): First date on which enrollment
                 events were received; the start date of the experiment.
             last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '20190322'. If you want to ignore
+                have complete data, e.g. '2019-03-22'. If you want to ignore
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
             analysis_start_days (int): the start of the analysis window,
@@ -536,7 +536,7 @@ class TimeLimits:
             first_enrollment_date (str): First date on which enrollment
                 events were received; the start date of the experiment.
             last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '20190322'. If you want to ignore
+                have complete data, e.g. '2019-03-22'. If you want to ignore
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
             time_series_period: 'daily' or 'weekly'.
