@@ -205,6 +205,18 @@ def test_ts_time_limits_create_not_enough_data():
         )
 
 
+def test_time_limits_has_right_date_in_error_message():
+    msg_re = r'until we have data for 2020-03-30.'
+    with pytest.raises(ValueError, match=msg_re):
+        TimeLimits.for_single_analysis_window(
+            first_enrollment_date="2020-03-03",
+            last_date_full_data="2020-03-23",
+            analysis_start_days=0,
+            analysis_length_dates=21,
+            num_dates_enrollment=8,
+        )
+
+
 def test_analysis_window_validates_start():
     AnalysisWindow(0, 1)
     with pytest.raises(AssertionError):
