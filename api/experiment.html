@@ -234,7 +234,7 @@ if we have data covering their entire analysis window.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>experiment_slug</strong> (<em>str</em>) – Name of the study, used to identify
 the enrollment events specific to this study.</p></li>
-<li><p><strong>start_date</strong> (<em>str</em>) – e.g. ‘20190101’. First date on which enrollment
+<li><p><strong>start_date</strong> (<em>str</em>) – e.g. ‘2019-01-01’. First date on which enrollment
 events were received.</p></li>
 <li><p><strong>num_dates_enrollment</strong> (<em>int</em><em>, </em><em>optional</em>) – Only include this many dates
 of enrollments. If <code class="docutils literal notranslate"><span class="pre">None</span></code> then use the maximum number of dates
@@ -261,7 +261,7 @@ the enrollment events specific to this study.</p>
 <dl class="attribute">
 <dt id="mozanalysis.experiment.Experiment.start_date">
 <code class="sig-name descname">start_date</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.start_date" title="Permalink to this definition">¶</a></dt>
-<dd><p>e.g. ‘20190101’. First date on which enrollment
+<dd><p>e.g. ‘2019-01-01’. First date on which enrollment
 events were received.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -301,7 +301,7 @@ will simply read the results from this table.</p>
 <li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics
 to analyze.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
-have complete data, e.g. ‘20190322’. If you want to ignore
+have complete data, e.g. ‘2019-03-22’. If you want to ignore
 all data collected after a certain date (e.g. when the
 experiment recipe was deactivated), then do that here.</p></li>
 <li><p><strong>analysis_start_days</strong> (<em>int</em>) – the start of the analysis window,
@@ -365,7 +365,7 @@ with different analysis windows, and reorganising the results.</p>
 <li><p><strong>bq_context</strong> (<em>BigQueryContext</em>) – BigQuery configuration and client.</p></li>
 <li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics to analyze.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
-have complete data, e.g. ‘20190322’. If you want to ignore
+have complete data, e.g. ‘2019-03-22’. If you want to ignore
 all data collected after a certain date (e.g. when the
 experiment recipe was deactivated), then do that here.</p></li>
 <li><p><strong>time_series_period</strong> (<em>'daily'</em><em> or </em><em>'weekly'</em>) – How long each
@@ -491,7 +491,7 @@ different contexts.</p>
 <li><p><strong>first_enrollment_date</strong> (<em>str</em>) – First date on which enrollment
 events were received; the start date of the experiment.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
-have complete data, e.g. ‘20190322’. If you want to ignore
+have complete data, e.g. ‘2019-03-22’. If you want to ignore
 all data collected after a certain date (e.g. when the
 experiment recipe was deactivated), then do that here.</p></li>
 <li><p><strong>analysis_start_days</strong> (<em>int</em>) – the start of the analysis window,
@@ -521,7 +521,7 @@ hours before UTC midnight.</p></li>
 <li><p><strong>first_enrollment_date</strong> (<em>str</em>) – First date on which enrollment
 events were received; the start date of the experiment.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
-have complete data, e.g. ‘20190322’. If you want to ignore
+have complete data, e.g. ‘2019-03-22’. If you want to ignore
 all data collected after a certain date (e.g. when the
 experiment recipe was deactivated), then do that here.</p></li>
 <li><p><strong>time_series_period</strong> – ‘daily’ or ‘weekly’.</p></li>

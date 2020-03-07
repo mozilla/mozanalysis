@@ -225,7 +225,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        experiment_slug (str): Name of the study, used to identify</span>
 <span class="sd">            the enrollment events specific to this study.</span>
-<span class="sd">        start_date (str): e.g. &#39;20190101&#39;. First date on which enrollment</span>
+<span class="sd">        start_date (str): e.g. &#39;2019-01-01&#39;. First date on which enrollment</span>
 <span class="sd">            events were received.</span>
 <span class="sd">        num_dates_enrollment (int, optional): Only include this many dates</span>
 <span class="sd">            of enrollments. If ``None`` then use the maximum number of dates</span>
@@ -238,7 +238,7 @@
 <span class="sd">    Attributes:</span>
 <span class="sd">        experiment_slug (str): Name of the study, used to identify</span>
 <span class="sd">            the enrollment events specific to this study.</span>
-<span class="sd">        start_date (str): e.g. &#39;20190101&#39;. First date on which enrollment</span>
+<span class="sd">        start_date (str): e.g. &#39;2019-01-01&#39;. First date on which enrollment</span>
 <span class="sd">            events were received.</span>
 <span class="sd">        num_dates_enrollment (int, optional): Only include this many days</span>
 <span class="sd">            of enrollments. If ``None`` then use the maximum number of days</span>
@@ -269,7 +269,7 @@
 <span class="sd">            metric_list (list of mozanalysis.metric.Metric): The metrics</span>
 <span class="sd">                to analyze.</span>
 <span class="sd">            last_date_full_data (str): The most recent date for which we</span>
-<span class="sd">                have complete data, e.g. &#39;20190322&#39;. If you want to ignore</span>
+<span class="sd">                have complete data, e.g. &#39;2019-03-22&#39;. If you want to ignore</span>
 <span class="sd">                all data collected after a certain date (e.g. when the</span>
 <span class="sd">                experiment recipe was deactivated), then do that here.</span>
 <span class="sd">            analysis_start_days (int): the start of the analysis window,</span>
@@ -342,7 +342,7 @@
 <span class="sd">            metric_list (list of mozanalysis.metric.Metric):</span>
 <span class="sd">                The metrics to analyze.</span>
 <span class="sd">            last_date_full_data (str): The most recent date for which we</span>
-<span class="sd">                have complete data, e.g. &#39;20190322&#39;. If you want to ignore</span>
+<span class="sd">                have complete data, e.g. &#39;2019-03-22&#39;. If you want to ignore</span>
 <span class="sd">                all data collected after a certain date (e.g. when the</span>
 <span class="sd">                experiment recipe was deactivated), then do that here.</span>
 <span class="sd">            time_series_period (&#39;daily&#39; or &#39;weekly&#39;): How long each</span>
@@ -619,7 +619,7 @@
 <span class="sd">            first_enrollment_date (str): First date on which enrollment</span>
 <span class="sd">                events were received; the start date of the experiment.</span>
 <span class="sd">            last_date_full_data (str): The most recent date for which we</span>
-<span class="sd">                have complete data, e.g. &#39;20190322&#39;. If you want to ignore</span>
+<span class="sd">                have complete data, e.g. &#39;2019-03-22&#39;. If you want to ignore</span>
 <span class="sd">                all data collected after a certain date (e.g. when the</span>
 <span class="sd">                experiment recipe was deactivated), then do that here.</span>
 <span class="sd">            analysis_start_days (int): the start of the analysis window,</span>
@@ -641,29 +641,26 @@
 
         <span class="k">if</span> <span class="n">num_dates_enrollment</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="o">-</span><span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
-
         <span class="k">else</span><span class="p">:</span>
             <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
                 <span class="n">first_enrollment_date</span><span class="p">,</span> <span class="n">num_dates_enrollment</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">add_days</span><span class="p">(</span>
-                <span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span>
-            <span class="p">)</span> <span class="o">&gt;</span> <span class="n">last_date_full_data</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;You said you wanted </span><span class="si">{}</span><span class="s2"> dates of enrollment, &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">num_dates_enrollment</span>
-                    <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;and need data from the </span><span class="si">{}</span><span class="s2">th day after enrollment. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span>
-                    <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;For that, you need to wait until we have data for </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">last_enrollment_date</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-
         <span class="n">first_date_data_required</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
             <span class="n">first_enrollment_date</span><span class="p">,</span> <span class="n">analysis_window</span><span class="o">.</span><span class="n">start</span>
         <span class="p">)</span>
         <span class="n">last_date_data_required</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span><span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">last_date_data_required</span> <span class="o">&gt;</span> <span class="n">last_date_full_data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;You said you wanted </span><span class="si">{}</span><span class="s2"> dates of enrollment, &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">num_dates_enrollment</span>
+                <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;and need data from the </span><span class="si">{}</span><span class="s2">th day after enrollment. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span>
+                <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;For that, you need to wait until we have data for </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">last_date_data_required</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="n">tl</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">first_enrollment_date</span><span class="p">,</span>
@@ -688,7 +685,7 @@
 <span class="sd">            first_enrollment_date (str): First date on which enrollment</span>
 <span class="sd">                events were received; the start date of the experiment.</span>
 <span class="sd">            last_date_full_data (str): The most recent date for which we</span>
-<span class="sd">                have complete data, e.g. &#39;20190322&#39;. If you want to ignore</span>
+<span class="sd">                have complete data, e.g. &#39;2019-03-22&#39;. If you want to ignore</span>
 <span class="sd">                all data collected after a certain date (e.g. when the</span>
 <span class="sd">                experiment recipe was deactivated), then do that here.</span>
 <span class="sd">            time_series_period: &#39;daily&#39; or &#39;weekly&#39;.</span>
