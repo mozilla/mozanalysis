@@ -1,6 +1,7 @@
 import pytest
 
 import mozanalysis.metrics.desktop as mad
+import mozanalysis.segments.desktop as msd
 from mozanalysis.experiment import TimeLimits, AnalysisWindow, Experiment
 
 
@@ -285,6 +286,26 @@ def test_megaquery_not_detectably_malformed():
 
     sql = exp.build_query(
         metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
+        time_limits=tl,
+        enrollments_query_type='normandy',
+    )
+
+    sql_lint(sql)
+
+
+def test_segments_megaquery_not_detectably_malformed():
+    exp = Experiment('slug', '2019-01-01', 8)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date='2019-01-01',
+        last_date_full_data='2019-03-01',
+        time_series_period='weekly',
+        num_dates_enrollment=8
+    )
+
+    sql = exp.build_query(
+        metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
+        segment_list=[s for s in msd.__dict__.values() if isinstance(s, msd.Segment)],
         time_limits=tl,
         enrollments_query_type='normandy',
     )
