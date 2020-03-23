@@ -370,7 +370,11 @@ class Experiment:
 
     def _build_metrics_query_bits(self, metric_list, time_limits):
         """Return lists of SQL fragments corresponding to metrics."""
-        ds_metrics = self._partition_metrics_by_data_source(metric_list)
+        ds_metrics = self._partition_by_data_source(metric_list)
+        ds_metrics = {
+            ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
+            for ds, metrics in ds_metrics.items()
+        }
 
         metrics_columns = []
         metrics_joins = []
@@ -396,16 +400,12 @@ class Experiment:
 
         return metrics_columns, metrics_joins
 
-    def _partition_metrics_by_data_source(self, metric_list):
-        """Return a dict mapping data sources to metric lists.
-
-        Also add sanity metrics."""
-        data_sources = {m.data_source for m in metric_list}
+    def _partition_by_data_source(self, metric_or_segment_list):
+        """Return a dict mapping data sources to metric/segment lists."""
+        data_sources = {m.data_source for m in metric_or_segment_list}
 
         return {
-            ds:
-                [m for m in metric_list if m.data_source == ds]
-                + ds.get_sanity_metrics(self.experiment_slug)
+            ds: [m for m in metric_or_segment_list if m.data_source == ds]
             for ds in data_sources
         }
 
