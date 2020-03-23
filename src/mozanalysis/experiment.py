@@ -409,6 +409,57 @@ class Experiment:
             for ds in data_sources
         }
 
+    def _build_segments_query(self, segment_list, time_limits):
+        """Build a query adding segment columns to the enrollments view."""
+
+        # Do similar things to what we do for metrics, but in a less
+        # ostentatious place, since people are likely to come to the
+        # source code asking how metrics work, but less likely to
+        # arrive with "how segments work" as their first question.
+
+        segments_columns, segments_joins = self._build_segments_query_bits(
+            segment_list or [], time_limits
+        )
+
+        return """
+        SELECT
+            raw_enrollments.*,
+            {segments_columns}
+        FROM raw_enrollments
+        {segments_joins}
+        """.format(
+            segments_columns=',\n        '.join(segments_columns),
+            segments_joins='\n'.join(segments_joins)
+        )
+
+    def _build_segments_query_bits(self, segment_list, time_limits):
+        """Return lists of SQL fragments corresponding to segments."""
+        ds_segments = self._partition_by_data_source(segment_list)
+
+        segments_columns = []
+        segments_joins = []
+
+        for i, ds in enumerate(ds_segments.keys()):
+            query_for_segments = ds.build_query(
+                ds_segments[ds], time_limits, self.experiment_slug
+            )
+            segments_joins.append(
+                """    LEFT JOIN (
+        {query}
+        ) ds_{i} USING (client_id)
+                """.format(
+                    query=query_for_segments,
+                    i=i
+                )
+            )
+
+            for m in ds_segments[ds]:
+                segments_columns.append("ds_{i}.{segment_name}".format(
+                    i=i, segment_name=m.name
+                ))
+
+        return segments_columns, segments_joins
+
 
 @attr.s(frozen=True, slots=True)
 class TimeLimits:
