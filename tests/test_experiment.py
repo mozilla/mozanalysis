@@ -268,9 +268,6 @@ def test_query_not_detectably_malformed():
         enrollments_query_type='normandy',
     )
 
-    # This query is actually slightly malformed, due to a trailing comma.
-    # We should add a metric here if the linter ever improves.
-
     sql_lint(sql)
 
 
