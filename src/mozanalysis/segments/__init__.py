@@ -42,9 +42,9 @@ class SegmentDataSource:
     def build_query(self, segment_list, time_limits, experiment_slug):
         """Return a nearly self contained SQL query.
 
-        The query takes a ``raw_enrollments`` view, and defines a new
-        view by adding one non-NULL boolean column per segment. It does
-        not otherwise tamper with the ``raw_enrollments`` view.
+        The query takes a list of ``client_id``s from
+        ``raw_enrollments``, and adds one non-NULL boolean column per
+        segment: True if the client is in the segment, False otherwise.
         """
         return """SELECT
             e.client_id,

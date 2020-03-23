@@ -422,7 +422,12 @@ class Experiment:
         }
 
     def _build_segments_query(self, segment_list, time_limits):
-        """Build a query adding segment columns to the enrollments view."""
+        """Build a query adding segment columns to the enrollments view.
+
+        The query takes a ``raw_enrollments`` view, and defines a new
+        view by adding one non-NULL boolean column per segment. It does
+        not otherwise tamper with the ``raw_enrollments`` view.
+        """
 
         # Do similar things to what we do for metrics, but in a less
         # ostentatious place, since people are likely to come to the
