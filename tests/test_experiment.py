@@ -1,4 +1,5 @@
 import pytest
+from cheap_lint import sql_lint
 
 import mozanalysis.metrics.desktop as mad
 import mozanalysis.segments.desktop as msd
@@ -228,28 +229,6 @@ def test_analysis_window_validates_end():
     AnalysisWindow(5, 5)
     with pytest.raises(AssertionError):
         AnalysisWindow(5, 4)
-
-
-def sql_lint(sql):
-    safewords = [
-        # Exceptions to skip linting
-    ]
-    for w in safewords:
-        if w in sql:
-            return
-
-    # Check whether a python string template wasn't filled
-    assert '{' not in sql
-    assert '}' not in sql
-
-    # Check crudely for balanced parentheses
-    assert sql.count('(') == sql.count(')')
-
-    # Check crudely for balanced quote marks
-    assert sql.count("'") % 2 == 0
-
-    # Check crudely for balanced backticks
-    assert sql.count("`") % 2 == 0
 
 
 def test_query_not_detectably_malformed():

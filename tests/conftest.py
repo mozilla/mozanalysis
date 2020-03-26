@@ -3,9 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 
+import sys
+import os
 import pytest
 from pyspark.sql import SparkSession
 
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
 
 _spark_session = None
 _spark_context = None

@@ -1,4 +1,5 @@
 import pytest
+from cheap_lint import sql_lint
 
 import mozanalysis.segments.desktop as msd
 import mozanalysis.metrics.desktop as mmd
@@ -6,25 +7,6 @@ import mozanalysis.metrics.desktop as mmd
 
 def test_imported_ok():
     assert msd.regular_users_v1
-
-
-def sql_lint(sql):
-    safewords = [
-        # Exceptions to skip linting
-    ]
-    for w in safewords:
-        if w in sql:
-            return
-
-    # Check whether a python string template wasn't filled
-    assert '{' not in sql
-    assert '}' not in sql
-
-    # Check for balanced parentheses
-    assert sql.count('(') == sql.count(')')
-
-    # Check for balanced quote marks
-    assert sql.count("'") % 2 == 0
 
 
 def test_sql_not_detectably_malformed():
