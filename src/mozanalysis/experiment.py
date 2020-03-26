@@ -106,8 +106,9 @@ class Experiment:
 
     def get_single_window_data(
         self, bq_context, metric_list, last_date_full_data,
-        analysis_start_days, analysis_length_days, segment_list=None,
-        enrollments_query_type='normandy', custom_enrollments_query=None
+        analysis_start_days, analysis_length_days,
+        enrollments_query_type='normandy', custom_enrollments_query=None,
+        segment_list=None
     ):
         """Return a DataFrame containing per-client metric values.
 
@@ -128,8 +129,6 @@ class Experiment:
                 collected outside this analysis window.
             analysis_length_days (int): the length of the analysis window,
                 measured in days.
-            segment_list (list of mozanalysis.segment.Segment): The user
-                segments to study.
             enrollments_query_type (str): Specifies the query type to use to
                 get the experiment's enrollments, unless overridden by
                 custom_enrollments_query.
@@ -137,6 +136,9 @@ class Experiment:
                 in the main query::
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
+
+            segment_list (list of mozanalysis.segment.Segment): The user
+                segments to study.
 
         Returns:
             A pandas DataFrame of experiment data. One row per ``client_id``.
@@ -182,8 +184,8 @@ class Experiment:
 
     def get_time_series_data(
         self, bq_context, metric_list, last_date_full_data,
-        time_series_period='weekly', segment_list=None,
-        enrollments_query_type='normandy', custom_enrollments_query=None
+        time_series_period='weekly', enrollments_query_type='normandy',
+        custom_enrollments_query=None, segment_list=None
     ):
         """Return a TimeSeriesResult with per-client metric values.
 
@@ -200,8 +202,6 @@ class Experiment:
                 experiment recipe was deactivated), then do that here.
             time_series_period ('daily' or 'weekly'): How long each
                 analysis window should be.
-            segment_list (list of mozanalysis.segment.Segment): The user
-                segments to study.
             enrollments_query_type (str): Specifies the query type to use to
                 get the experiment's enrollments, unless overridden by
                 custom_enrollments_query.
@@ -209,6 +209,9 @@ class Experiment:
                 in the main query::
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
+
+            segment_list (list of mozanalysis.segment.Segment): The user
+                segments to study.
 
         Returns:
             A TimeSeriesResult object, which may be used to obtain a
@@ -257,8 +260,8 @@ class Experiment:
         )
 
     def build_query(
-        self, metric_list, time_limits, segment_list=None,
-        enrollments_query_type='normandy', custom_enrollments_query=None,
+        self, metric_list, time_limits, enrollments_query_type='normandy',
+        custom_enrollments_query=None, segment_list=None
     ) -> str:
         """Return SQL to query metric data.
 
@@ -272,8 +275,6 @@ class Experiment:
                 The metrics to analyze.
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
-            segment_list (list of mozanalysis.segment.Segment): The user
-                segments to study.
             enrollments_query_type (str): Specifies the query type to use to
                 get the experiment's enrollments, unless overridden by
                 custom_enrollments_query.
@@ -281,6 +282,9 @@ class Experiment:
                 in the main query::
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
+
+            segment_list (list of mozanalysis.segment.Segment): The user
+                segments to study.
 
         Returns:
             A string containing a BigQuery SQL expression.
