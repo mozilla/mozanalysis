@@ -173,7 +173,8 @@ class Experiment:
         )
 
         sql = self.build_query(
-            metric_list, time_limits, enrollments_query_type, custom_enrollments_query
+            metric_list, time_limits, enrollments_query_type, custom_enrollments_query,
+            segment_list
         )
 
         res_table_name = sanitize_table_name_for_bq('_'.join(
@@ -243,7 +244,8 @@ class Experiment:
         )
 
         sql = self.build_query(
-            metric_list, time_limits, enrollments_query_type, custom_enrollments_query
+            metric_list, time_limits, enrollments_query_type, custom_enrollments_query,
+            segment_list
         )
 
         full_res_table_name = sanitize_table_name_for_bq('_'.join(
