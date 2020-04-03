@@ -106,8 +106,9 @@ class Experiment:
 
     def get_single_window_data(
         self, bq_context, metric_list, last_date_full_data,
-        analysis_start_days, analysis_length_days, enrollments_query_type='normandy',
-        custom_enrollments_query=None
+        analysis_start_days, analysis_length_days,
+        enrollments_query_type='normandy', custom_enrollments_query=None,
+        segment_list=None
     ):
         """Return a DataFrame containing per-client metric values.
 
@@ -135,6 +136,9 @@ class Experiment:
                 in the main query::
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
+
+            segment_list (list of mozanalysis.segment.Segment): The user
+                segments to study.
 
         Returns:
             A pandas DataFrame of experiment data. One row per ``client_id``.
@@ -169,7 +173,8 @@ class Experiment:
         )
 
         sql = self.build_query(
-            metric_list, time_limits, enrollments_query_type, custom_enrollments_query
+            metric_list, time_limits, enrollments_query_type, custom_enrollments_query,
+            segment_list
         )
 
         res_table_name = sanitize_table_name_for_bq('_'.join(
@@ -181,7 +186,7 @@ class Experiment:
     def get_time_series_data(
         self, bq_context, metric_list, last_date_full_data,
         time_series_period='weekly', enrollments_query_type='normandy',
-        custom_enrollments_query=None
+        custom_enrollments_query=None, segment_list=None
     ):
         """Return a TimeSeriesResult with per-client metric values.
 
@@ -205,6 +210,9 @@ class Experiment:
                 in the main query::
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
+
+            segment_list (list of mozanalysis.segment.Segment): The user
+                segments to study.
 
         Returns:
             A TimeSeriesResult object, which may be used to obtain a
@@ -236,7 +244,8 @@ class Experiment:
         )
 
         sql = self.build_query(
-            metric_list, time_limits, enrollments_query_type, custom_enrollments_query
+            metric_list, time_limits, enrollments_query_type, custom_enrollments_query,
+            segment_list
         )
 
         full_res_table_name = sanitize_table_name_for_bq('_'.join(
@@ -253,8 +262,8 @@ class Experiment:
         )
 
     def build_query(
-        self, metric_list, time_limits, enrollments_query_type,
-        custom_enrollments_query=None,
+        self, metric_list, time_limits, enrollments_query_type='normandy',
+        custom_enrollments_query=None, segment_list=None
     ) -> str:
         """Return SQL to query metric data.
 
@@ -276,6 +285,9 @@ class Experiment:
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
 
+            segment_list (list of mozanalysis.segment.Segment): The user
+                segments to study.
+
         Returns:
             A string containing a BigQuery SQL expression.
 
@@ -292,16 +304,21 @@ class Experiment:
             metric_list, time_limits
         )
 
+        segments_query = self._build_segments_query(
+            segment_list, time_limits
+        )
+
         return """
     WITH analysis_windows AS (
         {analysis_windows_query}
     ),
     raw_enrollments AS ({enrollments_query}),
+    segmented_enrollments AS ({segments_query}),
     enrollments AS (
         SELECT
             e.*,
             aw.*
-        FROM raw_enrollments e
+        FROM segmented_enrollments e
         CROSS JOIN analysis_windows aw
     )
     SELECT
@@ -312,6 +329,7 @@ class Experiment:
         """.format(
             analysis_windows_query=analysis_windows_query,
             enrollments_query=enrollments_query,
+            segments_query=segments_query,
             metrics_columns=',\n        '.join(metrics_columns),
             metrics_joins='\n'.join(metrics_joins)
         )
@@ -370,7 +388,11 @@ class Experiment:
 
     def _build_metrics_query_bits(self, metric_list, time_limits):
         """Return lists of SQL fragments corresponding to metrics."""
-        ds_metrics = self._partition_metrics_by_data_source(metric_list)
+        ds_metrics = self._partition_by_data_source(metric_list)
+        ds_metrics = {
+            ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
+            for ds, metrics in ds_metrics.items()
+        }
 
         metrics_columns = []
         metrics_joins = []
@@ -396,18 +418,70 @@ class Experiment:
 
         return metrics_columns, metrics_joins
 
-    def _partition_metrics_by_data_source(self, metric_list):
-        """Return a dict mapping data sources to metric lists.
-
-        Also add sanity metrics."""
-        data_sources = {m.data_source for m in metric_list}
+    def _partition_by_data_source(self, metric_or_segment_list):
+        """Return a dict mapping data sources to metric/segment lists."""
+        data_sources = {m.data_source for m in metric_or_segment_list}
 
         return {
-            ds:
-                [m for m in metric_list if m.data_source == ds]
-                + ds.get_sanity_metrics(self.experiment_slug)
+            ds: [m for m in metric_or_segment_list if m.data_source == ds]
             for ds in data_sources
         }
+
+    def _build_segments_query(self, segment_list, time_limits):
+        """Build a query adding segment columns to the enrollments view.
+
+        The query takes a ``raw_enrollments`` view, and defines a new
+        view by adding one non-NULL boolean column per segment. It does
+        not otherwise tamper with the ``raw_enrollments`` view.
+        """
+
+        # Do similar things to what we do for metrics, but in a less
+        # ostentatious place, since people are likely to come to the
+        # source code asking how metrics work, but less likely to
+        # arrive with "how segments work" as their first question.
+
+        segments_columns, segments_joins = self._build_segments_query_bits(
+            segment_list or [], time_limits
+        )
+
+        return """
+        SELECT
+            raw_enrollments.*,
+            {segments_columns}
+        FROM raw_enrollments
+        {segments_joins}
+        """.format(
+            segments_columns=',\n        '.join(segments_columns),
+            segments_joins='\n'.join(segments_joins)
+        )
+
+    def _build_segments_query_bits(self, segment_list, time_limits):
+        """Return lists of SQL fragments corresponding to segments."""
+        ds_segments = self._partition_by_data_source(segment_list)
+
+        segments_columns = []
+        segments_joins = []
+
+        for i, ds in enumerate(ds_segments.keys()):
+            query_for_segments = ds.build_query(
+                ds_segments[ds], time_limits, self.experiment_slug
+            )
+            segments_joins.append(
+                """    LEFT JOIN (
+        {query}
+        ) ds_{i} USING (client_id)
+                """.format(
+                    query=query_for_segments,
+                    i=i
+                )
+            )
+
+            for m in ds_segments[ds]:
+                segments_columns.append("ds_{i}.{segment_name}".format(
+                    i=i, segment_name=m.name
+                ))
+
+        return segments_columns, segments_joins
 
 
 @attr.s(frozen=True, slots=True)

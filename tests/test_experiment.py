@@ -1,6 +1,8 @@
 import pytest
+from cheap_lint import sql_lint
 
 import mozanalysis.metrics.desktop as mad
+import mozanalysis.segments.desktop as msd
 from mozanalysis.experiment import TimeLimits, AnalysisWindow, Experiment
 
 
@@ -229,28 +231,6 @@ def test_analysis_window_validates_end():
         AnalysisWindow(5, 4)
 
 
-def sql_lint(sql):
-    safewords = [
-        # Exceptions to skip linting
-    ]
-    for w in safewords:
-        if w in sql:
-            return
-
-    # Check whether a python string template wasn't filled
-    assert '{' not in sql
-    assert '}' not in sql
-
-    # Check crudely for balanced parentheses
-    assert sql.count('(') == sql.count(')')
-
-    # Check crudely for balanced quote marks
-    assert sql.count("'") % 2 == 0
-
-    # Check crudely for balanced backticks
-    assert sql.count("`") % 2 == 0
-
-
 def test_query_not_detectably_malformed():
     exp = Experiment('slug', '2019-01-01', 8)
 
@@ -267,9 +247,6 @@ def test_query_not_detectably_malformed():
         enrollments_query_type='normandy',
     )
 
-    # This query is actually slightly malformed, due to a trailing comma.
-    # We should add a metric here if the linter ever improves.
-
     sql_lint(sql)
 
 
@@ -285,6 +262,26 @@ def test_megaquery_not_detectably_malformed():
 
     sql = exp.build_query(
         metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
+        time_limits=tl,
+        enrollments_query_type='normandy',
+    )
+
+    sql_lint(sql)
+
+
+def test_segments_megaquery_not_detectably_malformed():
+    exp = Experiment('slug', '2019-01-01', 8)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date='2019-01-01',
+        last_date_full_data='2019-03-01',
+        time_series_period='weekly',
+        num_dates_enrollment=8
+    )
+
+    sql = exp.build_query(
+        metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
+        segment_list=[s for s in msd.__dict__.values() if isinstance(s, msd.Segment)],
         time_limits=tl,
         enrollments_query_type='normandy',
     )
