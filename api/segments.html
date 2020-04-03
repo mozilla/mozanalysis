@@ -1,0 +1,281 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mozanalysis.segments &mdash; mozanalysis  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="mozanalysis.segments.desktop" href="segments/desktop.html" />
+    <link rel="prev" title="mozanalysis.metrics.desktop" href="metrics/desktop.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mozanalysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About Mozanalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide.html">Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="bayesian_stats.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bayesian_stats/binary.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="segments/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments.desktop</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mozanalysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Documentation</a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/segments.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mozanalysis.segments">
+<span id="mozanalysis-segments"></span><h1><a class="reference internal" href="#module-mozanalysis.segments" title="mozanalysis.segments"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a><a class="headerlink" href="#module-mozanalysis.segments" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="mozanalysis.segments.SegmentDataSource">
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.segments.</code><code class="sig-name descname">SegmentDataSource</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">from_expr</em>, <em class="sig-param">window_start: int = 0</em>, <em class="sig-param">window_end: int = 0</em>, <em class="sig-param">client_id_column: str = 'client_id'</em>, <em class="sig-param">submission_date_column: str = 'submission_date'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#SegmentDataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.SegmentDataSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a table or view, from which segments may be defined.</p>
+<p><code class="docutils literal notranslate"><span class="pre">window_start</span></code> and <code class="docutils literal notranslate"><span class="pre">window_end</span></code> define the window of data used
+to determine whether each client fits a segment. Ideally this
+window ends at/before the moment of enrollment, so that user’s
+branches can’t bias the segment assignment. <code class="docutils literal notranslate"><span class="pre">window_start</span></code> and
+<code class="docutils literal notranslate"><span class="pre">window_end</span></code> are non-positive integers, representing the number
+of days before enrollment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">window_start</span> <span class="o">&lt;=</span> <span class="n">window_end</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name for the Data Source. Should be unique to avoid
+confusion.</p></li>
+<li><p><strong>from_expr</strong> (<em>str</em>) – FROM expression - often just a fully-qualified
+table name. Sometimes a subquery.</p></li>
+<li><p><strong>window_start</strong> (<em>int</em><em>, </em><em>optional</em>) – See above.</p></li>
+<li><p><strong>window_end</strong> (<em>int</em><em>, </em><em>optional</em>) – See above.</p></li>
+<li><p><strong>client_id_column</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the column that
+contains the <code class="docutils literal notranslate"><span class="pre">client_id</span></code> (join key). Defaults to
+‘client_id’.</p></li>
+<li><p><strong>submission_date_column</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the column
+that contains the submission date (as a date, not
+timestamp). Defaults to ‘submission_date’.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="mozanalysis.segments.SegmentDataSource.build_query">
+<code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param">segment_list</em>, <em class="sig-param">time_limits</em>, <em class="sig-param">experiment_slug</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#SegmentDataSource.build_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.SegmentDataSource.build_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a nearly self contained SQL query.</p>
+<p>The query takes a list of <code class="docutils literal notranslate"><span class="pre">client_id``s</span> <span class="pre">from</span>
+<span class="pre">``raw_enrollments</span></code>, and adds one non-NULL boolean column per
+segment: True if the client is in the segment, False otherwise.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mozanalysis.segments.Segment">
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.segments.</code><code class="sig-name descname">Segment</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">data_source</em>, <em class="sig-param">select_expr: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#Segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.Segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an experiment Segment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The segment’s name; will be a column name.</p></li>
+<li><p><strong>data_source</strong> (<a class="reference internal" href="#mozanalysis.segments.SegmentDataSource" title="mozanalysis.segments.SegmentDataSource"><em>SegmentDataSource</em></a>) – Data source that provides
+the columns referenced in <code class="docutils literal notranslate"><span class="pre">select_expr</span></code>.</p></li>
+<li><p><strong>select_expr</strong> (<em>str</em>) – A SQL select expression that includes
+an aggregation function (we <code class="docutils literal notranslate"><span class="pre">GROUP</span> <span class="pre">BY</span> <span class="pre">client_id</span></code>).
+Returns a non-NULL <code class="docutils literal notranslate"><span class="pre">BOOL</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> if the user is in the
+segment, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="segments/desktop.html" class="btn btn-neutral float-right" title="mozanalysis.segments.desktop" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="metrics/desktop.html" class="btn btn-neutral float-left" title="mozanalysis.metrics.desktop" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mozilla
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

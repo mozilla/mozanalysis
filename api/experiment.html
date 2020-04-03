@@ -94,6 +94,8 @@
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="segments.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="segments/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments.desktop</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -289,7 +291,7 @@ before UTC midnight.</p>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.get_single_window_data">
-<code class="sig-name descname">get_single_window_data</code><span class="sig-paren">(</span><em class="sig-param">bq_context</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_days</em>, <em class="sig-param">enrollments_query_type='normandy'</em>, <em class="sig-param">custom_enrollments_query=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_single_window_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_single_window_data</code><span class="sig-paren">(</span><em class="sig-param">bq_context</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">analysis_start_days</em>, <em class="sig-param">analysis_length_days</em>, <em class="sig-param">enrollments_query_type='normandy'</em>, <em class="sig-param">custom_enrollments_query=None</em>, <em class="sig-param">segment_list=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_single_window_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a DataFrame containing per-client metric values.</p>
 <p>Also store them in a permanent table in BigQuery. The name of
 this table will be printed. Subsequent calls to this function
@@ -318,6 +320,8 @@ in the main query:</p>
 </pre></div>
 </div>
 </p></li>
+<li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em>) – The user
+segments to study.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -355,7 +359,7 @@ standard format for queried experimental data.</p>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.get_time_series_data">
-<code class="sig-name descname">get_time_series_data</code><span class="sig-paren">(</span><em class="sig-param">bq_context</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">enrollments_query_type='normandy'</em>, <em class="sig-param">custom_enrollments_query=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_time_series_data</code><span class="sig-paren">(</span><em class="sig-param">bq_context</em>, <em class="sig-param">metric_list</em>, <em class="sig-param">last_date_full_data</em>, <em class="sig-param">time_series_period='weekly'</em>, <em class="sig-param">enrollments_query_type='normandy'</em>, <em class="sig-param">custom_enrollments_query=None</em>, <em class="sig-param">segment_list=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a TimeSeriesResult with per-client metric values.</p>
 <p>Roughly equivalent to looping over <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_single_window_data()</span></code></a>
 with different analysis windows, and reorganising the results.</p>
@@ -379,6 +383,8 @@ in the main query:</p>
 </pre></div>
 </div>
 </p></li>
+<li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em>) – The user
+segments to study.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -413,7 +419,7 @@ supports sanity checks.</p></li>
 
 <dl class="method">
 <dt id="mozanalysis.experiment.Experiment.build_query">
-<code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param">metric_list</em>, <em class="sig-param">time_limits</em>, <em class="sig-param">enrollments_query_type</em>, <em class="sig-param">custom_enrollments_query=None</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param">metric_list</em>, <em class="sig-param">time_limits</em>, <em class="sig-param">enrollments_query_type='normandy'</em>, <em class="sig-param">custom_enrollments_query=None</em>, <em class="sig-param">segment_list=None</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_query" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return SQL to query metric data.</p>
 <p>For interactive use, prefer <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="mozanalysis.experiment.Experiment.get_time_series_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_time_series_data()</span></code></a> or
 <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_single_window_data()</span></code></a>, according to your use case,
@@ -434,6 +440,8 @@ in the main query:</p>
 </pre></div>
 </div>
 </p></li>
+<li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em>) – The user
+segments to study.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

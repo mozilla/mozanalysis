@@ -255,8 +255,9 @@
 
 <div class="viewcode-block" id="Experiment.get_single_window_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_single_window_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_window_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
-        <span class="n">analysis_start_days</span><span class="p">,</span> <span class="n">analysis_length_days</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s1">&#39;normandy&#39;</span><span class="p">,</span>
-        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span>
+        <span class="n">analysis_start_days</span><span class="p">,</span> <span class="n">analysis_length_days</span><span class="p">,</span>
+        <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s1">&#39;normandy&#39;</span><span class="p">,</span> <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a DataFrame containing per-client metric values.</span>
 
@@ -284,6 +285,9 @@
 <span class="sd">                in the main query::</span>
 
 <span class="sd">                    WITH raw_enrollments AS ({custom_enrollments_query})</span>
+
+<span class="sd">            segment_list (list of mozanalysis.segment.Segment): The user</span>
+<span class="sd">                segments to study.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A pandas DataFrame of experiment data. One row per ``client_id``.</span>
@@ -318,7 +322,8 @@
         <span class="p">)</span>
 
         <span class="n">sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
-            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">,</span> <span class="n">custom_enrollments_query</span>
+            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">,</span> <span class="n">custom_enrollments_query</span><span class="p">,</span>
+            <span class="n">segment_list</span>
         <span class="p">)</span>
 
         <span class="n">res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
@@ -330,7 +335,7 @@
 <div class="viewcode-block" id="Experiment.get_time_series_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
         <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s1">&#39;normandy&#39;</span><span class="p">,</span>
-        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span>
+        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a TimeSeriesResult with per-client metric values.</span>
 
@@ -354,6 +359,9 @@
 <span class="sd">                in the main query::</span>
 
 <span class="sd">                    WITH raw_enrollments AS ({custom_enrollments_query})</span>
+
+<span class="sd">            segment_list (list of mozanalysis.segment.Segment): The user</span>
+<span class="sd">                segments to study.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A TimeSeriesResult object, which may be used to obtain a</span>
@@ -385,7 +393,8 @@
         <span class="p">)</span>
 
         <span class="n">sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
-            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">,</span> <span class="n">custom_enrollments_query</span>
+            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">,</span> <span class="n">custom_enrollments_query</span><span class="p">,</span>
+            <span class="n">segment_list</span>
         <span class="p">)</span>
 
         <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
@@ -402,8 +411,8 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Experiment.build_query"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.build_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_query</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">,</span>
-        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s1">&#39;normandy&#39;</span><span class="p">,</span>
+        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Return SQL to query metric data.</span>
 
@@ -425,6 +434,9 @@
 
 <span class="sd">                    WITH raw_enrollments AS ({custom_enrollments_query})</span>
 
+<span class="sd">            segment_list (list of mozanalysis.segment.Segment): The user</span>
+<span class="sd">                segments to study.</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            A string containing a BigQuery SQL expression.</span>
 
@@ -441,16 +453,21 @@
             <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span>
         <span class="p">)</span>
 
+        <span class="n">segments_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_segments_query</span><span class="p">(</span>
+            <span class="n">segment_list</span><span class="p">,</span> <span class="n">time_limits</span>
+        <span class="p">)</span>
+
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">    WITH analysis_windows AS (</span>
 <span class="s2">        </span><span class="si">{analysis_windows_query}</span><span class="s2"></span>
 <span class="s2">    ),</span>
 <span class="s2">    raw_enrollments AS (</span><span class="si">{enrollments_query}</span><span class="s2">),</span>
+<span class="s2">    segmented_enrollments AS (</span><span class="si">{segments_query}</span><span class="s2">),</span>
 <span class="s2">    enrollments AS (</span>
 <span class="s2">        SELECT</span>
 <span class="s2">            e.*,</span>
 <span class="s2">            aw.*</span>
-<span class="s2">        FROM raw_enrollments e</span>
+<span class="s2">        FROM segmented_enrollments e</span>
 <span class="s2">        CROSS JOIN analysis_windows aw</span>
 <span class="s2">    )</span>
 <span class="s2">    SELECT</span>
@@ -461,6 +478,7 @@
 <span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">analysis_windows_query</span><span class="o">=</span><span class="n">analysis_windows_query</span><span class="p">,</span>
             <span class="n">enrollments_query</span><span class="o">=</span><span class="n">enrollments_query</span><span class="p">,</span>
+            <span class="n">segments_query</span><span class="o">=</span><span class="n">segments_query</span><span class="p">,</span>
             <span class="n">metrics_columns</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">        &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_columns</span><span class="p">),</span>
             <span class="n">metrics_joins</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">)</span>
         <span class="p">)</span></div>
@@ -519,7 +537,11 @@
 
     <span class="k">def</span> <span class="nf">_build_metrics_query_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to metrics.&quot;&quot;&quot;</span>
-        <span class="n">ds_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_metrics_by_data_source</span><span class="p">(</span><span class="n">metric_list</span><span class="p">)</span>
+        <span class="n">ds_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_by_data_source</span><span class="p">(</span><span class="n">metric_list</span><span class="p">)</span>
+        <span class="n">ds_metrics</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">ds</span><span class="p">:</span> <span class="n">metrics</span> <span class="o">+</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_sanity_metrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="n">metrics</span> <span class="ow">in</span> <span class="n">ds_metrics</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
 
         <span class="n">metrics_columns</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">metrics_joins</span> <span class="o">=</span> <span class="p">[]</span>
@@ -545,18 +567,70 @@
 
         <span class="k">return</span> <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span>
 
-    <span class="k">def</span> <span class="nf">_partition_metrics_by_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a dict mapping data sources to metric lists.</span>
-
-<span class="sd">        Also add sanity metrics.&quot;&quot;&quot;</span>
-        <span class="n">data_sources</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">data_source</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">}</span>
+    <span class="k">def</span> <span class="nf">_partition_by_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_or_segment_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dict mapping data sources to metric/segment lists.&quot;&quot;&quot;</span>
+        <span class="n">data_sources</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">data_source</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_or_segment_list</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="n">ds</span><span class="p">:</span>
-                <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">data_source</span> <span class="o">==</span> <span class="n">ds</span><span class="p">]</span>
-                <span class="o">+</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_sanity_metrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">)</span>
+            <span class="n">ds</span><span class="p">:</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_or_segment_list</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">data_source</span> <span class="o">==</span> <span class="n">ds</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="n">data_sources</span>
-        <span class="p">}</span></div>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_build_segments_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Build a query adding segment columns to the enrollments view.</span>
+
+<span class="sd">        The query takes a ``raw_enrollments`` view, and defines a new</span>
+<span class="sd">        view by adding one non-NULL boolean column per segment. It does</span>
+<span class="sd">        not otherwise tamper with the ``raw_enrollments`` view.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Do similar things to what we do for metrics, but in a less</span>
+        <span class="c1"># ostentatious place, since people are likely to come to the</span>
+        <span class="c1"># source code asking how metrics work, but less likely to</span>
+        <span class="c1"># arrive with &quot;how segments work&quot; as their first question.</span>
+
+        <span class="n">segments_columns</span><span class="p">,</span> <span class="n">segments_joins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_segments_query_bits</span><span class="p">(</span>
+            <span class="n">segment_list</span> <span class="ow">or</span> <span class="p">[],</span> <span class="n">time_limits</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            raw_enrollments.*,</span>
+<span class="s2">            </span><span class="si">{segments_columns}</span><span class="s2"></span>
+<span class="s2">        FROM raw_enrollments</span>
+<span class="s2">        </span><span class="si">{segments_joins}</span><span class="s2"></span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">segments_columns</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">        &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">segments_columns</span><span class="p">),</span>
+            <span class="n">segments_joins</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">segments_joins</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_segments_query_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to segments.&quot;&quot;&quot;</span>
+        <span class="n">ds_segments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_by_data_source</span><span class="p">(</span><span class="n">segment_list</span><span class="p">)</span>
+
+        <span class="n">segments_columns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">segments_joins</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ds_segments</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">query_for_segments</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
+                <span class="n">ds_segments</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span>
+            <span class="p">)</span>
+            <span class="n">segments_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;    LEFT JOIN (</span>
+<span class="sd">        {query}</span>
+<span class="sd">        ) ds_{i} USING (client_id)</span>
+<span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">query</span><span class="o">=</span><span class="n">query_for_segments</span><span class="p">,</span>
+                    <span class="n">i</span><span class="o">=</span><span class="n">i</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ds_segments</span><span class="p">[</span><span class="n">ds</span><span class="p">]:</span>
+                <span class="n">segments_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;ds_</span><span class="si">{i}</span><span class="s2">.</span><span class="si">{segment_name}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">segment_name</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">name</span>
+                <span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">segments_columns</span><span class="p">,</span> <span class="n">segments_joins</span></div>
 
 
 <div class="viewcode-block" id="TimeLimits"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeLimits">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
