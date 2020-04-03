@@ -15,55 +15,44 @@ clients_last_seen_lag_1_day = SegmentDataSource(
 
 # Before https://github.com/mozilla/bigquery-etl/pull/825/ is merged,
 # we gotta do our own transforms
-tmp_segment_regular_users_v1 = """  CASE
-    CAST(
-      BIT_COUNT(
-        days_visited_5_uri_bits & `moz-fx-data-shared-prod.udf.bitmask_range`(2, 6)
-      ) >= 1 AS INT64
-    ) + CAST(
-      BIT_COUNT(
-        days_visited_5_uri_bits & `moz-fx-data-shared-prod.udf.bitmask_range`(8, 7)
-      ) >= 2 AS INT64
-    ) + CAST(
-      BIT_COUNT(
-        days_visited_5_uri_bits & `moz-fx-data-shared-prod.udf.bitmask_range`(15, 7)
-      ) >= 2 AS INT64
-    ) + CAST(
-      BIT_COUNT(
-        days_visited_5_uri_bits & `moz-fx-data-shared-prod.udf.bitmask_range`(22, 7)
-      ) >= 2 AS INT64
-    )
+tmp_segment_regular_users_v2 = """  CASE
   WHEN
-    4
+    BIT_COUNT(days_visited_5_uri_bits & 0x0FFFFFFE) = 0
   THEN
-    'regular_v1'
+    'new_irregular_users_v2'
   WHEN
-    0
+    BIT_COUNT(days_visited_5_uri_bits & 0x0FFFFFFE)
+    BETWEEN 1
+    AND 7
   THEN
-    'new_irregular_v1'
-  ELSE
-    'semi_regular_v1'
+    'semi_regular_users_v2'
+  WHEN
+    BIT_COUNT(days_visited_5_uri_bits & 0x0FFFFFFE)
+    BETWEEN 8
+    AND 27
+  THEN
+    'regular_users_v2'
   END
 """
 
 
-regular_users_v1 = Segment(
-    name='regular_users_v1',
+regular_users_v2 = Segment(
+    name='regular_users_v2',
     data_source=clients_last_seen_lag_1_day,
-    # select_expr="MAX(segment_regular_users_v1 = 'regular_v1')",
-    select_expr=f"MAX({tmp_segment_regular_users_v1} = 'regular_v1')",
+    # select_expr="MAX(segment_regular_users_v2 = 'regular_users_v2')",
+    select_expr=f"MAX({tmp_segment_regular_users_v2} = 'regular_users_v2')",
 )
 
-semi_regular_users_v1 = Segment(
-    name='semi_regular_users_v1',
+semi_regular_users_v2 = Segment(
+    name='semi_regular_users_v2',
     data_source=clients_last_seen_lag_1_day,
-    # select_expr="MAX(segment_regular_users_v1 = 'semi_regular_v1')",
-    select_expr=f"MAX({tmp_segment_regular_users_v1} = 'semi_regular_v1')",
+    # select_expr="MAX(segment_regular_users_v2 = 'semi_regular_users_v2')",
+    select_expr=f"MAX({tmp_segment_regular_users_v2} = 'semi_regular_users_v2')",
 )
 
-new_irregular_users_v1 = Segment(
-    name='new_irregular_users_v1',
+new_irregular_users_v2 = Segment(
+    name='new_irregular_users_v2',
     data_source=clients_last_seen_lag_1_day,
-    # select_expr="MAX(segment_regular_users_v1 = 'new_irregular_v1')",
-    select_expr=f"MAX({tmp_segment_regular_users_v1} = 'new_irregular_v1')",
+    # select_expr="MAX(segment_regular_users_v2 = 'new_irregular_users_v2')",
+    select_expr=f"MAX({tmp_segment_regular_users_v2} = 'new_irregular_users_v2')",
 )
