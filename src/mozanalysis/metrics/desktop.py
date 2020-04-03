@@ -69,10 +69,28 @@ search_count = Metric(
     select_expr=agg_sum('sap')
 )
 
+tagged_search_count = Metric(
+    name='tagged_search_count',
+    data_source=search_clients_daily,
+    select_expr=agg_sum('tagged_sap')
+)
+
+tagged_follow_on_search_count = Metric(
+    name='tagged_follow_on_search_count',
+    data_source=search_clients_daily,
+    select_expr=agg_sum('tagged_follow_on')
+)
+
 ad_clicks = Metric(
     name='ad_clicks',
     data_source=search_clients_daily,
     select_expr=agg_sum('ad_click')
+)
+
+searches_with_ads = Metric(
+    name='searches_with_ads',
+    data_source=search_clients_daily,
+    select_expr=agg_sum('search_with_ads')
 )
 
 organic_search_count = Metric(
