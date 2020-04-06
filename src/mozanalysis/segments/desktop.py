@@ -39,20 +39,38 @@ tmp_segment_regular_users_v2 = """  CASE
 regular_users_v2 = Segment(
     name='regular_users_v2',
     data_source=clients_last_seen_lag_1_day,
-    # select_expr="MAX(segment_regular_users_v2 = 'regular_users_v2')",
-    select_expr=f"MAX({tmp_segment_regular_users_v2} = 'regular_users_v2')",
+    # select_expr="""MAX(
+    #     COALESCE(segment_regular_users_v2, 'new_irregular_users_v2')
+    #     = 'regular_users_v2'
+    # )""",
+    select_expr=f"""MAX(
+        COALESCE({tmp_segment_regular_users_v2}, 'new_irregular_users_v2')
+        = 'regular_users_v2'
+    )""",
 )
 
 semi_regular_users_v2 = Segment(
     name='semi_regular_users_v2',
     data_source=clients_last_seen_lag_1_day,
-    # select_expr="MAX(segment_regular_users_v2 = 'semi_regular_users_v2')",
-    select_expr=f"MAX({tmp_segment_regular_users_v2} = 'semi_regular_users_v2')",
+    # select_expr="""MAX(
+    #     COALESCE(segment_regular_users_v2, 'new_irregular_users_v2')
+    #     = 'semi_regular_users_v2'
+    # )""",
+    select_expr=f"""MAX(
+        COALESCE({tmp_segment_regular_users_v2}, 'new_irregular_users_v2')
+        = 'semi_regular_users_v2'
+    )""",
 )
 
 new_irregular_users_v2 = Segment(
     name='new_irregular_users_v2',
     data_source=clients_last_seen_lag_1_day,
-    # select_expr="MAX(segment_regular_users_v2 = 'new_irregular_users_v2')",
-    select_expr=f"MAX({tmp_segment_regular_users_v2} = 'new_irregular_users_v2')",
+    # select_expr="""MAX(
+    #     COALESCE(segment_regular_users_v2, 'new_irregular_users_v2')
+    #     = 'new_irregular_users_v2'
+    # )""",
+    select_expr=f"""MAX(
+        COALESCE({tmp_segment_regular_users_v2}, 'new_irregular_users_v2')
+        = 'new_irregular_users_v2'
+    )""",
 )
