@@ -166,9 +166,9 @@
             
   <div class="section" id="module-mozanalysis.bayesian_stats.bayesian_bootstrap">
 <span id="mozanalysis-bayesian-stats-bayesian-bootstrap"></span><h1><a class="reference internal" href="#module-mozanalysis.bayesian_stats.bayesian_bootstrap" title="mozanalysis.bayesian_stats.bayesian_bootstrap"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a><a class="headerlink" href="#module-mozanalysis.bayesian_stats.bayesian_bootstrap" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
+<dl class="py function">
 <dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.bb_mean">
-<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">bb_mean</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">prob_weights</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#bb_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.bb_mean" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">bb_mean</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">values</span></em>, <em class="sig-param"><span class="n">prob_weights</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#bb_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.bb_mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the mean of a bootstrap replicate.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -186,9 +186,9 @@ each value.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure">
-<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">make_bb_quantile_closure</code><span class="sig-paren">(</span><em class="sig-param">quantiles</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#make_bb_quantile_closure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">make_bb_quantile_closure</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">quantiles</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#make_bb_quantile_closure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a function to calculate quantiles for a bootstrap replicate.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -217,7 +217,7 @@ each value.</p>
 </div></blockquote>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.compare_branches">
 <code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">compare_branches</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">col_label</em>, <em class="sig-param">ref_branch_label='control'</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">individual_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">comparative_summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">sc=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#compare_branches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.compare_branches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Jointly sample bootstrapped statistics then compare them.</p>
@@ -285,7 +285,7 @@ of <code class="docutils literal notranslate"><span class="pre">stat_fn</span></
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch">
 <code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">bootstrap_one_branch</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">summary_quantiles=(0.005</em>, <em class="sig-param">0.025</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.975</em>, <em class="sig-param">0.995)</em>, <em class="sig-param">sc=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#bootstrap_one_branch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bootstrap <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for one branch on its own.</p>
@@ -324,7 +324,7 @@ when making Bonferroni corrections.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples">
 <code class="sig-prename descclassname">mozanalysis.bayesian_stats.bayesian_bootstrap.</code><code class="sig-name descname">get_bootstrap_samples</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">stat_fn=&lt;function bb_mean&gt;</em>, <em class="sig-param">num_samples=10000</em>, <em class="sig-param">seed_start=None</em>, <em class="sig-param">threshold_quantile=None</em>, <em class="sig-param">sc=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#get_bootstrap_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> evaluated on resampled data.</p>

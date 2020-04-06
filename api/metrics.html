@@ -166,9 +166,9 @@
             
   <div class="section" id="module-mozanalysis.metrics">
 <span id="mozanalysis-metrics"></span><h1><a class="reference internal" href="#module-mozanalysis.metrics" title="mozanalysis.metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a><a class="headerlink" href="#module-mozanalysis.metrics" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="mozanalysis.metrics.DataSource">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">DataSource</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">from_expr</em>, <em class="sig-param">experiments_column_type: str = 'simple'</em>, <em class="sig-param">client_id_column: str = 'client_id'</em>, <em class="sig-param">submission_date_column: str = 'submission_date'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">DataSource</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">from_expr</span></em>, <em class="sig-param"><span class="n">experiments_column_type</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'simple'</span></em>, <em class="sig-param"><span class="n">client_id_column</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'client_id'</span></em>, <em class="sig-param"><span class="n">submission_date_column</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'submission_date'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents a table or view, from which Metrics may be defined.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -201,9 +201,9 @@ timestamp). Defaults to ‘submission_date’.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="mozanalysis.metrics.DataSource.build_query">
-<code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param">metric_list</em>, <em class="sig-param">time_limits</em>, <em class="sig-param">experiment_slug</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource.build_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource.build_query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">metric_list</span></em>, <em class="sig-param"><span class="n">time_limits</span></em>, <em class="sig-param"><span class="n">experiment_slug</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource.build_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource.build_query" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a nearly-self contained SQL query.</p>
 <p>This query does not define <code class="docutils literal notranslate"><span class="pre">enrollments</span></code> but otherwise could
 be executed to query all metrics from this data source.</p>
@@ -211,14 +211,14 @@ be executed to query all metrics from this data source.</p>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="mozanalysis.metrics.Metric">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">Metric</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">data_source: mozanalysis.metrics.DataSource</em>, <em class="sig-param">select_expr: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">Metric</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">data_source</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#mozanalysis.metrics.DataSource" title="mozanalysis.metrics.DataSource">mozanalysis.metrics.DataSource</a></span></em>, <em class="sig-param"><span class="n">select_expr</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an experiment metric.</p>
 <p>Needs to be combined with an analysis window to be measurable!</p>
-<dl class="method">
+<dl class="py method">
 <dt id="mozanalysis.metrics.Metric.from_data_source">
-<code class="sig-name descname">from_data_source</code><span class="sig-paren">(</span><em class="sig-param">data_source: mozanalysis.metrics.DataSource</em><span class="sig-paren">)</span> &#x2192; mozanalysis.metrics.Metric<a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric.from_data_source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric.from_data_source" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">from_data_source</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_source</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#mozanalysis.metrics.DataSource" title="mozanalysis.metrics.DataSource">mozanalysis.metrics.DataSource</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric">mozanalysis.metrics.Metric</a><a class="reference internal" href="../_modules/mozanalysis/metrics.html#Metric.from_data_source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.Metric.from_data_source" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an instance of the Metric drawing from a different DataSource.</p>
 <p>This is particularly useful for Glean, where pings from e.g. Fenix
 and Fenix Nightly are sent to different tables with identical schemas.</p>
@@ -226,21 +226,21 @@ and Fenix Nightly are sent to different tables with identical schemas.</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="mozanalysis.metrics.agg_sum">
-<code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">agg_sum</code><span class="sig-paren">(</span><em class="sig-param">select_expr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#agg_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.agg_sum" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">agg_sum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">select_expr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#agg_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.agg_sum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a SQL fragment for the sum over the data, with 0-filled nulls.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="mozanalysis.metrics.agg_any">
-<code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">agg_any</code><span class="sig-paren">(</span><em class="sig-param">select_expr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#agg_any"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.agg_any" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">agg_any</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">select_expr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#agg_any"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.agg_any" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the logical OR, with FALSE-filled nulls.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="mozanalysis.metrics.agg_histogram_mean">
-<code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">agg_histogram_mean</code><span class="sig-paren">(</span><em class="sig-param">select_expr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#agg_histogram_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.agg_histogram_mean" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">mozanalysis.metrics.</code><code class="sig-name descname">agg_histogram_mean</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">select_expr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#agg_histogram_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.metrics.agg_histogram_mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Produces an expression for the mean of an unparsed histogram.</p>
 </dd></dl>
 

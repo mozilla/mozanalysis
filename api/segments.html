@@ -166,9 +166,9 @@
             
   <div class="section" id="module-mozanalysis.segments">
 <span id="mozanalysis-segments"></span><h1><a class="reference internal" href="#module-mozanalysis.segments" title="mozanalysis.segments"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a><a class="headerlink" href="#module-mozanalysis.segments" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="mozanalysis.segments.SegmentDataSource">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.segments.</code><code class="sig-name descname">SegmentDataSource</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">from_expr</em>, <em class="sig-param">window_start: int = 0</em>, <em class="sig-param">window_end: int = 0</em>, <em class="sig-param">client_id_column: str = 'client_id'</em>, <em class="sig-param">submission_date_column: str = 'submission_date'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#SegmentDataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.SegmentDataSource" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.segments.</code><code class="sig-name descname">SegmentDataSource</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">from_expr</span></em>, <em class="sig-param"><span class="n">window_start</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">window_end</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">client_id_column</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'client_id'</span></em>, <em class="sig-param"><span class="n">submission_date_column</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'submission_date'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#SegmentDataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.SegmentDataSource" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents a table or view, from which segments may be defined.</p>
 <p><code class="docutils literal notranslate"><span class="pre">window_start</span></code> and <code class="docutils literal notranslate"><span class="pre">window_end</span></code> define the window of data used
 to determine whether each client fits a segment. Ideally this
@@ -197,9 +197,9 @@ timestamp). Defaults to ‘submission_date’.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="mozanalysis.segments.SegmentDataSource.build_query">
-<code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param">segment_list</em>, <em class="sig-param">time_limits</em>, <em class="sig-param">experiment_slug</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#SegmentDataSource.build_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.SegmentDataSource.build_query" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">segment_list</span></em>, <em class="sig-param"><span class="n">time_limits</span></em>, <em class="sig-param"><span class="n">experiment_slug</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#SegmentDataSource.build_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.SegmentDataSource.build_query" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a nearly self contained SQL query.</p>
 <p>The query takes a list of <code class="docutils literal notranslate"><span class="pre">client_id``s</span> <span class="pre">from</span>
 <span class="pre">``raw_enrollments</span></code>, and adds one non-NULL boolean column per
@@ -208,9 +208,9 @@ segment: True if the client is in the segment, False otherwise.</p>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="mozanalysis.segments.Segment">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.segments.</code><code class="sig-name descname">Segment</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">data_source</em>, <em class="sig-param">select_expr: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#Segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.Segment" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.segments.</code><code class="sig-name descname">Segment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">data_source</span></em>, <em class="sig-param"><span class="n">select_expr</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#Segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.Segment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an experiment Segment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
