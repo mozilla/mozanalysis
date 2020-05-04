@@ -51,6 +51,17 @@ crash = DataSource(
     experiments_column_type="native",
 )
 
+cfr = DataSource(
+    name='cfr',
+    from_expr="""(
+                SELECT
+                    *,
+                    DATE(submission_timestamp) AS submission_date
+                FROM `moz-fx-data-derived-datasets`.messaging_system.cfr
+            )""",
+    experiments_column_type="native",
+)
+
 active_hours = Metric(
     name='active_hours',
     data_source=clients_daily,
