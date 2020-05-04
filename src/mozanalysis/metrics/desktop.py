@@ -59,6 +59,7 @@ cfr = DataSource(
                     DATE(submission_timestamp) AS submission_date
                 FROM `moz-fx-data-derived-datasets`.messaging_system.cfr
             )""",
+            experiments_column_type="native",
 )
 
 active_hours = Metric(
