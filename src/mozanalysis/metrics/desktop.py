@@ -56,7 +56,7 @@ cfr = DataSource(
     from_expr="""(
                 SELECT
                     *,
-                    DATE(submission_timestamp) AS submission_date                
+                    DATE(submission_timestamp) AS submission_date
                 FROM `moz-fx-data-derived-datasets`.messaging_system.cfr
             )""",
 )
