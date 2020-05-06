@@ -261,7 +261,7 @@ If we're only interested in users' (say) second week in the experiment, then we 
         metric_list=[
             mmd.active_hours,
         ],
-        last_date_full_data='20190107',
+        last_date_full_data='2019-01-07',
         analysis_start_days=7,
         analysis_length_days=7
     )
