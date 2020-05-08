@@ -6,7 +6,7 @@ import mozanalysis.metrics.desktop as mmd
 
 
 def test_imported_ok():
-    assert msd.regular_users_v2
+    assert msd.regular_users_v3
 
 
 def test_sql_not_detectably_malformed():
