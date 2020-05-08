@@ -5,7 +5,7 @@
 from mozanalysis.segments import Segment, SegmentDataSource
 
 
-clients_last_seen_lag_1_day = SegmentDataSource(
+clients_last_seen = SegmentDataSource(
     name='clients_last_seen',
     from_expr="`moz-fx-data-shared-prod.telemetry.clients_last_seen`",
     window_start=0,
@@ -15,7 +15,7 @@ clients_last_seen_lag_1_day = SegmentDataSource(
 
 regular_users_v3 = Segment(
     name='regular_users_v3',
-    data_source=clients_last_seen_lag_1_day,
+    data_source=clients_last_seen,
     select_expr=f"""MAX(
         BIT_COUNT(COALESCE(days_seen_bits, 0) & 0x0FFFFFFE) >= 14
     )""",
@@ -23,7 +23,7 @@ regular_users_v3 = Segment(
 
 new_or_resurrected_v3 = Segment(
     name='new_or_resurrected_v3',
-    data_source=clients_last_seen_lag_1_day,
+    data_source=clients_last_seen,
     select_expr=f"""MAX(
         BIT_COUNT(COALESCE(days_seen_bits, 0) & 0x0FFFFFFE) = 0
     )""",
