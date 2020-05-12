@@ -16,7 +16,7 @@ clients_last_seen = SegmentDataSource(
 regular_users_v3 = Segment(
     name='regular_users_v3',
     data_source=clients_last_seen,
-    select_expr=f"""MAX(
+    select_expr="""MAX(
         BIT_COUNT(COALESCE(days_seen_bits, 0) & 0x0FFFFFFE) >= 14
     )""",
 )
@@ -24,7 +24,7 @@ regular_users_v3 = Segment(
 new_or_resurrected_v3 = Segment(
     name='new_or_resurrected_v3',
     data_source=clients_last_seen,
-    select_expr=f"""MAX(
+    select_expr="""MAX(
         BIT_COUNT(COALESCE(days_seen_bits, 0) & 0x0FFFFFFE) = 0
     )""",
 )
