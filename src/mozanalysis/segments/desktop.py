@@ -25,3 +25,16 @@ new_or_resurrected_v3 = Segment(
     data_source=clients_last_seen,
     select_expr="LOGICAL_OR(COALESCE(is_new_or_resurrected_v3, TRUE))",
 )
+
+
+weekday_regular_v1 = Segment(
+    name='weekday_regular_v1',
+    data_source=clients_last_seen,
+    select_expr=agg_any('is_weekday_regular_v1'),
+)
+
+allweek_regular_v1 = Segment(
+    name='allweek_regular_v1',
+    data_source=clients_last_seen,
+    select_expr=agg_any('is_allweek_regular_v1'),
+)
