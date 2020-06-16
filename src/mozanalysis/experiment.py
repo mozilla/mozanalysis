@@ -623,6 +623,9 @@ class TimeLimits:
                 time_series_period
             ))
 
+        if num_dates_enrollment <= 0:
+            raise ValueError("Number of enrollment dates must be a positive number")
+
         analysis_window_length_dates = 1 if time_series_period == 'daily' else 7
 
         last_enrollment_date = add_days(
