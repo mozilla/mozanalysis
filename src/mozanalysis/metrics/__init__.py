@@ -57,7 +57,7 @@ class DataSource:
         elif self.experiments_column_type == 'simple':
             return """AND (
                     ds.{submission_date} != e.enrollment_date
-                    OR `moz-fx-data-shared-prod.udf.get_key`(
+                    OR `mozfun.map.get_key`(
                         ds.experiments, '{experiment_slug}'
                     ) IS NOT NULL
                 )"""
@@ -65,7 +65,7 @@ class DataSource:
         elif self.experiments_column_type == 'native':
             return """AND (
                     ds.{submission_date} != e.enrollment_date
-                    OR `moz-fx-data-shared-prod.udf.get_key`(
+                    OR `mozfun.map.get_key`(
                         ds.experiments, '{experiment_slug}'
                     ).branch IS NOT NULL
             )"""
@@ -122,14 +122,14 @@ class DataSource:
                 Metric(
                     name=self.name + '_has_contradictory_branch',
                     data_source=self,
-                    select_expr=agg_any("""`moz-fx-data-shared-prod.udf.get_key`(
+                    select_expr=agg_any("""`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
             ) != e.branch"""),
                 ),
                 Metric(
                     name=self.name + '_has_non_enrolled_data',
                     data_source=self,
-                    select_expr=agg_any("""`moz-fx-data-shared-prod.udf.get_key`(
+                    select_expr=agg_any("""`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
             ) IS NULL""".format(experiment_slug=experiment_slug))
                 ),
@@ -140,14 +140,14 @@ class DataSource:
                 Metric(
                     name=self.name + '_has_contradictory_branch',
                     data_source=self,
-                    select_expr=agg_any("""`moz-fx-data-shared-prod.udf.get_key`(
+                    select_expr=agg_any("""`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
             ).branch != e.branch"""),
                 ),
                 Metric(
                     name=self.name + '_has_non_enrolled_data',
                     data_source=self,
-                    select_expr=agg_any("""`moz-fx-data-shared-prod.udf.get_key`(
+                    select_expr=agg_any("""`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
             ).branch IS NULL""".format(experiment_slug=experiment_slug))
                 ),

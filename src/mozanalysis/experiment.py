@@ -367,7 +367,7 @@ class Experiment:
         return """
         SELECT
             e.client_id,
-            `moz-fx-data-shared-prod.udf.get_key`(e.event_map_values, 'branch')
+            `mozfun.map.get_key`(e.event_map_values, 'branch')
                 AS branch,
             min(e.submission_date) AS enrollment_date,
             count(e.submission_date) AS num_enrollment_events
