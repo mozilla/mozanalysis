@@ -772,6 +772,9 @@
                 <span class="n">time_series_period</span>
             <span class="p">))</span>
 
+        <span class="k">if</span> <span class="n">num_dates_enrollment</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of enrollment dates must be a positive number&quot;</span><span class="p">)</span>
+
         <span class="n">analysis_window_length_dates</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">time_series_period</span> <span class="o">==</span> <span class="s1">&#39;daily&#39;</span> <span class="k">else</span> <span class="mi">7</span>
 
         <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
