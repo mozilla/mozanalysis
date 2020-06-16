@@ -250,21 +250,31 @@ before UTC midnight.</p></li>
 </dl>
 <dl class="py attribute">
 <dt id="mozanalysis.experiment.Experiment.experiment_slug">
-<code class="sig-name descname">experiment_slug</code><em class="property">: str</em><a class="headerlink" href="#mozanalysis.experiment.Experiment.experiment_slug" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">experiment_slug</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.experiment_slug" title="Permalink to this definition">¶</a></dt>
 <dd><p>Name of the study, used to identify
 the enrollment events specific to this study.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="mozanalysis.experiment.Experiment.start_date">
-<code class="sig-name descname">start_date</code><em class="property">: str</em><a class="headerlink" href="#mozanalysis.experiment.Experiment.start_date" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">start_date</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.start_date" title="Permalink to this definition">¶</a></dt>
 <dd><p>e.g. ‘2019-01-01’. First date on which enrollment
 events were received.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="mozanalysis.experiment.Experiment.num_dates_enrollment">
-<code class="sig-name descname">num_dates_enrollment</code><em class="property">: int, optional</em><a class="headerlink" href="#mozanalysis.experiment.Experiment.num_dates_enrollment" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">num_dates_enrollment</code><a class="headerlink" href="#mozanalysis.experiment.Experiment.num_dates_enrollment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Only include this many days
 of enrollments. If <code class="docutils literal notranslate"><span class="pre">None</span></code> then use the maximum number of days
 as determined by the metric’s analysis window and
@@ -272,6 +282,11 @@ as determined by the metric’s analysis window and
 factor ‘7’ removes weekly seasonality, and the <code class="docutils literal notranslate"><span class="pre">+1</span></code> accounts
 for the fact that enrollment typically starts a few hours
 before UTC midnight.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int, optional</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">

@@ -516,7 +516,7 @@
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        SELECT</span>
 <span class="s2">            e.client_id,</span>
-<span class="s2">            `moz-fx-data-shared-prod.udf.get_key`(e.event_map_values, &#39;branch&#39;)</span>
+<span class="s2">            `mozfun.map.get_key`(e.event_map_values, &#39;branch&#39;)</span>
 <span class="s2">                AS branch,</span>
 <span class="s2">            min(e.submission_date) AS enrollment_date,</span>
 <span class="s2">            count(e.submission_date) AS num_enrollment_events</span>

@@ -206,7 +206,7 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s1">&#39;simple&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;&quot;AND (</span>
 <span class="s2">                    ds.</span><span class="si">{submission_date}</span><span class="s2"> != e.enrollment_date</span>
-<span class="s2">                    OR `moz-fx-data-shared-prod.udf.get_key`(</span>
+<span class="s2">                    OR `mozfun.map.get_key`(</span>
 <span class="s2">                        ds.experiments, &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">                    ) IS NOT NULL</span>
 <span class="s2">                )&quot;&quot;&quot;</span>
@@ -214,7 +214,7 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s1">&#39;native&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;&quot;AND (</span>
 <span class="s2">                    ds.</span><span class="si">{submission_date}</span><span class="s2"> != e.enrollment_date</span>
-<span class="s2">                    OR `moz-fx-data-shared-prod.udf.get_key`(</span>
+<span class="s2">                    OR `mozfun.map.get_key`(</span>
 <span class="s2">                        ds.experiments, &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">                    ).branch IS NOT NULL</span>
 <span class="s2">            )&quot;&quot;&quot;</span>
@@ -271,14 +271,14 @@
                 <span class="n">Metric</span><span class="p">(</span>
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_has_contradictory_branch&#39;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
-                    <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;`moz-fx-data-shared-prod.udf.get_key`(</span>
+                    <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="s2">                ds.experiments, &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">            ) != e.branch&quot;&quot;&quot;</span><span class="p">),</span>
                 <span class="p">),</span>
                 <span class="n">Metric</span><span class="p">(</span>
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_has_non_enrolled_data&#39;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
-                    <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;`moz-fx-data-shared-prod.udf.get_key`(</span>
+                    <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="s2">                ds.experiments, &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">            ) IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span><span class="p">))</span>
                 <span class="p">),</span>
@@ -289,14 +289,14 @@
                 <span class="n">Metric</span><span class="p">(</span>
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_has_contradictory_branch&#39;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
-                    <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;`moz-fx-data-shared-prod.udf.get_key`(</span>
+                    <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="s2">                ds.experiments, &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">            ).branch != e.branch&quot;&quot;&quot;</span><span class="p">),</span>
                 <span class="p">),</span>
                 <span class="n">Metric</span><span class="p">(</span>
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_has_non_enrolled_data&#39;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
-                    <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;`moz-fx-data-shared-prod.udf.get_key`(</span>
+                    <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="s2">                ds.experiments, &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">            ).branch IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span><span class="p">))</span>
                 <span class="p">),</span>
