@@ -62,6 +62,16 @@ cfr = DataSource(
     experiments_column_type="native",
 )
 
+normandy_events = DataSource(
+    name='normandy_events',
+    from_expr="""(
+        SELECT
+            *
+        FROM `moz-fx-data-shared-prod`.telemetry.events
+        WHERE event_category = 'normandy'
+    )""",
+)
+
 active_hours = Metric(
     name='active_hours',
     data_source=clients_daily,
@@ -112,7 +122,7 @@ organic_search_count = Metric(
 
 unenroll = Metric(
     name='unenroll',
-    data_source=events,
+    data_source=normandy_events,
     select_expr=agg_any("""
                 event_category = 'normandy'
                 AND event_method = 'unenroll'
