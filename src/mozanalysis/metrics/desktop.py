@@ -38,6 +38,7 @@ normandy_events = DataSource(
         FROM `moz-fx-data-shared-prod`.telemetry.events
         WHERE event_category = 'normandy'
     )""",
+    experiments_column_type='native',
 )
 
 main = DataSource(
