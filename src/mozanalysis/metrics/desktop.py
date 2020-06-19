@@ -27,6 +27,19 @@ events = DataSource(
     experiments_column_type='native',
 )
 
+# The telemetry.events table is clustered by event_category.
+# Normandy accounts for about 10% of event volume, so this dramatically
+# reduces bytes queried compared to counting rows from the generic events DataSource.
+normandy_events = DataSource(
+    name='normandy_events',
+    from_expr="""(
+        SELECT
+            *
+        FROM `moz-fx-data-shared-prod`.telemetry.events
+        WHERE event_category = 'normandy'
+    )""",
+)
+
 main = DataSource(
     name='main',
     from_expr="""(
@@ -60,16 +73,6 @@ cfr = DataSource(
                 FROM `moz-fx-data-derived-datasets`.messaging_system.cfr
             )""",
     experiments_column_type="native",
-)
-
-normandy_events = DataSource(
-    name='normandy_events',
-    from_expr="""(
-        SELECT
-            *
-        FROM `moz-fx-data-shared-prod`.telemetry.events
-        WHERE event_category = 'normandy'
-    )""",
 )
 
 active_hours = Metric(
