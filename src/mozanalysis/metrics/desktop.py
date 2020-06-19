@@ -27,6 +27,19 @@ events = DataSource(
     experiments_column_type='native',
 )
 
+# The telemetry.events table is clustered by event_category.
+# Normandy accounts for about 10% of event volume, so this dramatically
+# reduces bytes queried compared to counting rows from the generic events DataSource.
+normandy_events = DataSource(
+    name='normandy_events',
+    from_expr="""(
+        SELECT
+            *
+        FROM `moz-fx-data-shared-prod`.telemetry.events
+        WHERE event_category = 'normandy'
+    )""",
+)
+
 main = DataSource(
     name='main',
     from_expr="""(
@@ -112,7 +125,7 @@ organic_search_count = Metric(
 
 unenroll = Metric(
     name='unenroll',
-    data_source=events,
+    data_source=normandy_events,
     select_expr=agg_any("""
                 event_category = 'normandy'
                 AND event_method = 'unenroll'
