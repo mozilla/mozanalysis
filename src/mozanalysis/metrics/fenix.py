@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from mozanalysis.metrics import Metric, DataSource, agg_sum, get_key
+from mozanalysis.metrics import Metric, DataSource, agg_sum
 
 
 baseline = DataSource(
@@ -65,14 +65,14 @@ user_reports_site_issue_count = Metric(
     name='user_reports_site_issue_count',
     data_source=events,
     select_expr="COUNTIF(event.name = 'browser_menu_action' AND "
-    + get_key('event.extra', 'item') + " = 'report_site_issue')"
+    + "mozfun.map.get_key('event.extra', 'item') = 'report_site_issue')"
 )
 
 user_reload_count = Metric(
     name='user_reload_count',
     data_source=events,
     select_expr="COUNTIF(event.name = 'browser_menu_action' AND "
-    + get_key('event.extra', 'item') + " = 'reload')"
+    + "mozfun.map.get_key('event.extra', 'item') = 'reload')"
 )
 
 baseline_ping_count = Metric(
