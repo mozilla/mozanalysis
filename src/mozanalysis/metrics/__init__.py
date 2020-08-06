@@ -208,3 +208,11 @@ def agg_sum(select_expr):
 def agg_any(select_expr):
     """Return the logical OR, with FALSE-filled nulls."""
     return "COALESCE(LOGICAL_OR({}), FALSE)".format(select_expr)
+
+
+def agg_histogram_mean(select_expr):
+    """Produces an expression for the mean of an unparsed histogram."""
+    return f"""SAFE_DIVIDE(
+                SUM(CAST(JSON_EXTRACT_SCALAR({select_expr}, "$.sum") AS int64)),
+                SUM((SELECT SUM(value) FROM UNNEST(`moz-fx-data-shared-prod`.udf.json_extract_histogram({select_expr}).values)))
+            )"""  # noqa
