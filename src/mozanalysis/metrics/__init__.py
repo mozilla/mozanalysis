@@ -39,7 +39,7 @@ class DataSource:
     client_id_column = attr.ib(default='client_id', type=str)
     submission_date_column = attr.ib(default='submission_date', type=str)
 
-    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native")
+    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "fenix")
 
     @experiments_column_type.validator
     def _check_experiments_column_type(self, attribute, value):
@@ -70,7 +70,7 @@ class DataSource:
                     ).branch IS NOT NULL
             )"""
 
-        elif self.experiments_column_type == 'glean':
+        elif self.experiments_column_type == 'fenix':
             return """AND (
                     ds.{submission_date} != e.enrollment_date
                     OR `mozfun.map.get_key`(
@@ -158,7 +158,7 @@ class DataSource:
                 ),
             ]
 
-        elif self.experiments_column_type == 'glean':
+        elif self.experiments_column_type == 'fenix':
             return [
                 Metric(
                     name=self.name + '_has_contradictory_branch',
