@@ -393,7 +393,7 @@ class Experiment:
         return """
         SELECT
             b.client_info.client_id AS client_id,
-            `moz-fx-data-shared-prod`.udf.get_key(
+            mozfun.map.get_key(
                 b.ping_info.experiments,
                 '{experiment_slug}'
             ).branch,
@@ -403,7 +403,7 @@ class Experiment:
             DATE(b.submission_timestamp)
                 BETWEEN DATE_SUB('{first_enrollment_date}', INTERVAL 7 DAY)
                 AND '{last_enrollment_date}'
-            AND `moz-fx-data-shared-prod`.udf.get_key(
+            AND mozfun.map.get_key(
                 b.ping_info.experiments,
                 '{experiment_slug}'
             ).branch IS NOT NULL

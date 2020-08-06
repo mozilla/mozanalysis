@@ -163,14 +163,14 @@ class DataSource:
                 Metric(
                     name=self.name + '_has_contradictory_branch',
                     data_source=self,
-                    select_expr=agg_any("""`moz-fx-data-shared-prod.udf.get_key`(
+                    select_expr=agg_any("""`mozfun.map.get_key`(
                 ds.ping_info.experiments, '{experiment_slug}'
             ).branch != e.branch"""),
                 ),
                 Metric(
                     name=self.name + '_has_non_enrolled_data',
                     data_source=self,
-                    select_expr=agg_any("""`moz-fx-data-shared-prod.udf.get_key`(
+                    select_expr=agg_any("""`mozfun.map.get_key`(
                 ds.ping_info.experiments, '{experiment_slug}'
             ).branch IS NULL""".format(experiment_slug=experiment_slug))
                 ),
