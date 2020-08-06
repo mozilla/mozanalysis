@@ -7,7 +7,7 @@ Basic experiment: get the data & crunch the stats
 
 Let's start by analysing a straightforward pref-flip experiment on the desktop browser.
 
-If we're using a Colab notebook, we begin by installing the latest version of :mod:`mozanalysis` into the notebook. It's a good idea to specify the specific version, for reproducibility::
+If we're using a Colab notebook, we begin by installing the latest version of :mod:`mozanalysis` into the notebook. It's a good idea to specify the specific version (`from pypi <https://pypi.org/project/mozanalysis/>`_), for reproducibility::
 
     !pip install mozanalysis=='{current_version}'
 
@@ -30,6 +30,8 @@ And get a BigQuery context (a client, and some config)::
     bq_context = BigQueryContext(
         dataset_id='your_dataset_id',  # e.g. mine's 'flawrence'
     )
+
+If you do not have a dataset, you will need to `create one <https://cloud.google.com/bigquery/docs/datasets#create-dataset>`_. Mozanalysis will save data into this dataset - if you want to access them directly (i.e. not through mozanalysis), they live at ``project_id.dataset_id.table_name`` , where ``table_name`` will be printed by mozanalysis when it saves/retrieves the data.
 
 To bill queries to a project other than ``moz-fx-data-bq-data-science``, pass the ``project_id`` as an argument when initializing ``BigQueryContext()``.
 
@@ -259,7 +261,7 @@ If we're only interested in users' (say) second week in the experiment, then we 
         metric_list=[
             mmd.active_hours,
         ],
-        last_date_full_data='20190107',
+        last_date_full_data='2019-01-07',
         analysis_start_days=7,
         analysis_length_days=7
     )

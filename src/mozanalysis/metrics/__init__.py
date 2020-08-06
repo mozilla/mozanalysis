@@ -5,30 +5,75 @@ import attr
 
 
 @attr.s(frozen=True, slots=True)
-class DataSource(object):
+class DataSource:
+    """Represents a table or view, from which Metrics may be defined.
+
+    Args:
+        name (str): Name for the Data Source. Used in sanity metric
+            column names.
+        from_expr (str): FROM expression - often just a fully-qualified
+            table name. Sometimes a subquery.
+        experiments_column_type (str or None): Info about the schema
+            of the table or view:
+
+            * 'simple': There is an ``experiments`` column, which is an
+              (experiment_slug:str -> branch_name:str) map.
+            * 'native': There is an ``experiments`` column, which is an
+              (experiment_slug:str -> struct) map, where the struct
+              contains a ``branch`` field, which is the branch as a
+              string.
+            * None: There is no ``experiments`` column, so skip the
+              sanity checks that rely on it. We'll also be unable to
+              filter out pre-enrollment data from day 0 in the
+              experiment.
+        client_id_column (str, optional): Name of the column that
+            contains the ``client_id`` (join key). Defaults to
+            'client_id'.
+        submission_date_column (str, optional): Name of the column
+            that contains the submission date (as a date, not
+            timestamp). Defaults to 'submission_date'.
+    """
     name = attr.ib(validator=attr.validators.instance_of(str))
     from_expr = attr.ib(validator=attr.validators.instance_of(str))
-    experiments_column_type = attr.ib(default='desktop_main_ping', type=str)
+    experiments_column_type = attr.ib(default='simple', type=str)
     client_id_column = attr.ib(default='client_id', type=str)
     submission_date_column = attr.ib(default='submission_date', type=str)
+
+    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native")
+
+    @experiments_column_type.validator
+    def _check_experiments_column_type(self, attribute, value):
+        if value not in self.EXPERIMENT_COLUMN_TYPES:
+            raise ValueError(
+                f"experiments_column_type {repr(value)} must be one of: "
+                f"{repr(self.EXPERIMENT_COLUMN_TYPES)}"
+            )
 
     @property
     def experiments_column_expr(self):
         if self.experiments_column_type is None:
             return ''
 
-        elif self.experiments_column_type == 'desktop_main_ping':
+        elif self.experiments_column_type == 'simple':
             return """AND (
                     ds.{submission_date} != e.enrollment_date
-                    OR `moz-fx-data-shared-prod.udf.get_key`(
+                    OR `mozfun.map.get_key`(
                         ds.experiments, '{experiment_slug}'
                     ) IS NOT NULL
                 )"""
 
+        elif self.experiments_column_type == 'native':
+            return """AND (
+                    ds.{submission_date} != e.enrollment_date
+                    OR `mozfun.map.get_key`(
+                        ds.experiments, '{experiment_slug}'
+                    ).branch IS NOT NULL
+            )"""
+
         elif self.experiments_column_type == 'glean':
             return """AND (
                     ds.{submission_date} != e.enrollment_date
-                    OR `moz-fx-data-shared-prod.udf.get_key`(
+                    OR `mozfun.map.get_key`(
                         ds.ping_info.experiments, '{experiment_slug}'
                     ).branch IS NOT NULL
                 )"""
@@ -77,21 +122,39 @@ class DataSource(object):
         if self.experiments_column_type is None:
             return []
 
-        elif self.experiments_column_type == 'desktop_main_ping':
+        elif self.experiments_column_type == 'simple':
             return [
                 Metric(
                     name=self.name + '_has_contradictory_branch',
                     data_source=self,
-                    select_expr=agg_any("""`moz-fx-data-shared-prod.udf.get_key`(
+                    select_expr=agg_any("""`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
             ) != e.branch"""),
                 ),
                 Metric(
                     name=self.name + '_has_non_enrolled_data',
                     data_source=self,
-                    select_expr=agg_any("""`moz-fx-data-shared-prod.udf.get_key`(
+                    select_expr=agg_any("""`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
             ) IS NULL""".format(experiment_slug=experiment_slug))
+                ),
+            ]
+
+        elif self.experiments_column_type == 'native':
+            return [
+                Metric(
+                    name=self.name + '_has_contradictory_branch',
+                    data_source=self,
+                    select_expr=agg_any("""`mozfun.map.get_key`(
+                ds.experiments, '{experiment_slug}'
+            ).branch != e.branch"""),
+                ),
+                Metric(
+                    name=self.name + '_has_non_enrolled_data',
+                    data_source=self,
+                    select_expr=agg_any("""`mozfun.map.get_key`(
+                ds.experiments, '{experiment_slug}'
+            ).branch IS NULL""".format(experiment_slug=experiment_slug))
                 ),
             ]
 
@@ -118,7 +181,7 @@ class DataSource(object):
 
 
 @attr.s(frozen=True, slots=True)
-class Metric(object):
+class Metric:
     """Represents an experiment metric.
 
     Needs to be combined with an analysis window to be measurable!
@@ -126,6 +189,14 @@ class Metric(object):
     name = attr.ib(type=str)
     data_source = attr.ib(type=DataSource)
     select_expr = attr.ib(type=str)
+
+    def from_data_source(self, data_source: DataSource) -> "Metric":
+        """Returns an instance of the Metric drawing from a different DataSource.
+
+        This is particularly useful for Glean, where pings from e.g. Fenix
+        and Fenix Nightly are sent to different tables with identical schemas.
+        """
+        return attr.evolve(self, data_source=data_source)
 
 
 def agg_sum(select_expr):
@@ -137,10 +208,3 @@ def agg_sum(select_expr):
 def agg_any(select_expr):
     """Return the logical OR, with FALSE-filled nulls."""
     return "COALESCE(LOGICAL_OR({}), FALSE)".format(select_expr)
-
-
-def get_key(select_expr, key):
-    """Work around udf namespace ugliness"""
-    return "`moz-fx-data-shared-prod`.udf.get_key({se}, '{k}')".format(
-        se=select_expr, k=key
-    )

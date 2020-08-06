@@ -44,7 +44,7 @@ def compare_branches(
           Series of summary statistics for the possible uplifts of the
           conversion rate relative to the reference branch - see docs
           for
-          :meth:`mozanalysis.stats.summarize_samples.summarize_joint_samples`.
+          :meth:`mozanalysis.bayesian_stats.summarize_samples.summarize_joint_samples`.
     """
     agg_col = aggregate_col(df, col_label)
 

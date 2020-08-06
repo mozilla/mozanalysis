@@ -8,7 +8,7 @@ from mozanalysis.utils import add_days, date_sub, hash_ish
 
 
 @attr.s(frozen=True, slots=True)
-class Experiment(object):
+class Experiment:
     """Query experiment data; store experiment metadata.
 
     The methods here query data in a way compatible with the following
@@ -76,7 +76,7 @@ class Experiment(object):
     Args:
         experiment_slug (str): Name of the study, used to identify
             the enrollment events specific to this study.
-        start_date (str): e.g. '20190101'. First date on which enrollment
+        start_date (str): e.g. '2019-01-01'. First date on which enrollment
             events were received.
         num_dates_enrollment (int, optional): Only include this many dates
             of enrollments. If ``None`` then use the maximum number of dates
@@ -89,7 +89,7 @@ class Experiment(object):
     Attributes:
         experiment_slug (str): Name of the study, used to identify
             the enrollment events specific to this study.
-        start_date (str): e.g. '20190101'. First date on which enrollment
+        start_date (str): e.g. '2019-01-01'. First date on which enrollment
             events were received.
         num_dates_enrollment (int, optional): Only include this many days
             of enrollments. If ``None`` then use the maximum number of days
@@ -106,8 +106,9 @@ class Experiment(object):
 
     def get_single_window_data(
         self, bq_context, metric_list, last_date_full_data,
-        analysis_start_days, analysis_length_days, enrollments_query_type='normandy',
-        custom_enrollments_query=None
+        analysis_start_days, analysis_length_days,
+        enrollments_query_type='normandy', custom_enrollments_query=None,
+        segment_list=None
     ):
         """Return a DataFrame containing per-client metric values.
 
@@ -120,7 +121,7 @@ class Experiment(object):
             metric_list (list of mozanalysis.metric.Metric): The metrics
                 to analyze.
             last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '20190322'. If you want to ignore
+                have complete data, e.g. '2019-03-22'. If you want to ignore
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
             analysis_start_days (int): the start of the analysis window,
@@ -128,13 +129,16 @@ class Experiment(object):
                 collected outside this analysis window.
             analysis_length_days (int): the length of the analysis window,
                 measured in days.
-            enrollments_query_type (str): Specifies the query to use to
+            enrollments_query_type (str): Specifies the query type to use to
                 get the experiment's enrollments, unless overridden by
                 custom_enrollments_query.
             custom_enrollments_query (str): A full SQL query to be used
                 in the main query::
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
+
+            segment_list (list of mozanalysis.segment.Segment): The user
+                segments to study.
 
         Returns:
             A pandas DataFrame of experiment data. One row per ``client_id``.
@@ -168,8 +172,9 @@ class Experiment(object):
             analysis_length_days, self.num_dates_enrollment
         )
 
-        sql = self._build_query(
-            metric_list, time_limits, enrollments_query_type, custom_enrollments_query
+        sql = self.build_query(
+            metric_list, time_limits, enrollments_query_type, custom_enrollments_query,
+            segment_list
         )
 
         res_table_name = sanitize_table_name_for_bq('_'.join(
@@ -181,11 +186,11 @@ class Experiment(object):
     def get_time_series_data(
         self, bq_context, metric_list, last_date_full_data,
         time_series_period='weekly', enrollments_query_type='normandy',
-        custom_enrollments_query=None
+        custom_enrollments_query=None, segment_list=None
     ):
         """Return a TimeSeriesResult with per-client metric values.
 
-        Roughly equivalent to looping over ``get_single_window_data``
+        Roughly equivalent to looping over :meth:`.get_single_window_data`
         with different analysis windows, and reorganising the results.
 
         Args:
@@ -193,18 +198,21 @@ class Experiment(object):
             metric_list (list of mozanalysis.metric.Metric):
                 The metrics to analyze.
             last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '20190322'. If you want to ignore
+                have complete data, e.g. '2019-03-22'. If you want to ignore
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
             time_series_period ('daily' or 'weekly'): How long each
                 analysis window should be.
-            enrollments_query_type (str): Specifies the query to use to
+            enrollments_query_type (str): Specifies the query type to use to
                 get the experiment's enrollments, unless overridden by
                 custom_enrollments_query.
             custom_enrollments_query (str): A full SQL query to be used
                 in the main query::
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
+
+            segment_list (list of mozanalysis.segment.Segment): The user
+                segments to study.
 
         Returns:
             A TimeSeriesResult object, which may be used to obtain a
@@ -235,8 +243,9 @@ class Experiment(object):
             self.num_dates_enrollment
         )
 
-        sql = self._build_query(
-            metric_list, time_limits, enrollments_query_type, custom_enrollments_query
+        sql = self.build_query(
+            metric_list, time_limits, enrollments_query_type, custom_enrollments_query,
+            segment_list
         )
 
         full_res_table_name = sanitize_table_name_for_bq('_'.join(
@@ -252,11 +261,35 @@ class Experiment(object):
             analysis_windows=time_limits.analysis_windows
         )
 
-    def _build_query(
-        self, metric_list, time_limits, enrollments_query_type,
-        custom_enrollments_query=None,
-    ):
-        """Return SQL to query metric data for users.
+    def build_query(
+        self, metric_list, time_limits, enrollments_query_type='normandy',
+        custom_enrollments_query=None, segment_list=None
+    ) -> str:
+        """Return SQL to query metric data.
+
+        For interactive use, prefer :meth:`.get_time_series_data` or
+        :meth:`.get_single_window_data`, according to your use case,
+        which will run the query for you and return a materialized
+        dataframe.
+
+        Args:
+            metric_list (list of mozanalysis.metric.Metric):
+                The metrics to analyze.
+            time_limits (TimeLimits): An object describing the
+                interval(s) to query
+            enrollments_query_type (str): Specifies the query type to use to
+                get the experiment's enrollments, unless overridden by
+                custom_enrollments_query.
+            custom_enrollments_query (str): A full SQL query to be used
+                in the main query::
+
+                    WITH raw_enrollments AS ({custom_enrollments_query})
+
+            segment_list (list of mozanalysis.segment.Segment): The user
+                segments to study.
+
+        Returns:
+            A string containing a BigQuery SQL expression.
 
         Building this query is the main goal of this module.
         """
@@ -271,16 +304,21 @@ class Experiment(object):
             metric_list, time_limits
         )
 
+        segments_query = self._build_segments_query(
+            segment_list, time_limits
+        )
+
         return """
     WITH analysis_windows AS (
         {analysis_windows_query}
     ),
     raw_enrollments AS ({enrollments_query}),
+    segmented_enrollments AS ({segments_query}),
     enrollments AS (
         SELECT
             e.*,
             aw.*
-        FROM raw_enrollments e
+        FROM segmented_enrollments e
         CROSS JOIN analysis_windows aw
     )
     SELECT
@@ -291,6 +329,7 @@ class Experiment(object):
         """.format(
             analysis_windows_query=analysis_windows_query,
             enrollments_query=enrollments_query,
+            segments_query=segments_query,
             metrics_columns=',\n        '.join(metrics_columns),
             metrics_joins='\n'.join(metrics_joins)
         )
@@ -328,7 +367,7 @@ class Experiment(object):
         return """
         SELECT
             e.client_id,
-            `moz-fx-data-shared-prod.udf.get_key`(e.event_map_values, 'branch')
+            `mozfun.map.get_key`(e.event_map_values, 'branch')
                 AS branch,
             min(e.submission_date) AS enrollment_date,
             count(e.submission_date) AS num_enrollment_events
@@ -378,7 +417,11 @@ class Experiment(object):
 
     def _build_metrics_query_bits(self, metric_list, time_limits):
         """Return lists of SQL fragments corresponding to metrics."""
-        ds_metrics = self._partition_metrics_by_data_source(metric_list)
+        ds_metrics = self._partition_by_data_source(metric_list)
+        ds_metrics = {
+            ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
+            for ds, metrics in ds_metrics.items()
+        }
 
         metrics_columns = []
         metrics_joins = []
@@ -404,25 +447,77 @@ class Experiment(object):
 
         return metrics_columns, metrics_joins
 
-    def _partition_metrics_by_data_source(self, metric_list):
-        """Return a dict mapping data sources to metric lists.
-
-        Also add sanity metrics."""
-        data_sources = {m.data_source for m in metric_list}
+    def _partition_by_data_source(self, metric_or_segment_list):
+        """Return a dict mapping data sources to metric/segment lists."""
+        data_sources = {m.data_source for m in metric_or_segment_list}
 
         return {
-            ds:
-                [m for m in metric_list if m.data_source == ds]
-                + ds.get_sanity_metrics(self.experiment_slug)
+            ds: [m for m in metric_or_segment_list if m.data_source == ds]
             for ds in data_sources
         }
 
+    def _build_segments_query(self, segment_list, time_limits):
+        """Build a query adding segment columns to the enrollments view.
+
+        The query takes a ``raw_enrollments`` view, and defines a new
+        view by adding one non-NULL boolean column per segment. It does
+        not otherwise tamper with the ``raw_enrollments`` view.
+        """
+
+        # Do similar things to what we do for metrics, but in a less
+        # ostentatious place, since people are likely to come to the
+        # source code asking how metrics work, but less likely to
+        # arrive with "how segments work" as their first question.
+
+        segments_columns, segments_joins = self._build_segments_query_bits(
+            segment_list or [], time_limits
+        )
+
+        return """
+        SELECT
+            raw_enrollments.*,
+            {segments_columns}
+        FROM raw_enrollments
+        {segments_joins}
+        """.format(
+            segments_columns=',\n        '.join(segments_columns),
+            segments_joins='\n'.join(segments_joins)
+        )
+
+    def _build_segments_query_bits(self, segment_list, time_limits):
+        """Return lists of SQL fragments corresponding to segments."""
+        ds_segments = self._partition_by_data_source(segment_list)
+
+        segments_columns = []
+        segments_joins = []
+
+        for i, ds in enumerate(ds_segments.keys()):
+            query_for_segments = ds.build_query(
+                ds_segments[ds], time_limits, self.experiment_slug
+            )
+            segments_joins.append(
+                """    LEFT JOIN (
+        {query}
+        ) ds_{i} USING (client_id)
+                """.format(
+                    query=query_for_segments,
+                    i=i
+                )
+            )
+
+            for m in ds_segments[ds]:
+                segments_columns.append("ds_{i}.{segment_name}".format(
+                    i=i, segment_name=m.name
+                ))
+
+        return segments_columns, segments_joins
+
 
 @attr.s(frozen=True, slots=True)
-class TimeLimits(object):
-    """Internal object containing various time limits.
+class TimeLimits:
+    """Expresses time limits for different kinds of analysis windows.
 
-    Instantiated and used by the ``Experiment`` class; end users
+    Instantiated and used by the :class:`Experiment` class; end users
     should not need to interact with it.
 
     Do not directly instantiate: use the constructors provided.
@@ -478,7 +573,7 @@ class TimeLimits(object):
             first_enrollment_date (str): First date on which enrollment
                 events were received; the start date of the experiment.
             last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '20190322'. If you want to ignore
+                have complete data, e.g. '2019-03-22'. If you want to ignore
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
             analysis_start_days (int): the start of the analysis window,
@@ -500,29 +595,26 @@ class TimeLimits(object):
 
         if num_dates_enrollment is None:
             last_enrollment_date = add_days(last_date_full_data, -analysis_window.end)
-
         else:
             last_enrollment_date = add_days(
                 first_enrollment_date, num_dates_enrollment - 1
             )
 
-            if add_days(
-                last_enrollment_date, analysis_window.end
-            ) > last_date_full_data:
-                raise ValueError(
-                    "You said you wanted {} dates of enrollment, ".format(
-                        num_dates_enrollment
-                    ) + "and need data from the {}th day after enrollment. ".format(
-                        analysis_window.end
-                    ) + "For that, you need to wait until we have data for {}.".format(
-                        last_enrollment_date
-                    )
-                )
-
         first_date_data_required = add_days(
             first_enrollment_date, analysis_window.start
         )
         last_date_data_required = add_days(last_enrollment_date, analysis_window.end)
+
+        if last_date_data_required > last_date_full_data:
+            raise ValueError(
+                "You said you wanted {} dates of enrollment, ".format(
+                    num_dates_enrollment
+                ) + "and need data from the {}th day after enrollment. ".format(
+                    analysis_window.end
+                ) + "For that, you need to wait until we have data for {}.".format(
+                    last_date_data_required
+                )
+            )
 
         tl = cls(
             first_enrollment_date=first_enrollment_date,
@@ -547,7 +639,7 @@ class TimeLimits(object):
             first_enrollment_date (str): First date on which enrollment
                 events were received; the start date of the experiment.
             last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '20190322'. If you want to ignore
+                have complete data, e.g. '2019-03-22'. If you want to ignore
                 all data collected after a certain date (e.g. when the
                 experiment recipe was deactivated), then do that here.
             time_series_period: 'daily' or 'weekly'.
@@ -559,6 +651,9 @@ class TimeLimits(object):
             raise ValueError("Unsupported time series period {}".format(
                 time_series_period
             ))
+
+        if num_dates_enrollment <= 0:
+            raise ValueError("Number of enrollment dates must be a positive number")
 
         analysis_window_length_dates = 1 if time_series_period == 'daily' else 7
 
@@ -619,7 +714,7 @@ class TimeLimits(object):
 
 
 @attr.s(frozen=True, slots=True)
-class AnalysisWindow(object):
+class AnalysisWindow:
     """Represents the range of days in which to measure a metric.
 
     The range is measured in "days after enrollment", and is inclusive.
@@ -645,7 +740,7 @@ class AnalysisWindow(object):
 
 
 @attr.s(frozen=True, slots=True)
-class TimeSeriesResult(object):
+class TimeSeriesResult:
     """Result from a time series query.
 
     For each analysis window, this object lets us get a dataframe in
