@@ -54,13 +54,6 @@ uri_count = Metric(
     select_expr=agg_sum('metrics.counter.events_total_uri_count')
 )
 
-# # TODO: work out how to deal with the potentially varying units
-# duration = Metric(
-#     name='duration',
-#     data_source=baseline,
-#     select_expr=...
-# )
-
 user_reports_site_issue_count = Metric(
     name='user_reports_site_issue_count',
     data_source=events,
