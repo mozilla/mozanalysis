@@ -71,13 +71,13 @@ user_reload_count = Metric(
 baseline_ping_count = Metric(
     name='baseline_ping_count',
     data_source=baseline,
-    select_expr='COUNT(client_info.client_id)'
+    select_expr='COUNT(*)'
 )
 
 metric_ping_count = Metric(
     name='metric_ping_count',
     data_source=metrics,
-    select_expr='COUNT(client_info.client_id)'
+    select_expr='COUNT(*)'
 )
 
 first_run_date = Metric(

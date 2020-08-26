@@ -397,7 +397,7 @@ class Experiment:
                 b.ping_info.experiments,
                 '{experiment_slug}'
             ).branch,
-            EXTRACT(DATE FROM MIN(b.submission_timestamp)) AS enrollment_date
+            DATE(MIN(b.submission_timestamp)) AS enrollment_date
         FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` b
         WHERE
             DATE(b.submission_timestamp)
