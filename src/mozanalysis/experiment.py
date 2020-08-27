@@ -129,9 +129,10 @@ class Experiment:
                 collected outside this analysis window.
             analysis_length_days (int): the length of the analysis window,
                 measured in days.
-            enrollments_query_type (str): Specifies the query type to use to
-                get the experiment's enrollments, unless overridden by
-                custom_enrollments_query.
+            enrollments_query_type ('normandy' or 'fenix-fallback'):
+                Specifies the query type to use to get the experiment's
+                enrollments, unless overridden by
+                ``custom_enrollments_query``.
             custom_enrollments_query (str): A full SQL query to be used
                 in the main query::
 
@@ -203,9 +204,10 @@ class Experiment:
                 experiment recipe was deactivated), then do that here.
             time_series_period ('daily' or 'weekly'): How long each
                 analysis window should be.
-            enrollments_query_type (str): Specifies the query type to use to
-                get the experiment's enrollments, unless overridden by
-                custom_enrollments_query.
+            enrollments_query_type ('normandy' or 'fenix-fallback'):
+                Specifies the query type to use to get the experiment's
+                enrollments, unless overridden by
+                ``custom_enrollments_query``.
             custom_enrollments_query (str): A full SQL query to be used
                 in the main query::
 
@@ -277,9 +279,10 @@ class Experiment:
                 The metrics to analyze.
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
-            enrollments_query_type (str): Specifies the query type to use to
-                get the experiment's enrollments, unless overridden by
-                custom_enrollments_query.
+            enrollments_query_type ('normandy' or 'fenix-fallback'):
+                Specifies the query type to use to get the experiment's
+                enrollments, unless overridden by
+                ``custom_enrollments_query``.
             custom_enrollments_query (str): A full SQL query to be used
                 in the main query::
 
@@ -357,8 +360,8 @@ class Experiment:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == 'normandy':
             return self._build_enrollments_query_normandy(time_limits)
-        elif enrollments_query_type == 'glean':
-            raise NotImplementedError
+        elif enrollments_query_type == 'fenix-fallback':
+            return self._build_enrollments_query_fenix_baseline(time_limits)
         else:
             raise ValueError
 
@@ -380,6 +383,43 @@ class Experiment:
                 BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
             AND e.event_string_value = '{experiment_slug}'
         GROUP BY e.client_id, branch
+            """.format(
+            experiment_slug=self.experiment_slug,
+            first_enrollment_date=time_limits.first_enrollment_date,
+            last_enrollment_date=time_limits.last_enrollment_date,
+        )
+
+    def _build_enrollments_query_fenix_baseline(self, time_limits):
+        """Return SQL to query enrollments for a Fenix no-event experiment
+
+        If enrollment events are available for this experiment, then you
+        can take a better approach than this method. But in the absence
+        of enrollment events (e.g. in a Mako-based experiment, which
+        does not send enrollment events), you need to fall back to using
+        ``ping_info.experiments`` to get a list of who is in what branch
+        and when they enrolled.
+        """
+        # Try to ignore users who enrolled early - but only consider a
+        # 7 day window
+        return """
+        SELECT
+            b.client_info.client_id AS client_id,
+            mozfun.map.get_key(
+                b.ping_info.experiments,
+                '{experiment_slug}'
+            ).branch,
+            DATE(MIN(b.submission_timestamp)) AS enrollment_date
+        FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` b
+        WHERE
+            DATE(b.submission_timestamp)
+                BETWEEN DATE_SUB('{first_enrollment_date}', INTERVAL 7 DAY)
+                AND '{last_enrollment_date}'
+            AND mozfun.map.get_key(
+                b.ping_info.experiments,
+                '{experiment_slug}'
+            ).branch IS NOT NULL
+        GROUP BY client_id, branch
+        HAVING enrollment_date >= '{first_enrollment_date}'
             """.format(
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,

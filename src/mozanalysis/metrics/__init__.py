@@ -39,7 +39,7 @@ class DataSource:
     client_id_column = attr.ib(default='client_id', type=str)
     submission_date_column = attr.ib(default='submission_date', type=str)
 
-    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native")
+    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean")
 
     @experiments_column_type.validator
     def _check_experiments_column_type(self, attribute, value):
@@ -71,7 +71,12 @@ class DataSource:
             )"""
 
         elif self.experiments_column_type == 'glean':
-            raise NotImplementedError
+            return """AND (
+                    ds.{submission_date} != e.enrollment_date
+                    OR `mozfun.map.get_key`(
+                        ds.ping_info.experiments, '{experiment_slug}'
+                    ).branch IS NOT NULL
+                )"""
 
         else:
             raise ValueError
@@ -154,7 +159,22 @@ class DataSource:
             ]
 
         elif self.experiments_column_type == 'glean':
-            raise NotImplementedError
+            return [
+                Metric(
+                    name=self.name + '_has_contradictory_branch',
+                    data_source=self,
+                    select_expr=agg_any("""`mozfun.map.get_key`(
+                ds.ping_info.experiments, '{experiment_slug}'
+            ).branch != e.branch"""),
+                ),
+                Metric(
+                    name=self.name + '_has_non_enrolled_data',
+                    data_source=self,
+                    select_expr=agg_any("""`mozfun.map.get_key`(
+                ds.ping_info.experiments, '{experiment_slug}'
+            ).branch IS NULL""".format(experiment_slug=experiment_slug))
+                ),
+            ]
 
         else:
             raise ValueError
