@@ -287,3 +287,22 @@ def test_segments_megaquery_not_detectably_malformed():
     )
 
     sql_lint(sql)
+
+
+def test_query_not_detectably_malformed_fenix_fallback():
+    exp = Experiment('slug', '2019-01-01', 8)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date='2019-01-01',
+        last_date_full_data='2019-03-01',
+        time_series_period='weekly',
+        num_dates_enrollment=8
+    )
+
+    sql = exp.build_query(
+        metric_list=[],
+        time_limits=tl,
+        enrollments_query_type='fenix-fallback',
+    )
+
+    sql_lint(sql)
