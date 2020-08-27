@@ -281,9 +281,10 @@
 <span class="sd">                collected outside this analysis window.</span>
 <span class="sd">            analysis_length_days (int): the length of the analysis window,</span>
 <span class="sd">                measured in days.</span>
-<span class="sd">            enrollments_query_type (str): Specifies the query type to use to</span>
-<span class="sd">                get the experiment&#39;s enrollments, unless overridden by</span>
-<span class="sd">                custom_enrollments_query.</span>
+<span class="sd">            enrollments_query_type (&#39;normandy&#39; or &#39;fenix-fallback&#39;):</span>
+<span class="sd">                Specifies the query type to use to get the experiment&#39;s</span>
+<span class="sd">                enrollments, unless overridden by</span>
+<span class="sd">                ``custom_enrollments_query``.</span>
 <span class="sd">            custom_enrollments_query (str): A full SQL query to be used</span>
 <span class="sd">                in the main query::</span>
 
@@ -355,9 +356,10 @@
 <span class="sd">                experiment recipe was deactivated), then do that here.</span>
 <span class="sd">            time_series_period (&#39;daily&#39; or &#39;weekly&#39;): How long each</span>
 <span class="sd">                analysis window should be.</span>
-<span class="sd">            enrollments_query_type (str): Specifies the query type to use to</span>
-<span class="sd">                get the experiment&#39;s enrollments, unless overridden by</span>
-<span class="sd">                custom_enrollments_query.</span>
+<span class="sd">            enrollments_query_type (&#39;normandy&#39; or &#39;fenix-fallback&#39;):</span>
+<span class="sd">                Specifies the query type to use to get the experiment&#39;s</span>
+<span class="sd">                enrollments, unless overridden by</span>
+<span class="sd">                ``custom_enrollments_query``.</span>
 <span class="sd">            custom_enrollments_query (str): A full SQL query to be used</span>
 <span class="sd">                in the main query::</span>
 
@@ -429,9 +431,10 @@
 <span class="sd">                The metrics to analyze.</span>
 <span class="sd">            time_limits (TimeLimits): An object describing the</span>
 <span class="sd">                interval(s) to query</span>
-<span class="sd">            enrollments_query_type (str): Specifies the query type to use to</span>
-<span class="sd">                get the experiment&#39;s enrollments, unless overridden by</span>
-<span class="sd">                custom_enrollments_query.</span>
+<span class="sd">            enrollments_query_type (&#39;normandy&#39; or &#39;fenix-fallback&#39;):</span>
+<span class="sd">                Specifies the query type to use to get the experiment&#39;s</span>
+<span class="sd">                enrollments, unless overridden by</span>
+<span class="sd">                ``custom_enrollments_query``.</span>
 <span class="sd">            custom_enrollments_query (str): A full SQL query to be used</span>
 <span class="sd">                in the main query::</span>
 
@@ -509,8 +512,8 @@
         <span class="sd">&quot;&quot;&quot;Return SQL to query a list of enrollments and their branches&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s1">&#39;normandy&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_normandy</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s1">&#39;glean&#39;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">elif</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s1">&#39;fenix-fallback&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_fenix_baseline</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
 
@@ -532,6 +535,43 @@
 <span class="s2">                BETWEEN &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39; AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
 <span class="s2">            AND e.event_string_value = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">        GROUP BY e.client_id, branch</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
+            <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span>
+            <span class="n">last_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_enrollments_query_fenix_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a Fenix no-event experiment</span>
+
+<span class="sd">        If enrollment events are available for this experiment, then you</span>
+<span class="sd">        can take a better approach than this method. But in the absence</span>
+<span class="sd">        of enrollment events (e.g. in a Mako-based experiment, which</span>
+<span class="sd">        does not send enrollment events), you need to fall back to using</span>
+<span class="sd">        ``ping_info.experiments`` to get a list of who is in what branch</span>
+<span class="sd">        and when they enrolled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Try to ignore users who enrolled early - but only consider a</span>
+        <span class="c1"># 7 day window</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            b.client_info.client_id AS client_id,</span>
+<span class="s2">            mozfun.map.get_key(</span>
+<span class="s2">                b.ping_info.experiments,</span>
+<span class="s2">                &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
+<span class="s2">            ).branch,</span>
+<span class="s2">            DATE(MIN(b.submission_timestamp)) AS enrollment_date</span>
+<span class="s2">        FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` b</span>
+<span class="s2">        WHERE</span>
+<span class="s2">            DATE(b.submission_timestamp)</span>
+<span class="s2">                BETWEEN DATE_SUB(&#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39;, INTERVAL 7 DAY)</span>
+<span class="s2">                AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
+<span class="s2">            AND mozfun.map.get_key(</span>
+<span class="s2">                b.ping_info.experiments,</span>
+<span class="s2">                &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
+<span class="s2">            ).branch IS NOT NULL</span>
+<span class="s2">        GROUP BY client_id, branch</span>
+<span class="s2">        HAVING enrollment_date &gt;= &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39;</span>
 <span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
             <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span>
