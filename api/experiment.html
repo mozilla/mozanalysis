@@ -38,7 +38,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="mozanalysis.frequentist_stats.bootstrap" href="frequentist_stats/bootstrap.html" />
-    <link rel="prev" title="mozanalysis.bayesian_stats.survival_func" href="bayesian_stats/survival_func.html" /> 
+    <link rel="prev" title="mozanalysis.bq" href="bq.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,6 +92,7 @@
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/binary.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bq.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
@@ -302,7 +303,7 @@ will simply read the results from this table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>bq_context</strong> (<em>BigQueryContext</em>) – BigQuery configuration and client.</p></li>
+<li><p><strong>bq_context</strong> (<a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><em>BigQueryContext</em></a>) – BigQuery configuration and client.</p></li>
 <li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics
 to analyze.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
@@ -369,7 +370,7 @@ with different analysis windows, and reorganising the results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>bq_context</strong> (<em>BigQueryContext</em>) – BigQuery configuration and client.</p></li>
+<li><p><strong>bq_context</strong> (<a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><em>BigQueryContext</em></a>) – BigQuery configuration and client.</p></li>
 <li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics to analyze.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
 have complete data, e.g. ‘2019-03-22’. If you want to ignore
@@ -592,7 +593,7 @@ results is your responsibility.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>bq_context</strong> (<em>BigQueryContext</em>) – </p></li>
+<li><p><strong>bq_context</strong> (<a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><em>BigQueryContext</em></a>) – </p></li>
 <li><p><strong>analysis_window</strong> (<a class="reference internal" href="#mozanalysis.experiment.AnalysisWindow" title="mozanalysis.experiment.AnalysisWindow"><em>AnalysisWindow</em></a><em> or </em><em>int</em>) – The analysis
 window, or its start day as an int.</p></li>
 </ul>
@@ -615,7 +616,7 @@ window, or its start day as an int.</p></li>
         <a href="frequentist_stats/bootstrap.html" class="btn btn-neutral float-right" title="mozanalysis.frequentist_stats.bootstrap" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="bayesian_stats/survival_func.html" class="btn btn-neutral float-left" title="mozanalysis.bayesian_stats.survival_func" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="bq.html" class="btn btn-neutral float-left" title="mozanalysis.bq" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
