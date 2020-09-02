@@ -114,7 +114,7 @@ def summarize_one_branch_from_agg(
 
     q_index = [str(v) for v in quantiles]
 
-    res = pd.Series(index=q_index + ['mean'])
+    res = pd.Series(index=q_index + ['mean'], dtype=float)
 
     res[q_index] = beta.ppf(quantiles)
     res['mean'] = beta.mean()
