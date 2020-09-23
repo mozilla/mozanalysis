@@ -185,10 +185,23 @@ class Metric:
     """Represents an experiment metric.
 
     Needs to be combined with an analysis window to be measurable!
+
+    Args:
+        name (str): A slug; uniquely identifies this metric in tables
+        data_source (DataSource): where to find the metric
+        select_expr (str): a SQL snippet representing a clause of a SELECT
+            expression describing how to compute the metric; must include an
+            aggregation function since it will be GROUPed BY client_id
+            and branch
+        friendly_name (str): A human-readable dashboard title for this metric
+        description (str): A paragraph of Markdown-formatted text describing
+            what the metric measures, to be shown on dashboards
     """
     name = attr.ib(type=str)
     data_source = attr.ib(type=DataSource)
     select_expr = attr.ib(type=str)
+    friendly_name = attr.ib(type=str, default="")
+    description = attr.ib(type=str, default="")
 
     def from_data_source(self, data_source: DataSource) -> "Metric":
         """Returns an instance of the Metric drawing from a different DataSource.
