@@ -1,6 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from typing import Optional
+
 import attr
 
 
@@ -200,8 +202,8 @@ class Metric:
     name = attr.ib(type=str)
     data_source = attr.ib(type=DataSource)
     select_expr = attr.ib(type=str)
-    friendly_name = attr.ib(type=str, default="")
-    description = attr.ib(type=str, default="")
+    friendly_name = attr.ib(type=Optional[str], default=None)
+    description = attr.ib(type=Optional[str], default=None)
 
     def from_data_source(self, data_source: DataSource) -> "Metric":
         """Returns an instance of the Metric drawing from a different DataSource.
