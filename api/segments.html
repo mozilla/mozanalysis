@@ -214,7 +214,7 @@ segment: True if the client is in the segment, False otherwise.</p>
 
 <dl class="py class">
 <dt id="mozanalysis.segments.Segment">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.segments.</code><code class="sig-name descname">Segment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">data_source</span></em>, <em class="sig-param"><span class="n">select_expr</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#Segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.Segment" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.segments.</code><code class="sig-name descname">Segment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">data_source</span></em>, <em class="sig-param"><span class="n">select_expr</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">friendly_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">description</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#Segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.segments.Segment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an experiment Segment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -226,6 +226,9 @@ the columns referenced in <code class="docutils literal notranslate"><span class
 an aggregation function (we <code class="docutils literal notranslate"><span class="pre">GROUP</span> <span class="pre">BY</span> <span class="pre">client_id</span></code>).
 Returns a non-NULL <code class="docutils literal notranslate"><span class="pre">BOOL</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> if the user is in the
 segment, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></li>
+<li><p><strong>friendly_name</strong> (<em>str</em>) – A human-readable dashboard title for this segment</p></li>
+<li><p><strong>description</strong> (<em>str</em>) – A paragraph of Markdown-formatted text describing
+the segment in more detail, to be shown on dashboards</p></li>
 </ul>
 </dd>
 </dl>
