@@ -153,6 +153,8 @@
 <span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
 <span class="kn">import</span> <span class="nn">attr</span>
 
 
@@ -337,10 +339,23 @@
     <span class="sd">&quot;&quot;&quot;Represents an experiment metric.</span>
 
 <span class="sd">    Needs to be combined with an analysis window to be measurable!</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name (str): A slug; uniquely identifies this metric in tables</span>
+<span class="sd">        data_source (DataSource): where to find the metric</span>
+<span class="sd">        select_expr (str): a SQL snippet representing a clause of a SELECT</span>
+<span class="sd">            expression describing how to compute the metric; must include an</span>
+<span class="sd">            aggregation function since it will be GROUPed BY client_id</span>
+<span class="sd">            and branch</span>
+<span class="sd">        friendly_name (str): A human-readable dashboard title for this metric</span>
+<span class="sd">        description (str): A paragraph of Markdown-formatted text describing</span>
+<span class="sd">            what the metric measures, to be shown on dashboards</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">data_source</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">DataSource</span><span class="p">)</span>
     <span class="n">select_expr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">friendly_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Metric.from_data_source"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.Metric.from_data_source">[docs]</a>    <span class="k">def</span> <span class="nf">from_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source</span><span class="p">:</span> <span class="n">DataSource</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Metric&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns an instance of the Metric drawing from a different DataSource.</span>
