@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from textwrap import dedent
 
 from mozanalysis.metrics import Metric, DataSource, agg_sum, agg_any
 
@@ -79,49 +80,102 @@ cfr = DataSource(
 active_hours = Metric(
     name='active_hours',
     data_source=clients_daily,
-    select_expr=agg_sum('active_hours_sum')
+    select_expr=agg_sum('active_hours_sum'),
+    friendly_name="Active hours",
+    description=dedent("""\
+        Measures the amount of time (in 5-second increments) during which
+        Firefox received user input from a keyboard or mouse. The Firefox
+        window does not need to be focused.
+    """),
 )
 
 uri_count = Metric(
     name='uri_count',
     data_source=clients_daily,
-    select_expr=agg_sum('scalar_parent_browser_engagement_total_uri_count_sum')
+    select_expr=agg_sum('scalar_parent_browser_engagement_total_uri_count_sum'),
+    friendly_name="URIs visited",
+    description=dedent("""\
+        Counts the total number of URIs visited.
+        Includes within-page navigation events (e.g. to anchors).
+    """),
 )
 
 search_count = Metric(
     name='search_count',
     data_source=search_clients_daily,
-    select_expr=agg_sum('sap')
+    select_expr=agg_sum('sap'),
+    friendly_name="SAP searches",
+    description=dedent("""\
+        Counts the number of searches a user performed through Firefox's
+        Search Access Points.
+        Learn more in the
+        [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
+    """),  # noqa:E501
 )
 
 tagged_search_count = Metric(
     name='tagged_search_count',
     data_source=search_clients_daily,
-    select_expr=agg_sum('tagged_sap')
+    select_expr=agg_sum('tagged_sap'),
+    friendly_name="Tagged SAP searches",
+    description=dedent("""\
+        Counts the number of searches a user performed through Firefox's
+        Search Access Points that were submitted with a partner code
+        and were potentially revenue-generating.
+        Learn more in the
+        [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
+    """),  # noqa:E501
 )
 
 tagged_follow_on_search_count = Metric(
     name='tagged_follow_on_search_count',
     data_source=search_clients_daily,
-    select_expr=agg_sum('tagged_follow_on')
+    select_expr=agg_sum('tagged_follow_on'),
+    friendly_name="Tagged follow-on searches",
+    description=dedent("""\
+        Counts the number of follow-on searches with a Mozilla partner tag.
+        These are additional searches that users performed from a search engine
+        results page after executing a tagged search through a SAP.
+        Learn more in the
+        [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
+    """),  # noqa:E501
 )
 
 ad_clicks = Metric(
     name='ad_clicks',
     data_source=search_clients_daily,
-    select_expr=agg_sum('ad_click')
+    select_expr=agg_sum('ad_click'),
+    friendly_name="Ad clicks",
+    description=dedent("""\
+        Counts clicks on ads on search engine result pages with a Mozilla
+        partner tag.
+    """),
 )
 
 searches_with_ads = Metric(
     name='searches_with_ads',
     data_source=search_clients_daily,
-    select_expr=agg_sum('search_with_ads')
+    select_expr=agg_sum('search_with_ads'),
+    friendly_name="Search result pages with ads",
+    description=dedent("""\
+        Counts search result pages served with advertising.
+        Users may not actually see these ads thanks to e.g. ad-blockers.
+        Learn more in the
+        [search analysis documentation](https://mozilla-private.report/search-analysis-docs/book/in_content_searches.html).
+    """),  # noqa:E501
 )
 
 organic_search_count = Metric(
     name='organic_search_count',
     data_source=search_clients_daily,
-    select_expr=agg_sum('organic')
+    select_expr=agg_sum('organic'),
+    friendly_name="Organic searches",
+    description=dedent("""\
+        Counts organic searches, which are searches that are _not_ performed
+        through a Firefox SAP and which are not monetizable.
+        Learn more in the
+        [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
+    """),  # noqa:E501
 )
 
 unenroll = Metric(
@@ -131,7 +185,11 @@ unenroll = Metric(
                 event_category = 'normandy'
                 AND event_method = 'unenroll'
                 AND event_string_value = '{experiment_slug}'
-            """)
+            """),
+    friendly_name="Unenrollments",
+    description=dedent("""\
+        Counts the number of clients with an experiment unenrollment event.
+    """),
 )
 
 view_about_logins = Metric(
@@ -140,7 +198,11 @@ view_about_logins = Metric(
     select_expr=agg_any("""
                 event_method = 'open_management'
                 AND event_category = 'pwmgr'
-            """)
+            """),
+    friendly_name="about:logins viewers",
+    description=dedent("""\
+        Counts the number of clients that viewed about:logins.
+    """),
 )
 
 view_about_protections = Metric(
@@ -149,7 +211,11 @@ view_about_protections = Metric(
     select_expr=agg_any("""
                 event_method = 'show'
                 AND event_object = 'protection_report'
-            """)
+            """),
+    friendly_name="about:protections viewers",
+    description=dedent("""\
+        Counts the number of clients that viewed about:protections.
+    """),
 )
 
 connect_fxa = Metric(
@@ -158,5 +224,11 @@ connect_fxa = Metric(
     select_expr=agg_any("""
                 event_method = 'connect'
                 AND event_object = 'account'
-            """)
+            """),
+    friendly_name="Connected FxA",
+    description=dedent("""\
+        Counts the number of clients that took action to connect to FxA.
+        This does not include clients that were already connected to FxA at
+        the start of the experiment and remained connected.
+    """),
 )

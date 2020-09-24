@@ -1,5 +1,7 @@
 from cheap_lint import sql_lint
+import pytest
 
+from mozanalysis.metrics import DataSource, Metric
 import mozanalysis.metrics.desktop as mmd
 import mozanalysis.metrics.fenix as mmf
 
@@ -9,29 +11,40 @@ def test_imported_ok():
     assert mmf.uri_count
 
 
-def test_sql_not_detectably_malformed():
-    for m in mmd.__dict__.values():
-        if isinstance(m, mmd.Metric):
-            sql_lint(m.select_expr.format(experiment_slug='slug'))
-
-    for ds in mmd.__dict__.values():
-        if isinstance(ds, mmd.DataSource):
-            sql_lint(ds.from_expr)
-
-    for m in mmf.__dict__.values():
-        if isinstance(m, mmf.Metric):
-            sql_lint(m.select_expr.format(experiment_slug='slug'))
-
-    for ds in mmf.__dict__.values():
-        if isinstance(ds, mmf.DataSource):
-            sql_lint(ds.from_expr)
+def enumerate_included(klass):
+    collected = []
+    for module in (mmd, mmf):
+        collected.extend([
+            (k, v) for k, v in module.__dict__.items()
+            if isinstance(v, klass)
+        ])
+    return collected
 
 
-def test_consistency_of_metric_and_variable_names():
-    for name, metric in mmd.__dict__.items():
-        if isinstance(metric, mmd.Metric):
-            assert name == metric.name, metric
+@pytest.fixture()
+def included_metrics():
+    return enumerate_included(Metric)
 
-    for name, metric in mmf.__dict__.items():
-        if isinstance(metric, mmd.Metric):
-            assert name == metric.name, metric
+
+@pytest.fixture()
+def included_datasources():
+    return enumerate_included(DataSource)
+
+
+def test_sql_not_detectably_malformed(included_metrics, included_datasources):
+    for _, m in included_metrics:
+        sql_lint(m.select_expr.format(experiment_slug='slug'))
+
+    for _, ds in included_datasources:
+        sql_lint(ds.from_expr)
+
+
+def test_consistency_of_metric_and_variable_names(included_metrics):
+    for name, metric in included_metrics:
+        assert name == metric.name, metric
+
+
+def test_included_metrics_have_docs(included_metrics):
+    for _, m in included_metrics:
+        assert m.friendly_name, m.name
+        assert m.description, m.name
