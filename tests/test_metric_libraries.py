@@ -5,30 +5,22 @@ from mozanalysis.metrics import DataSource, Metric
 import mozanalysis.metrics.desktop as mmd
 import mozanalysis.metrics.fenix as mmf
 
+from . import enumerate_included
+
 
 def test_imported_ok():
     assert mmd.active_hours
     assert mmf.uri_count
 
 
-def enumerate_included(klass):
-    collected = []
-    for module in (mmd, mmf):
-        collected.extend([
-            (k, v) for k, v in module.__dict__.items()
-            if isinstance(v, klass)
-        ])
-    return collected
-
-
 @pytest.fixture()
 def included_metrics():
-    return enumerate_included(Metric)
+    return enumerate_included((mmd, mmf), Metric)
 
 
 @pytest.fixture()
 def included_datasources():
-    return enumerate_included(DataSource)
+    return enumerate_included((mmd, mmf), DataSource)
 
 
 def test_sql_not_detectably_malformed(included_metrics, included_datasources):

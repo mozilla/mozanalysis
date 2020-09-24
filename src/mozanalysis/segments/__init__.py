@@ -1,6 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from typing import Optional
+
 import attr
 
 
@@ -94,7 +96,12 @@ class Segment:
             an aggregation function (we ``GROUP BY client_id``).
             Returns a non-NULL ``BOOL``: ``True`` if the user is in the
             segment, ``False`` otherwise.
+        friendly_name (str): A human-readable dashboard title for this segment
+        description (str): A paragraph of Markdown-formatted text describing
+            the segment in more detail, to be shown on dashboards
     """
     name = attr.ib(type=str)
     data_source = attr.ib(validator=attr.validators.instance_of(SegmentDataSource))
     select_expr = attr.ib(type=str)
+    friendly_name = attr.ib(type=Optional[str], default=None)
+    description = attr.ib(type=Optional[str], default=None)
