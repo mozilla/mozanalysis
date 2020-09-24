@@ -1,28 +1,38 @@
 import pytest
 from cheap_lint import sql_lint
 
+from mozanalysis.segments import Segment, SegmentDataSource
 import mozanalysis.segments.desktop as msd
 import mozanalysis.metrics.desktop as mmd
+
+from . import enumerate_included
+
+
+@pytest.fixture()
+def included_segments():
+    return enumerate_included((msd,), Segment)
+
+
+@pytest.fixture()
+def included_segment_datasources():
+    return enumerate_included((msd,), SegmentDataSource)
 
 
 def test_imported_ok():
     assert msd.regular_users_v3
 
 
-def test_sql_not_detectably_malformed():
-    for m in msd.__dict__.values():
-        if isinstance(m, msd.Segment):
-            sql_lint(m.select_expr)
+def test_sql_not_detectably_malformed(included_segments, included_segment_datasources):
+    for _name, s in included_segments:
+        sql_lint(s.select_expr)
 
-    for ds in msd.__dict__.values():
-        if isinstance(ds, msd.SegmentDataSource):
-            sql_lint(ds.from_expr)
+    for _name, sds in included_segment_datasources:
+        sql_lint(sds.from_expr)
 
 
-def test_consistency_of_segment_and_variable_names():
-    for name, segment in msd.__dict__.items():
-        if isinstance(segment, msd.Segment):
-            assert name == segment.name, segment
+def test_consistency_of_segment_and_variable_names(included_segments):
+    for name, segment in included_segments:
+        assert name == segment.name, segment
 
 
 def test_segment_data_source_window_end_validates():
@@ -66,3 +76,8 @@ def test_segment_validates_not_metric_data_source():
             data_source=mmd.clients_daily,
             select_expr='bla',
         )
+
+
+def test_included_segments_have_docs(included_segments):
+    for name, segment in included_segments:
+        assert segment.friendly_name and segment.description, name
