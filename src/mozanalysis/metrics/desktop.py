@@ -15,8 +15,9 @@ clients_daily = DataSource(
 #: DataSource: The `search_clients_daily`_ table.
 #: This table unpacks search counts from the main ping;
 #: it contains one row per (client_id, submission_date, engine, source).
-#: 
-#: .. _`search_clients_daily`: https://docs.telemetry.mozilla.org/datasets/search/search_clients_daily/reference.html
+#:
+#: .. _`search_clients_daily`: https://docs.telemetry.mozilla.org/datasets/
+#:    search/search_clients_daily/reference.html
 search_clients_daily = DataSource(
     name='search_clients_daily',
     from_expr='`moz-fx-data-shared-prod.search.search_clients_daily`',
