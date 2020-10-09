@@ -6,31 +6,41 @@ from textwrap import dedent
 from mozanalysis.metrics import Metric, DataSource, agg_sum, agg_any
 
 
+#: DataSource: The clients_daily table.
 clients_daily = DataSource(
     name='clients_daily',
     from_expr="`moz-fx-data-shared-prod.telemetry.clients_daily`",
 )
 
+#: DataSource: The `search_clients_daily`_ table.
+#: This table unpacks search counts from the main ping;
+#: it contains one row per (client_id, submission_date, engine, source).
+#:
+#: .. _`search_clients_daily`: https://docs.telemetry.mozilla.org/datasets/
+#:    search/search_clients_daily/reference.html
 search_clients_daily = DataSource(
     name='search_clients_daily',
     from_expr='`moz-fx-data-shared-prod.search.search_clients_daily`',
     experiments_column_type=None,
 )
 
+#: DataSource: The main_summary table.
 main_summary = DataSource(
     name='main_summary',
     from_expr="`moz-fx-data-shared-prod.telemetry.main_summary`"
 )
 
+#: DataSource: The events table.
 events = DataSource(
     name='events',
     from_expr="`moz-fx-data-shared-prod.telemetry.events`",
     experiments_column_type='native',
 )
 
-# The telemetry.events table is clustered by event_category.
-# Normandy accounts for about 10% of event volume, so this dramatically
-# reduces bytes queried compared to counting rows from the generic events DataSource.
+#: DataSource: Normandy events; a subset of the events table.
+#: The telemetry.events table is clustered by event_category.
+#: Normandy accounts for about 10% of event volume, so this dramatically
+#: reduces bytes queried compared to counting rows from the generic events DataSource.
 normandy_events = DataSource(
     name='normandy_events',
     from_expr="""(
@@ -42,6 +52,7 @@ normandy_events = DataSource(
     experiments_column_type='native',
 )
 
+#: DataSource: The telemetry.main ping table.
 main = DataSource(
     name='main',
     from_expr="""(
@@ -54,6 +65,7 @@ main = DataSource(
     experiments_column_type="native",
 )
 
+#: DataSource: The telemetry.crash ping table.
 crash = DataSource(
     name='crash',
     from_expr="""(
@@ -66,6 +78,7 @@ crash = DataSource(
     experiments_column_type="native",
 )
 
+#: DataSource: The ``messaging_system.cfr`` table.
 cfr = DataSource(
     name='cfr',
     from_expr="""(
@@ -77,6 +90,7 @@ cfr = DataSource(
     experiments_column_type="native",
 )
 
+#: Metric: ...
 active_hours = Metric(
     name='active_hours',
     data_source=clients_daily,
@@ -89,6 +103,7 @@ active_hours = Metric(
     """),
 )
 
+#: Metric: ...
 uri_count = Metric(
     name='uri_count',
     data_source=clients_daily,
@@ -100,6 +115,7 @@ uri_count = Metric(
     """),
 )
 
+#: Metric: ...
 search_count = Metric(
     name='search_count',
     data_source=search_clients_daily,
@@ -113,6 +129,7 @@ search_count = Metric(
     """),  # noqa:E501
 )
 
+#: Metric: ...
 tagged_search_count = Metric(
     name='tagged_search_count',
     data_source=search_clients_daily,
@@ -127,6 +144,7 @@ tagged_search_count = Metric(
     """),  # noqa:E501
 )
 
+#: Metric: ...
 tagged_follow_on_search_count = Metric(
     name='tagged_follow_on_search_count',
     data_source=search_clients_daily,
@@ -141,6 +159,7 @@ tagged_follow_on_search_count = Metric(
     """),  # noqa:E501
 )
 
+#: Metric: ...
 ad_clicks = Metric(
     name='ad_clicks',
     data_source=search_clients_daily,
@@ -152,6 +171,7 @@ ad_clicks = Metric(
     """),
 )
 
+#: Metric: ...
 searches_with_ads = Metric(
     name='searches_with_ads',
     data_source=search_clients_daily,
@@ -165,6 +185,7 @@ searches_with_ads = Metric(
     """),  # noqa:E501
 )
 
+#: Metric: ...
 organic_search_count = Metric(
     name='organic_search_count',
     data_source=search_clients_daily,
@@ -178,6 +199,7 @@ organic_search_count = Metric(
     """),  # noqa:E501
 )
 
+#: Metric: ...
 unenroll = Metric(
     name='unenroll',
     data_source=normandy_events,
@@ -192,6 +214,7 @@ unenroll = Metric(
     """),
 )
 
+#: Metric: ...
 view_about_logins = Metric(
     name='view_about_logins',
     data_source=events,
@@ -205,6 +228,7 @@ view_about_logins = Metric(
     """),
 )
 
+#: Metric: ...
 view_about_protections = Metric(
     name='view_about_protections',
     data_source=events,
@@ -218,6 +242,7 @@ view_about_protections = Metric(
     """),
 )
 
+#: Metric: ...
 connect_fxa = Metric(
     name='connect_fxa',
     data_source=events,
