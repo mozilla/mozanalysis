@@ -90,6 +90,19 @@ cfr = DataSource(
     experiments_column_type="native",
 )
 
+#: DataSource: The ``activity_stream.events`` table.
+activity_stream_events = DataSource(
+    name='activity_stream_events',
+    from_expr="""(
+                SELECT
+                    *,
+                    DATE(submission_timestamp) AS submission_date
+                FROM `moz-fx-data-shared-prod`.activity_stream.events
+            )""",
+    experiments_column_type="native",
+)
+
+
 #: Metric: ...
 active_hours = Metric(
     name='active_hours',
@@ -255,5 +268,34 @@ connect_fxa = Metric(
         Counts the number of clients that took action to connect to FxA.
         This does not include clients that were already connected to FxA at
         the start of the experiment and remained connected.
+    """),
+)
+
+#: Metric: ...
+pocket_click = Metric(
+    name='pocket_click',
+    data_source=activity_stream_events,
+    select_expr=agg_any("""
+                event = 'CLICK'
+                AND source = 'CARDGRID'
+            """),
+    friendly_name="Clicked pocket content",
+    description=dedent("""\
+        Counts the number of clients that clicked a pocket tile on the
+        new tab page.
+    """),
+)
+
+#: Metric: ...
+pocket_click_count = Metric(
+    name='pocket_click_count',
+    data_source=activity_stream_events,
+    select_expr="""COUNTIF(
+                event = 'CLICK'
+                AND source = 'CARDGRID'
+            )""",
+    friendly_name="Clicked pocket content",
+    description=dedent("""\
+        Counts the number of pocket tile clicks made by each client.
     """),
 )
