@@ -264,6 +264,17 @@ reduces bytes queried compared to counting rows from the generic events DataSour
 </dd></dl>
 
 <dl class="py data">
+<dt id="mozanalysis.metrics.desktop.activity_stream_events">
+<code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">activity_stream_events</code><em class="property"> = DataSource(name='activity_stream_events', from_expr='(\n                SELECT\n                    *,\n                    DATE(submission_timestamp) AS submission_date\n                FROM `moz-fx-data-shared-prod`.activity_stream.events\n            )', experiments_column_type='native', client_id_column='client_id', submission_date_column='submission_date')</em><a class="headerlink" href="#mozanalysis.metrics.desktop.activity_stream_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">activity_stream.events</span></code> table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../metrics.html#mozanalysis.metrics.DataSource" title="mozanalysis.metrics.DataSource">DataSource</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
 <dt id="mozanalysis.metrics.desktop.active_hours">
 <code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">active_hours</code><em class="property"> = Metric(name='active_hours', data_source=DataSource(name='clients_daily', from_expr='`moz-fx-data-shared-prod.telemetry.clients_daily`', experiments_column_type='simple', client_id_column='client_id', submission_date_column='submission_date'), select_expr='COALESCE(SUM(active_hours_sum), 0)', friendly_name='Active hours', description='Measures the amount of time (in 5-second increments) during which\nFirefox received user input from a keyboard or mouse. The Firefox\nwindow does not need to be focused.\n')</em><a class="headerlink" href="#mozanalysis.metrics.desktop.active_hours" title="Permalink to this definition">¶</a></dt>
 <dd><p>…</p>
@@ -387,6 +398,28 @@ reduces bytes queried compared to counting rows from the generic events DataSour
 <dl class="py data">
 <dt id="mozanalysis.metrics.desktop.connect_fxa">
 <code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">connect_fxa</code><em class="property"> = Metric(name='connect_fxa', data_source=DataSource(name='events', from_expr='`moz-fx-data-shared-prod.telemetry.events`', experiments_column_type='native', client_id_column='client_id', submission_date_column='submission_date'), select_expr=&quot;COALESCE(LOGICAL_OR(\n                event_method = 'connect'\n                AND event_object = 'account'\n            ), FALSE)&quot;, friendly_name='Connected FxA', description='Counts the number of clients that took action to connect to FxA.\nThis does not include clients that were already connected to FxA at\nthe start of the experiment and remained connected.\n')</em><a class="headerlink" href="#mozanalysis.metrics.desktop.connect_fxa" title="Permalink to this definition">¶</a></dt>
+<dd><p>…</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric">Metric</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt id="mozanalysis.metrics.desktop.pocket_click">
+<code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">pocket_click</code><em class="property"> = Metric(name='pocket_click', data_source=DataSource(name='activity_stream_events', from_expr='(\n                SELECT\n                    *,\n                    DATE(submission_timestamp) AS submission_date\n                FROM `moz-fx-data-shared-prod`.activity_stream.events\n            )', experiments_column_type='native', client_id_column='client_id', submission_date_column='submission_date'), select_expr=&quot;COALESCE(LOGICAL_OR(\n                event = 'CLICK'\n                AND source = 'CARDGRID'\n            ), FALSE)&quot;, friendly_name='Clicked pocket content', description='Counts the number of clients that clicked a pocket tile on the\nnew tab page.\n')</em><a class="headerlink" href="#mozanalysis.metrics.desktop.pocket_click" title="Permalink to this definition">¶</a></dt>
+<dd><p>…</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric">Metric</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt id="mozanalysis.metrics.desktop.pocket_click_count">
+<code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">pocket_click_count</code><em class="property"> = Metric(name='pocket_click_count', data_source=DataSource(name='activity_stream_events', from_expr='(\n                SELECT\n                    *,\n                    DATE(submission_timestamp) AS submission_date\n                FROM `moz-fx-data-shared-prod`.activity_stream.events\n            )', experiments_column_type='native', client_id_column='client_id', submission_date_column='submission_date'), select_expr=&quot;COUNTIF(\n                event = 'CLICK'\n                AND source = 'CARDGRID'\n            )&quot;, friendly_name='Clicked pocket content', description='Counts the number of pocket tile clicks made by each client.\n')</em><a class="headerlink" href="#mozanalysis.metrics.desktop.pocket_click_count" title="Permalink to this definition">¶</a></dt>
 <dd><p>…</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
