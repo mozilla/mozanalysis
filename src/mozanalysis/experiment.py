@@ -217,7 +217,8 @@ class Experiment:
                 segments to study.
 
         Returns:
-            A TimeSeriesResult object, which may be used to obtain a
+            A :class:`mozanalysis.experiment.TimeSeriesResult` object,
+            which may be used to obtain a
             pandas DataFrame of per-client metric data, for each
             analysis window. Each DataFrame is a pandas DataFrame in
             "the standard format": one row per client, some metadata
