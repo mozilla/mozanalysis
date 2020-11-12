@@ -15,6 +15,14 @@ clients_last_seen = SegmentDataSource(
 )
 
 
+clients_first_seen_today = SegmentDataSource(
+    name="clients_first_seen_today",
+    from_expr="`moz-fx-data-shared-prod`.telemetry.clients_first_seen",
+    window_start=0,
+    window_end=0,
+    submission_date_column="first_seen_date",
+)
+
 regular_users_v3 = Segment(
     name='regular_users_v3',
     data_source=clients_last_seen,
@@ -55,4 +63,15 @@ allweek_regular_v1 = Segment(
     description=dedent("""\
         A subset of "regular users" that have used Firefox on weekends.
         """),
+)
+
+new_unique_profiles = Segment(
+    name="new_unique_profiles",
+    data_source=clients_first_seen_today,
+    select_expr=agg_any("first_seen_date IS NOT NULL"),
+    friendly_name="New unique profiles",
+    description=dedent("""\
+        Clients that enrolled the first date their client_id ever appeared
+        in telemetry (i.e. new, unique profiles).
+    """)
 )
