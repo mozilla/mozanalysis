@@ -78,7 +78,7 @@ The first two arguments to :meth:`mozanalysis.experiment.Experiment.get_time_ser
 
 ``time_series_period`` can be ``'daily'`` or ``'weekly'``. A ``'weekly'`` time series neatly sidesteps/masks weekly seasonality issues: most of the experiment subjects will enroll within a day of the experiment launching - typically a Tuesday, leading to ``'daily'`` time series reflecting a non-uniform convolution of the metrics' weekly seasonalities with the uneven enrollment numbers across the week.
 
-:meth:`mozanalysis.experiment.Experiment.get_time_series_data()` returns a :class:`TimeSeriesResult` object, which can return DataFrames keyed by the start of their analysis windows (measured in days after enrollment)::
+:meth:`mozanalysis.experiment.Experiment.get_time_series_data()` returns a :class:`mozanalysis.experiment.TimeSeriesResult` object, which can return DataFrames keyed by the start of their analysis windows (measured in days after enrollment)::
 
     >>> ts_res.keys()
     [0, 7, 14]
