@@ -299,3 +299,13 @@ pocket_click_count = Metric(
         Counts the number of pocket tile clicks made by each client.
     """),
 )
+
+
+#: Metric: ...
+days_of_use = Metric(
+    name="days_of_use",
+    data_source="clients_daily",
+    select_expr="COUNT(*)",
+    friendly_name="Days of use",
+    description="The number of days in the interval that each client sent a main ping."
+)
