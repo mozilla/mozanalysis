@@ -72,7 +72,7 @@ user_reload_count = Metric(
     + "mozfun.map.get_key('event.extra', 'item') = 'reload')",
     friendly_name="Pages reloaded",
     description="Counts the number of times a client reloaded a page.",
-    lower_is_better=True,
+    bigger_is_better=False,
 )
 
 baseline_ping_count = Metric(
