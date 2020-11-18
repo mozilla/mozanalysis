@@ -204,6 +204,7 @@ class Metric:
     select_expr = attr.ib(type=str)
     friendly_name = attr.ib(type=Optional[str], default=None)
     description = attr.ib(type=Optional[str], default=None)
+    bigger_is_better = attr.ib(type=bool, default=True)
 
     def from_data_source(self, data_source: DataSource) -> "Metric":
         """Returns an instance of the Metric drawing from a different DataSource.
