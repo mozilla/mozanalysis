@@ -225,6 +225,7 @@ unenroll = Metric(
     description=dedent("""\
         Counts the number of clients with an experiment unenrollment event.
     """),
+    lower_is_better=True,
 )
 
 #: Metric: ...
