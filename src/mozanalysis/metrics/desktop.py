@@ -306,7 +306,7 @@ pocket_click_count = Metric(
 days_of_use = Metric(
     name="days_of_use",
     data_source=clients_daily,
-    select_expr="COUNT(*)",
+    select_expr="COUNT(ds.submission_date)",
     friendly_name="Days of use",
     description="The number of days in the interval that each client sent a main ping."
 )
