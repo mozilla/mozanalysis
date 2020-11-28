@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import re
 from google.cloud import bigquery
-from google.api_core.exceptions import Conflict
+from google.api_core.exceptions import Conflict, NotFound
 
 
 def sanitize_table_name_for_bq(table_name):
@@ -61,6 +61,29 @@ class BigQueryContext:
                     self.fully_qualify_table_name(results_table)
                 )
             ).result()
+
+    def run_script_or_fetch(self, sql, destination_table):
+        """Runs a BigQuery SQL script and returns a RowIterator for destination_table.
+        The script is assumed to create a table named destination_table after completing
+        succesfully. If destination_table already exists, a RowIterator for the
+        existing table will be returned without invoking the script.
+
+        destination_table is assumed to be an unqualified table name without
+        a project or dataset reference.
+
+        Learn more about BigQuery scripting at
+        https://cloud.google.com/bigquery/docs/reference/standard-sql/scripting.
+        """
+
+        fqtn = self.fully_qualify_table_name(destination_table)
+
+        try:
+            return self.client.list_rows(fqtn)
+        except NotFound:
+            pass
+
+        self.client.query(sql).result()
+        return self.client.list_rows(fqtn)
 
     def fully_qualify_table_name(self, table_name):
         """Given a table name, return it fully qualified."""

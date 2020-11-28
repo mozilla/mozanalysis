@@ -173,16 +173,29 @@ class Experiment:
             analysis_length_days, self.num_dates_enrollment
         )
 
-        sql = self.build_query(
-            metric_list, time_limits, enrollments_query_type, custom_enrollments_query,
-            segment_list
+        sql_to_be_hashed = self.build_query(
+            metric_list=metric_list,
+            time_limits=time_limits,
+            destination_table="",
+            enrollments_query_type=enrollments_query_type,
+            custom_enrollments_query=custom_enrollments_query,
+            segment_list=segment_list,
         )
 
-        res_table_name = sanitize_table_name_for_bq('_'.join(
-            [last_date_full_data, self.experiment_slug, hash_ish(sql)]
+        full_res_table_name = sanitize_table_name_for_bq('_'.join(
+            [last_date_full_data, self.experiment_slug, hash_ish(sql_to_be_hashed)]
         ))
 
-        return bq_context.run_query(sql, res_table_name).to_dataframe()
+        sql = self.build_query(
+            metric_list=metric_list,
+            time_limits=time_limits,
+            destination_table=full_res_table_name,
+            enrollments_query_type=enrollments_query_type,
+            custom_enrollments_query=custom_enrollments_query,
+            segment_list=segment_list,
+        )
+
+        return bq_context.run_script_or_fetch(sql, full_res_table_name).to_dataframe()
 
     def get_time_series_data(
         self, bq_context, metric_list, last_date_full_data,
@@ -246,16 +259,29 @@ class Experiment:
             self.num_dates_enrollment
         )
 
-        sql = self.build_query(
-            metric_list, time_limits, enrollments_query_type, custom_enrollments_query,
-            segment_list
+        sql_to_be_hashed = self.build_query(
+            metric_list=metric_list,
+            time_limits=time_limits,
+            destination_table="",
+            enrollments_query_type=enrollments_query_type,
+            custom_enrollments_query=custom_enrollments_query,
+            segment_list=segment_list,
         )
 
         full_res_table_name = sanitize_table_name_for_bq('_'.join(
-            [last_date_full_data, self.experiment_slug, hash_ish(sql)]
+            [last_date_full_data, self.experiment_slug, hash_ish(sql_to_be_hashed)]
         ))
 
-        bq_context.run_query(sql, full_res_table_name)
+        sql = self.build_query(
+            metric_list=metric_list,
+            time_limits=time_limits,
+            destination_table=full_res_table_name,
+            enrollments_query_type=enrollments_query_type,
+            custom_enrollments_query=custom_enrollments_query,
+            segment_list=segment_list,
+        )
+
+        bq_context.run_script_or_fetch(sql, full_res_table_name)
 
         return TimeSeriesResult(
             fully_qualified_table_name=bq_context.fully_qualify_table_name(
@@ -265,8 +291,9 @@ class Experiment:
         )
 
     def build_query(
-        self, metric_list, time_limits, enrollments_query_type='normandy',
-        custom_enrollments_query=None, segment_list=None
+        self, *, metric_list, time_limits, destination_table,
+        enrollments_query_type='normandy', custom_enrollments_query=None,
+        segment_list=None
     ) -> str:
         """Return SQL to query metric data.
 
@@ -280,6 +307,7 @@ class Experiment:
                 The metrics to analyze.
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
+            destination_table (str): The name of the table to write
             enrollments_query_type ('normandy' or 'fenix-fallback'):
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
@@ -328,17 +356,20 @@ class Experiment:
         )
     );
 
-    SELECT
-        enrollments.*,
-        {metrics_columns}
-    FROM enrollments
-    {metrics_joins}
+    CREATE OR REPLACE TABLE {destination_table} AS (
+        SELECT
+            enrollments.*,
+            {metrics_columns}
+        FROM enrollments
+        {metrics_joins}
+    );
         """.format(
             analysis_windows_query=analysis_windows_query,
             enrollments_query=enrollments_query,
             segments_query=segments_query,
             metrics_columns=',\n        '.join(metrics_columns),
-            metrics_joins='\n'.join(metrics_joins)
+            metrics_joins='\n'.join(metrics_joins),
+            destination_table=destination_table,
         )
 
     @staticmethod
