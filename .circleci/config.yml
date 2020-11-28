@@ -14,7 +14,7 @@ test_settings: &test_settings
         command: |
           # pyspark needs to run Java, so we install openjdk.
           apt-get update
-          apt-get install -y openjdk-8-jre-headless
+          apt-get install -y default-jre-headless
     - run: &run_tox_environment_matching_circleci_job_name
         name: Run tox job
         command: |
@@ -39,14 +39,19 @@ test_settings: &test_settings
 version: 2
 jobs:
 
-  py37:
+  py36:
     <<: *test_settings
     docker:
-      - image: python:3.7-stretch
+      - image: python:3.6-stretch
+
+  py38:
+    <<: *test_settings
+    docker:
+      - image: python:3.8-buster
 
   lint:
     docker:
-      - image: python:3.7-stretch
+      - image: python:3.8-buster
     steps:
     - checkout
     - run:
@@ -59,7 +64,7 @@ jobs:
   # below for trigger logic.
   deploy:
     docker:
-      - image: python:3.7-stretch
+      - image: python:3.8-buster
     steps:
       - checkout
       - run:
@@ -81,7 +86,7 @@ jobs:
 
   docs: &docs_settings
     docker:
-      - image: python:3.7-stretch
+      - image: python:3.8-buster
     steps:
       - checkout
       - run:
@@ -126,7 +131,8 @@ workflows:
   version: 2
   build:
     jobs:
-      - py37
+      - py36
+      - py38
       - lint
       - docs
       - docs-deploy:
