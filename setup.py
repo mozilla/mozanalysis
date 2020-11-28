@@ -25,8 +25,10 @@ setup(
         'attrs',
         'numpy',
         'pandas',
+        'pyarrow',
         'scipy',
         'google-cloud-bigquery',
+        'google-cloud-bigquery-storage',
     ],
     setup_requires=['pytest-runner', 'setuptools_scm'],
     extras_require={
