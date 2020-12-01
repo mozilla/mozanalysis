@@ -336,14 +336,13 @@ class Experiment:
             {analysis_windows_query}
         ),
         raw_enrollments AS ({enrollments_query}),
-        segmented_enrollments AS ({segments_query}),
-        enrollments AS (
-            SELECT
-                e.*,
-                aw.*
-            FROM segmented_enrollments e
-            CROSS JOIN analysis_windows aw
-        )
+        segmented_enrollments AS ({segments_query})
+
+        SELECT
+            e.*,
+            aw.*
+        FROM segmented_enrollments e
+        CROSS JOIN analysis_windows aw
     );
 
     CREATE OR REPLACE TABLE {{results_table}} AS (
