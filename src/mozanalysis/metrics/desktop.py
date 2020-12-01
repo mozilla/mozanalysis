@@ -272,35 +272,35 @@ connect_fxa = Metric(
     """),
 )
 
-#: Metric: ...
-pocket_click = Metric(
-    name='pocket_click',
-    data_source=activity_stream_events,
-    select_expr=agg_any("""
-                event = 'CLICK'
-                AND source = 'CARDGRID'
-            """),
-    friendly_name="Clicked pocket content",
-    description=dedent("""\
-        Counts the number of clients that clicked a pocket tile on the
-        new tab page.
-    """),
-)
-
-#: Metric: ...
-pocket_click_count = Metric(
-    name='pocket_click_count',
+#: Metric: Pocket organic rec clicks in New Tab
+pocket_rec_clicks = Metric(
+    name='pocket_rec_clicks',
     data_source=activity_stream_events,
     select_expr="""COUNTIF(
                 event = 'CLICK'
                 AND source = 'CARDGRID'
+                AND JSON_EXTRACT_SCALAR(value, '$.card_type') = 'organic'
             )""",
-    friendly_name="Clicked pocket content",
+    friendly_name="Clicked Pocket organic recs in New Tab",
     description=dedent("""\
-        Counts the number of pocket tile clicks made by each client.
+         Counts the number of Pocket rec clicks made by each client.
     """),
 )
 
+#: Metric: Pocket sponsored content clicks in New Tab
+pocket_spoc_clicks = Metric(
+    name='pocket_spoc_clicks',
+    data_source=activity_stream_events,
+    select_expr="""COUNTIF(
+                event = 'CLICK'
+                AND source = 'CARDGRID'
+                AND JSON_EXTRACT_SCALAR(value, '$.card_type') = 'spoc'
+            )""",
+    friendly_name="Clicked Pocket sponsored content in New Tab",
+    description=dedent("""\
+         Counts the number of Pocket sponsored content clicks made by each client.
+    """),
+)
 
 #: Metric: ...
 days_of_use = Metric(
