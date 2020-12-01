@@ -488,14 +488,13 @@
 <span class="s2">            </span><span class="si">{analysis_windows_query}</span><span class="s2"></span>
 <span class="s2">        ),</span>
 <span class="s2">        raw_enrollments AS (</span><span class="si">{enrollments_query}</span><span class="s2">),</span>
-<span class="s2">        segmented_enrollments AS (</span><span class="si">{segments_query}</span><span class="s2">),</span>
-<span class="s2">        enrollments AS (</span>
-<span class="s2">            SELECT</span>
-<span class="s2">                e.*,</span>
-<span class="s2">                aw.*</span>
-<span class="s2">            FROM segmented_enrollments e</span>
-<span class="s2">            CROSS JOIN analysis_windows aw</span>
-<span class="s2">        )</span>
+<span class="s2">        segmented_enrollments AS (</span><span class="si">{segments_query}</span><span class="s2">)</span>
+
+<span class="s2">        SELECT</span>
+<span class="s2">            e.*,</span>
+<span class="s2">            aw.*</span>
+<span class="s2">        FROM segmented_enrollments e</span>
+<span class="s2">        CROSS JOIN analysis_windows aw</span>
 <span class="s2">    );</span>
 
 <span class="s2">    CREATE OR REPLACE TABLE {{results_table}} AS (</span>
