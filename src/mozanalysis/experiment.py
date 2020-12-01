@@ -176,7 +176,7 @@ class Experiment:
         sql_to_be_hashed = self.build_query(
             metric_list=metric_list,
             time_limits=time_limits,
-            destination_table="",
+            results_table="",
             enrollments_query_type=enrollments_query_type,
             custom_enrollments_query=custom_enrollments_query,
             segment_list=segment_list,
@@ -189,7 +189,7 @@ class Experiment:
         sql = self.build_query(
             metric_list=metric_list,
             time_limits=time_limits,
-            destination_table=full_res_table_name,
+            results_table=full_res_table_name,
             enrollments_query_type=enrollments_query_type,
             custom_enrollments_query=custom_enrollments_query,
             segment_list=segment_list,
@@ -262,7 +262,7 @@ class Experiment:
         sql_to_be_hashed = self.build_query(
             metric_list=metric_list,
             time_limits=time_limits,
-            destination_table="",
+            results_table="",
             enrollments_query_type=enrollments_query_type,
             custom_enrollments_query=custom_enrollments_query,
             segment_list=segment_list,
@@ -275,7 +275,7 @@ class Experiment:
         sql = self.build_query(
             metric_list=metric_list,
             time_limits=time_limits,
-            destination_table=full_res_table_name,
+            results_table=full_res_table_name,
             enrollments_query_type=enrollments_query_type,
             custom_enrollments_query=custom_enrollments_query,
             segment_list=segment_list,
@@ -291,7 +291,7 @@ class Experiment:
         )
 
     def build_query(
-        self, *, metric_list, time_limits, destination_table,
+        self, *, metric_list, time_limits, results_table,
         enrollments_query_type='normandy', custom_enrollments_query=None,
         segment_list=None
     ) -> str:
@@ -307,7 +307,7 @@ class Experiment:
                 The metrics to analyze.
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
-            destination_table (str): The name of the table to write
+            results_table (str): The name of the table to write
             enrollments_query_type ('normandy' or 'fenix-fallback'):
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
@@ -356,7 +356,7 @@ class Experiment:
         )
     );
 
-    CREATE OR REPLACE TABLE {destination_table} AS (
+    CREATE OR REPLACE TABLE {results_table} AS (
         SELECT
             enrollments.*,
             {metrics_columns}
@@ -369,7 +369,7 @@ class Experiment:
             segments_query=segments_query,
             metrics_columns=',\n        '.join(metrics_columns),
             metrics_joins='\n'.join(metrics_joins),
-            destination_table=destination_table,
+            results_table=results_table,
         )
 
     @staticmethod
