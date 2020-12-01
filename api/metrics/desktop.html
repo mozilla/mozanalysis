@@ -407,9 +407,9 @@ reduces bytes queried compared to counting rows from the generic events DataSour
 </dd></dl>
 
 <dl class="py data">
-<dt id="mozanalysis.metrics.desktop.pocket_click">
-<code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">pocket_click</code><em class="property"> = Metric(name='pocket_click', data_source=DataSource(name='activity_stream_events', from_expr='(\n                SELECT\n                    *,\n                    DATE(submission_timestamp) AS submission_date\n                FROM `moz-fx-data-shared-prod`.activity_stream.events\n            )', experiments_column_type='native', client_id_column='client_id', submission_date_column='submission_date'), select_expr=&quot;COALESCE(LOGICAL_OR(\n                event = 'CLICK'\n                AND source = 'CARDGRID'\n            ), FALSE)&quot;, friendly_name='Clicked pocket content', description='Counts the number of clients that clicked a pocket tile on the\nnew tab page.\n', bigger_is_better=True)</em><a class="headerlink" href="#mozanalysis.metrics.desktop.pocket_click" title="Permalink to this definition">¶</a></dt>
-<dd><p>…</p>
+<dt id="mozanalysis.metrics.desktop.pocket_rec_clicks">
+<code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">pocket_rec_clicks</code><em class="property"> = Metric(name='pocket_rec_clicks', data_source=DataSource(name='activity_stream_events', from_expr='(\n                SELECT\n                    *,\n                    DATE(submission_timestamp) AS submission_date\n                FROM `moz-fx-data-shared-prod`.activity_stream.events\n            )', experiments_column_type='native', client_id_column='client_id', submission_date_column='submission_date'), select_expr=&quot;COUNTIF(\n                event = 'CLICK'\n                AND source = 'CARDGRID'\n                AND JSON_EXTRACT_SCALAR(value, '$.card_type') = 'organic'\n            )&quot;, friendly_name='Clicked Pocket organic recs in New Tab', description='Counts the number of Pocket rec clicks made by each client.\n', bigger_is_better=True)</em><a class="headerlink" href="#mozanalysis.metrics.desktop.pocket_rec_clicks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pocket organic rec clicks in New Tab</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric">Metric</a></p>
@@ -418,9 +418,9 @@ reduces bytes queried compared to counting rows from the generic events DataSour
 </dd></dl>
 
 <dl class="py data">
-<dt id="mozanalysis.metrics.desktop.pocket_click_count">
-<code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">pocket_click_count</code><em class="property"> = Metric(name='pocket_click_count', data_source=DataSource(name='activity_stream_events', from_expr='(\n                SELECT\n                    *,\n                    DATE(submission_timestamp) AS submission_date\n                FROM `moz-fx-data-shared-prod`.activity_stream.events\n            )', experiments_column_type='native', client_id_column='client_id', submission_date_column='submission_date'), select_expr=&quot;COUNTIF(\n                event = 'CLICK'\n                AND source = 'CARDGRID'\n            )&quot;, friendly_name='Clicked pocket content', description='Counts the number of pocket tile clicks made by each client.\n', bigger_is_better=True)</em><a class="headerlink" href="#mozanalysis.metrics.desktop.pocket_click_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>…</p>
+<dt id="mozanalysis.metrics.desktop.pocket_spoc_clicks">
+<code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">pocket_spoc_clicks</code><em class="property"> = Metric(name='pocket_spoc_clicks', data_source=DataSource(name='activity_stream_events', from_expr='(\n                SELECT\n                    *,\n                    DATE(submission_timestamp) AS submission_date\n                FROM `moz-fx-data-shared-prod`.activity_stream.events\n            )', experiments_column_type='native', client_id_column='client_id', submission_date_column='submission_date'), select_expr=&quot;COUNTIF(\n                event = 'CLICK'\n                AND source = 'CARDGRID'\n                AND JSON_EXTRACT_SCALAR(value, '$.card_type') = 'spoc'\n            )&quot;, friendly_name='Clicked Pocket sponsored content in New Tab', description='Counts the number of Pocket sponsored content clicks made by each client.\n', bigger_is_better=True)</em><a class="headerlink" href="#mozanalysis.metrics.desktop.pocket_spoc_clicks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pocket sponsored content clicks in New Tab</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric">Metric</a></p>
