@@ -423,9 +423,11 @@ supports sanity checks.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="mozanalysis.experiment.Experiment.build_query">
-<code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">metric_list</span></em>, <em class="sig-param"><span class="n">time_limits</span></em>, <em class="sig-param"><span class="n">enrollments_query_type</span><span class="o">=</span><span class="default_value">'normandy'</span></em>, <em class="sig-param"><span class="n">custom_enrollments_query</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">segment_list</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_query" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return SQL to query metric data.</p>
+<dt id="mozanalysis.experiment.Experiment.build_query_template">
+<code class="sig-name descname">build_query_template</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">metric_list</span></em>, <em class="sig-param"><span class="n">time_limits</span></em>, <em class="sig-param"><span class="n">enrollments_query_type</span><span class="o">=</span><span class="default_value">'normandy'</span></em>, <em class="sig-param"><span class="n">custom_enrollments_query</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">segment_list</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_query_template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_query_template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a SQL template for querying metric data.</p>
+<p>The return value is a Python string template that needs to be formatted
+with a value for <cite>results_table</cite> before it is valid SQL.</p>
 <p>For interactive use, prefer <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="mozanalysis.experiment.Experiment.get_time_series_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_time_series_data()</span></code></a> or
 <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_single_window_data()</span></code></a>, according to your use case,
 which will run the query for you and return a materialized
@@ -436,6 +438,7 @@ dataframe.</p>
 <li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics to analyze.</p></li>
 <li><p><strong>time_limits</strong> (<a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><em>TimeLimits</em></a>) – An object describing the
 interval(s) to query</p></li>
+<li><p><strong>results_table</strong> (<em>str</em>) – The name of the table to write</p></li>
 <li><p><strong>enrollments_query_type</strong> (<em>'normandy'</em><em> or </em><em>'fenix-fallback'</em>) – Specifies the query type to use to get the experiment’s
 enrollments, unless overridden by
 <code class="docutils literal notranslate"><span class="pre">custom_enrollments_query</span></code>.</p></li>
