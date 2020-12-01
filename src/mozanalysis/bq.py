@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import re
 from google.cloud import bigquery
-from google.api_core.exceptions import Conflict
+from google.api_core.exceptions import NotFound
 
 
 def sanitize_table_name_for_bq(table_name):
@@ -31,36 +31,31 @@ class BigQueryContext:
         self.project_id = project_id
         self.client = bigquery.Client(project=project_id)
 
-    def run_query(self, sql, results_table=None):
-        """Run a query and return the result.
+    def run_script_or_fetch(self, sql, results_table):
+        """Runs a BigQuery SQL script and returns a RowIterator for results_table.
+        The script is assumed to create a table named results_table after completing
+        succesfully. If results_table already exists, a RowIterator for the
+        existing table will be returned without invoking the script.
 
-        If ``results_table`` is provided, then save the results
-        into there (or just query from there if it already exists).
+        results_table is assumed to be an unqualified table name without
+        a project or dataset reference.
 
-        Returns a ``google.cloud.bigquery.table.RowIterator``
+        Learn more about BigQuery scripting at
+        https://cloud.google.com/bigquery/docs/reference/standard-sql/scripting.
         """
-        if not results_table:
-            return self.client.query(sql).result()
+
+        fqtn = self.fully_qualify_table_name(results_table)
 
         try:
-            full_res = self.client.query(
-                sql,
-                job_config=bigquery.QueryJobConfig(
-                    destination=self.client.dataset(
-                        self.dataset_id
-                    ).table(results_table)
-                )
-            ).result()
-            print('Saved into', results_table)
-            return full_res
-
-        except Conflict:
+            cached = self.client.list_rows(fqtn)
             print("Full results table already exists. Reusing", results_table)
-            return self.client.query(
-                "SELECT * FROM {}".format(
-                    self.fully_qualify_table_name(results_table)
-                )
-            ).result()
+            return cached
+        except NotFound:
+            pass
+
+        self.client.query(sql).result()
+        print('Saved into', results_table)
+        return self.client.list_rows(fqtn)
 
     def fully_qualify_table_name(self, table_name):
         """Given a table name, return it fully qualified."""

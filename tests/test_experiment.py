@@ -241,11 +241,11 @@ def test_query_not_detectably_malformed():
         num_dates_enrollment=8
     )
 
-    sql = exp.build_query(
+    sql = exp.build_query_template(
         metric_list=[],
         time_limits=tl,
         enrollments_query_type='normandy',
-    )
+    ).format(results_table='foo')
 
     sql_lint(sql)
 
@@ -260,11 +260,11 @@ def test_megaquery_not_detectably_malformed():
         num_dates_enrollment=8
     )
 
-    sql = exp.build_query(
+    sql = exp.build_query_template(
         metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
         time_limits=tl,
         enrollments_query_type='normandy',
-    )
+    ).format(results_table='foo')
 
     sql_lint(sql)
 
@@ -279,12 +279,12 @@ def test_segments_megaquery_not_detectably_malformed():
         num_dates_enrollment=8
     )
 
-    sql = exp.build_query(
+    sql = exp.build_query_template(
         metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
         segment_list=[s for s in msd.__dict__.values() if isinstance(s, msd.Segment)],
         time_limits=tl,
         enrollments_query_type='normandy',
-    )
+    ).format(results_table='foo')
 
     sql_lint(sql)
 
@@ -299,10 +299,10 @@ def test_query_not_detectably_malformed_fenix_fallback():
         num_dates_enrollment=8
     )
 
-    sql = exp.build_query(
+    sql = exp.build_query_template(
         metric_list=[],
         time_limits=tl,
         enrollments_query_type='fenix-fallback',
-    )
+    ).format(results_table='foo')
 
     sql_lint(sql)

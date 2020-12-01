@@ -173,16 +173,21 @@ class Experiment:
             analysis_length_days, self.num_dates_enrollment
         )
 
-        sql = self.build_query(
-            metric_list, time_limits, enrollments_query_type, custom_enrollments_query,
-            segment_list
+        sql_template = self.build_query(
+            metric_list=metric_list,
+            time_limits=time_limits,
+            enrollments_query_type=enrollments_query_type,
+            custom_enrollments_query=custom_enrollments_query,
+            segment_list=segment_list,
         )
 
-        res_table_name = sanitize_table_name_for_bq('_'.join(
-            [last_date_full_data, self.experiment_slug, hash_ish(sql)]
+        full_res_table_name = sanitize_table_name_for_bq('_'.join(
+            [last_date_full_data, self.experiment_slug, hash_ish(sql_template)]
         ))
 
-        return bq_context.run_query(sql, res_table_name).to_dataframe()
+        sql = sql_template.format(results_table=full_res_table_name)
+
+        return bq_context.run_script_or_fetch(sql, full_res_table_name).to_dataframe()
 
     def get_time_series_data(
         self, bq_context, metric_list, last_date_full_data,
@@ -246,16 +251,21 @@ class Experiment:
             self.num_dates_enrollment
         )
 
-        sql = self.build_query(
-            metric_list, time_limits, enrollments_query_type, custom_enrollments_query,
-            segment_list
+        sql_template = self.build_query_template(
+            metric_list=metric_list,
+            time_limits=time_limits,
+            enrollments_query_type=enrollments_query_type,
+            custom_enrollments_query=custom_enrollments_query,
+            segment_list=segment_list,
         )
 
         full_res_table_name = sanitize_table_name_for_bq('_'.join(
-            [last_date_full_data, self.experiment_slug, hash_ish(sql)]
+            [last_date_full_data, self.experiment_slug, hash_ish(sql_template)]
         ))
 
-        bq_context.run_query(sql, full_res_table_name)
+        sql = sql_template.format(results_table=full_res_table_name)
+
+        bq_context.run_script_or_fetch(sql, full_res_table_name)
 
         return TimeSeriesResult(
             fully_qualified_table_name=bq_context.fully_qualify_table_name(
@@ -264,11 +274,18 @@ class Experiment:
             analysis_windows=time_limits.analysis_windows
         )
 
-    def build_query(
-        self, metric_list, time_limits, enrollments_query_type='normandy',
-        custom_enrollments_query=None, segment_list=None
+    def build_query_template(
+        self,
+        metric_list,
+        time_limits,
+        enrollments_query_type='normandy',
+        custom_enrollments_query=None,
+        segment_list=None,
     ) -> str:
-        """Return SQL to query metric data.
+        """Return a SQL template for querying metric data.
+
+        The return value is a Python string template that needs to be formatted
+        with a value for `results_table` before it is valid SQL.
 
         For interactive use, prefer :meth:`.get_time_series_data` or
         :meth:`.get_single_window_data`, according to your use case,
@@ -280,6 +297,7 @@ class Experiment:
                 The metrics to analyze.
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
+            results_table (str): The name of the table to write
             enrollments_query_type ('normandy' or 'fenix-fallback'):
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
@@ -313,29 +331,34 @@ class Experiment:
         )
 
         return """
-    WITH analysis_windows AS (
-        {analysis_windows_query}
-    ),
-    raw_enrollments AS ({enrollments_query}),
-    segmented_enrollments AS ({segments_query}),
-    enrollments AS (
+    CREATE TEMPORARY TABLE enrollments AS (
+        WITH analysis_windows AS (
+            {analysis_windows_query}
+        ),
+        raw_enrollments AS ({enrollments_query}),
+        segmented_enrollments AS ({segments_query}),
+        enrollments AS (
+            SELECT
+                e.*,
+                aw.*
+            FROM segmented_enrollments e
+            CROSS JOIN analysis_windows aw
+        )
+    );
+
+    CREATE OR REPLACE TABLE {{results_table}} AS (
         SELECT
-            e.*,
-            aw.*
-        FROM segmented_enrollments e
-        CROSS JOIN analysis_windows aw
-    )
-    SELECT
-        enrollments.*,
-        {metrics_columns}
-    FROM enrollments
-    {metrics_joins}
+            enrollments.*,
+            {metrics_columns}
+        FROM enrollments
+        {metrics_joins}
+    );
         """.format(
             analysis_windows_query=analysis_windows_query,
             enrollments_query=enrollments_query,
             segments_query=segments_query,
             metrics_columns=',\n        '.join(metrics_columns),
-            metrics_joins='\n'.join(metrics_joins)
+            metrics_joins='\n'.join(metrics_joins),
         )
 
     @staticmethod
