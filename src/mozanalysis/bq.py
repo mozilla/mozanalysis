@@ -56,11 +56,7 @@ class BigQueryContext:
 
         except Conflict:
             print("Full results table already exists. Reusing", results_table)
-            return self.client.query(
-                "SELECT * FROM {}".format(
-                    self.fully_qualify_table_name(results_table)
-                )
-            ).result()
+            return self.client.list_rows(self.fully_qualify_table_name(results_table))
 
     def run_script_or_fetch(self, sql, results_table):
         """Runs a BigQuery SQL script and returns a RowIterator for results_table.
