@@ -78,7 +78,7 @@ user_reload_count = Metric(
 baseline_ping_count = Metric(
     name='baseline_ping_count',
     data_source=baseline,
-    select_expr='COUNT(*)',
+    select_expr='COUNT(document_id)',
     friendly_name="Baseline pings",
     description="Counts the number of `baseline` pings received from each client.",
 )
@@ -86,7 +86,7 @@ baseline_ping_count = Metric(
 metric_ping_count = Metric(
     name='metric_ping_count',
     data_source=metrics,
-    select_expr='COUNT(*)',
+    select_expr='COUNT(document_id)',
     friendly_name="Metrics pings",
     description="Counts the number of `metrics` pings received from each client.",
 )
