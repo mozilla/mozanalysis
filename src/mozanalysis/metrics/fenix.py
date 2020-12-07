@@ -15,7 +15,7 @@ baseline = DataSource(
             )""",
     client_id_column='client_info.client_id',
     experiments_column_type='glean',
-    default_dataset='org_mozilla_fenix',
+    default_dataset='org_mozilla_firefox',
 )
 
 
@@ -33,7 +33,7 @@ events = DataSource(
             )""",
     client_id_column='client_info.client_id',
     experiments_column_type='glean',
-    default_dataset='org_mozilla_fenix',
+    default_dataset='org_mozilla_firefox',
 )
 
 
@@ -47,7 +47,7 @@ metrics = DataSource(
             )""",
     client_id_column='client_info.client_id',
     experiments_column_type='glean',
-    default_dataset='org_mozilla_fenix',
+    default_dataset='org_mozilla_firefox',
 )
 
 

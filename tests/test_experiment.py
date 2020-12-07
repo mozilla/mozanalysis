@@ -305,7 +305,7 @@ def test_app_id_propagates():
     sds = SegmentDataSource(
         name="cool_data_source",
         from_expr="`moz-fx-data-shared-prod`.{dataset}.cool_table",
-        default_dataset="org_mozilla_fenix",
+        default_dataset="org_mozilla_firefox",
     )
 
     segment = Segment(
@@ -324,7 +324,7 @@ def test_app_id_propagates():
         enrollments_query_type='fenix-fallback',
     ).format(results_table='foo')
 
-    assert "org_mozilla_fenix" not in sql
+    assert "org_mozilla_firefox" not in sql
     assert "my_cool_app" in sql
 
     sql_lint(sql)

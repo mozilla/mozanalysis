@@ -86,7 +86,7 @@ class Experiment:
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
         app_id (str, optional): For a Glean app, the name of the BigQuery
-            dataset derived from its app ID, like `org_mozilla_fenix`.
+            dataset derived from its app ID, like `org_mozilla_firefox`.
 
     Attributes:
         experiment_slug (str): Name of the study, used to identify
@@ -450,7 +450,7 @@ class Experiment:
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
-            dataset=self.app_id or "org_mozilla_fenix",
+            dataset=self.app_id or "org_mozilla_firefox",
         )
 
     def _build_metrics_query_bits(self, metric_list, time_limits):
