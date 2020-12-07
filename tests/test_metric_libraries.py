@@ -28,7 +28,7 @@ def test_sql_not_detectably_malformed(included_metrics, included_datasources):
         sql_lint(m.select_expr.format(experiment_slug='slug'))
 
     for _, ds in included_datasources:
-        sql_lint(ds.from_expr)
+        sql_lint(ds.from_expr_for(None))
 
 
 def test_consistency_of_metric_and_variable_names(included_metrics):

@@ -14,7 +14,10 @@ class DataSource:
         name (str): Name for the Data Source. Used in sanity metric
             column names.
         from_expr (str): FROM expression - often just a fully-qualified
-            table name. Sometimes a subquery.
+            table name. Sometimes a subquery. May contain the string
+            ``{dataset}`` which will be replaced with an app-specific
+            dataset for Glean apps. If the expression is templated
+            on dataset, default_dataset is mandatory.
         experiments_column_type (str or None): Info about the schema
             of the table or view:
 
@@ -34,12 +37,17 @@ class DataSource:
         submission_date_column (str, optional): Name of the column
             that contains the submission date (as a date, not
             timestamp). Defaults to 'submission_date'.
+        default_dataset (str, optional): The value to use for
+            `{dataset}` in from_expr if a value is not provided
+            at runtime. Mandatory if from_expr contains a
+            `{dataset}` parameter.
     """
     name = attr.ib(validator=attr.validators.instance_of(str))
     from_expr = attr.ib(validator=attr.validators.instance_of(str))
     experiments_column_type = attr.ib(default='simple', type=str)
     client_id_column = attr.ib(default='client_id', type=str)
     submission_date_column = attr.ib(default='submission_date', type=str)
+    default_dataset = attr.ib(default=None, type=Optional[str])
 
     EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean")
 
@@ -50,6 +58,21 @@ class DataSource:
                 f"experiments_column_type {repr(value)} must be one of: "
                 f"{repr(self.EXPERIMENT_COLUMN_TYPES)}"
             )
+
+    @default_dataset.validator
+    def _check_default_dataset_provided_if_needed(self, attribute, value):
+        self.from_expr_for(None)
+
+    def from_expr_for(self, dataset: Optional[str]) -> str:
+        effective_dataset = dataset or self.default_dataset
+        if effective_dataset is None:
+            try:
+                return self.from_expr.format()
+            except Exception as e:
+                raise ValueError(
+                    f"{self.name}: from_expr contains a dataset template but no value was provided."  # noqa:E501
+                ) from e
+        return self.from_expr.format(dataset=effective_dataset)
 
     @property
     def experiments_column_expr(self):
@@ -83,7 +106,13 @@ class DataSource:
         else:
             raise ValueError
 
-    def build_query(self, metric_list, time_limits, experiment_slug):
+    def build_query(
+            self,
+            metric_list,
+            time_limits,
+            experiment_slug,
+            from_expr_dataset=None,
+            ):
         """Return a nearly-self contained SQL query.
 
         This query does not define ``enrollments`` but otherwise could
@@ -105,7 +134,7 @@ class DataSource:
         GROUP BY e.client_id, e.analysis_window_start, e.analysis_window_end""".format(
             client_id=self.client_id_column,
             submission_date=self.submission_date_column,
-            from_expr=self.from_expr,
+            from_expr=self.from_expr_for(from_expr_dataset),
             fddr=time_limits.first_date_data_required,
             lddr=time_limits.last_date_data_required,
             metrics=',\n            '.join(
@@ -205,14 +234,6 @@ class Metric:
     friendly_name = attr.ib(type=Optional[str], default=None)
     description = attr.ib(type=Optional[str], default=None)
     bigger_is_better = attr.ib(type=bool, default=True)
-
-    def from_data_source(self, data_source: DataSource) -> "Metric":
-        """Returns an instance of the Metric drawing from a different DataSource.
-
-        This is particularly useful for Glean, where pings from e.g. Fenix
-        and Fenix Nightly are sent to different tables with identical schemas.
-        """
-        return attr.evolve(self, data_source=data_source)
 
 
 def agg_sum(select_expr):
