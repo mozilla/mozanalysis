@@ -42,7 +42,7 @@ class SegmentDataSource:
             `{dataset}` parameter.
     """
     name = attr.ib(validator=attr.validators.instance_of(str))
-    from_expr = attr.ib(validator=attr.validators.instance_of(str))
+    _from_expr = attr.ib(validator=attr.validators.instance_of(str))
     window_start = attr.ib(default=0, type=int)
     window_end = attr.ib(default=0, type=int)
     client_id_column = attr.ib(default='client_id', type=str)
@@ -54,15 +54,22 @@ class SegmentDataSource:
         self.from_expr_for(None)
 
     def from_expr_for(self, dataset: Optional[str]) -> str:
+        """Expands the ``from_expr`` template for the given dataset.
+        If ``from_expr`` is not a template, returns ``from_expr``.
+
+        Args:
+            dataset (str or None): Dataset name to substitute
+                into the from expression.
+        """
         effective_dataset = dataset or self.default_dataset
         if effective_dataset is None:
             try:
-                return self.from_expr.format()
+                return self._from_expr.format()
             except Exception as e:
                 raise ValueError(
                     f"{self.name}: from_expr contains a dataset template but no value was provided."  # noqa:E501
                 ) from e
-        return self.from_expr.format(dataset=effective_dataset)
+        return self._from_expr.format(dataset=effective_dataset)
 
     def build_query(
             self,
