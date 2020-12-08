@@ -85,6 +85,8 @@ class Experiment:
             factor '7' removes weekly seasonality, and the ``+1`` accounts
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
+        app_id (str, optional): For a Glean app, the name of the BigQuery
+            dataset derived from its app ID, like `org_mozilla_firefox`.
 
     Attributes:
         experiment_slug (str): Name of the study, used to identify
@@ -103,6 +105,7 @@ class Experiment:
     experiment_slug = attr.ib()
     start_date = attr.ib()
     num_dates_enrollment = attr.ib(default=None)
+    app_id = attr.ib(default=None)
 
     def get_single_window_data(
         self, bq_context, metric_list, last_date_full_data,
@@ -432,7 +435,7 @@ class Experiment:
                 '{experiment_slug}'
             ).branch,
             DATE(MIN(b.submission_timestamp)) AS enrollment_date
-        FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` b
+        FROM `moz-fx-data-shared-prod.{dataset}.baseline` b
         WHERE
             DATE(b.submission_timestamp)
                 BETWEEN DATE_SUB('{first_enrollment_date}', INTERVAL 7 DAY)
@@ -447,6 +450,7 @@ class Experiment:
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
+            dataset=self.app_id or "org_mozilla_firefox",
         )
 
     def _build_metrics_query_bits(self, metric_list, time_limits):
@@ -462,7 +466,7 @@ class Experiment:
 
         for i, ds in enumerate(ds_metrics.keys()):
             query_for_metrics = ds.build_query(
-                ds_metrics[ds], time_limits, self.experiment_slug
+                ds_metrics[ds], time_limits, self.experiment_slug, self.app_id
             )
             metrics_joins.append(
                 """    LEFT JOIN (
@@ -527,7 +531,7 @@ class Experiment:
 
         for i, ds in enumerate(ds_segments.keys()):
             query_for_segments = ds.build_query(
-                ds_segments[ds], time_limits, self.experiment_slug
+                ds_segments[ds], time_limits, self.experiment_slug, self.app_id
             )
             segments_joins.append(
                 """    LEFT JOIN (

@@ -27,7 +27,7 @@ def test_sql_not_detectably_malformed(included_segments, included_segment_dataso
         sql_lint(s.select_expr)
 
     for _name, sds in included_segment_datasources:
-        sql_lint(sds.from_expr)
+        sql_lint(sds.from_expr_for(None))
 
 
 def test_consistency_of_segment_and_variable_names(included_segments):
@@ -81,3 +81,16 @@ def test_segment_validates_not_metric_data_source():
 def test_included_segments_have_docs(included_segments):
     for name, segment in included_segments:
         assert segment.friendly_name and segment.description, name
+
+
+def test_complains_about_template_without_default():
+    with pytest.raises(ValueError):
+        msd.SegmentDataSource(
+            name="foo",
+            from_expr="moz-fx-data-shared-prod.{dataset}.foo",
+        )
+    msd.SegmentDataSource(
+        name="foo",
+        from_expr="moz-fx-data-shared-prod.{dataset}.foo",
+        default_dataset="dataset",
+    )

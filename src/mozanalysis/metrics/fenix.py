@@ -11,10 +11,11 @@ baseline = DataSource(
                 SELECT
                     p.*,
                     DATE(p.submission_timestamp) AS submission_date
-                FROM `moz-fx-data-shared-prod.org_mozilla_fenix.baseline` p
+                FROM `moz-fx-data-shared-prod.{dataset}.baseline` p
             )""",
     client_id_column='client_info.client_id',
     experiments_column_type='glean',
+    default_dataset='org_mozilla_firefox',
 )
 
 
@@ -26,12 +27,13 @@ events = DataSource(
                     DATE(p.submission_timestamp) AS submission_date,
                     event
                 FROM
-                    `moz-fx-data-shared-prod.org_mozilla_fenix.events` p
+                    `moz-fx-data-shared-prod.{dataset}.events` p
                 CROSS JOIN
                     UNNEST(p.events) AS event
             )""",
     client_id_column='client_info.client_id',
     experiments_column_type='glean',
+    default_dataset='org_mozilla_firefox',
 )
 
 
@@ -41,10 +43,11 @@ metrics = DataSource(
                 SELECT
                     p.*,
                     DATE(p.submission_timestamp) AS submission_date
-                FROM `moz-fx-data-shared-prod.org_mozilla_fenix.metrics` p
+                FROM `moz-fx-data-shared-prod.{dataset}.metrics` p
             )""",
     client_id_column='client_info.client_id',
     experiments_column_type='glean',
+    default_dataset='org_mozilla_firefox',
 )
 
 

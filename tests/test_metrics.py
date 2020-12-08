@@ -30,3 +30,16 @@ def test_datasource_constructor_fails(name, from_expr, experiments_column_type, 
             from_expr=from_expr,
             experiments_column_type=experiments_column_type,
         )
+
+
+def test_complains_about_template_without_default():
+    with pytest.raises(ValueError):
+        DataSource(
+            name="foo",
+            from_expr="moz-fx-data-shared-prod.{dataset}.foo",
+        )
+    DataSource(
+        name="foo",
+        from_expr="moz-fx-data-shared-prod.{dataset}.foo",
+        default_dataset="dataset",
+    )

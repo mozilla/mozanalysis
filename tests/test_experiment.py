@@ -1,7 +1,10 @@
 import pytest
 from cheap_lint import sql_lint
 
+from mozanalysis.metrics import Metric
 import mozanalysis.metrics.desktop as mad
+import mozanalysis.metrics.fenix
+from mozanalysis.segments import Segment, SegmentDataSource
 import mozanalysis.segments.desktop as msd
 from mozanalysis.experiment import TimeLimits, AnalysisWindow, Experiment
 
@@ -285,6 +288,44 @@ def test_segments_megaquery_not_detectably_malformed():
         time_limits=tl,
         enrollments_query_type='normandy',
     ).format(results_table='foo')
+
+    sql_lint(sql)
+
+
+def test_app_id_propagates():
+    exp = Experiment('slug', '2019-01-01', 8, app_id="my_cool_app")
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date='2019-01-01',
+        last_date_full_data='2019-03-01',
+        time_series_period='weekly',
+        num_dates_enrollment=8
+    )
+
+    sds = SegmentDataSource(
+        name="cool_data_source",
+        from_expr="`moz-fx-data-shared-prod`.{dataset}.cool_table",
+        default_dataset="org_mozilla_firefox",
+    )
+
+    segment = Segment(
+        name="cool_segment",
+        select_expr="COUNT(*)",
+        data_source=sds,
+    )
+
+    sql = exp.build_query_template(
+        metric_list=[
+            m for m in mozanalysis.metrics.fenix.__dict__.values()
+            if isinstance(m, Metric)
+        ],
+        segment_list=[segment],
+        time_limits=tl,
+        enrollments_query_type='fenix-fallback',
+    ).format(results_table='foo')
+
+    assert "org_mozilla_firefox" not in sql
+    assert "my_cool_app" in sql
 
     sql_lint(sql)
 

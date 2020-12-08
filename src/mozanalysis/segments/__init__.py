@@ -24,7 +24,10 @@ class SegmentDataSource:
         name (str): Name for the Data Source. Should be unique to avoid
             confusion.
         from_expr (str): FROM expression - often just a fully-qualified
-            table name. Sometimes a subquery.
+            table name. Sometimes a subquery. May contain the string
+            ``{dataset}`` which will be replaced with an app-specific
+            dataset for Glean apps. If the expression is templated
+            on dataset, default_dataset is mandatory.
         window_start (int, optional): See above.
         window_end (int, optional): See above.
         client_id_column (str, optional): Name of the column that
@@ -33,15 +36,48 @@ class SegmentDataSource:
         submission_date_column (str, optional): Name of the column
             that contains the submission date (as a date, not
             timestamp). Defaults to 'submission_date'.
+        default_dataset (str, optional): The value to use for
+            `{dataset}` in from_expr if a value is not provided
+            at runtime. Mandatory if from_expr contains a
+            `{dataset}` parameter.
     """
     name = attr.ib(validator=attr.validators.instance_of(str))
-    from_expr = attr.ib(validator=attr.validators.instance_of(str))
+    _from_expr = attr.ib(validator=attr.validators.instance_of(str))
     window_start = attr.ib(default=0, type=int)
     window_end = attr.ib(default=0, type=int)
     client_id_column = attr.ib(default='client_id', type=str)
     submission_date_column = attr.ib(default='submission_date', type=str)
+    default_dataset = attr.ib(default=None, type=Optional[str])
 
-    def build_query(self, segment_list, time_limits, experiment_slug):
+    @default_dataset.validator
+    def _check_default_dataset_provided_if_needed(self, attribute, value):
+        self.from_expr_for(None)
+
+    def from_expr_for(self, dataset: Optional[str]) -> str:
+        """Expands the ``from_expr`` template for the given dataset.
+        If ``from_expr`` is not a template, returns ``from_expr``.
+
+        Args:
+            dataset (str or None): Dataset name to substitute
+                into the from expression.
+        """
+        effective_dataset = dataset or self.default_dataset
+        if effective_dataset is None:
+            try:
+                return self._from_expr.format()
+            except Exception as e:
+                raise ValueError(
+                    f"{self.name}: from_expr contains a dataset template but no value was provided."  # noqa:E501
+                ) from e
+        return self._from_expr.format(dataset=effective_dataset)
+
+    def build_query(
+        self,
+        segment_list,
+        time_limits,
+        experiment_slug,
+        from_expr_dataset=None,
+    ):
         """Return a nearly self contained SQL query.
 
         The query takes a list of ``client_id``s from
@@ -63,7 +99,7 @@ class SegmentDataSource:
         GROUP BY e.client_id""".format(
             client_id=self.client_id_column,
             submission_date=self.submission_date_column,
-            from_expr=self.from_expr,
+            from_expr=self.from_expr_for(from_expr_dataset),
             first_enrollment=time_limits.first_enrollment_date,
             last_enrollment=time_limits.last_enrollment_date,
             window_start=self.window_start,
