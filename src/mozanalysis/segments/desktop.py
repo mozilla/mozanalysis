@@ -6,7 +6,6 @@ from textwrap import dedent
 from mozanalysis.metrics import agg_any
 from mozanalysis.segments import Segment, SegmentDataSource
 
-
 clients_last_seen = SegmentDataSource(
     name="clients_last_seen",
     from_expr="`moz-fx-data-shared-prod.telemetry.clients_last_seen`",

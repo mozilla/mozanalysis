@@ -4,7 +4,7 @@
 import numpy as np
 import pytest
 
-from mozanalysis.utils import all_, any_, add_days, filter_outliers, date_sub
+from mozanalysis.utils import add_days, all_, any_, date_sub, filter_outliers
 
 
 def test_all_(spark):

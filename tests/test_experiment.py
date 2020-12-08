@@ -1,12 +1,12 @@
 import pytest
 from cheap_lint import sql_lint
 
-from mozanalysis.metrics import Metric
 import mozanalysis.metrics.desktop as mad
 import mozanalysis.metrics.fenix
-from mozanalysis.segments import Segment, SegmentDataSource
 import mozanalysis.segments.desktop as msd
-from mozanalysis.experiment import TimeLimits, AnalysisWindow, Experiment
+from mozanalysis.experiment import AnalysisWindow, Experiment, TimeLimits
+from mozanalysis.metrics import Metric
+from mozanalysis.segments import Segment, SegmentDataSource
 
 
 def test_time_limits_validates():

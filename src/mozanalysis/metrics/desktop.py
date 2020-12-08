@@ -3,8 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from textwrap import dedent
 
-from mozanalysis.metrics import Metric, DataSource, agg_sum, agg_any
-
+from mozanalysis.metrics import DataSource, Metric, agg_any, agg_sum
 
 #: DataSource: The clients_daily table.
 clients_daily = DataSource(

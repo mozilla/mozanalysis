@@ -1,9 +1,9 @@
 import pytest
 from cheap_lint import sql_lint
 
-from mozanalysis.segments import Segment, SegmentDataSource
-import mozanalysis.segments.desktop as msd
 import mozanalysis.metrics.desktop as mmd
+import mozanalysis.segments.desktop as msd
+from mozanalysis.segments import Segment, SegmentDataSource
 
 from . import enumerate_included
 

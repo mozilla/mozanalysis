@@ -1,9 +1,9 @@
-from cheap_lint import sql_lint
 import pytest
+from cheap_lint import sql_lint
 
-from mozanalysis.metrics import DataSource, Metric
 import mozanalysis.metrics.desktop as mmd
 import mozanalysis.metrics.fenix as mmf
+from mozanalysis.metrics import DataSource, Metric
 
 from . import enumerate_included
 

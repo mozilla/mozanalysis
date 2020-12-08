@@ -3,8 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import datetime
 import hashlib
-import numpy as np
 from functools import reduce
+
+import numpy as np
 
 
 def all_(l):

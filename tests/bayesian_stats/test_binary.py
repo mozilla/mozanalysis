@@ -4,8 +4,8 @@
 import pandas as pd
 import pytest
 
-import mozanalysis.bayesian_stats.binary as mabsb
 import mozanalysis.bayesian_stats as mabs
+import mozanalysis.bayesian_stats.binary as mabsb
 
 
 def test_aggregate_col():

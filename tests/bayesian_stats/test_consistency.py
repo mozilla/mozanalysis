@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import mozanalysis.bayesian_stats.binary as mabsbin
 import mozanalysis.bayesian_stats.bayesian_bootstrap as mabsbb
+import mozanalysis.bayesian_stats.binary as mabsbin
 import mozanalysis.frequentist_stats.bootstrap as mafsb
 
 

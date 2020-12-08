@@ -4,7 +4,6 @@
 import numpy as np
 import pandas as pd
 
-
 DEFAULT_QUANTILES = (0.005, 0.025, 0.5, 0.975, 0.995)
 
 
