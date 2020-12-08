@@ -72,12 +72,12 @@ class SegmentDataSource:
         return self._from_expr.format(dataset=effective_dataset)
 
     def build_query(
-            self,
-            segment_list,
-            time_limits,
-            experiment_slug,
-            from_expr_dataset=None,
-            ):
+        self,
+        segment_list,
+        time_limits,
+        experiment_slug,
+        from_expr_dataset=None,
+    ):
         """Return a nearly self contained SQL query.
 
         The query takes a list of ``client_id``s from

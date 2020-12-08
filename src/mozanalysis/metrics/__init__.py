@@ -114,12 +114,12 @@ class DataSource:
             raise ValueError
 
     def build_query(
-            self,
-            metric_list,
-            time_limits,
-            experiment_slug,
-            from_expr_dataset=None,
-            ):
+        self,
+        metric_list,
+        time_limits,
+        experiment_slug,
+        from_expr_dataset=None,
+    ):
         """Return a nearly-self contained SQL query.
 
         This query does not define ``enrollments`` but otherwise could
