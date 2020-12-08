@@ -392,7 +392,7 @@ class Experiment:
         This method writes the SQL to define the analysis window table.
         """
         return "\n        UNION ALL\n        ".join(
-            "(SELECT {aws} AS analysis_window_start, {awe} AS analysis_window_end)".format(
+            "(SELECT {aws} AS analysis_window_start, {awe} AS analysis_window_end)".format(  # noqa:E501
                 aws=aw.start,
                 awe=aw.end,
             )
