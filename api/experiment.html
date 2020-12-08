@@ -172,7 +172,7 @@
 <span id="mozanalysis-experiment"></span><h1><a class="reference internal" href="#module-mozanalysis.experiment" title="mozanalysis.experiment"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a><a class="headerlink" href="#module-mozanalysis.experiment" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="mozanalysis.experiment.Experiment">
-<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">Experiment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">experiment_slug</span></em>, <em class="sig-param"><span class="n">start_date</span></em>, <em class="sig-param"><span class="n">num_dates_enrollment</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">mozanalysis.experiment.</code><code class="sig-name descname">Experiment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">experiment_slug</span></em>, <em class="sig-param"><span class="n">start_date</span></em>, <em class="sig-param"><span class="n">num_dates_enrollment</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">app_id</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query experiment data; store experiment metadata.</p>
 <p>The methods here query data in a way compatible with the following
 principles, which are important for experiment analysis:</p>
@@ -249,6 +249,8 @@ as determined by the metric’s analysis window and
 factor ‘7’ removes weekly seasonality, and the <code class="docutils literal notranslate"><span class="pre">+1</span></code> accounts
 for the fact that enrollment typically starts a few hours
 before UTC midnight.</p></li>
+<li><p><strong>app_id</strong> (<em>str</em><em>, </em><em>optional</em>) – For a Glean app, the name of the BigQuery
+dataset derived from its app ID, like <cite>org_mozilla_firefox</cite>.</p></li>
 </ul>
 </dd>
 </dl>

@@ -176,7 +176,10 @@
 <span class="sd">        name (str): Name for the Data Source. Should be unique to avoid</span>
 <span class="sd">            confusion.</span>
 <span class="sd">        from_expr (str): FROM expression - often just a fully-qualified</span>
-<span class="sd">            table name. Sometimes a subquery.</span>
+<span class="sd">            table name. Sometimes a subquery. May contain the string</span>
+<span class="sd">            ``{dataset}`` which will be replaced with an app-specific</span>
+<span class="sd">            dataset for Glean apps. If the expression is templated</span>
+<span class="sd">            on dataset, default_dataset is mandatory.</span>
 <span class="sd">        window_start (int, optional): See above.</span>
 <span class="sd">        window_end (int, optional): See above.</span>
 <span class="sd">        client_id_column (str, optional): Name of the column that</span>
@@ -185,15 +188,48 @@
 <span class="sd">        submission_date_column (str, optional): Name of the column</span>
 <span class="sd">            that contains the submission date (as a date, not</span>
 <span class="sd">            timestamp). Defaults to &#39;submission_date&#39;.</span>
+<span class="sd">        default_dataset (str, optional): The value to use for</span>
+<span class="sd">            `{dataset}` in from_expr if a value is not provided</span>
+<span class="sd">            at runtime. Mandatory if from_expr contains a</span>
+<span class="sd">            `{dataset}` parameter.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
-    <span class="n">from_expr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+    <span class="n">_from_expr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
     <span class="n">window_start</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
     <span class="n">window_end</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
     <span class="n">client_id_column</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;client_id&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">submission_date_column</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;submission_date&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">default_dataset</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span>
 
-<div class="viewcode-block" id="SegmentDataSource.build_query"><a class="viewcode-back" href="../../api/segments.html#mozanalysis.segments.SegmentDataSource.build_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">experiment_slug</span><span class="p">):</span>
+    <span class="nd">@default_dataset</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_check_default_dataset_provided_if_needed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_expr_for</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SegmentDataSource.from_expr_for"><a class="viewcode-back" href="../../api/segments.html#mozanalysis.segments.SegmentDataSource.from_expr_for">[docs]</a>    <span class="k">def</span> <span class="nf">from_expr_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Expands the ``from_expr`` template for the given dataset.</span>
+<span class="sd">        If ``from_expr`` is not a template, returns ``from_expr``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataset (str or None): Dataset name to substitute</span>
+<span class="sd">                into the from expression.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">effective_dataset</span> <span class="o">=</span> <span class="n">dataset</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_dataset</span>
+        <span class="k">if</span> <span class="n">effective_dataset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_expr</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: from_expr contains a dataset template but no value was provided.&quot;</span>  <span class="c1"># noqa:E501</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_expr</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">effective_dataset</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SegmentDataSource.build_query"><a class="viewcode-back" href="../../api/segments.html#mozanalysis.segments.SegmentDataSource.build_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">segment_list</span><span class="p">,</span>
+        <span class="n">time_limits</span><span class="p">,</span>
+        <span class="n">experiment_slug</span><span class="p">,</span>
+        <span class="n">from_expr_dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a nearly self contained SQL query.</span>
 
 <span class="sd">        The query takes a list of ``client_id``s from</span>
@@ -215,7 +251,7 @@
 <span class="s2">        GROUP BY e.client_id&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">client_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client_id_column</span><span class="p">,</span>
             <span class="n">submission_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_date_column</span><span class="p">,</span>
-            <span class="n">from_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">from_expr</span><span class="p">,</span>
+            <span class="n">from_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">from_expr_for</span><span class="p">(</span><span class="n">from_expr_dataset</span><span class="p">),</span>
             <span class="n">first_enrollment</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span>
             <span class="n">last_enrollment</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span>
             <span class="n">window_start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_start</span><span class="p">,</span>
