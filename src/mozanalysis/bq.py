@@ -7,13 +7,16 @@ from google.api_core.exceptions import NotFound
 
 
 def sanitize_table_name_for_bq(table_name):
-    of_good_character_but_possibly_verbose = re.sub(r'[^a-zA-Z_0-9]', '_', table_name)
+    of_good_character_but_possibly_verbose = re.sub(r"[^a-zA-Z_0-9]", "_", table_name)
 
     if len(of_good_character_but_possibly_verbose) <= 1024:
         return of_good_character_but_possibly_verbose
 
-    return of_good_character_but_possibly_verbose[:500] + '___' \
+    return (
+        of_good_character_but_possibly_verbose[:500]
+        + "___"
         + of_good_character_but_possibly_verbose[-500:]
+    )
 
 
 class BigQueryContext:
@@ -26,7 +29,8 @@ class BigQueryContext:
 
     .. _BigQuery dataset id: https://cloud.google.com/bigquery/docs/datasets
     """
-    def __init__(self, dataset_id, project_id='moz-fx-data-bq-data-science'):
+
+    def __init__(self, dataset_id, project_id="moz-fx-data-bq-data-science"):
         self.dataset_id = dataset_id
         self.project_id = project_id
         self.client = bigquery.Client(project=project_id)
@@ -54,7 +58,7 @@ class BigQueryContext:
             pass
 
         self.client.query(sql).result()
-        print('Saved into', results_table)
+        print("Saved into", results_table)
         return self.client.list_rows(fqtn)
 
     def fully_qualify_table_name(self, table_name):

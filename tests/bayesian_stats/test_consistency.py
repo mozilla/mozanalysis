@@ -16,12 +16,16 @@ def test_bootstrap_vs_beta(spark_context_or_none):
     fake_data[:300] = 1
 
     boot_res = mafsb.bootstrap_one_branch(fake_data, sc=spark_context_or_none)
-    beta_res = mabsbin.summarize_one_branch_from_agg(pd.Series({
-        # `-1` to simulate Beta(0, 0) improper prior, closer to
-        # bootstrap for quantiles (i think?)
-        'num_enrollments': len(fake_data) - 1,
-        'num_conversions': fake_data.sum() - 1
-    }))
+    beta_res = mabsbin.summarize_one_branch_from_agg(
+        pd.Series(
+            {
+                # `-1` to simulate Beta(0, 0) improper prior, closer to
+                # bootstrap for quantiles (i think?)
+                "num_enrollments": len(fake_data) - 1,
+                "num_conversions": fake_data.sum() - 1,
+            }
+        )
+    )
 
     for l in boot_res.index:
         # Bootstrapped quantiles are discretized based on the number of enrollments,
@@ -36,7 +40,7 @@ def test_bootstrap_vs_beta(spark_context_or_none):
             beta_res.loc[l],
             # abs=1.9 is usually good enough with a percentile bootstrap
             # set abs=2.9 because there are lots of tests
-            abs=2.9/num_enrollments
+            abs=2.9 / num_enrollments,
         ), l
 
 
@@ -50,19 +54,23 @@ def test_bayesian_bootstrap_vs_beta(spark_context_or_none):
     fake_data[:300] = 1
 
     boot_res = mabsbb.bootstrap_one_branch(fake_data, sc=spark_context_or_none)
-    beta_res = mabsbin.summarize_one_branch_from_agg(pd.Series({
-        # `-1` to simulate Beta(0, 0) improper prior, closer to
-        # bootstrap for quantiles (i think?)
-        'num_enrollments': len(fake_data) - 1,
-        'num_conversions': fake_data.sum() - 1
-    }))
+    beta_res = mabsbin.summarize_one_branch_from_agg(
+        pd.Series(
+            {
+                # `-1` to simulate Beta(0, 0) improper prior, closer to
+                # bootstrap for quantiles (i think?)
+                "num_enrollments": len(fake_data) - 1,
+                "num_conversions": fake_data.sum() - 1,
+            }
+        )
+    )
 
     for l in boot_res.index:
         assert boot_res.loc[l] == pytest.approx(
             beta_res.loc[l],
             # abs=1.9 is usually good enough with a percentile bootstrap
             # set abs=2.9 because there are lots of tests
-            abs=2.9/num_enrollments
+            abs=2.9 / num_enrollments,
         ), (l, boot_res, beta_res)
 
 
@@ -75,14 +83,15 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric(spark_context_or_none):
     bb_res = mabsbb.bootstrap_one_branch(data, sc=spark_context_or_none)
     pboot_res = mafsb.bootstrap_one_branch(data, sc=spark_context_or_none)
 
-    assert bb_res['mean'] == pytest.approx(10, rel=1e-2)
-    assert bb_res['0.5'] == pytest.approx(10, rel=1e-2)
+    assert bb_res["mean"] == pytest.approx(10, rel=1e-2)
+    assert bb_res["0.5"] == pytest.approx(10, rel=1e-2)
 
     for l in bb_res.index:
-        assert bb_res.loc[l] == pytest.approx(
-            pboot_res.loc[l],
-            rel=5e-3
-        ), (l, bb_res, pboot_res)
+        assert bb_res.loc[l] == pytest.approx(pboot_res.loc[l], rel=5e-3), (
+            l,
+            bb_res,
+            pboot_res,
+        )
 
 
 def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(spark_context_or_none):
@@ -94,14 +103,12 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(spark_context_or_no
     quantiles = [0.3, 0.5, 0.9]
 
     def calc_quantiles(x):
-        return dict(zip(
-            quantiles, np.quantile(x, quantiles)
-        ))
+        return dict(zip(quantiles, np.quantile(x, quantiles)))
 
     bb_res = mabsbb.bootstrap_one_branch(
         data,
         stat_fn=mabsbb.make_bb_quantile_closure(quantiles),
-        sc=spark_context_or_none
+        sc=spark_context_or_none,
     )
     pboot_res = mafsb.bootstrap_one_branch(
         data, stat_fn=calc_quantiles, sc=spark_context_or_none
@@ -109,10 +116,12 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(spark_context_or_no
 
     for q in bb_res.index:
         for l in bb_res.columns:
-            assert bb_res.loc[q, l] == pytest.approx(
-                pboot_res.loc[q, l],
-                rel=5e-3
-            ), (q, l, bb_res, pboot_res)
+            assert bb_res.loc[q, l] == pytest.approx(pboot_res.loc[q, l], rel=5e-3), (
+                q,
+                l,
+                bb_res,
+                pboot_res,
+            )
 
 
 def test_bayesian_bootstrap_vs_bootstrap_poisson(spark_context_or_none):
@@ -124,14 +133,15 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson(spark_context_or_none):
     bb_res = mabsbb.bootstrap_one_branch(data, sc=spark_context_or_none)
     pboot_res = mafsb.bootstrap_one_branch(data, sc=spark_context_or_none)
 
-    assert bb_res['mean'] == pytest.approx(10, rel=1e-2)
-    assert bb_res['0.5'] == pytest.approx(10, rel=1e-2)
+    assert bb_res["mean"] == pytest.approx(10, rel=1e-2)
+    assert bb_res["0.5"] == pytest.approx(10, rel=1e-2)
 
     for l in bb_res.index:
-        assert bb_res.loc[l] == pytest.approx(
-            pboot_res.loc[l],
-            rel=5e-3
-        ), (l, bb_res, pboot_res)
+        assert bb_res.loc[l] == pytest.approx(pboot_res.loc[l], rel=5e-3), (
+            l,
+            bb_res,
+            pboot_res,
+        )
 
 
 def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles(spark_context_or_none):
@@ -143,14 +153,12 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles(spark_context_or_none
     quantiles = [0.1, 0.5, 0.95]
 
     def calc_quantiles(x):
-        return dict(zip(
-            quantiles, np.quantile(x, quantiles)
-        ))
+        return dict(zip(quantiles, np.quantile(x, quantiles)))
 
     bb_res = mabsbb.bootstrap_one_branch(
         data,
         stat_fn=mabsbb.make_bb_quantile_closure(quantiles),
-        sc=spark_context_or_none
+        sc=spark_context_or_none,
     )
     pboot_res = mafsb.bootstrap_one_branch(
         data, stat_fn=calc_quantiles, sc=spark_context_or_none
@@ -158,7 +166,9 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles(spark_context_or_none
 
     for q in bb_res.index:
         for l in bb_res.columns:
-            assert bb_res.loc[q, l] == pytest.approx(
-                pboot_res.loc[q, l],
-                rel=5e-3
-            ), (q, l, bb_res, pboot_res)
+            assert bb_res.loc[q, l] == pytest.approx(pboot_res.loc[q, l], rel=5e-3), (
+                q,
+                l,
+                bb_res,
+                pboot_res,
+            )

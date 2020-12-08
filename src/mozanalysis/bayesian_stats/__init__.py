@@ -9,9 +9,10 @@ DEFAULT_QUANTILES = (0.005, 0.025, 0.5, 0.975, 0.995)
 
 
 def compare_samples(
-    samples, ref_branch_label,
+    samples,
+    ref_branch_label,
     individual_summary_quantiles=DEFAULT_QUANTILES,
-    comparative_summary_quantiles=DEFAULT_QUANTILES
+    comparative_summary_quantiles=DEFAULT_QUANTILES,
 ):
     """Return descriptive statistics for branch stats and uplifts.
 
@@ -54,17 +55,19 @@ def compare_samples(
     branch_list = list(samples.keys())
 
     return {
-        'individual': {
+        "individual": {
             b: summarize_one_branch_samples(
-                samples[b],
-                quantiles=individual_summary_quantiles
-            ) for b in branch_list
+                samples[b], quantiles=individual_summary_quantiles
+            )
+            for b in branch_list
         },
-        'comparative': {
+        "comparative": {
             b: summarize_joint_samples(
-                samples[b], samples[ref_branch_label],
-                quantiles=comparative_summary_quantiles
-            ) for b in set(branch_list) - {ref_branch_label}
+                samples[b],
+                samples[ref_branch_label],
+                quantiles=comparative_summary_quantiles,
+            )
+            for b in set(branch_list) - {ref_branch_label}
         },
     }
 
@@ -180,7 +183,7 @@ def _summarize_one_branch_samples_single(samples, quantiles=DEFAULT_QUANTILES):
     res = pd.Series(index=q_index + ["mean"], dtype="float")
 
     res[q_index] = np.quantile(samples, quantiles)
-    res['mean'] = np.mean(samples)
+    res["mean"] = np.mean(samples)
     return res
 
 
@@ -192,33 +195,30 @@ def _summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILE
     str_quantiles = [str(q) for q in quantiles]
 
     index = pd.MultiIndex.from_tuples(
-        [('rel_uplift', q) for q in str_quantiles + ['exp']] +
-        [('abs_uplift', q) for q in str_quantiles + ['exp']] +
-        [
-            ('max_abs_diff', '0.95'),
-            ('prob_win', )
-        ]
+        [("rel_uplift", q) for q in str_quantiles + ["exp"]]
+        + [("abs_uplift", q) for q in str_quantiles + ["exp"]]
+        + [("max_abs_diff", "0.95"), ("prob_win",)]
     )
 
     res = pd.Series(index=index, dtype="float")
 
     rel_uplift_samples = focus / reference - 1
-    res.loc[
-        [('rel_uplift', q) for q in str_quantiles]
-    ] = np.quantile(rel_uplift_samples, quantiles)
+    res.loc[[("rel_uplift", q) for q in str_quantiles]] = np.quantile(
+        rel_uplift_samples, quantiles
+    )
 
-    res.loc[('rel_uplift', 'exp')] = np.mean(rel_uplift_samples)
+    res.loc[("rel_uplift", "exp")] = np.mean(rel_uplift_samples)
 
     abs_uplift_samples = focus - reference
-    res.loc[
-        [('abs_uplift', q) for q in str_quantiles]
-    ] = np.quantile(abs_uplift_samples, quantiles)
+    res.loc[[("abs_uplift", q) for q in str_quantiles]] = np.quantile(
+        abs_uplift_samples, quantiles
+    )
 
-    res.loc[('abs_uplift', 'exp')] = np.mean(abs_uplift_samples)
+    res.loc[("abs_uplift", "exp")] = np.mean(abs_uplift_samples)
 
-    res.loc[('max_abs_diff', '0.95')] = np.quantile(np.abs(abs_uplift_samples), 0.95)
+    res.loc[("max_abs_diff", "0.95")] = np.quantile(np.abs(abs_uplift_samples), 0.95)
 
-    res.loc['prob_win'] = np.mean(focus > reference)
+    res.loc["prob_win"] = np.mean(focus > reference)
 
     return res
 
@@ -227,7 +227,10 @@ def _summarize_joint_samples_batch(focus, reference, quantiles=DEFAULT_QUANTILES
     if set(focus.columns) != set(reference.columns):
         raise ValueError()
 
-    return pd.DataFrame({
-        k: summarize_joint_samples(focus[k], reference[k], quantiles)
-        for k in focus.columns
-    }, columns=focus.columns).T
+    return pd.DataFrame(
+        {
+            k: summarize_joint_samples(focus[k], reference[k], quantiles)
+            for k in focus.columns
+        },
+        columns=focus.columns,
+    ).T

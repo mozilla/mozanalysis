@@ -43,15 +43,15 @@ def any_(l):
 
 def add_days(date_string, n_days):
     """Add `n_days` days to a date string like '2019-01-01'."""
-    original_date = datetime.datetime.strptime(date_string, '%Y-%m-%d')
+    original_date = datetime.datetime.strptime(date_string, "%Y-%m-%d")
     new_date = original_date + datetime.timedelta(days=n_days)
-    return datetime.datetime.strftime(new_date, '%Y-%m-%d')
+    return datetime.datetime.strftime(new_date, "%Y-%m-%d")
 
 
 def date_sub(date_string_l, date_string_r):
     """Return the number of days between two date strings like '2019-01-01'"""
-    date_l = datetime.datetime.strptime(date_string_l, '%Y-%m-%d')
-    date_r = datetime.datetime.strptime(date_string_r, '%Y-%m-%d')
+    date_l = datetime.datetime.strptime(date_string_l, "%Y-%m-%d")
+    date_r = datetime.datetime.strptime(date_string_r, "%Y-%m-%d")
     return (date_l - date_r).days
 
 
@@ -84,4 +84,4 @@ def filter_outliers(branch_data, threshold_quantile):
 
 def hash_ish(string, hex_chars=12):
     """Return a crude hash of a string."""
-    return hashlib.sha256(string.encode('utf-8')).hexdigest()[:hex_chars]
+    return hashlib.sha256(string.encode("utf-8")).hexdigest()[:hex_chars]

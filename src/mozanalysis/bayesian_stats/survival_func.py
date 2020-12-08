@@ -7,7 +7,7 @@ import pandas as pd
 import mozanalysis.bayesian_stats.binary as mabsb
 
 
-def compare_branches(df, col_label, ref_branch_label='control', thresholds=None):
+def compare_branches(df, col_label, ref_branch_label="control", thresholds=None):
     """Return the survival functions and relative uplifts thereupon.
 
     This function generates data for a metric's survival function
@@ -72,16 +72,15 @@ def compare_branches(df, col_label, ref_branch_label='control', thresholds=None)
     data = {t: _one_thresh(t, df, col_label, ref_branch_label) for t in thresholds}
 
     return {
-        'individual': {
-            b: pd.DataFrame({
-                t: d['individual'][b] for t, d in data.items()
-            }, columns=thresholds).T
+        "individual": {
+            b: pd.DataFrame(
+                {t: d["individual"][b] for t, d in data.items()}, columns=thresholds
+            ).T
             for b in branch_list
         },
-        'comparative': {
-            b: pd.DataFrame({
-                t: d['comparative'][b] for t, d in data.items()
-            }).T for b in set(branch_list) - {ref_branch_label}
+        "comparative": {
+            b: pd.DataFrame({t: d["comparative"][b] for t, d in data.items()}).T
+            for b in set(branch_list) - {ref_branch_label}
         },
     }
 
@@ -114,11 +113,11 @@ def get_thresholds(col, max_num_thresholds=101):
         # to avoid duplicating work.
         # Can't use 'lower', 'higher', or 'midpoint' due to rounding issues
         # that lead to dumb choices. That leaves us with 'nearest'
-        interpolation='nearest'
+        interpolation="nearest",
     )
-    return sorted(
-        [np.float64(0)] + list(nonzero_quantiles.unique())
-    )[:-1]  # The thresholds get used as `>` not `>=`, so exclude the max value
+    return sorted([np.float64(0)] + list(nonzero_quantiles.unique()))[
+        :-1
+    ]  # The thresholds get used as `>` not `>=`, so exclude the max value
 
 
 def _one_thresh(threshold, df, col_label, ref_branch_label):
@@ -126,18 +125,18 @@ def _one_thresh(threshold, df, col_label, ref_branch_label):
     if df[col_label].isnull().any():
         raise ValueError("'df' contains null values for '{}'".format(col_label))
 
-    if '_tmp_threshold_val' in df.columns:
+    if "_tmp_threshold_val" in df.columns:
         raise ValueError(
             "Either you have an exceedingly poor taste in column names, "
             "or there is a bug in `_one_thresh`."
         )
     try:
         # Sorry for mutating the input inplace. I'll be sure to tidy up.
-        df['_tmp_threshold_val'] = df[col_label] > threshold
+        df["_tmp_threshold_val"] = df[col_label] > threshold
 
         return mabsb.compare_branches(
-            df, '_tmp_threshold_val', ref_branch_label=ref_branch_label
+            df, "_tmp_threshold_val", ref_branch_label=ref_branch_label
         )
 
     finally:
-        df.drop('_tmp_threshold_val', axis='columns', inplace=True)
+        df.drop("_tmp_threshold_val", axis="columns", inplace=True)

@@ -10,8 +10,8 @@ import mozanalysis.bayesian_stats.bayesian_bootstrap as mabsbb
 
 def test_resample_and_agg_once():
     assert mabsbb._resample_and_agg_once(
-        np.array([3.]), np.array([3]), mabsbb.bb_mean
-    ) == pytest.approx(3.)
+        np.array([3.0]), np.array([3]), mabsbb.bb_mean
+    ) == pytest.approx(3.0)
 
 
 def test_resample_and_agg_once_multistat(stack_depth=0):
@@ -21,39 +21,42 @@ def test_resample_and_agg_once_multistat(stack_depth=0):
         data_values,
         data_counts,
         lambda x, y: {
-            'min': np.min(x),
-            'max': np.max(x),
-            'mean': np.dot(x, y),
+            "min": np.min(x),
+            "max": np.max(x),
+            "mean": np.dot(x, y),
         },
     )
 
-    assert res['min'] == 0
-    assert res['max'] == 1
-    assert res['mean'] == pytest.approx(0.5, rel=1e-1)
+    assert res["min"] == 0
+    assert res["max"] == 1
+    assert res["mean"] == pytest.approx(0.5, rel=1e-1)
 
     if stack_depth >= 3:
-        assert res['mean'] != 0.5  # Extremely unlikely
-    elif res['mean'] == 0.5:
+        assert res["mean"] != 0.5  # Extremely unlikely
+    elif res["mean"] == 0.5:
         # This is a 0.5% event - implausible but not impossible.
         # Re-roll the dice a few times to make sure this was a fluke.
         test_resample_and_agg_once_multistat(stack_depth + 1)
 
 
 def test_resample_and_agg_once_bcast(spark_context):
-    b_data_values = spark_context.broadcast(np.array([3.]))
+    b_data_values = spark_context.broadcast(np.array([3.0]))
     b_data_counts = spark_context.broadcast(np.array([3]))
-    assert mabsbb._resample_and_agg_once_bcast(
-        b_data_values, b_data_counts, mabsbb.bb_mean, 42
-    ) == 3.
+    assert (
+        mabsbb._resample_and_agg_once_bcast(
+            b_data_values, b_data_counts, mabsbb.bb_mean, 42
+        )
+        == 3.0
+    )
 
 
 def test_get_bootstrap_samples(spark_context):
     res = mabsbb.get_bootstrap_samples(
-        np.array([3., 3., 3.]), num_samples=2, sc=spark_context
+        np.array([3.0, 3.0, 3.0]), num_samples=2, sc=spark_context
     )
     assert res.shape == (2,)
-    assert res[0] == pytest.approx(3.)
-    assert res[1] == pytest.approx(3.)
+    assert res[0] == pytest.approx(3.0)
+    assert res[1] == pytest.approx(3.0)
 
 
 def test_get_bootstrap_samples_no_spark():
@@ -65,27 +68,27 @@ def test_get_bootstrap_samples_multistat(spark_context, stack_depth=0):
     res = mabsbb.get_bootstrap_samples(
         data,
         lambda x, y: {
-            'min': np.min(x),
-            'max': np.max(x),
-            'mean': np.dot(x, y),
+            "min": np.min(x),
+            "max": np.max(x),
+            "mean": np.dot(x, y),
         },
         num_samples=2,
-        sc=spark_context
+        sc=spark_context,
     )
 
     assert res.shape == (2, 3)
 
-    assert (res['min'] == 0).all()
-    assert (res['max'] == 1).all()
-    assert res['mean'].iloc[0] == pytest.approx(np.mean(data), rel=1e-1)
-    assert res['mean'].iloc[1] == pytest.approx(np.mean(data), rel=1e-1)
+    assert (res["min"] == 0).all()
+    assert (res["max"] == 1).all()
+    assert res["mean"].iloc[0] == pytest.approx(np.mean(data), rel=1e-1)
+    assert res["mean"].iloc[1] == pytest.approx(np.mean(data), rel=1e-1)
 
     # If we stuff up (duplicate) the seeds then things aren't random
-    assert res['mean'].iloc[0] != res['mean'].iloc[1]
+    assert res["mean"].iloc[0] != res["mean"].iloc[1]
 
     if stack_depth >= 3:
-        assert (res['mean'] != np.mean(data)).any()  # Extremely unlikely
-    elif (res['mean'] == np.mean(data)).any():
+        assert (res["mean"] != np.mean(data)).any()  # Extremely unlikely
+    elif (res["mean"] == np.mean(data)).any():
         # Re-roll the dice a few times to make sure this was a fluke.
         test_get_bootstrap_samples_multistat(spark_context, stack_depth + 1)
 
@@ -100,9 +103,9 @@ def test_bootstrap_one_branch(spark_context):
         data, num_samples=100, summary_quantiles=(0.5, 0.61), sc=spark_context
     )
 
-    assert res['mean'] == pytest.approx(0.5, rel=1e-1)
-    assert res['0.5'] == pytest.approx(0.5, rel=1e-1)
-    assert res['0.61'] == pytest.approx(0.5, rel=1e-1)
+    assert res["mean"] == pytest.approx(0.5, rel=1e-1)
+    assert res["0.5"] == pytest.approx(0.5, rel=1e-1)
+    assert res["0.61"] == pytest.approx(0.5, rel=1e-1)
 
 
 def test_bootstrap_one_branch_no_spark():
@@ -114,8 +117,8 @@ def test_bootstrap_one_branch_multistat(spark_context):
     res = mabsbb.bootstrap_one_branch(
         data,
         stat_fn=lambda x, y: {
-            'max': np.max(x),
-            'mean': np.dot(x, y),
+            "max": np.max(x),
+            "mean": np.dot(x, y),
         },
         num_samples=5,
         summary_quantiles=(0.5, 0.61),
@@ -125,12 +128,12 @@ def test_bootstrap_one_branch_multistat(spark_context):
 
     assert res.shape == (2, 3)
 
-    assert res.loc['max', 'mean'] == 1
-    assert res.loc['max', '0.5'] == 1
-    assert res.loc['max', '0.61'] == 1
-    assert res.loc['mean', 'mean'] == pytest.approx(0.5, rel=1e-1)
-    assert res.loc['mean', '0.5'] == pytest.approx(0.5, rel=1e-1)
-    assert res.loc['mean', '0.61'] == pytest.approx(0.5, rel=1e-1)
+    assert res.loc["max", "mean"] == 1
+    assert res.loc["max", "0.5"] == 1
+    assert res.loc["max", "0.61"] == 1
+    assert res.loc["mean", "mean"] == pytest.approx(0.5, rel=1e-1)
+    assert res.loc["mean", "0.5"] == pytest.approx(0.5, rel=1e-1)
+    assert res.loc["mean", "0.61"] == pytest.approx(0.5, rel=1e-1)
 
 
 def test_bootstrap_one_branch_multistat_no_spark():
@@ -138,91 +141,90 @@ def test_bootstrap_one_branch_multistat_no_spark():
 
 
 def test_compare_branches(spark_context_or_none):
-    data = pd.DataFrame(
-        index=range(60000),
-        columns=['branch', 'val'],
-        dtype='float'
-    )
-    data.iloc[::3, 0] = 'control'
-    data.iloc[1::3, 0] = 'same'
-    data.iloc[2::3, 0] = 'bigger'
+    data = pd.DataFrame(index=range(60000), columns=["branch", "val"], dtype="float")
+    data.iloc[::3, 0] = "control"
+    data.iloc[1::3, 0] = "same"
+    data.iloc[2::3, 0] = "bigger"
 
     data.iloc[::2, 1] = 0
     data.iloc[1::2, 1] = 1
 
     data.iloc[2::12, 1] = 1
 
-    assert data.val[data.branch != 'bigger'].mean() == 0.5
-    assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
+    assert data.val[data.branch != "bigger"].mean() == 0.5
+    assert data.val[data.branch == "bigger"].mean() == pytest.approx(0.75)
 
-    res = mabsbb.compare_branches(data, 'val', num_samples=2, sc=spark_context_or_none)
+    res = mabsbb.compare_branches(data, "val", num_samples=2, sc=spark_context_or_none)
 
-    assert res['individual']['control']['mean'] == pytest.approx(0.5, rel=1e-1)
-    assert res['individual']['same']['mean'] == pytest.approx(0.5, rel=1e-1)
-    assert res['individual']['bigger']['mean'] == pytest.approx(0.75, rel=1e-1)
+    assert res["individual"]["control"]["mean"] == pytest.approx(0.5, rel=1e-1)
+    assert res["individual"]["same"]["mean"] == pytest.approx(0.5, rel=1e-1)
+    assert res["individual"]["bigger"]["mean"] == pytest.approx(0.75, rel=1e-1)
 
-    assert 'control' not in res['comparative'].keys()
-    assert res['comparative']['same'][('rel_uplift', 'exp')] == \
-        pytest.approx(0, abs=0.1)
-    assert res['comparative']['bigger'][('rel_uplift', 'exp')] == \
-        pytest.approx(0.5, abs=0.1)
+    assert "control" not in res["comparative"].keys()
+    assert res["comparative"]["same"][("rel_uplift", "exp")] == pytest.approx(
+        0, abs=0.1
+    )
+    assert res["comparative"]["bigger"][("rel_uplift", "exp")] == pytest.approx(
+        0.5, abs=0.1
+    )
 
     # num_samples=2 so only 3 possible outcomes
-    assert res['comparative']['same'][('prob_win', None)] in (0, 0.5, 1)
-    assert res['comparative']['bigger'][('prob_win', None)] == \
-        pytest.approx(1, abs=0.01)
+    assert res["comparative"]["same"][("prob_win", None)] in (0, 0.5, 1)
+    assert res["comparative"]["bigger"][("prob_win", None)] == pytest.approx(
+        1, abs=0.01
+    )
 
 
 def test_compare_branches_multistat(spark_context_or_none):
-    data = pd.DataFrame(
-        index=range(60000),
-        columns=['branch', 'val'],
-        dtype='float'
-    )
-    data.iloc[::3, 0] = 'control'
-    data.iloc[1::3, 0] = 'same'
-    data.iloc[2::3, 0] = 'bigger'
+    data = pd.DataFrame(index=range(60000), columns=["branch", "val"], dtype="float")
+    data.iloc[::3, 0] = "control"
+    data.iloc[1::3, 0] = "same"
+    data.iloc[2::3, 0] = "bigger"
 
     data.iloc[::2, 1] = 0
     data.iloc[1::2, 1] = 1
 
     data.iloc[2::12, 1] = 1
 
-    assert data.val[data.branch != 'bigger'].mean() == 0.5
-    assert data.val[data.branch == 'bigger'].mean() == pytest.approx(0.75)
+    assert data.val[data.branch != "bigger"].mean() == 0.5
+    assert data.val[data.branch == "bigger"].mean() == pytest.approx(0.75)
 
     res = mabsbb.compare_branches(
         data,
-        'val',
+        "val",
         stat_fn=lambda x, y: {
-            'max': np.max(x),
-            'mean': np.dot(x, y),
+            "max": np.max(x),
+            "mean": np.dot(x, y),
         },
         num_samples=2,
         sc=spark_context_or_none,
     )
 
-    assert res['individual']['control'].loc['mean', 'mean'] \
-        == pytest.approx(0.5, rel=1e-1)
-    assert res['individual']['same'].loc['mean', 'mean'] \
-        == pytest.approx(0.5, rel=1e-1)
-    assert res['individual']['bigger'].loc['mean', 'mean'] \
-        == pytest.approx(0.75, rel=1e-1)
+    assert res["individual"]["control"].loc["mean", "mean"] == pytest.approx(
+        0.5, rel=1e-1
+    )
+    assert res["individual"]["same"].loc["mean", "mean"] == pytest.approx(0.5, rel=1e-1)
+    assert res["individual"]["bigger"].loc["mean", "mean"] == pytest.approx(
+        0.75, rel=1e-1
+    )
 
-    assert 'control' not in res['comparative'].keys()
+    assert "control" not in res["comparative"].keys()
 
-    assert res['comparative']['same'].loc['mean', ('rel_uplift', 'exp')] \
-        == pytest.approx(0, abs=0.1)
-    assert res['comparative']['bigger'].loc['mean', ('rel_uplift', 'exp')] \
-        == pytest.approx(0.5, abs=0.1)
+    assert res["comparative"]["same"].loc[
+        "mean", ("rel_uplift", "exp")
+    ] == pytest.approx(0, abs=0.1)
+    assert res["comparative"]["bigger"].loc[
+        "mean", ("rel_uplift", "exp")
+    ] == pytest.approx(0.5, abs=0.1)
 
     # num_samples=2 so only 3 possible outcomes
-    assert res['comparative']['same'].loc['mean', ('prob_win', None)] in (0, 0.5, 1)
-    assert res['comparative']['bigger'].loc['mean', ('prob_win', None)] \
-        == pytest.approx(1, abs=0.01)
+    assert res["comparative"]["same"].loc["mean", ("prob_win", None)] in (0, 0.5, 1)
+    assert res["comparative"]["bigger"].loc[
+        "mean", ("prob_win", None)
+    ] == pytest.approx(1, abs=0.01)
 
-    assert res['comparative']['same'].loc['max', ('rel_uplift', 'exp')] == 0
-    assert res['comparative']['bigger'].loc['max', ('rel_uplift', 'exp')] == 0
+    assert res["comparative"]["same"].loc["max", ("rel_uplift", "exp")] == 0
+    assert res["comparative"]["bigger"].loc["max", ("rel_uplift", "exp")] == 0
 
 
 def test_bb_mean():

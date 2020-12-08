@@ -9,10 +9,15 @@ from mozanalysis.utils import filter_outliers
 
 
 def compare_branches(
-    df, col_label, ref_branch_label='control', stat_fn=np.mean,
-    num_samples=10000, threshold_quantile=None,
+    df,
+    col_label,
+    ref_branch_label="control",
+    stat_fn=np.mean,
+    num_samples=10000,
+    threshold_quantile=None,
     individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
-    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES, sc=None
+    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES,
+    sc=None,
 ):
     """Jointly sample bootstrapped statistics then compare them.
 
@@ -72,9 +77,11 @@ def compare_branches(
     branch_list = df.branch.unique()
 
     if ref_branch_label not in branch_list:
-        raise ValueError("Branch label '{b}' not in branch list '{bl}".format(
-            b=ref_branch_label, bl=branch_list
-        ))
+        raise ValueError(
+            "Branch label '{b}' not in branch list '{bl}".format(
+                b=ref_branch_label, bl=branch_list
+            )
+        )
 
     samples = {
         # TODO: do we need to control seed_start? If so then we must be careful here
@@ -84,19 +91,26 @@ def compare_branches(
             num_samples,
             threshold_quantile=threshold_quantile,
             sc=sc,
-        ) for b in branch_list
+        )
+        for b in branch_list
     }
 
     return mabs.compare_samples(
-        samples, ref_branch_label, individual_summary_quantiles,
-        comparative_summary_quantiles
+        samples,
+        ref_branch_label,
+        individual_summary_quantiles,
+        comparative_summary_quantiles,
     )
 
 
 def bootstrap_one_branch(
-    data, stat_fn=np.mean, num_samples=10000, seed_start=None,
-    threshold_quantile=None, summary_quantiles=mabs.DEFAULT_QUANTILES,
-    sc=None
+    data,
+    stat_fn=np.mean,
+    num_samples=10000,
+    seed_start=None,
+    threshold_quantile=None,
+    summary_quantiles=mabs.DEFAULT_QUANTILES,
+    sc=None,
 ):
     """Run a bootstrap for one branch on its own.
 
@@ -126,14 +140,16 @@ def bootstrap_one_branch(
         data, stat_fn, num_samples, seed_start, threshold_quantile, sc
     )
 
-    return mabs.summarize_one_branch_samples(
-        samples, summary_quantiles
-    )
+    return mabs.summarize_one_branch_samples(samples, summary_quantiles)
 
 
 def get_bootstrap_samples(
-    data, stat_fn=np.mean, num_samples=10000, seed_start=None,
-    threshold_quantile=None, sc=None
+    data,
+    stat_fn=np.mean,
+    num_samples=10000,
+    seed_start=None,
+    threshold_quantile=None,
+    sc=None,
 ):
     """Return ``stat_fn`` evaluated on resampled and original data.
 
@@ -193,13 +209,17 @@ def get_bootstrap_samples(
         try:
             broadcast_data = sc.broadcast(data)
 
-            summary_stat_samples = sc.parallelize(seed_range).map(
-                lambda seed: _resample_and_agg_once_bcast(
-                    broadcast_data=broadcast_data,
-                    stat_fn=stat_fn,
-                    unique_seed=seed % np.iinfo(np.uint32).max,
+            summary_stat_samples = (
+                sc.parallelize(seed_range)
+                .map(
+                    lambda seed: _resample_and_agg_once_bcast(
+                        broadcast_data=broadcast_data,
+                        stat_fn=stat_fn,
+                        unique_seed=seed % np.iinfo(np.uint32).max,
+                    )
                 )
-            ).collect()
+                .collect()
+            )
 
         finally:
             broadcast_data.unpersist()
@@ -214,9 +234,7 @@ def get_bootstrap_samples(
 
 
 def _resample_and_agg_once_bcast(broadcast_data, stat_fn, unique_seed):
-    return _resample_and_agg_once(
-        broadcast_data.value, stat_fn, unique_seed
-    )
+    return _resample_and_agg_once(broadcast_data.value, stat_fn, unique_seed)
 
 
 def _resample_and_agg_once(data, stat_fn, unique_seed=None):

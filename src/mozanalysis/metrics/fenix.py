@@ -6,21 +6,21 @@ from mozanalysis.metrics import Metric, DataSource, agg_sum
 
 
 baseline = DataSource(
-    name='baseline',
+    name="baseline",
     from_expr="""(
                 SELECT
                     p.*,
                     DATE(p.submission_timestamp) AS submission_date
                 FROM `moz-fx-data-shared-prod.{dataset}.baseline` p
             )""",
-    client_id_column='client_info.client_id',
-    experiments_column_type='glean',
-    default_dataset='org_mozilla_firefox',
+    client_id_column="client_info.client_id",
+    experiments_column_type="glean",
+    default_dataset="org_mozilla_firefox",
 )
 
 
 events = DataSource(
-    name='events',
+    name="events",
     from_expr="""(
                 SELECT
                     p.* EXCEPT (events),
@@ -31,36 +31,36 @@ events = DataSource(
                 CROSS JOIN
                     UNNEST(p.events) AS event
             )""",
-    client_id_column='client_info.client_id',
-    experiments_column_type='glean',
-    default_dataset='org_mozilla_firefox',
+    client_id_column="client_info.client_id",
+    experiments_column_type="glean",
+    default_dataset="org_mozilla_firefox",
 )
 
 
 metrics = DataSource(
-    name='metrics',
+    name="metrics",
     from_expr="""(
                 SELECT
                     p.*,
                     DATE(p.submission_timestamp) AS submission_date
                 FROM `moz-fx-data-shared-prod.{dataset}.metrics` p
             )""",
-    client_id_column='client_info.client_id',
-    experiments_column_type='glean',
-    default_dataset='org_mozilla_firefox',
+    client_id_column="client_info.client_id",
+    experiments_column_type="glean",
+    default_dataset="org_mozilla_firefox",
 )
 
 
 uri_count = Metric(
-    name='uri_count',
+    name="uri_count",
     data_source=baseline,
-    select_expr=agg_sum('metrics.counter.events_total_uri_count'),
+    select_expr=agg_sum("metrics.counter.events_total_uri_count"),
     friendly_name="URIs visited",
     description="Counts the number of URIs each client visited",
 )
 
 user_reports_site_issue_count = Metric(
-    name='user_reports_site_issue_count',
+    name="user_reports_site_issue_count",
     data_source=events,
     select_expr="COUNTIF(event.name = 'browser_menu_action' AND "
     + "mozfun.map.get_key('event.extra', 'item') = 'report_site_issue')",
@@ -69,7 +69,7 @@ user_reports_site_issue_count = Metric(
 )
 
 user_reload_count = Metric(
-    name='user_reload_count',
+    name="user_reload_count",
     data_source=events,
     select_expr="COUNTIF(event.name = 'browser_menu_action' AND "
     + "mozfun.map.get_key('event.extra', 'item') = 'reload')",
@@ -79,25 +79,25 @@ user_reload_count = Metric(
 )
 
 baseline_ping_count = Metric(
-    name='baseline_ping_count',
+    name="baseline_ping_count",
     data_source=baseline,
-    select_expr='COUNT(document_id)',
+    select_expr="COUNT(document_id)",
     friendly_name="Baseline pings",
     description="Counts the number of `baseline` pings received from each client.",
 )
 
 metric_ping_count = Metric(
-    name='metric_ping_count',
+    name="metric_ping_count",
     data_source=metrics,
-    select_expr='COUNT(document_id)',
+    select_expr="COUNT(document_id)",
     friendly_name="Metrics pings",
     description="Counts the number of `metrics` pings received from each client.",
 )
 
 first_run_date = Metric(
-    name='first_run_date',
+    name="first_run_date",
     data_source=baseline,
-    select_expr='MIN(client_info.first_run_date)',
+    select_expr="MIN(client_info.first_run_date)",
     friendly_name="First run date",
     description="The earliest first-run date reported by each client.",
 )

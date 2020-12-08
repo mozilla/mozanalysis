@@ -41,12 +41,13 @@ class SegmentDataSource:
             at runtime. Mandatory if from_expr contains a
             `{dataset}` parameter.
     """
+
     name = attr.ib(validator=attr.validators.instance_of(str))
     _from_expr = attr.ib(validator=attr.validators.instance_of(str))
     window_start = attr.ib(default=0, type=int)
     window_end = attr.ib(default=0, type=int)
-    client_id_column = attr.ib(default='client_id', type=str)
-    submission_date_column = attr.ib(default='submission_date', type=str)
+    client_id_column = attr.ib(default="client_id", type=str)
+    submission_date_column = attr.ib(default="submission_date", type=str)
     default_dataset = attr.ib(default=None, type=Optional[str])
 
     @default_dataset.validator
@@ -104,7 +105,7 @@ class SegmentDataSource:
             last_enrollment=time_limits.last_enrollment_date,
             window_start=self.window_start,
             window_end=self.window_end,
-            segments=',\n            '.join(
+            segments=",\n            ".join(
                 f"{m.select_expr} AS {m.name}" for m in segment_list
             ),
         )
@@ -136,6 +137,7 @@ class Segment:
         description (str): A paragraph of Markdown-formatted text describing
             the segment in more detail, to be shown on dashboards
     """
+
     name = attr.ib(type=str)
     data_source = attr.ib(validator=attr.validators.instance_of(SegmentDataSource))
     select_expr = attr.ib(type=str)

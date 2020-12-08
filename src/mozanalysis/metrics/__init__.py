@@ -42,11 +42,12 @@ class DataSource:
             at runtime. Mandatory if from_expr contains a
             `{dataset}` parameter.
     """
+
     name = attr.ib(validator=attr.validators.instance_of(str))
     _from_expr = attr.ib(validator=attr.validators.instance_of(str))
-    experiments_column_type = attr.ib(default='simple', type=str)
-    client_id_column = attr.ib(default='client_id', type=str)
-    submission_date_column = attr.ib(default='submission_date', type=str)
+    experiments_column_type = attr.ib(default="simple", type=str)
+    client_id_column = attr.ib(default="client_id", type=str)
+    submission_date_column = attr.ib(default="submission_date", type=str)
     default_dataset = attr.ib(default=None, type=Optional[str])
 
     EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean")
@@ -84,9 +85,9 @@ class DataSource:
     @property
     def experiments_column_expr(self):
         if self.experiments_column_type is None:
-            return ''
+            return ""
 
-        elif self.experiments_column_type == 'simple':
+        elif self.experiments_column_type == "simple":
             return """AND (
                     ds.{submission_date} != e.enrollment_date
                     OR `mozfun.map.get_key`(
@@ -94,7 +95,7 @@ class DataSource:
                     ) IS NOT NULL
                 )"""
 
-        elif self.experiments_column_type == 'native':
+        elif self.experiments_column_type == "native":
             return """AND (
                     ds.{submission_date} != e.enrollment_date
                     OR `mozfun.map.get_key`(
@@ -102,7 +103,7 @@ class DataSource:
                     ).branch IS NOT NULL
             )"""
 
-        elif self.experiments_column_type == 'glean':
+        elif self.experiments_column_type == "glean":
             return """AND (
                     ds.{submission_date} != e.enrollment_date
                     OR `mozfun.map.get_key`(
@@ -144,7 +145,7 @@ class DataSource:
             from_expr=self.from_expr_for(from_expr_dataset),
             fddr=time_limits.first_date_data_required,
             lddr=time_limits.last_date_data_required,
-            metrics=',\n            '.join(
+            metrics=",\n            ".join(
                 "{se} AS {n}".format(
                     se=m.select_expr.format(experiment_slug=experiment_slug), n=m.name
                 )
@@ -153,64 +154,82 @@ class DataSource:
             ignore_pre_enroll_first_day=self.experiments_column_expr.format(
                 submission_date=self.submission_date_column,
                 experiment_slug=experiment_slug,
-            )
+            ),
         )
 
     def get_sanity_metrics(self, experiment_slug):
         if self.experiments_column_type is None:
             return []
 
-        elif self.experiments_column_type == 'simple':
+        elif self.experiments_column_type == "simple":
             return [
                 Metric(
-                    name=self.name + '_has_contradictory_branch',
+                    name=self.name + "_has_contradictory_branch",
                     data_source=self,
-                    select_expr=agg_any("""`mozfun.map.get_key`(
+                    select_expr=agg_any(
+                        """`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
-            ) != e.branch"""),
+            ) != e.branch"""
+                    ),
                 ),
                 Metric(
-                    name=self.name + '_has_non_enrolled_data',
+                    name=self.name + "_has_non_enrolled_data",
                     data_source=self,
-                    select_expr=agg_any("""`mozfun.map.get_key`(
+                    select_expr=agg_any(
+                        """`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
-            ) IS NULL""".format(experiment_slug=experiment_slug))
+            ) IS NULL""".format(
+                            experiment_slug=experiment_slug
+                        )
+                    ),
                 ),
             ]
 
-        elif self.experiments_column_type == 'native':
+        elif self.experiments_column_type == "native":
             return [
                 Metric(
-                    name=self.name + '_has_contradictory_branch',
+                    name=self.name + "_has_contradictory_branch",
                     data_source=self,
-                    select_expr=agg_any("""`mozfun.map.get_key`(
+                    select_expr=agg_any(
+                        """`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
-            ).branch != e.branch"""),
+            ).branch != e.branch"""
+                    ),
                 ),
                 Metric(
-                    name=self.name + '_has_non_enrolled_data',
+                    name=self.name + "_has_non_enrolled_data",
                     data_source=self,
-                    select_expr=agg_any("""`mozfun.map.get_key`(
+                    select_expr=agg_any(
+                        """`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
-            ).branch IS NULL""".format(experiment_slug=experiment_slug))
+            ).branch IS NULL""".format(
+                            experiment_slug=experiment_slug
+                        )
+                    ),
                 ),
             ]
 
-        elif self.experiments_column_type == 'glean':
+        elif self.experiments_column_type == "glean":
             return [
                 Metric(
-                    name=self.name + '_has_contradictory_branch',
+                    name=self.name + "_has_contradictory_branch",
                     data_source=self,
-                    select_expr=agg_any("""`mozfun.map.get_key`(
+                    select_expr=agg_any(
+                        """`mozfun.map.get_key`(
                 ds.ping_info.experiments, '{experiment_slug}'
-            ).branch != e.branch"""),
+            ).branch != e.branch"""
+                    ),
                 ),
                 Metric(
-                    name=self.name + '_has_non_enrolled_data',
+                    name=self.name + "_has_non_enrolled_data",
                     data_source=self,
-                    select_expr=agg_any("""`mozfun.map.get_key`(
+                    select_expr=agg_any(
+                        """`mozfun.map.get_key`(
                 ds.ping_info.experiments, '{experiment_slug}'
-            ).branch IS NULL""".format(experiment_slug=experiment_slug))
+            ).branch IS NULL""".format(
+                            experiment_slug=experiment_slug
+                        )
+                    ),
                 ),
             ]
 
@@ -235,6 +254,7 @@ class Metric:
         description (str): A paragraph of Markdown-formatted text describing
             what the metric measures, to be shown on dashboards
     """
+
     name = attr.ib(type=str)
     data_source = attr.ib(type=DataSource)
     select_expr = attr.ib(type=str)
@@ -244,8 +264,7 @@ class Metric:
 
 
 def agg_sum(select_expr):
-    """Return a SQL fragment for the sum over the data, with 0-filled nulls.
-    """
+    """Return a SQL fragment for the sum over the data, with 0-filled nulls."""
     return "COALESCE(SUM({}), 0)".format(select_expr)
 
 

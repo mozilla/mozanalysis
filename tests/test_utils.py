@@ -4,8 +4,7 @@
 import numpy as np
 import pytest
 
-from mozanalysis.utils import all_, any_, add_days, filter_outliers, \
-    date_sub
+from mozanalysis.utils import all_, any_, add_days, filter_outliers, date_sub
 
 
 def test_all_(spark):
@@ -71,15 +70,15 @@ def test_any_(spark):
 
 
 def test_add_days():
-    assert add_days('2019-01-01', 0) == '2019-01-01'
-    assert add_days('2019-01-01', 1) == '2019-01-02'
-    assert add_days('2019-01-01', -1) == '2018-12-31'
+    assert add_days("2019-01-01", 0) == "2019-01-01"
+    assert add_days("2019-01-01", 1) == "2019-01-02"
+    assert add_days("2019-01-01", -1) == "2018-12-31"
 
 
 def test_date_sub():
-    assert date_sub('2019-01-01', '2019-01-01') == 0
-    assert date_sub('2019-01-02', '2019-01-01') == 1
-    assert date_sub('2019-01-01', '2019-01-02') == -1
+    assert date_sub("2019-01-01", "2019-01-01") == 0
+    assert date_sub("2019-01-02", "2019-01-01") == 1
+    assert date_sub("2019-01-01", "2019-01-02") == -1
 
 
 def test_filter_outliers():

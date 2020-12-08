@@ -8,7 +8,7 @@ from mozanalysis.segments import Segment, SegmentDataSource
 
 
 clients_last_seen = SegmentDataSource(
-    name='clients_last_seen',
+    name="clients_last_seen",
     from_expr="`moz-fx-data-shared-prod.telemetry.clients_last_seen`",
     window_start=0,
     window_end=0,
@@ -16,43 +16,51 @@ clients_last_seen = SegmentDataSource(
 
 
 regular_users_v3 = Segment(
-    name='regular_users_v3',
+    name="regular_users_v3",
     data_source=clients_last_seen,
-    select_expr=agg_any('is_regular_user_v3'),
+    select_expr=agg_any("is_regular_user_v3"),
     friendly_name="Regular users (v3)",
-    description=dedent("""\
+    description=dedent(
+        """\
         Clients who used Firefox on at least 14 of the 27 days prior to enrolling.
         This segment is characterized by high retention.
-        """),
+        """
+    ),
 )
 
 new_or_resurrected_v3 = Segment(
-    name='new_or_resurrected_v3',
+    name="new_or_resurrected_v3",
     data_source=clients_last_seen,
     select_expr="LOGICAL_OR(COALESCE(is_new_or_resurrected_v3, TRUE))",
     friendly_name="New or resurrected users (v3)",
-    description=dedent("""\
+    description=dedent(
+        """\
         Clients who used Firefox on none of the 27 days prior to enrolling.
-        """),
+        """
+    ),
 )
 
 
 weekday_regular_v1 = Segment(
-    name='weekday_regular_v1',
+    name="weekday_regular_v1",
     data_source=clients_last_seen,
-    select_expr=agg_any('is_weekday_regular_v1'),
+    select_expr=agg_any("is_weekday_regular_v1"),
     friendly_name="Weekday regular users (v1)",
-    description=dedent("""\
+    description=dedent(
+        """\
         A subset of "regular users" who typically use Firefox on weekdays.
-        """),
+        """
+    ),
 )
 
 allweek_regular_v1 = Segment(
-    name='allweek_regular_v1',
+    name="allweek_regular_v1",
     data_source=clients_last_seen,
-    select_expr=agg_any('is_allweek_regular_v1'),
+    select_expr=agg_any("is_allweek_regular_v1"),
     friendly_name="All-week regulars (v1)",
-    description=dedent("""\
+    description=dedent(
+        """\
         A subset of "regular users" that have used Firefox on weekends.
-        """),
+        """
+    ),
 )

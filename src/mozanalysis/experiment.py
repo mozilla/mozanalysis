@@ -108,10 +108,15 @@ class Experiment:
     app_id = attr.ib(default=None)
 
     def get_single_window_data(
-        self, bq_context, metric_list, last_date_full_data,
-        analysis_start_days, analysis_length_days,
-        enrollments_query_type='normandy', custom_enrollments_query=None,
-        segment_list=None
+        self,
+        bq_context,
+        metric_list,
+        last_date_full_data,
+        analysis_start_days,
+        analysis_length_days,
+        enrollments_query_type="normandy",
+        custom_enrollments_query=None,
+        segment_list=None,
     ):
         """Return a DataFrame containing per-client metric values.
 
@@ -172,8 +177,11 @@ class Experiment:
             standard format for queried experimental data.
         """
         time_limits = TimeLimits.for_single_analysis_window(
-            self.start_date, last_date_full_data, analysis_start_days,
-            analysis_length_days, self.num_dates_enrollment
+            self.start_date,
+            last_date_full_data,
+            analysis_start_days,
+            analysis_length_days,
+            self.num_dates_enrollment,
         )
 
         sql_template = self.build_query(
@@ -184,18 +192,25 @@ class Experiment:
             segment_list=segment_list,
         )
 
-        full_res_table_name = sanitize_table_name_for_bq('_'.join(
-            [last_date_full_data, self.experiment_slug, hash_ish(sql_template)]
-        ))
+        full_res_table_name = sanitize_table_name_for_bq(
+            "_".join(
+                [last_date_full_data, self.experiment_slug, hash_ish(sql_template)]
+            )
+        )
 
         sql = sql_template.format(results_table=full_res_table_name)
 
         return bq_context.run_script_or_fetch(sql, full_res_table_name).to_dataframe()
 
     def get_time_series_data(
-        self, bq_context, metric_list, last_date_full_data,
-        time_series_period='weekly', enrollments_query_type='normandy',
-        custom_enrollments_query=None, segment_list=None
+        self,
+        bq_context,
+        metric_list,
+        last_date_full_data,
+        time_series_period="weekly",
+        enrollments_query_type="normandy",
+        custom_enrollments_query=None,
+        segment_list=None,
     ):
         """Return a TimeSeriesResult with per-client metric values.
 
@@ -250,8 +265,10 @@ class Experiment:
         """
 
         time_limits = TimeLimits.for_ts(
-            self.start_date, last_date_full_data, time_series_period,
-            self.num_dates_enrollment
+            self.start_date,
+            last_date_full_data,
+            time_series_period,
+            self.num_dates_enrollment,
         )
 
         sql_template = self.build_query_template(
@@ -262,9 +279,11 @@ class Experiment:
             segment_list=segment_list,
         )
 
-        full_res_table_name = sanitize_table_name_for_bq('_'.join(
-            [last_date_full_data, self.experiment_slug, hash_ish(sql_template)]
-        ))
+        full_res_table_name = sanitize_table_name_for_bq(
+            "_".join(
+                [last_date_full_data, self.experiment_slug, hash_ish(sql_template)]
+            )
+        )
 
         sql = sql_template.format(results_table=full_res_table_name)
 
@@ -274,14 +293,14 @@ class Experiment:
             fully_qualified_table_name=bq_context.fully_qualify_table_name(
                 full_res_table_name
             ),
-            analysis_windows=time_limits.analysis_windows
+            analysis_windows=time_limits.analysis_windows,
         )
 
     def build_query_template(
         self,
         metric_list,
         time_limits,
-        enrollments_query_type='normandy',
+        enrollments_query_type="normandy",
         custom_enrollments_query=None,
         segment_list=None,
     ) -> str:
@@ -322,16 +341,15 @@ class Experiment:
             time_limits.analysis_windows
         )
 
-        enrollments_query = custom_enrollments_query or \
-            self._build_enrollments_query(time_limits, enrollments_query_type)
+        enrollments_query = custom_enrollments_query or self._build_enrollments_query(
+            time_limits, enrollments_query_type
+        )
 
         metrics_columns, metrics_joins = self._build_metrics_query_bits(
             metric_list, time_limits
         )
 
-        segments_query = self._build_segments_query(
-            segment_list, time_limits
-        )
+        segments_query = self._build_segments_query(segment_list, time_limits)
 
         return """
     CREATE TEMPORARY TABLE enrollments AS (
@@ -359,8 +377,8 @@ class Experiment:
             analysis_windows_query=analysis_windows_query,
             enrollments_query=enrollments_query,
             segments_query=segments_query,
-            metrics_columns=',\n        '.join(metrics_columns),
-            metrics_joins='\n'.join(metrics_joins),
+            metrics_columns=",\n        ".join(metrics_columns),
+            metrics_joins="\n".join(metrics_joins),
         )
 
     @staticmethod
@@ -374,8 +392,7 @@ class Experiment:
         This method writes the SQL to define the analysis window table.
         """
         return "\n        UNION ALL\n        ".join(
-            "(SELECT {aws} AS analysis_window_start, {awe} AS analysis_window_end)"
-            .format(
+            "(SELECT {aws} AS analysis_window_start, {awe} AS analysis_window_end)".format(
                 aws=aw.start,
                 awe=aw.end,
             )
@@ -384,9 +401,9 @@ class Experiment:
 
     def _build_enrollments_query(self, time_limits, enrollments_query_type):
         """Return SQL to query a list of enrollments and their branches"""
-        if enrollments_query_type == 'normandy':
+        if enrollments_query_type == "normandy":
             return self._build_enrollments_query_normandy(time_limits)
-        elif enrollments_query_type == 'fenix-fallback':
+        elif enrollments_query_type == "fenix-fallback":
             return self._build_enrollments_query_fenix_baseline(time_limits)
         else:
             raise ValueError
@@ -473,15 +490,14 @@ class Experiment:
         {query}
         ) ds_{i} USING (client_id, analysis_window_start, analysis_window_end)
                 """.format(
-                    query=query_for_metrics,
-                    i=i
+                    query=query_for_metrics, i=i
                 )
             )
 
             for m in ds_metrics[ds]:
-                metrics_columns.append("ds_{i}.{metric_name}".format(
-                    i=i, metric_name=m.name
-                ))
+                metrics_columns.append(
+                    "ds_{i}.{metric_name}".format(i=i, metric_name=m.name)
+                )
 
         return metrics_columns, metrics_joins
 
@@ -518,8 +534,8 @@ class Experiment:
         FROM raw_enrollments
         {segments_joins}
         """.format(
-            segments_columns=',\n        '.join(segments_columns),
-            segments_joins='\n'.join(segments_joins)
+            segments_columns=",\n        ".join(segments_columns),
+            segments_joins="\n".join(segments_joins),
         )
 
     def _build_segments_query_bits(self, segment_list, time_limits):
@@ -538,15 +554,14 @@ class Experiment:
         {query}
         ) ds_{i} USING (client_id)
                 """.format(
-                    query=query_for_segments,
-                    i=i
+                    query=query_for_segments, i=i
                 )
             )
 
             for m in ds_segments[ds]:
-                segments_columns.append("ds_{i}.{segment_name}".format(
-                    i=i, segment_name=m.name
-                ))
+                segments_columns.append(
+                    "ds_{i}.{segment_name}".format(i=i, segment_name=m.name)
+                )
 
         return segments_columns, segments_joins
 
@@ -647,9 +662,11 @@ class TimeLimits:
             raise ValueError(
                 "You said you wanted {} dates of enrollment, ".format(
                     num_dates_enrollment
-                ) + "and need data from the {}th day after enrollment. ".format(
+                )
+                + "and need data from the {}th day after enrollment. ".format(
                     analysis_window.end
-                ) + "For that, you need to wait until we have data for {}.".format(
+                )
+                + "For that, you need to wait until we have data for {}.".format(
                     last_date_data_required
                 )
             )
@@ -685,32 +702,32 @@ class TimeLimits:
                 enrollments. This is a mandatory argument because it
                 determines the number of points in the time series.
         """
-        if time_series_period not in ('daily', 'weekly'):
-            raise ValueError("Unsupported time series period {}".format(
-                time_series_period
-            ))
+        if time_series_period not in ("daily", "weekly"):
+            raise ValueError(
+                "Unsupported time series period {}".format(time_series_period)
+            )
 
         if num_dates_enrollment <= 0:
             raise ValueError("Number of enrollment dates must be a positive number")
 
-        analysis_window_length_dates = 1 if time_series_period == 'daily' else 7
+        analysis_window_length_dates = 1 if time_series_period == "daily" else 7
 
-        last_enrollment_date = add_days(
-            first_enrollment_date, num_dates_enrollment - 1
-        )
+        last_enrollment_date = add_days(first_enrollment_date, num_dates_enrollment - 1)
         max_dates_of_data = date_sub(last_date_full_data, last_enrollment_date) + 1
         num_periods = max_dates_of_data // analysis_window_length_dates
 
         if num_periods <= 0:
             raise ValueError("Insufficient data")
 
-        analysis_windows = tuple([
-            AnalysisWindow(
-                i * analysis_window_length_dates,
-                (i + 1) * analysis_window_length_dates - 1
-            )
-            for i in range(num_periods)
-        ])
+        analysis_windows = tuple(
+            [
+                AnalysisWindow(
+                    i * analysis_window_length_dates,
+                    (i + 1) * analysis_window_length_dates - 1,
+                )
+                for i in range(num_periods)
+            ]
+        )
 
         last_date_data_required = add_days(
             last_enrollment_date, analysis_windows[-1].end
@@ -765,6 +782,7 @@ class AnalysisWindow:
         end (int): Final day of the analysis window, in days since
             enrollment.
     """
+
     start = attr.ib(type=int)
     end = attr.ib(type=int)
 
@@ -798,6 +816,7 @@ class TimeSeriesResult:
 
         window_0 = time_series_result.get(bq_context, 0)
     """
+
     fully_qualified_table_name = attr.ib(type=str)
     analysis_windows = attr.ib(type=list)
 
