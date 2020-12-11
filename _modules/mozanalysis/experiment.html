@@ -260,10 +260,15 @@
     <span class="n">app_id</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Experiment.get_single_window_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_single_window_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_window_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
-        <span class="n">analysis_start_days</span><span class="p">,</span> <span class="n">analysis_length_days</span><span class="p">,</span>
-        <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s1">&#39;normandy&#39;</span><span class="p">,</span> <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bq_context</span><span class="p">,</span>
+        <span class="n">metric_list</span><span class="p">,</span>
+        <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="n">analysis_start_days</span><span class="p">,</span>
+        <span class="n">analysis_length_days</span><span class="p">,</span>
+        <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s2">&quot;normandy&quot;</span><span class="p">,</span>
+        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a DataFrame containing per-client metric values.</span>
 
@@ -324,8 +329,11 @@
 <span class="sd">            standard format for queried experimental data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_single_analysis_window</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">analysis_start_days</span><span class="p">,</span>
-            <span class="n">analysis_length_days</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span>
+            <span class="n">last_date_full_data</span><span class="p">,</span>
+            <span class="n">analysis_start_days</span><span class="p">,</span>
+            <span class="n">analysis_length_days</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">sql_template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
@@ -336,18 +344,25 @@
             <span class="n">segment_list</span><span class="o">=</span><span class="n">segment_list</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">sql_template</span><span class="p">)]</span>
-        <span class="p">))</span>
+        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
+            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">sql_template</span><span class="p">)]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
 
         <span class="n">sql</span> <span class="o">=</span> <span class="n">sql_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_table</span><span class="o">=</span><span class="n">full_res_table_name</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_script_or_fetch</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">full_res_table_name</span><span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Experiment.get_time_series_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span>
-        <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s1">&#39;normandy&#39;</span><span class="p">,</span>
-        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bq_context</span><span class="p">,</span>
+        <span class="n">metric_list</span><span class="p">,</span>
+        <span class="n">last_date_full_data</span><span class="p">,</span>
+        <span class="n">time_series_period</span><span class="o">=</span><span class="s2">&quot;weekly&quot;</span><span class="p">,</span>
+        <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s2">&quot;normandy&quot;</span><span class="p">,</span>
+        <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a TimeSeriesResult with per-client metric values.</span>
 
@@ -402,8 +417,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_ts</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">time_series_period</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span>
+            <span class="n">last_date_full_data</span><span class="p">,</span>
+            <span class="n">time_series_period</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">sql_template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_query_template</span><span class="p">(</span>
@@ -414,9 +431,11 @@
             <span class="n">segment_list</span><span class="o">=</span><span class="n">segment_list</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">sql_template</span><span class="p">)]</span>
-        <span class="p">))</span>
+        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
+            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">sql_template</span><span class="p">)]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
 
         <span class="n">sql</span> <span class="o">=</span> <span class="n">sql_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_table</span><span class="o">=</span><span class="n">full_res_table_name</span><span class="p">)</span>
 
@@ -426,14 +445,14 @@
             <span class="n">fully_qualified_table_name</span><span class="o">=</span><span class="n">bq_context</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span>
                 <span class="n">full_res_table_name</span>
             <span class="p">),</span>
-            <span class="n">analysis_windows</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
+            <span class="n">analysis_windows</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Experiment.build_query_template"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.build_query_template">[docs]</a>    <span class="k">def</span> <span class="nf">build_query_template</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">metric_list</span><span class="p">,</span>
         <span class="n">time_limits</span><span class="p">,</span>
-        <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s1">&#39;normandy&#39;</span><span class="p">,</span>
+        <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s2">&quot;normandy&quot;</span><span class="p">,</span>
         <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -474,16 +493,15 @@
             <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
         <span class="p">)</span>
 
-        <span class="n">enrollments_query</span> <span class="o">=</span> <span class="n">custom_enrollments_query</span> <span class="ow">or</span> \
-            <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query</span><span class="p">(</span><span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">)</span>
+        <span class="n">enrollments_query</span> <span class="o">=</span> <span class="n">custom_enrollments_query</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query</span><span class="p">(</span>
+            <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span>
+        <span class="p">)</span>
 
         <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_metrics_query_bits</span><span class="p">(</span>
             <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span>
         <span class="p">)</span>
 
-        <span class="n">segments_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_segments_query</span><span class="p">(</span>
-            <span class="n">segment_list</span><span class="p">,</span> <span class="n">time_limits</span>
-        <span class="p">)</span>
+        <span class="n">segments_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_segments_query</span><span class="p">(</span><span class="n">segment_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">    CREATE TEMPORARY TABLE enrollments AS (</span>
@@ -511,8 +529,8 @@
             <span class="n">analysis_windows_query</span><span class="o">=</span><span class="n">analysis_windows_query</span><span class="p">,</span>
             <span class="n">enrollments_query</span><span class="o">=</span><span class="n">enrollments_query</span><span class="p">,</span>
             <span class="n">segments_query</span><span class="o">=</span><span class="n">segments_query</span><span class="p">,</span>
-            <span class="n">metrics_columns</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">        &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_columns</span><span class="p">),</span>
-            <span class="n">metrics_joins</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">),</span>
+            <span class="n">metrics_columns</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_columns</span><span class="p">),</span>
+            <span class="n">metrics_joins</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">),</span>
         <span class="p">)</span></div>
 
     <span class="nd">@staticmethod</span>
@@ -526,8 +544,7 @@
 <span class="sd">        This method writes the SQL to define the analysis window table.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        UNION ALL</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="s2">&quot;(SELECT </span><span class="si">{aws}</span><span class="s2"> AS analysis_window_start, </span><span class="si">{awe}</span><span class="s2"> AS analysis_window_end)&quot;</span>
-            <span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="s2">&quot;(SELECT </span><span class="si">{aws}</span><span class="s2"> AS analysis_window_start, </span><span class="si">{awe}</span><span class="s2"> AS analysis_window_end)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>  <span class="c1"># noqa:E501</span>
                 <span class="n">aws</span><span class="o">=</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
                 <span class="n">awe</span><span class="o">=</span><span class="n">aw</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
             <span class="p">)</span>
@@ -536,9 +553,9 @@
 
     <span class="k">def</span> <span class="nf">_build_enrollments_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return SQL to query a list of enrollments and their branches&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s1">&#39;normandy&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s2">&quot;normandy&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_normandy</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s1">&#39;fenix-fallback&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s2">&quot;fenix-fallback&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_fenix_baseline</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
@@ -625,15 +642,14 @@
 <span class="sd">        {query}</span>
 <span class="sd">        ) ds_{i} USING (client_id, analysis_window_start, analysis_window_end)</span>
 <span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">query</span><span class="o">=</span><span class="n">query_for_metrics</span><span class="p">,</span>
-                    <span class="n">i</span><span class="o">=</span><span class="n">i</span>
+                    <span class="n">query</span><span class="o">=</span><span class="n">query_for_metrics</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
             <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ds_metrics</span><span class="p">[</span><span class="n">ds</span><span class="p">]:</span>
-                <span class="n">metrics_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;ds_</span><span class="si">{i}</span><span class="s2">.</span><span class="si">{metric_name}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">name</span>
-                <span class="p">))</span>
+                <span class="n">metrics_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="s2">&quot;ds_</span><span class="si">{i}</span><span class="s2">.</span><span class="si">{metric_name}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span>
 
@@ -670,8 +686,8 @@
 <span class="s2">        FROM raw_enrollments</span>
 <span class="s2">        </span><span class="si">{segments_joins}</span><span class="s2"></span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">segments_columns</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">        &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">segments_columns</span><span class="p">),</span>
-            <span class="n">segments_joins</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">segments_joins</span><span class="p">)</span>
+            <span class="n">segments_columns</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">segments_columns</span><span class="p">),</span>
+            <span class="n">segments_joins</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">segments_joins</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_build_segments_query_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
@@ -690,15 +706,14 @@
 <span class="sd">        {query}</span>
 <span class="sd">        ) ds_{i} USING (client_id)</span>
 <span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">query</span><span class="o">=</span><span class="n">query_for_segments</span><span class="p">,</span>
-                    <span class="n">i</span><span class="o">=</span><span class="n">i</span>
+                    <span class="n">query</span><span class="o">=</span><span class="n">query_for_segments</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
             <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ds_segments</span><span class="p">[</span><span class="n">ds</span><span class="p">]:</span>
-                <span class="n">segments_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;ds_</span><span class="si">{i}</span><span class="s2">.</span><span class="si">{segment_name}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">segment_name</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">name</span>
-                <span class="p">))</span>
+                <span class="n">segments_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="s2">&quot;ds_</span><span class="si">{i}</span><span class="s2">.</span><span class="si">{segment_name}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">segment_name</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">segments_columns</span><span class="p">,</span> <span class="n">segments_joins</span></div>
 
@@ -799,9 +814,11 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;You said you wanted </span><span class="si">{}</span><span class="s2"> dates of enrollment, &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">num_dates_enrollment</span>
-                <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;and need data from the </span><span class="si">{}</span><span class="s2">th day after enrollment. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;and need data from the </span><span class="si">{}</span><span class="s2">th day after enrollment. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">analysis_window</span><span class="o">.</span><span class="n">end</span>
-                <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;For that, you need to wait until we have data for </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;For that, you need to wait until we have data for </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">last_date_data_required</span>
                 <span class="p">)</span>
             <span class="p">)</span>
@@ -837,32 +854,32 @@
 <span class="sd">                enrollments. This is a mandatory argument because it</span>
 <span class="sd">                determines the number of points in the time series.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">time_series_period</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;daily&#39;</span><span class="p">,</span> <span class="s1">&#39;weekly&#39;</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported time series period </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">time_series_period</span>
-            <span class="p">))</span>
+        <span class="k">if</span> <span class="n">time_series_period</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;daily&quot;</span><span class="p">,</span> <span class="s2">&quot;weekly&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Unsupported time series period </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_series_period</span><span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">num_dates_enrollment</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of enrollment dates must be a positive number&quot;</span><span class="p">)</span>
 
-        <span class="n">analysis_window_length_dates</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">time_series_period</span> <span class="o">==</span> <span class="s1">&#39;daily&#39;</span> <span class="k">else</span> <span class="mi">7</span>
+        <span class="n">analysis_window_length_dates</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">time_series_period</span> <span class="o">==</span> <span class="s2">&quot;daily&quot;</span> <span class="k">else</span> <span class="mi">7</span>
 
-        <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
-            <span class="n">first_enrollment_date</span><span class="p">,</span> <span class="n">num_dates_enrollment</span> <span class="o">-</span> <span class="mi">1</span>
-        <span class="p">)</span>
+        <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span><span class="n">first_enrollment_date</span><span class="p">,</span> <span class="n">num_dates_enrollment</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">max_dates_of_data</span> <span class="o">=</span> <span class="n">date_sub</span><span class="p">(</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="n">last_enrollment_date</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="n">num_periods</span> <span class="o">=</span> <span class="n">max_dates_of_data</span> <span class="o">//</span> <span class="n">analysis_window_length_dates</span>
 
         <span class="k">if</span> <span class="n">num_periods</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Insufficient data&quot;</span><span class="p">)</span>
 
-        <span class="n">analysis_windows</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span>
-            <span class="n">AnalysisWindow</span><span class="p">(</span>
-                <span class="n">i</span> <span class="o">*</span> <span class="n">analysis_window_length_dates</span><span class="p">,</span>
-                <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">analysis_window_length_dates</span> <span class="o">-</span> <span class="mi">1</span>
-            <span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_periods</span><span class="p">)</span>
-        <span class="p">])</span>
+        <span class="n">analysis_windows</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">AnalysisWindow</span><span class="p">(</span>
+                    <span class="n">i</span> <span class="o">*</span> <span class="n">analysis_window_length_dates</span><span class="p">,</span>
+                    <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">analysis_window_length_dates</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_periods</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
 
         <span class="n">last_date_data_required</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
             <span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">analysis_windows</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">end</span>
@@ -917,6 +934,7 @@
 <span class="sd">        end (int): Final day of the analysis window, in days since</span>
 <span class="sd">            enrollment.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">start</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
     <span class="n">end</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
@@ -950,6 +968,7 @@
 
 <span class="sd">        window_0 = time_series_result.get(bq_context, 0)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">fully_qualified_table_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">analysis_windows</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 

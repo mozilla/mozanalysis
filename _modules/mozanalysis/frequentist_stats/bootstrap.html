@@ -161,10 +161,15 @@
 
 
 <div class="viewcode-block" id="compare_branches"><a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.compare_branches">[docs]</a><span class="k">def</span> <span class="nf">compare_branches</span><span class="p">(</span>
-    <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="s1">&#39;control&#39;</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
-    <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">df</span><span class="p">,</span>
+    <span class="n">col_label</span><span class="p">,</span>
+    <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span>
+    <span class="n">stat_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
-    <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span> <span class="n">sc</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+    <span class="n">sc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Jointly sample bootstrapped statistics then compare them.</span>
 
@@ -224,9 +229,11 @@
     <span class="n">branch_list</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">ref_branch_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">branch_list</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Branch label &#39;</span><span class="si">{b}</span><span class="s2">&#39; not in branch list &#39;</span><span class="si">{bl}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">b</span><span class="o">=</span><span class="n">ref_branch_label</span><span class="p">,</span> <span class="n">bl</span><span class="o">=</span><span class="n">branch_list</span>
-        <span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Branch label &#39;</span><span class="si">{b}</span><span class="s2">&#39; not in branch list &#39;</span><span class="si">{bl}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">b</span><span class="o">=</span><span class="n">ref_branch_label</span><span class="p">,</span> <span class="n">bl</span><span class="o">=</span><span class="n">branch_list</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span>
         <span class="c1"># TODO: do we need to control seed_start? If so then we must be careful here</span>
@@ -236,19 +243,26 @@
             <span class="n">num_samples</span><span class="p">,</span>
             <span class="n">threshold_quantile</span><span class="o">=</span><span class="n">threshold_quantile</span><span class="p">,</span>
             <span class="n">sc</span><span class="o">=</span><span class="n">sc</span><span class="p">,</span>
-        <span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">branch_list</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">branch_list</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="n">mabs</span><span class="o">.</span><span class="n">compare_samples</span><span class="p">(</span>
-        <span class="n">samples</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="p">,</span> <span class="n">individual_summary_quantiles</span><span class="p">,</span>
-        <span class="n">comparative_summary_quantiles</span>
+        <span class="n">samples</span><span class="p">,</span>
+        <span class="n">ref_branch_label</span><span class="p">,</span>
+        <span class="n">individual_summary_quantiles</span><span class="p">,</span>
+        <span class="n">comparative_summary_quantiles</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="bootstrap_one_branch"><a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch">[docs]</a><span class="k">def</span> <span class="nf">bootstrap_one_branch</span><span class="p">(</span>
-    <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
-    <span class="n">sc</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">stat_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+    <span class="n">sc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Run a bootstrap for one branch on its own.</span>
 
@@ -278,14 +292,16 @@
         <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">seed_start</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="p">,</span> <span class="n">sc</span>
     <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">mabs</span><span class="o">.</span><span class="n">summarize_one_branch_samples</span><span class="p">(</span>
-        <span class="n">samples</span><span class="p">,</span> <span class="n">summary_quantiles</span>
-    <span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">mabs</span><span class="o">.</span><span class="n">summarize_one_branch_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">summary_quantiles</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="get_bootstrap_samples"><a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples">[docs]</a><span class="k">def</span> <span class="nf">get_bootstrap_samples</span><span class="p">(</span>
-    <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sc</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">stat_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return ``stat_fn`` evaluated on resampled and original data.</span>
 
@@ -345,13 +361,17 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">broadcast_data</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-            <span class="n">summary_stat_samples</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">(</span><span class="n">seed_range</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">seed</span><span class="p">:</span> <span class="n">_resample_and_agg_once_bcast</span><span class="p">(</span>
-                    <span class="n">broadcast_data</span><span class="o">=</span><span class="n">broadcast_data</span><span class="p">,</span>
-                    <span class="n">stat_fn</span><span class="o">=</span><span class="n">stat_fn</span><span class="p">,</span>
-                    <span class="n">unique_seed</span><span class="o">=</span><span class="n">seed</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
+            <span class="n">summary_stat_samples</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">(</span><span class="n">seed_range</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">map</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">seed</span><span class="p">:</span> <span class="n">_resample_and_agg_once_bcast</span><span class="p">(</span>
+                        <span class="n">broadcast_data</span><span class="o">=</span><span class="n">broadcast_data</span><span class="p">,</span>
+                        <span class="n">stat_fn</span><span class="o">=</span><span class="n">stat_fn</span><span class="p">,</span>
+                        <span class="n">unique_seed</span><span class="o">=</span><span class="n">seed</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+            <span class="p">)</span>
 
         <span class="k">finally</span><span class="p">:</span>
             <span class="n">broadcast_data</span><span class="o">.</span><span class="n">unpersist</span><span class="p">()</span>
@@ -366,9 +386,7 @@
 
 
 <span class="k">def</span> <span class="nf">_resample_and_agg_once_bcast</span><span class="p">(</span><span class="n">broadcast_data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">unique_seed</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">_resample_and_agg_once</span><span class="p">(</span>
-        <span class="n">broadcast_data</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">unique_seed</span>
-    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_resample_and_agg_once</span><span class="p">(</span><span class="n">broadcast_data</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">unique_seed</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_resample_and_agg_once</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">unique_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
