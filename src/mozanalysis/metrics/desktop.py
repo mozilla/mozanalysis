@@ -142,8 +142,8 @@ search_count = Metric(
         Search Access Points.
         Learn more in the
         [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
-    """  # noqa:E501
-    ),
+    """
+    ),  # noqa:E501
 )
 
 #: Metric: ...
@@ -159,8 +159,8 @@ tagged_search_count = Metric(
         and were potentially revenue-generating.
         Learn more in the
         [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
-    """  # noqa:E501
-    ),
+    """
+    ),  # noqa:E501
 )
 
 #: Metric: ...
@@ -176,8 +176,8 @@ tagged_follow_on_search_count = Metric(
         results page after executing a tagged search through a SAP.
         Learn more in the
         [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
-    """  # noqa:E501
-    ),
+    """
+    ),  # noqa:E501
 )
 
 #: Metric: ...
@@ -206,8 +206,8 @@ searches_with_ads = Metric(
         Users may not actually see these ads thanks to e.g. ad-blockers.
         Learn more in the
         [search analysis documentation](https://mozilla-private.report/search-analysis-docs/book/in_content_searches.html).
-    """  # noqa:E501
-    ),
+    """
+    ),  # noqa:E501
 )
 
 #: Metric: ...
@@ -222,8 +222,8 @@ organic_search_count = Metric(
         through a Firefox SAP and which are not monetizable.
         Learn more in the
         [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
-    """   # noqa:E501
-    ),
+    """
+    ),  # noqa:E501
 )
 
 #: Metric: ...

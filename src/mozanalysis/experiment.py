@@ -184,23 +184,35 @@ class Experiment:
             self.num_dates_enrollment,
         )
 
-        sql_template = self.build_query(
-            metric_list=metric_list,
+        enrollments_sql = self.build_enrollments_query(
             time_limits=time_limits,
             enrollments_query_type=enrollments_query_type,
             custom_enrollments_query=custom_enrollments_query,
             segment_list=segment_list,
         )
 
+<<<<<<< HEAD
         full_res_table_name = sanitize_table_name_for_bq(
             "_".join(
                 [last_date_full_data, self.experiment_slug, hash_ish(sql_template)]
             )
+=======
+        enrollments_table = bq_context.run_query(enrollments_sql)
+
+        metrics_sql = self.build_metrics_query(
+            metric_list=metric_list,
+            time_limits=time_limits,
+            enrollments_table=enrollments_table,
+>>>>>>> Use simple queries for enrollments and metrics SQL
         )
 
-        sql = sql_template.format(results_table=full_res_table_name)
+        full_res_table_name = sanitize_table_name_for_bq(
+            "_".join([last_date_full_data, self.experiment_slug, hash_ish(metrics_sql)])
+        )
 
-        return bq_context.run_script_or_fetch(sql, full_res_table_name).to_dataframe()
+        return bq_context.run_query_and_fetch(
+            metrics_sql, full_res_table_name
+        ).to_dataframe()
 
     def get_time_series_data(
         self,
@@ -271,23 +283,33 @@ class Experiment:
             self.num_dates_enrollment,
         )
 
-        sql_template = self.build_query_template(
-            metric_list=metric_list,
+        enrollments_sql = self.build_enrollments_query(
             time_limits=time_limits,
             enrollments_query_type=enrollments_query_type,
             custom_enrollments_query=custom_enrollments_query,
             segment_list=segment_list,
         )
 
+<<<<<<< HEAD
         full_res_table_name = sanitize_table_name_for_bq(
             "_".join(
                 [last_date_full_data, self.experiment_slug, hash_ish(sql_template)]
             )
+=======
+        enrollments_table = bq_context.run_query(enrollments_sql)
+
+        metrics_sql = self.build_metrics_query(
+            metric_list=metric_list,
+            time_limits=time_limits,
+            enrollments_table=enrollments_table,
+>>>>>>> Use simple queries for enrollments and metrics SQL
         )
 
-        sql = sql_template.format(results_table=full_res_table_name)
+        full_res_table_name = sanitize_table_name_for_bq(
+            "_".join([last_date_full_data, self.experiment_slug, hash_ish(metrics_sql)])
+        )
 
-        bq_context.run_script_or_fetch(sql, full_res_table_name)
+        bq_context.run_query_and_fetch(metrics_sql, full_res_table_name)
 
         return TimeSeriesResult(
             fully_qualified_table_name=bq_context.fully_qualify_table_name(
@@ -296,18 +318,14 @@ class Experiment:
             analysis_windows=time_limits.analysis_windows,
         )
 
-    def build_query_template(
+    def build_enrollments_query(
         self,
-        metric_list,
         time_limits,
         enrollments_query_type="normandy",
         custom_enrollments_query=None,
         segment_list=None,
     ) -> str:
-        """Return a SQL template for querying metric data.
-
-        The return value is a Python string template that needs to be formatted
-        with a value for `results_table` before it is valid SQL.
+        """Return a SQL query for querying enrollments data.
 
         For interactive use, prefer :meth:`.get_time_series_data` or
         :meth:`.get_single_window_data`, according to your use case,
@@ -315,11 +333,8 @@ class Experiment:
         dataframe.
 
         Args:
-            metric_list (list of mozanalysis.metric.Metric):
-                The metrics to analyze.
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
-            results_table (str): The name of the table to write
             enrollments_query_type ('normandy' or 'fenix-fallback'):
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
@@ -343,42 +358,82 @@ class Experiment:
 
         enrollments_query = custom_enrollments_query or self._build_enrollments_query(
             time_limits, enrollments_query_type
+<<<<<<< HEAD
         )
 
         metrics_columns, metrics_joins = self._build_metrics_query_bits(
             metric_list, time_limits
+=======
+>>>>>>> Use simple queries for enrollments and metrics SQL
         )
 
         segments_query = self._build_segments_query(segment_list, time_limits)
 
         return """
-    CREATE TEMPORARY TABLE enrollments AS (
-        WITH analysis_windows AS (
-            {analysis_windows_query}
-        ),
-        raw_enrollments AS ({enrollments_query}),
-        segmented_enrollments AS ({segments_query})
+            WITH analysis_windows AS (
+                {analysis_windows_query}
+            ),
+            raw_enrollments AS ({enrollments_query}),
+            segmented_enrollments AS ({segments_query})
 
-        SELECT
-            e.*,
-            aw.*
-        FROM segmented_enrollments e
-        CROSS JOIN analysis_windows aw
-    );
-
-    CREATE OR REPLACE TABLE {{results_table}} AS (
-        SELECT
-            enrollments.*,
-            {metrics_columns}
-        FROM enrollments
-        {metrics_joins}
-    );
+            SELECT
+                e.*,
+                aw.*
+            FROM segmented_enrollments e
+            CROSS JOIN analysis_windows aw
         """.format(
+            analysis_windows_query=analysis_windows_query,
+            enrollments_query=enrollments_query,
+            segments_query=segments_query,
+        )
+
+    def build_metrics_query(
+        self,
+        metric_list,
+        time_limits,
+        enrollments_table,
+    ) -> str:
+        """Return a SQL query for querying metric data.
+
+        For interactive use, prefer :meth:`.get_time_series_data` or
+        :meth:`.get_single_window_data`, according to your use case,
+        which will run the query for you and return a materialized
+        dataframe.
+
+        Args:
+            metric_list (list of mozanalysis.metric.Metric):
+                The metrics to analyze.
+            time_limits (TimeLimits): An object describing the
+                interval(s) to query
+            enrollments_table (str): The name of the enrollments table
+
+        Returns:
+            A string containing a BigQuery SQL expression.
+
+        Building this query is the main goal of this module.
+        """
+        metrics_columns, metrics_joins = self._build_metrics_query_bits(
+            metric_list, time_limits
+        )
+
+        return """
+        SELECT
+            {enrollments_table}.*,
+            {metrics_columns}
+        FROM {enrollments_table}
+        {metrics_joins}
+        """.format(
+<<<<<<< HEAD
             analysis_windows_query=analysis_windows_query,
             enrollments_query=enrollments_query,
             segments_query=segments_query,
             metrics_columns=",\n        ".join(metrics_columns),
             metrics_joins="\n".join(metrics_joins),
+=======
+            metrics_columns=",\n        ".join(metrics_columns),
+            metrics_joins="\n".join(metrics_joins),
+            enrollments_table=enrollments_table,
+>>>>>>> Use simple queries for enrollments and metrics SQL
         )
 
     @staticmethod
@@ -392,7 +447,11 @@ class Experiment:
         This method writes the SQL to define the analysis window table.
         """
         return "\n        UNION ALL\n        ".join(
+<<<<<<< HEAD
             "(SELECT {aws} AS analysis_window_start, {awe} AS analysis_window_end)".format(  # noqa:E501
+=======
+            "(SELECT {aws} AS analysis_window_start, {awe} AS analysis_window_end)".format(
+>>>>>>> Use simple queries for enrollments and metrics SQL
                 aws=aw.start,
                 awe=aw.end,
             )
@@ -841,7 +900,7 @@ class TimeSeriesResult:
                     "AnalysisWindow not found with start of {}".format(analysis_window)
                 )
 
-        return bq_context.run_query(
+        return bq_context.run_query_and_fetch(
             self._build_analysis_window_subset_query(analysis_window)
         ).to_dataframe()
 
