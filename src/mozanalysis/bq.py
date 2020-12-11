@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import re
 
-from google.api_core.exceptions import NotFound
+from google.api_core.exceptions import Conflict
 from google.cloud import bigquery
 
 
@@ -36,31 +36,52 @@ class BigQueryContext:
         self.project_id = project_id
         self.client = bigquery.Client(project=project_id)
 
-    def run_script_or_fetch(self, sql, results_table):
-        """Runs a BigQuery SQL script and returns a RowIterator for results_table.
-        The script is assumed to create a table named results_table after completing
-        succesfully. If results_table already exists, a RowIterator for the
-        existing table will be returned without invoking the script.
-
-        results_table is assumed to be an unqualified table name without
-        a project or dataset reference.
-
-        Learn more about BigQuery scripting at
-        https://cloud.google.com/bigquery/docs/reference/standard-sql/scripting.
+    def run_query(self, sql, results_table=None) -> str:
+        """Runs a SQL query and returns the destination table.
+        If ``results_table`` is provided, then save the results
+        into there otherwise save results in a temporary table.
         """
+        if results_table:
+            job = self.client.query(
+                sql,
+                job_config=bigquery.QueryJobConfig(
+                    destination=self.client.dataset(self.dataset_id).table(
+                        results_table
+                    )
+                ),
+            )
+        else:
+            job = self.client.query(sql)
 
-        fqtn = self.fully_qualify_table_name(results_table)
+        job.result()
+        return job.destination
+
+    def run_query_and_fetch(self, sql, results_table=None):
+        """Run a query and return the result.
+        If ``results_table`` is provided, then save the results
+        into there (or just query from there if it already exists).
+        Returns a ``google.cloud.bigquery.table.RowIterator``
+        """
+        if not results_table:
+            return self.client.query(sql).result()
 
         try:
-            cached = self.client.list_rows(fqtn)
-            print("Full results table already exists. Reusing", results_table)
-            return cached
-        except NotFound:
-            pass
+            full_res = self.client.query(
+                sql,
+                job_config=bigquery.QueryJobConfig(
+                    destination=self.client.dataset(self.dataset_id).table(
+                        results_table
+                    )
+                ),
+            ).result()
+            print("Saved into", results_table)
+            return full_res
 
-        self.client.query(sql).result()
-        print("Saved into", results_table)
-        return self.client.list_rows(fqtn)
+        except Conflict:
+            print("Full results table already exists. Reusing", results_table)
+            return self.client.query(
+                "SELECT * FROM {}".format(self.fully_qualify_table_name(results_table))
+            ).result()
 
     def fully_qualify_table_name(self, table_name):
         """Given a table name, return it fully qualified."""

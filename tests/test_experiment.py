@@ -244,13 +244,19 @@ def test_query_not_detectably_malformed():
         num_dates_enrollment=8,
     )
 
-    sql = exp.build_query_template(
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type="normandy"
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
         metric_list=[],
         time_limits=tl,
-        enrollments_query_type="normandy",
-    ).format(results_table="foo")
+        enrollments_table="enrollments",
+    )
 
-    sql_lint(sql)
+    sql_lint(metrics_sql)
 
 
 def test_megaquery_not_detectably_malformed():
@@ -263,13 +269,19 @@ def test_megaquery_not_detectably_malformed():
         num_dates_enrollment=8,
     )
 
-    sql = exp.build_query_template(
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type="normandy"
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
         metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
         time_limits=tl,
-        enrollments_query_type="normandy",
-    ).format(results_table="foo")
+        enrollments_table="enrollments",
+    )
 
-    sql_lint(sql)
+    sql_lint(metrics_sql)
 
 
 def test_segments_megaquery_not_detectably_malformed():
@@ -282,14 +294,21 @@ def test_segments_megaquery_not_detectably_malformed():
         num_dates_enrollment=8,
     )
 
-    sql = exp.build_query_template(
-        metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
-        segment_list=[s for s in msd.__dict__.values() if isinstance(s, msd.Segment)],
+    enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
+        segment_list=[s for s in msd.__dict__.values() if isinstance(s, msd.Segment)],
         enrollments_query_type="normandy",
-    ).format(results_table="foo")
+    )
 
-    sql_lint(sql)
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
+        time_limits=tl,
+        enrollments_table="enrollments",
+    )
+
+    sql_lint(metrics_sql)
 
 
 def test_app_id_propagates():
@@ -314,21 +333,28 @@ def test_app_id_propagates():
         data_source=sds,
     )
 
-    sql = exp.build_query_template(
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, segment_list=[segment], enrollments_query_type="fenix-fallback"
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
         metric_list=[
             m
             for m in mozanalysis.metrics.fenix.__dict__.values()
             if isinstance(m, Metric)
         ],
-        segment_list=[segment],
         time_limits=tl,
-        enrollments_query_type="fenix-fallback",
-    ).format(results_table="foo")
+        enrollments_table="enrollments",
+    )
 
-    assert "org_mozilla_firefox" not in sql
-    assert "my_cool_app" in sql
+    sql_lint(metrics_sql)
 
-    sql_lint(sql)
+    assert "org_mozilla_firefox" not in enrollments_sql
+    assert "my_cool_app" in enrollments_sql
+
+    sql_lint(metrics_sql)
 
 
 def test_query_not_detectably_malformed_fenix_fallback():
@@ -341,10 +367,16 @@ def test_query_not_detectably_malformed_fenix_fallback():
         num_dates_enrollment=8,
     )
 
-    sql = exp.build_query_template(
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type="fenix-fallback"
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
         metric_list=[],
         time_limits=tl,
-        enrollments_query_type="fenix-fallback",
-    ).format(results_table="foo")
+        enrollments_table="enrollments",
+    )
 
-    sql_lint(sql)
+    sql_lint(metrics_sql)
