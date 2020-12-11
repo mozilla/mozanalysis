@@ -191,19 +191,12 @@ class Experiment:
             segment_list=segment_list,
         )
 
-<<<<<<< HEAD
-        full_res_table_name = sanitize_table_name_for_bq(
-            "_".join(
-                [last_date_full_data, self.experiment_slug, hash_ish(sql_template)]
-            )
-=======
         enrollments_table = bq_context.run_query(enrollments_sql)
 
         metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
             time_limits=time_limits,
             enrollments_table=enrollments_table,
->>>>>>> Use simple queries for enrollments and metrics SQL
         )
 
         full_res_table_name = sanitize_table_name_for_bq(
@@ -290,19 +283,12 @@ class Experiment:
             segment_list=segment_list,
         )
 
-<<<<<<< HEAD
-        full_res_table_name = sanitize_table_name_for_bq(
-            "_".join(
-                [last_date_full_data, self.experiment_slug, hash_ish(sql_template)]
-            )
-=======
         enrollments_table = bq_context.run_query(enrollments_sql)
 
         metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
             time_limits=time_limits,
             enrollments_table=enrollments_table,
->>>>>>> Use simple queries for enrollments and metrics SQL
         )
 
         full_res_table_name = sanitize_table_name_for_bq(
@@ -358,13 +344,6 @@ class Experiment:
 
         enrollments_query = custom_enrollments_query or self._build_enrollments_query(
             time_limits, enrollments_query_type
-<<<<<<< HEAD
-        )
-
-        metrics_columns, metrics_joins = self._build_metrics_query_bits(
-            metric_list, time_limits
-=======
->>>>>>> Use simple queries for enrollments and metrics SQL
         )
 
         segments_query = self._build_segments_query(segment_list, time_limits)
@@ -423,17 +402,9 @@ class Experiment:
         FROM {enrollments_table}
         {metrics_joins}
         """.format(
-<<<<<<< HEAD
-            analysis_windows_query=analysis_windows_query,
-            enrollments_query=enrollments_query,
-            segments_query=segments_query,
-            metrics_columns=",\n        ".join(metrics_columns),
-            metrics_joins="\n".join(metrics_joins),
-=======
             metrics_columns=",\n        ".join(metrics_columns),
             metrics_joins="\n".join(metrics_joins),
             enrollments_table=enrollments_table,
->>>>>>> Use simple queries for enrollments and metrics SQL
         )
 
     @staticmethod
@@ -447,11 +418,7 @@ class Experiment:
         This method writes the SQL to define the analysis window table.
         """
         return "\n        UNION ALL\n        ".join(
-<<<<<<< HEAD
             "(SELECT {aws} AS analysis_window_start, {awe} AS analysis_window_end)".format(  # noqa:E501
-=======
-            "(SELECT {aws} AS analysis_window_start, {awe} AS analysis_window_end)".format(
->>>>>>> Use simple queries for enrollments and metrics SQL
                 aws=aw.start,
                 awe=aw.end,
             )
