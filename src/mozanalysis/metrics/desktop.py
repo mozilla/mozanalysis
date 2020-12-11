@@ -3,12 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from textwrap import dedent
 
-from mozanalysis.metrics import Metric, DataSource, agg_sum, agg_any
-
+from mozanalysis.metrics import DataSource, Metric, agg_any, agg_sum
 
 #: DataSource: The clients_daily table.
 clients_daily = DataSource(
-    name='clients_daily',
+    name="clients_daily",
     from_expr="`moz-fx-data-shared-prod.telemetry.clients_daily`",
 )
 
@@ -19,22 +18,21 @@ clients_daily = DataSource(
 #: .. _`search_clients_daily`: https://docs.telemetry.mozilla.org/datasets/
 #:    search/search_clients_daily/reference.html
 search_clients_daily = DataSource(
-    name='search_clients_daily',
-    from_expr='`moz-fx-data-shared-prod.search.search_clients_daily`',
+    name="search_clients_daily",
+    from_expr="`moz-fx-data-shared-prod.search.search_clients_daily`",
     experiments_column_type=None,
 )
 
 #: DataSource: The main_summary table.
 main_summary = DataSource(
-    name='main_summary',
-    from_expr="`moz-fx-data-shared-prod.telemetry.main_summary`"
+    name="main_summary", from_expr="`moz-fx-data-shared-prod.telemetry.main_summary`"
 )
 
 #: DataSource: The events table.
 events = DataSource(
-    name='events',
+    name="events",
     from_expr="`moz-fx-data-shared-prod.telemetry.events`",
-    experiments_column_type='native',
+    experiments_column_type="native",
 )
 
 #: DataSource: Normandy events; a subset of the events table.
@@ -42,19 +40,19 @@ events = DataSource(
 #: Normandy accounts for about 10% of event volume, so this dramatically
 #: reduces bytes queried compared to counting rows from the generic events DataSource.
 normandy_events = DataSource(
-    name='normandy_events',
+    name="normandy_events",
     from_expr="""(
         SELECT
             *
         FROM `moz-fx-data-shared-prod`.telemetry.events
         WHERE event_category = 'normandy'
     )""",
-    experiments_column_type='native',
+    experiments_column_type="native",
 )
 
 #: DataSource: The telemetry.main ping table.
 main = DataSource(
-    name='main',
+    name="main",
     from_expr="""(
                 SELECT
                     *,
@@ -67,7 +65,7 @@ main = DataSource(
 
 #: DataSource: The telemetry.crash ping table.
 crash = DataSource(
-    name='crash',
+    name="crash",
     from_expr="""(
                 SELECT
                     *,
@@ -80,7 +78,7 @@ crash = DataSource(
 
 #: DataSource: The ``messaging_system.cfr`` table.
 cfr = DataSource(
-    name='cfr',
+    name="cfr",
     from_expr="""(
                 SELECT
                     *,
@@ -92,7 +90,7 @@ cfr = DataSource(
 
 #: DataSource: The ``activity_stream.events`` table.
 activity_stream_events = DataSource(
-    name='activity_stream_events',
+    name="activity_stream_events",
     from_expr="""(
                 SELECT
                     *,
@@ -105,176 +103,208 @@ activity_stream_events = DataSource(
 
 #: Metric: ...
 active_hours = Metric(
-    name='active_hours',
+    name="active_hours",
     data_source=clients_daily,
-    select_expr=agg_sum('active_hours_sum'),
+    select_expr=agg_sum("active_hours_sum"),
     friendly_name="Active hours",
-    description=dedent("""\
+    description=dedent(
+        """\
         Measures the amount of time (in 5-second increments) during which
         Firefox received user input from a keyboard or mouse. The Firefox
         window does not need to be focused.
-    """),
+    """
+    ),
 )
 
 #: Metric: ...
 uri_count = Metric(
-    name='uri_count',
+    name="uri_count",
     data_source=clients_daily,
-    select_expr=agg_sum('scalar_parent_browser_engagement_total_uri_count_sum'),
+    select_expr=agg_sum("scalar_parent_browser_engagement_total_uri_count_sum"),
     friendly_name="URIs visited",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts the total number of URIs visited.
         Includes within-page navigation events (e.g. to anchors).
-    """),
+    """
+    ),
 )
 
 #: Metric: ...
 search_count = Metric(
-    name='search_count',
+    name="search_count",
     data_source=search_clients_daily,
-    select_expr=agg_sum('sap'),
+    select_expr=agg_sum("sap"),
     friendly_name="SAP searches",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts the number of searches a user performed through Firefox's
         Search Access Points.
         Learn more in the
         [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
-    """),  # noqa:E501
+    """  # noqa:E501
+    ),
 )
 
 #: Metric: ...
 tagged_search_count = Metric(
-    name='tagged_search_count',
+    name="tagged_search_count",
     data_source=search_clients_daily,
-    select_expr=agg_sum('tagged_sap'),
+    select_expr=agg_sum("tagged_sap"),
     friendly_name="Tagged SAP searches",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts the number of searches a user performed through Firefox's
         Search Access Points that were submitted with a partner code
         and were potentially revenue-generating.
         Learn more in the
         [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
-    """),  # noqa:E501
+    """  # noqa:E501
+    ),
 )
 
 #: Metric: ...
 tagged_follow_on_search_count = Metric(
-    name='tagged_follow_on_search_count',
+    name="tagged_follow_on_search_count",
     data_source=search_clients_daily,
-    select_expr=agg_sum('tagged_follow_on'),
+    select_expr=agg_sum("tagged_follow_on"),
     friendly_name="Tagged follow-on searches",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts the number of follow-on searches with a Mozilla partner tag.
         These are additional searches that users performed from a search engine
         results page after executing a tagged search through a SAP.
         Learn more in the
         [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
-    """),  # noqa:E501
+    """  # noqa:E501
+    ),
 )
 
 #: Metric: ...
 ad_clicks = Metric(
-    name='ad_clicks',
+    name="ad_clicks",
     data_source=search_clients_daily,
-    select_expr=agg_sum('ad_click'),
+    select_expr=agg_sum("ad_click"),
     friendly_name="Ad clicks",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts clicks on ads on search engine result pages with a Mozilla
         partner tag.
-    """),
+    """
+    ),
 )
 
 #: Metric: ...
 searches_with_ads = Metric(
-    name='searches_with_ads',
+    name="searches_with_ads",
     data_source=search_clients_daily,
-    select_expr=agg_sum('search_with_ads'),
+    select_expr=agg_sum("search_with_ads"),
     friendly_name="Search result pages with ads",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts search result pages served with advertising.
         Users may not actually see these ads thanks to e.g. ad-blockers.
         Learn more in the
         [search analysis documentation](https://mozilla-private.report/search-analysis-docs/book/in_content_searches.html).
-    """),  # noqa:E501
+    """  # noqa:E501
+    ),
 )
 
 #: Metric: ...
 organic_search_count = Metric(
-    name='organic_search_count',
+    name="organic_search_count",
     data_source=search_clients_daily,
-    select_expr=agg_sum('organic'),
+    select_expr=agg_sum("organic"),
     friendly_name="Organic searches",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts organic searches, which are searches that are _not_ performed
         through a Firefox SAP and which are not monetizable.
         Learn more in the
         [search data documentation](https://docs.telemetry.mozilla.org/datasets/search.html).
-    """),  # noqa:E501
+    """   # noqa:E501
+    ),
 )
 
 #: Metric: ...
 unenroll = Metric(
-    name='unenroll',
+    name="unenroll",
     data_source=normandy_events,
-    select_expr=agg_any("""
+    select_expr=agg_any(
+        """
                 event_category = 'normandy'
                 AND event_method = 'unenroll'
                 AND event_string_value = '{experiment_slug}'
-            """),
+            """
+    ),
     friendly_name="Unenrollments",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts the number of clients with an experiment unenrollment event.
-    """),
+    """
+    ),
     bigger_is_better=False,
 )
 
 #: Metric: ...
 view_about_logins = Metric(
-    name='view_about_logins',
+    name="view_about_logins",
     data_source=events,
-    select_expr=agg_any("""
+    select_expr=agg_any(
+        """
                 event_method = 'open_management'
                 AND event_category = 'pwmgr'
-            """),
+            """
+    ),
     friendly_name="about:logins viewers",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts the number of clients that viewed about:logins.
-    """),
+    """
+    ),
 )
 
 #: Metric: ...
 view_about_protections = Metric(
-    name='view_about_protections',
+    name="view_about_protections",
     data_source=events,
-    select_expr=agg_any("""
+    select_expr=agg_any(
+        """
                 event_method = 'show'
                 AND event_object = 'protection_report'
-            """),
+            """
+    ),
     friendly_name="about:protections viewers",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts the number of clients that viewed about:protections.
-    """),
+    """
+    ),
 )
 
 #: Metric: ...
 connect_fxa = Metric(
-    name='connect_fxa',
+    name="connect_fxa",
     data_source=events,
-    select_expr=agg_any("""
+    select_expr=agg_any(
+        """
                 event_method = 'connect'
                 AND event_object = 'account'
-            """),
+            """
+    ),
     friendly_name="Connected FxA",
-    description=dedent("""\
+    description=dedent(
+        """\
         Counts the number of clients that took action to connect to FxA.
         This does not include clients that were already connected to FxA at
         the start of the experiment and remained connected.
-    """),
+    """
+    ),
 )
 
 #: Metric: Pocket organic rec clicks in New Tab
 pocket_rec_clicks = Metric(
-    name='pocket_rec_clicks',
+    name="pocket_rec_clicks",
     data_source=activity_stream_events,
     select_expr="""COUNTIF(
                 event = 'CLICK'
@@ -282,14 +312,16 @@ pocket_rec_clicks = Metric(
                 AND JSON_EXTRACT_SCALAR(value, '$.card_type') = 'organic'
             )""",
     friendly_name="Clicked Pocket organic recs in New Tab",
-    description=dedent("""\
+    description=dedent(
+        """\
          Counts the number of Pocket rec clicks made by each client.
-    """),
+    """
+    ),
 )
 
 #: Metric: Pocket sponsored content clicks in New Tab
 pocket_spoc_clicks = Metric(
-    name='pocket_spoc_clicks',
+    name="pocket_spoc_clicks",
     data_source=activity_stream_events,
     select_expr="""COUNTIF(
                 event = 'CLICK'
@@ -297,9 +329,11 @@ pocket_spoc_clicks = Metric(
                 AND JSON_EXTRACT_SCALAR(value, '$.card_type') = 'spoc'
             )""",
     friendly_name="Clicked Pocket sponsored content in New Tab",
-    description=dedent("""\
+    description=dedent(
+        """\
          Counts the number of Pocket sponsored content clicks made by each client.
-    """),
+    """
+    ),
 )
 
 #: Metric: ...
@@ -308,5 +342,5 @@ days_of_use = Metric(
     data_source=clients_daily,
     select_expr="COUNT(ds.submission_date)",
     friendly_name="Days of use",
-    description="The number of days in the interval that each client sent a main ping."
+    description="The number of days in the interval that each client sent a main ping.",
 )

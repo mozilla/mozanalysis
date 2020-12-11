@@ -7,33 +7,38 @@
 from setuptools import setup, find_packages
 
 tests_require = [
-    'mock', 'pytest', 'pytest-cov', 'pytest-timeout', 'pyspark'
+    "mock",
+    "pytest",
+    "pytest-black",
+    "pytest-cov",
+    "pytest-timeout",
+    "pyspark",
 ]
 
-docs_require = ['Sphinx', 'sphinx-autobuild', 'sphinx-rtd-theme']
+docs_require = ["Sphinx", "sphinx-autobuild", "sphinx-rtd-theme"]
 
 setup(
-    name='mozanalysis',
+    name="mozanalysis",
     use_scm_version=True,
-    author='Rob Hudson',
-    author_email='robhudson@mozilla.com',
-    description='A library for Mozilla experiments analysis',
-    url='https://github.com/mozilla/mozanalysis',
-    packages=find_packages(where='src'),
-    package_dir={'': 'src'},
+    author="Mozilla Corporation",
+    author_email="fx-data-dev@mozilla.org",
+    description="A library for Mozilla experiments analysis",
+    url="https://github.com/mozilla/mozanalysis",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     install_requires=[
-        'attrs',
-        'numpy',
-        'pandas',
-        'pyarrow',
-        'scipy',
-        'google-cloud-bigquery',
-        'google-cloud-bigquery-storage',
+        "attrs",
+        "numpy",
+        "pandas",
+        "pyarrow",
+        "scipy",
+        "google-cloud-bigquery",
+        "google-cloud-bigquery-storage",
     ],
-    setup_requires=['pytest-runner', 'setuptools_scm'],
+    setup_requires=["pytest-runner", "setuptools_scm"],
     extras_require={
-        'testing': tests_require,
-        'docs': docs_require,
+        "testing": tests_require,
+        "docs": docs_require,
     },
     tests_require=tests_require,
 )

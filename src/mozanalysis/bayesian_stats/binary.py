@@ -1,17 +1,20 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import pandas as pd
 import numpy as np
+import pandas as pd
 import scipy.stats as st
 
 import mozanalysis.bayesian_stats as mabs
 
 
 def compare_branches(
-    df, col_label, ref_branch_label='control', num_samples=10000,
+    df,
+    col_label,
+    ref_branch_label="control",
+    num_samples=10000,
     individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
-    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES
+    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES,
 ):
     """Jointly sample conversion rates for branches then compare them.
 
@@ -49,9 +52,11 @@ def compare_branches(
     agg_col = aggregate_col(df, col_label)
 
     return compare_branches_from_agg(
-        agg_col, ref_branch_label=ref_branch_label, num_samples=num_samples,
+        agg_col,
+        ref_branch_label=ref_branch_label,
+        num_samples=num_samples,
         individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
-        comparative_summary_quantiles=mabs.DEFAULT_QUANTILES
+        comparative_summary_quantiles=mabs.DEFAULT_QUANTILES,
     )
 
 
@@ -77,16 +82,18 @@ def aggregate_col(df, col_label):
     if not ((df[col_label] == 0) | (df[col_label] == 1)).all():
         raise ValueError("All values in column '{}' must be 0 or 1.".format(col_label))
 
-    return df.groupby('branch')[col_label].agg(
-        ['count', 'sum']
-    ).rename(
-        columns={'count': 'num_enrollments', 'sum': 'num_conversions'}
+    return (
+        df.groupby("branch")[col_label]
+        .agg(["count", "sum"])
+        .rename(columns={"count": "num_enrollments", "sum": "num_conversions"})
     )
 
 
 def summarize_one_branch_from_agg(
-    s, num_enrollments_label='num_enrollments', num_conversions_label='num_conversions',
-    quantiles=mabs.DEFAULT_QUANTILES
+    s,
+    num_enrollments_label="num_enrollments",
+    num_conversions_label="num_conversions",
+    quantiles=mabs.DEFAULT_QUANTILES,
 ):
     """Return stats about a branch's conversion rate.
 
@@ -109,27 +116,27 @@ def summarize_one_branch_from_agg(
     """
     beta = st.beta(
         s.loc[num_conversions_label] + 1,
-        s.loc[num_enrollments_label] - s.loc[num_conversions_label] + 1
+        s.loc[num_enrollments_label] - s.loc[num_conversions_label] + 1,
     )
 
     q_index = [str(v) for v in quantiles]
 
-    res = pd.Series(index=q_index + ['mean'], dtype=float)
+    res = pd.Series(index=q_index + ["mean"], dtype=float)
 
     res[q_index] = beta.ppf(quantiles)
-    res['mean'] = beta.mean()
+    res["mean"] = beta.mean()
 
     return res
 
 
 def compare_branches_from_agg(
     df,
-    ref_branch_label='control',
-    num_enrollments_label='num_enrollments',
-    num_conversions_label='num_conversions',
+    ref_branch_label="control",
+    num_enrollments_label="num_enrollments",
+    num_conversions_label="num_conversions",
     num_samples=10000,
     individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
-    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES
+    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES,
 ):
     """Jointly sample conversion rates for two branches then compare them.
 
@@ -168,29 +175,30 @@ def compare_branches_from_agg(
     """
     assert ref_branch_label in df.index, "What's the reference branch?"
 
-    samples = get_samples(
-        df, num_enrollments_label, num_conversions_label, num_samples
-    )
+    samples = get_samples(df, num_enrollments_label, num_conversions_label, num_samples)
 
     return {
-        'individual': {
-                b: summarize_one_branch_from_agg(
-                    df.loc[b], num_enrollments_label, num_conversions_label,
-                    quantiles=individual_summary_quantiles
-                ) for b in df.index
-            },
-        'comparative': {
-                b: mabs.summarize_joint_samples(
-                    samples[b], samples[ref_branch_label],
-                    quantiles=comparative_summary_quantiles
-                ) for b in df.index.drop(ref_branch_label)
-            },
+        "individual": {
+            b: summarize_one_branch_from_agg(
+                df.loc[b],
+                num_enrollments_label,
+                num_conversions_label,
+                quantiles=individual_summary_quantiles,
+            )
+            for b in df.index
+        },
+        "comparative": {
+            b: mabs.summarize_joint_samples(
+                samples[b],
+                samples[ref_branch_label],
+                quantiles=comparative_summary_quantiles,
+            )
+            for b in df.index.drop(ref_branch_label)
+        },
     }
 
 
-def get_samples(
-    df, num_enrollments_label, num_conversions_label, num_samples
-):
+def get_samples(df, num_enrollments_label, num_conversions_label, num_samples):
     """Return samples from Beta distributions.
 
     Assumes a Beta(1, 1) prior.
@@ -219,7 +227,7 @@ def get_samples(
         samples[branch_label] = np.random.beta(
             r.loc[num_conversions_label] + 1,
             r.loc[num_enrollments_label] - r.loc[num_conversions_label] + 1,
-            size=num_samples
+            size=num_samples,
         )
 
     return samples

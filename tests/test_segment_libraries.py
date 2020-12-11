@@ -1,9 +1,9 @@
 import pytest
 from cheap_lint import sql_lint
 
-from mozanalysis.segments import Segment, SegmentDataSource
-import mozanalysis.segments.desktop as msd
 import mozanalysis.metrics.desktop as mmd
+import mozanalysis.segments.desktop as msd
+from mozanalysis.segments import Segment, SegmentDataSource
 
 from . import enumerate_included
 
@@ -37,7 +37,7 @@ def test_consistency_of_segment_and_variable_names(included_segments):
 
 def test_segment_data_source_window_end_validates():
     msd.SegmentDataSource(
-        name='bla',
+        name="bla",
         from_expr="bla",
         window_start=0,
         window_end=0,
@@ -45,7 +45,7 @@ def test_segment_data_source_window_end_validates():
 
     with pytest.raises(ValueError):
         msd.SegmentDataSource(
-            name='bla',
+            name="bla",
             from_expr="bla",
             window_start=0,
             window_end=1,
@@ -54,7 +54,7 @@ def test_segment_data_source_window_end_validates():
 
 def test_segment_data_source_window_start_validates():
     msd.SegmentDataSource(
-        name='bla',
+        name="bla",
         from_expr="bla",
         window_start=-1,
         window_end=-1,
@@ -62,7 +62,7 @@ def test_segment_data_source_window_start_validates():
 
     with pytest.raises(ValueError):
         msd.SegmentDataSource(
-            name='bla',
+            name="bla",
             from_expr="bla",
             window_start=0,
             window_end=-1,
@@ -72,9 +72,9 @@ def test_segment_data_source_window_start_validates():
 def test_segment_validates_not_metric_data_source():
     with pytest.raises(TypeError):
         msd.Segment(
-            name='bla',
+            name="bla",
             data_source=mmd.clients_daily,
-            select_expr='bla',
+            select_expr="bla",
         )
 
 

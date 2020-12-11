@@ -6,8 +6,7 @@
 def enumerate_included(modules, klass):
     collected = []
     for module in modules:
-        collected.extend([
-            (k, v) for k, v in module.__dict__.items()
-            if isinstance(v, klass)
-        ])
+        collected.extend(
+            [(k, v) for k, v in module.__dict__.items() if isinstance(v, klass)]
+        )
     return collected

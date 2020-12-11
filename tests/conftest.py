@@ -2,14 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
-
-import sys
 import os
+import sys
+
 import pytest
 from pyspark.sql import SparkSession
 
-
-sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
 
 _spark_session = None
 _spark_context = None
@@ -42,7 +41,7 @@ def spark_context(spark):
 
 
 def pytest_generate_tests(metafunc):
-    if 'spark_context_or_none' in metafunc.fixturenames:
+    if "spark_context_or_none" in metafunc.fixturenames:
         metafunc.parametrize(
             "spark_context_or_none", ["spark", "no spark"], indirect=True
         )
@@ -50,9 +49,9 @@ def pytest_generate_tests(metafunc):
 
 @pytest.fixture()
 def spark_context_or_none(request):
-    if request.param == 'spark':
+    if request.param == "spark":
         return _spark_context
-    elif request.param == 'no spark':
+    elif request.param == "no spark":
         return None
     else:
         raise ValueError("invalid internal test config")

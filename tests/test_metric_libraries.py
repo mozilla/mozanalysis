@@ -1,9 +1,9 @@
-from cheap_lint import sql_lint
 import pytest
+from cheap_lint import sql_lint
 
-from mozanalysis.metrics import DataSource, Metric
 import mozanalysis.metrics.desktop as mmd
 import mozanalysis.metrics.fenix as mmf
+from mozanalysis.metrics import DataSource, Metric
 
 from . import enumerate_included
 
@@ -25,7 +25,7 @@ def included_datasources():
 
 def test_sql_not_detectably_malformed(included_metrics, included_datasources):
     for _, m in included_metrics:
-        sql_lint(m.select_expr.format(experiment_slug='slug'))
+        sql_lint(m.select_expr.format(experiment_slug="slug"))
 
     for _, ds in included_datasources:
         sql_lint(ds.from_expr_for(None))
