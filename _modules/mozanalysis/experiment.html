@@ -336,23 +336,28 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">sql_template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
-            <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span>
+        <span class="n">enrollments_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_enrollments_query</span><span class="p">(</span>
             <span class="n">time_limits</span><span class="o">=</span><span class="n">time_limits</span><span class="p">,</span>
             <span class="n">enrollments_query_type</span><span class="o">=</span><span class="n">enrollments_query_type</span><span class="p">,</span>
             <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="n">custom_enrollments_query</span><span class="p">,</span>
             <span class="n">segment_list</span><span class="o">=</span><span class="n">segment_list</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
-            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">sql_template</span><span class="p">)]</span>
-            <span class="p">)</span>
+        <span class="n">enrollments_table</span> <span class="o">=</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span><span class="n">enrollments_sql</span><span class="p">)</span>
+
+        <span class="n">metrics_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_metrics_query</span><span class="p">(</span>
+            <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span>
+            <span class="n">time_limits</span><span class="o">=</span><span class="n">time_limits</span><span class="p">,</span>
+            <span class="n">enrollments_table</span><span class="o">=</span><span class="n">enrollments_table</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">sql</span> <span class="o">=</span> <span class="n">sql_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_table</span><span class="o">=</span><span class="n">full_res_table_name</span><span class="p">)</span>
+        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
+            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">metrics_sql</span><span class="p">)])</span>
+        <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_script_or_fetch</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">full_res_table_name</span><span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query_and_fetch</span><span class="p">(</span>
+            <span class="n">metrics_sql</span><span class="p">,</span> <span class="n">full_res_table_name</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Experiment.get_time_series_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -423,23 +428,39 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">sql_template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_query_template</span><span class="p">(</span>
-            <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span>
+        <span class="n">enrollments_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_enrollments_query</span><span class="p">(</span>
             <span class="n">time_limits</span><span class="o">=</span><span class="n">time_limits</span><span class="p">,</span>
             <span class="n">enrollments_query_type</span><span class="o">=</span><span class="n">enrollments_query_type</span><span class="p">,</span>
             <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="n">custom_enrollments_query</span><span class="p">,</span>
             <span class="n">segment_list</span><span class="o">=</span><span class="n">segment_list</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
+        <span class="n">enrollments_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
             <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">sql_template</span><span class="p">)]</span>
+                <span class="p">[</span>
+                    <span class="n">last_date_full_data</span><span class="p">,</span>
+                    <span class="s2">&quot;enrollments&quot;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
+                    <span class="n">hash_ish</span><span class="p">(</span><span class="n">enrollments_sql</span><span class="p">),</span>
+                <span class="p">]</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="n">sql</span> <span class="o">=</span> <span class="n">sql_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_table</span><span class="o">=</span><span class="n">full_res_table_name</span><span class="p">)</span>
+        <span class="n">enrollments_table</span> <span class="o">=</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query_and_fetch</span><span class="p">(</span>
+            <span class="n">enrollments_sql</span><span class="p">,</span> <span class="n">enrollments_table_name</span>
+        <span class="p">)</span>
 
-        <span class="n">bq_context</span><span class="o">.</span><span class="n">run_script_or_fetch</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">full_res_table_name</span><span class="p">)</span>
+        <span class="n">metrics_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_metrics_query</span><span class="p">(</span>
+            <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span>
+            <span class="n">time_limits</span><span class="o">=</span><span class="n">time_limits</span><span class="p">,</span>
+            <span class="n">enrollments_table</span><span class="o">=</span><span class="n">enrollments_table</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
+            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">metrics_sql</span><span class="p">)])</span>
+        <span class="p">)</span>
+
+        <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query_and_fetch</span><span class="p">(</span><span class="n">metrics_sql</span><span class="p">,</span> <span class="n">full_res_table_name</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">TimeSeriesResult</span><span class="p">(</span>
             <span class="n">fully_qualified_table_name</span><span class="o">=</span><span class="n">bq_context</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span>
@@ -448,18 +469,14 @@
             <span class="n">analysis_windows</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Experiment.build_query_template"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.build_query_template">[docs]</a>    <span class="k">def</span> <span class="nf">build_query_template</span><span class="p">(</span>
+<div class="viewcode-block" id="Experiment.build_enrollments_query"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.build_enrollments_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_enrollments_query</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">metric_list</span><span class="p">,</span>
         <span class="n">time_limits</span><span class="p">,</span>
         <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s2">&quot;normandy&quot;</span><span class="p">,</span>
         <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return a SQL template for querying metric data.</span>
-
-<span class="sd">        The return value is a Python string template that needs to be formatted</span>
-<span class="sd">        with a value for `results_table` before it is valid SQL.</span>
+        <span class="sd">&quot;&quot;&quot;Return a SQL query for querying enrollments data.</span>
 
 <span class="sd">        For interactive use, prefer :meth:`.get_time_series_data` or</span>
 <span class="sd">        :meth:`.get_single_window_data`, according to your use case,</span>
@@ -467,11 +484,8 @@
 <span class="sd">        dataframe.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            metric_list (list of mozanalysis.metric.Metric):</span>
-<span class="sd">                The metrics to analyze.</span>
 <span class="sd">            time_limits (TimeLimits): An object describing the</span>
 <span class="sd">                interval(s) to query</span>
-<span class="sd">            results_table (str): The name of the table to write</span>
 <span class="sd">            enrollments_query_type (&#39;normandy&#39; or &#39;fenix-fallback&#39;):</span>
 <span class="sd">                Specifies the query type to use to get the experiment&#39;s</span>
 <span class="sd">                enrollments, unless overridden by</span>
@@ -497,40 +511,65 @@
             <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span>
         <span class="p">)</span>
 
-        <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_metrics_query_bits</span><span class="p">(</span>
-            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span>
-        <span class="p">)</span>
-
         <span class="n">segments_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_segments_query</span><span class="p">(</span><span class="n">segment_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">    CREATE TEMPORARY TABLE enrollments AS (</span>
-<span class="s2">        WITH analysis_windows AS (</span>
-<span class="s2">            </span><span class="si">{analysis_windows_query}</span><span class="s2"></span>
-<span class="s2">        ),</span>
-<span class="s2">        raw_enrollments AS (</span><span class="si">{enrollments_query}</span><span class="s2">),</span>
-<span class="s2">        segmented_enrollments AS (</span><span class="si">{segments_query}</span><span class="s2">)</span>
+<span class="s2">            WITH analysis_windows AS (</span>
+<span class="s2">                </span><span class="si">{analysis_windows_query}</span><span class="s2"></span>
+<span class="s2">            ),</span>
+<span class="s2">            raw_enrollments AS (</span><span class="si">{enrollments_query}</span><span class="s2">),</span>
+<span class="s2">            segmented_enrollments AS (</span><span class="si">{segments_query}</span><span class="s2">)</span>
 
-<span class="s2">        SELECT</span>
-<span class="s2">            e.*,</span>
-<span class="s2">            aw.*</span>
-<span class="s2">        FROM segmented_enrollments e</span>
-<span class="s2">        CROSS JOIN analysis_windows aw</span>
-<span class="s2">    );</span>
-
-<span class="s2">    CREATE OR REPLACE TABLE {{results_table}} AS (</span>
-<span class="s2">        SELECT</span>
-<span class="s2">            enrollments.*,</span>
-<span class="s2">            </span><span class="si">{metrics_columns}</span><span class="s2"></span>
-<span class="s2">        FROM enrollments</span>
-<span class="s2">        </span><span class="si">{metrics_joins}</span><span class="s2"></span>
-<span class="s2">    );</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                e.*,</span>
+<span class="s2">                aw.*</span>
+<span class="s2">            FROM segmented_enrollments e</span>
+<span class="s2">            CROSS JOIN analysis_windows aw</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">analysis_windows_query</span><span class="o">=</span><span class="n">analysis_windows_query</span><span class="p">,</span>
             <span class="n">enrollments_query</span><span class="o">=</span><span class="n">enrollments_query</span><span class="p">,</span>
             <span class="n">segments_query</span><span class="o">=</span><span class="n">segments_query</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Experiment.build_metrics_query"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.build_metrics_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_metrics_query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">metric_list</span><span class="p">,</span>
+        <span class="n">time_limits</span><span class="p">,</span>
+        <span class="n">enrollments_table</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return a SQL query for querying metric data.</span>
+
+<span class="sd">        For interactive use, prefer :meth:`.get_time_series_data` or</span>
+<span class="sd">        :meth:`.get_single_window_data`, according to your use case,</span>
+<span class="sd">        which will run the query for you and return a materialized</span>
+<span class="sd">        dataframe.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metric_list (list of mozanalysis.metric.Metric):</span>
+<span class="sd">                The metrics to analyze.</span>
+<span class="sd">            time_limits (TimeLimits): An object describing the</span>
+<span class="sd">                interval(s) to query</span>
+<span class="sd">            enrollments_table (str): The name of the enrollments table</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A string containing a BigQuery SQL expression.</span>
+
+<span class="sd">        Building this query is the main goal of this module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_metrics_query_bits</span><span class="p">(</span>
+            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            </span><span class="si">{enrollments_table}</span><span class="s2">.*,</span>
+<span class="s2">            </span><span class="si">{metrics_columns}</span><span class="s2"></span>
+<span class="s2">        FROM </span><span class="si">{enrollments_table}</span><span class="s2"></span>
+<span class="s2">        </span><span class="si">{metrics_joins}</span><span class="s2"></span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">metrics_columns</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_columns</span><span class="p">),</span>
             <span class="n">metrics_joins</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">),</span>
+            <span class="n">enrollments_table</span><span class="o">=</span><span class="n">enrollments_table</span><span class="p">,</span>
         <span class="p">)</span></div>
 
     <span class="nd">@staticmethod</span>
@@ -993,7 +1032,7 @@
                     <span class="s2">&quot;AnalysisWindow not found with start of </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">analysis_window</span><span class="p">)</span>
                 <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query_and_fetch</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_build_analysis_window_subset_query</span><span class="p">(</span><span class="n">analysis_window</span><span class="p">)</span>
         <span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
 

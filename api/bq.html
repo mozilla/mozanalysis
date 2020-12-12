@@ -184,16 +184,12 @@ Defaults to the DS team’s project.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="mozanalysis.bq.BigQueryContext.run_script_or_fetch">
-<code class="sig-name descname">run_script_or_fetch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sql</span></em>, <em class="sig-param"><span class="n">results_table</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.run_script_or_fetch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.run_script_or_fetch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs a BigQuery SQL script and returns a RowIterator for results_table.
-The script is assumed to create a table named results_table after completing
-succesfully. If results_table already exists, a RowIterator for the
-existing table will be returned without invoking the script.</p>
-<p>results_table is assumed to be an unqualified table name without
-a project or dataset reference.</p>
-<p>Learn more about BigQuery scripting at
-<a class="reference external" href="https://cloud.google.com/bigquery/docs/reference/standard-sql/scripting">https://cloud.google.com/bigquery/docs/reference/standard-sql/scripting</a>.</p>
+<dt id="mozanalysis.bq.BigQueryContext.run_query_and_fetch">
+<code class="sig-name descname">run_query_and_fetch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sql</span></em>, <em class="sig-param"><span class="n">results_table</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.run_query_and_fetch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.run_query_and_fetch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a query and return the result.
+If <code class="docutils literal notranslate"><span class="pre">results_table</span></code> is provided, then save the results
+into there (or just query from there if it already exists).
+Returns a <code class="docutils literal notranslate"><span class="pre">google.cloud.bigquery.table.RowIterator</span></code></p>
 </dd></dl>
 
 <dl class="py method">
