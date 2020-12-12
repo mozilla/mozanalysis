@@ -36,26 +36,6 @@ class BigQueryContext:
         self.project_id = project_id
         self.client = bigquery.Client(project=project_id)
 
-    def run_query(self, sql, results_table=None) -> str:
-        """Runs a SQL query and returns the destination table.
-        If ``results_table`` is provided, then save the results
-        into there otherwise save results in a temporary table.
-        """
-        if results_table:
-            job = self.client.query(
-                sql,
-                job_config=bigquery.QueryJobConfig(
-                    destination=self.client.dataset(self.dataset_id).table(
-                        results_table
-                    )
-                ),
-            )
-        else:
-            job = self.client.query(sql)
-
-        job.result()
-        return job.destination
-
     def run_query_and_fetch(self, sql, results_table=None):
         """Run a query and return the result.
         If ``results_table`` is provided, then save the results
