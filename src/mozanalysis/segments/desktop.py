@@ -13,7 +13,6 @@ clients_last_seen = SegmentDataSource(
     window_end=0,
 )
 
-
 regular_users_v3 = Segment(
     name="regular_users_v3",
     data_source=clients_last_seen,
@@ -62,4 +61,15 @@ allweek_regular_v1 = Segment(
         A subset of "regular users" that have used Firefox on weekends.
         """
     ),
+)
+
+new_unique_profiles = Segment(
+    name="new_unique_profiles",
+    data_source=clients_last_seen,
+    select_expr="COALESCE(ANY_VALUE(first_seen_date) >= submission_date, TRUE)",
+    friendly_name="New unique profiles",
+    description=dedent("""\
+        Clients that enrolled the first date their client_id ever appeared
+        in telemetry (i.e. new, unique profiles).
+    """)
 )
