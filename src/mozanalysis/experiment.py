@@ -591,7 +591,7 @@ class Experiment:
             segments_joins.append(
                 """    LEFT JOIN (
         {query}
-        ) ds_{i} USING (client_id)
+        ) ds_{i} USING (client_id, branch)
                 """.format(
                     query=query_for_segments, i=i
                 )

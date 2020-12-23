@@ -87,6 +87,7 @@ class SegmentDataSource:
         """
         return """SELECT
             e.client_id,
+            e.branch,
             {segments}
         FROM raw_enrollments e
             LEFT JOIN {from_expr} ds
@@ -97,7 +98,7 @@ class SegmentDataSource:
                 AND ds.{submission_date} BETWEEN
                     DATE_ADD(e.enrollment_date, interval {window_start} day)
                     AND DATE_ADD(e.enrollment_date, interval {window_end} day)
-        GROUP BY e.client_id""".format(
+        GROUP BY e.client_id, e.branch""".format(
             client_id=self.client_id_column,
             submission_date=self.submission_date_column,
             from_expr=self.from_expr_for(from_expr_dataset),
