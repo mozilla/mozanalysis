@@ -191,16 +191,14 @@ class Experiment:
             segment_list=segment_list,
         )
 
-        enrollments_table_name = bq_context.fully_qualify_table_name(
-            sanitize_table_name_for_bq(
-                "_".join(
-                    [
-                        last_date_full_data,
-                        "enrollments",
-                        self.experiment_slug,
-                        hash_ish(enrollments_sql),
-                    ]
-                )
+        enrollments_table_name = sanitize_table_name_for_bq(
+            "_".join(
+                [
+                    last_date_full_data,
+                    "enrollments",
+                    self.experiment_slug,
+                    hash_ish(enrollments_sql),
+                ]
             )
         )
 
@@ -211,7 +209,9 @@ class Experiment:
         metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
             time_limits=time_limits,
-            enrollments_table=enrollments_table_name,
+            enrollments_table=bq_context.fully_qualify_table_name(
+                enrollments_table_name
+            ),
         )
 
         full_res_table_name = sanitize_table_name_for_bq(
@@ -298,16 +298,14 @@ class Experiment:
             segment_list=segment_list,
         )
 
-        enrollments_table_name = bq_context.fully_qualify_table_name(
-            sanitize_table_name_for_bq(
-                "_".join(
-                    [
-                        last_date_full_data,
-                        "enrollments",
-                        self.experiment_slug,
-                        hash_ish(enrollments_sql),
-                    ]
-                )
+        enrollments_table_name = sanitize_table_name_for_bq(
+            "_".join(
+                [
+                    last_date_full_data,
+                    "enrollments",
+                    self.experiment_slug,
+                    hash_ish(enrollments_sql),
+                ]
             )
         )
 
@@ -318,7 +316,9 @@ class Experiment:
         metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
             time_limits=time_limits,
-            enrollments_table=enrollments_table_name,
+            enrollments_table=bq_context.fully_qualify_table_name(
+                enrollments_table_name
+            ),
         )
 
         full_res_table_name = sanitize_table_name_for_bq(
