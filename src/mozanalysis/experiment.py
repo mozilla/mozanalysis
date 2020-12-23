@@ -527,7 +527,7 @@ class Experiment:
             metrics_joins.append(
                 """    LEFT JOIN (
         {query}
-        ) ds_{i} USING (client_id, analysis_window_start, analysis_window_end)
+        ) ds_{i} USING (client_id, branch, analysis_window_start, analysis_window_end)
                 """.format(
                     query=query_for_metrics, i=i
                 )
