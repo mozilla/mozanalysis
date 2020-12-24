@@ -343,11 +343,6 @@ class Experiment:
     ) -> str:
         """Return a SQL query for querying enrollments data.
 
-        For interactive use, prefer :meth:`.get_time_series_data` or
-        :meth:`.get_single_window_data`, according to your use case,
-        which will run the query for you and return a materialized
-        dataframe.
-
         Args:
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
@@ -365,8 +360,6 @@ class Experiment:
 
         Returns:
             A string containing a BigQuery SQL expression.
-
-        Building this query is the main goal of this module.
         """
         analysis_windows_query = self._build_analysis_windows_query(
             time_limits.analysis_windows
@@ -383,12 +376,14 @@ class Experiment:
                 {analysis_windows_query}
             ),
             raw_enrollments AS ({enrollments_query}),
+            -- TODO: enforce that raw_enrollments is uniquely keyed
+            -- by (client_id, branch)
             segmented_enrollments AS ({segments_query})
 
             SELECT
-                e.*,
+                se.*,
                 aw.*
-            FROM segmented_enrollments e
+            FROM segmented_enrollments se
             CROSS JOIN analysis_windows aw
         """.format(
             analysis_windows_query=analysis_windows_query,
@@ -426,10 +421,14 @@ class Experiment:
         )
 
         return """
+        WITH enrollments AS (
+            SELECT *
+            FROM {enrollments_table}
+        )
         SELECT
-            {enrollments_table}.*,
+            enrollments.*,
             {metrics_columns}
-        FROM {enrollments_table}
+        FROM enrollments
         {metrics_joins}
         """.format(
             metrics_columns=",\n        ".join(metrics_columns),
