@@ -67,7 +67,7 @@ class BigQueryContext:
             return full_res
 
         except Conflict:
-            print("Full results table already exists. Reusing", results_table)
+            print("Table already exists. Reusing", results_table)
             return self.client.list_rows(
                 self.fully_qualify_table_name(results_table)
             )
