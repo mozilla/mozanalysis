@@ -29,7 +29,6 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -188,11 +187,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span> <span class="o">=</span> <span class="n">project_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">bigquery</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="n">project_id</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BigQueryContext.run_query_and_fetch"><a class="viewcode-back" href="../../api/bq.html#mozanalysis.bq.BigQueryContext.run_query_and_fetch">[docs]</a>    <span class="k">def</span> <span class="nf">run_query_and_fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">results_table</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="BigQueryContext.run_query"><a class="viewcode-back" href="../../api/bq.html#mozanalysis.bq.BigQueryContext.run_query">[docs]</a>    <span class="k">def</span> <span class="nf">run_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">results_table</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run a query and return the result.</span>
+
 <span class="sd">        If ``results_table`` is provided, then save the results</span>
 <span class="sd">        into there (or just query from there if it already exists).</span>
 <span class="sd">        Returns a ``google.cloud.bigquery.table.RowIterator``</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sql (str): A SQL query.</span>
+<span class="sd">            results_table (str, optional): A table name, not including</span>
+<span class="sd">                a project_id or dataset_id. The table name is used as a</span>
+<span class="sd">                cache key (if the table already exists, we ignore ``sql``</span>
+<span class="sd">                and return the table&#39;s contents), so it is wise for</span>
+<span class="sd">                ``results_table`` to include a hash of ``sql``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">results_table</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
@@ -210,12 +218,14 @@
             <span class="k">return</span> <span class="n">full_res</span>
 
         <span class="k">except</span> <span class="n">Conflict</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Full results table already exists. Reusing&quot;</span><span class="p">,</span> <span class="n">results_table</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">list_rows</span><span class="p">(</span><span class="n">results_table</span><span class="p">)</span></div>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Table already exists. Reusing&quot;</span><span class="p">,</span> <span class="n">results_table</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">list_rows</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span><span class="n">results_table</span><span class="p">)</span>
+            <span class="p">)</span></div>
 
 <div class="viewcode-block" id="BigQueryContext.fully_qualify_table_name"><a class="viewcode-back" href="../../api/bq.html#mozanalysis.bq.BigQueryContext.fully_qualify_table_name">[docs]</a>    <span class="k">def</span> <span class="nf">fully_qualify_table_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Given a table name, return it fully qualified.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;`</span><span class="si">{project_id}</span><span class="s2">.</span><span class="si">{dataset_id}</span><span class="s2">.</span><span class="si">{full_table_name}</span><span class="s2">`&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{project_id}</span><span class="s2">.</span><span class="si">{dataset_id}</span><span class="s2">.</span><span class="si">{full_table_name}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">project_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
             <span class="n">dataset_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_id</span><span class="p">,</span>
             <span class="n">full_table_name</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span>

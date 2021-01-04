@@ -29,7 +29,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -184,12 +183,24 @@ Defaults to the DS team’s project.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="mozanalysis.bq.BigQueryContext.run_query_and_fetch">
-<code class="sig-name descname">run_query_and_fetch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sql</span></em>, <em class="sig-param"><span class="n">results_table</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.run_query_and_fetch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.run_query_and_fetch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a query and return the result.
-If <code class="docutils literal notranslate"><span class="pre">results_table</span></code> is provided, then save the results
+<dt id="mozanalysis.bq.BigQueryContext.run_query">
+<code class="sig-name descname">run_query</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sql</span></em>, <em class="sig-param"><span class="n">results_table</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.run_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.run_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a query and return the result.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">results_table</span></code> is provided, then save the results
 into there (or just query from there if it already exists).
 Returns a <code class="docutils literal notranslate"><span class="pre">google.cloud.bigquery.table.RowIterator</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sql</strong> (<em>str</em>) – A SQL query.</p></li>
+<li><p><strong>results_table</strong> (<em>str</em><em>, </em><em>optional</em>) – A table name, not including
+a project_id or dataset_id. The table name is used as a
+cache key (if the table already exists, we ignore <code class="docutils literal notranslate"><span class="pre">sql</span></code>
+and return the table’s contents), so it is wise for
+<code class="docutils literal notranslate"><span class="pre">results_table</span></code> to include a hash of <code class="docutils literal notranslate"><span class="pre">sql</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">

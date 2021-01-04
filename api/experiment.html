@@ -29,7 +29,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -325,6 +324,9 @@ in the main query:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="n">raw_enrollments</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_enrollments_query</span><span class="p">})</span>
 </pre></div>
 </div>
+<p>N.B. this query’s results must be uniquely keyed by
+(client_id, branch), or else your results will be subtly
+wrong.</p>
 </p></li>
 <li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em>) – The user
 segments to study.</p></li>
@@ -388,6 +390,9 @@ in the main query:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="n">raw_enrollments</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_enrollments_query</span><span class="p">})</span>
 </pre></div>
 </div>
+<p>N.B. this query’s results must be uniquely keyed by
+(client_id, branch), or else your results will be subtly
+wrong.</p>
 </p></li>
 <li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em>) – The user
 segments to study.</p></li>
@@ -428,10 +433,6 @@ supports sanity checks.</p></li>
 <dt id="mozanalysis.experiment.Experiment.build_enrollments_query">
 <code class="sig-name descname">build_enrollments_query</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_limits</span></em>, <em class="sig-param"><span class="n">enrollments_query_type</span><span class="o">=</span><span class="default_value">'normandy'</span></em>, <em class="sig-param"><span class="n">custom_enrollments_query</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">segment_list</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_enrollments_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_enrollments_query" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a SQL query for querying enrollments data.</p>
-<p>For interactive use, prefer <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="mozanalysis.experiment.Experiment.get_time_series_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_time_series_data()</span></code></a> or
-<a class="reference internal" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_single_window_data()</span></code></a>, according to your use case,
-which will run the query for you and return a materialized
-dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -454,7 +455,6 @@ segments to study.</p></li>
 <dd class="field-even"><p>A string containing a BigQuery SQL expression.</p>
 </dd>
 </dl>
-<p>Building this query is the main goal of this module.</p>
 </dd></dl>
 
 <dl class="py method">

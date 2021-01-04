@@ -29,7 +29,6 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -280,6 +279,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;SELECT</span>
 <span class="s2">            e.client_id,</span>
+<span class="s2">            e.branch,</span>
 <span class="s2">            e.analysis_window_start,</span>
 <span class="s2">            e.analysis_window_end,</span>
 <span class="s2">            </span><span class="si">{metrics}</span><span class="s2"></span>
@@ -291,7 +291,11 @@
 <span class="s2">                    DATE_ADD(e.enrollment_date, interval e.analysis_window_start day)</span>
 <span class="s2">                    AND DATE_ADD(e.enrollment_date, interval e.analysis_window_end day)</span>
 <span class="s2">                </span><span class="si">{ignore_pre_enroll_first_day}</span><span class="s2"></span>
-<span class="s2">        GROUP BY e.client_id, e.analysis_window_start, e.analysis_window_end&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+<span class="s2">        GROUP BY</span>
+<span class="s2">            e.client_id,</span>
+<span class="s2">            e.branch,</span>
+<span class="s2">            e.analysis_window_start,</span>
+<span class="s2">            e.analysis_window_end&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">client_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client_id_column</span><span class="p">,</span>
             <span class="n">submission_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_date_column</span><span class="p">,</span>
             <span class="n">from_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">from_expr_for</span><span class="p">(</span><span class="n">from_expr_dataset</span><span class="p">),</span>
