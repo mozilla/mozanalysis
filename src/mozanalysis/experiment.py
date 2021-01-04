@@ -146,6 +146,10 @@ class Experiment:
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
 
+                N.B. this query's results must be uniquely keyed by
+                (client_id, branch), or else your results will be subtly
+                wrong.
+
             segment_list (list of mozanalysis.segment.Segment): The user
                 segments to study.
 
@@ -255,6 +259,10 @@ class Experiment:
                 in the main query::
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
+
+                N.B. this query's results must be uniquely keyed by
+                (client_id, branch), or else your results will be subtly
+                wrong.
 
             segment_list (list of mozanalysis.segment.Segment): The user
                 segments to study.
