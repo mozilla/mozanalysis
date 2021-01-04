@@ -146,6 +146,10 @@ class Experiment:
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
 
+                N.B. this query's results must be uniquely keyed by
+                (client_id, branch), or else your results will be subtly
+                wrong.
+
             segment_list (list of mozanalysis.segment.Segment): The user
                 segments to study.
 
@@ -191,19 +195,34 @@ class Experiment:
             segment_list=segment_list,
         )
 
-        enrollments_table = bq_context.run_query(enrollments_sql)
+        enrollments_table_name = sanitize_table_name_for_bq(
+            "_".join(
+                [
+                    last_date_full_data,
+                    "enrollments",
+                    self.experiment_slug,
+                    hash_ish(enrollments_sql),
+                ]
+            )
+        )
+
+        bq_context.run_query(
+            enrollments_sql, enrollments_table_name
+        )
 
         metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
             time_limits=time_limits,
-            enrollments_table=enrollments_table,
+            enrollments_table=bq_context.fully_qualify_table_name(
+                enrollments_table_name
+            ),
         )
 
         full_res_table_name = sanitize_table_name_for_bq(
             "_".join([last_date_full_data, self.experiment_slug, hash_ish(metrics_sql)])
         )
 
-        return bq_context.run_query_and_fetch(
+        return bq_context.run_query(
             metrics_sql, full_res_table_name
         ).to_dataframe()
 
@@ -240,6 +259,10 @@ class Experiment:
                 in the main query::
 
                     WITH raw_enrollments AS ({custom_enrollments_query})
+
+                N.B. this query's results must be uniquely keyed by
+                (client_id, branch), or else your results will be subtly
+                wrong.
 
             segment_list (list of mozanalysis.segment.Segment): The user
                 segments to study.
@@ -294,21 +317,23 @@ class Experiment:
             )
         )
 
-        enrollments_table = bq_context.run_query_and_fetch(
+        bq_context.run_query(
             enrollments_sql, enrollments_table_name
         )
 
         metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
             time_limits=time_limits,
-            enrollments_table=enrollments_table,
+            enrollments_table=bq_context.fully_qualify_table_name(
+                enrollments_table_name
+            ),
         )
 
         full_res_table_name = sanitize_table_name_for_bq(
             "_".join([last_date_full_data, self.experiment_slug, hash_ish(metrics_sql)])
         )
 
-        bq_context.run_query_and_fetch(metrics_sql, full_res_table_name)
+        bq_context.run_query(metrics_sql, full_res_table_name)
 
         return TimeSeriesResult(
             fully_qualified_table_name=bq_context.fully_qualify_table_name(
@@ -325,11 +350,6 @@ class Experiment:
         segment_list=None,
     ) -> str:
         """Return a SQL query for querying enrollments data.
-
-        For interactive use, prefer :meth:`.get_time_series_data` or
-        :meth:`.get_single_window_data`, according to your use case,
-        which will run the query for you and return a materialized
-        dataframe.
 
         Args:
             time_limits (TimeLimits): An object describing the
@@ -348,8 +368,6 @@ class Experiment:
 
         Returns:
             A string containing a BigQuery SQL expression.
-
-        Building this query is the main goal of this module.
         """
         analysis_windows_query = self._build_analysis_windows_query(
             time_limits.analysis_windows
@@ -369,9 +387,9 @@ class Experiment:
             segmented_enrollments AS ({segments_query})
 
             SELECT
-                e.*,
+                se.*,
                 aw.*
-            FROM segmented_enrollments e
+            FROM segmented_enrollments se
             CROSS JOIN analysis_windows aw
         """.format(
             analysis_windows_query=analysis_windows_query,
@@ -409,10 +427,14 @@ class Experiment:
         )
 
         return """
+        WITH enrollments AS (
+            SELECT *
+            FROM `{enrollments_table}`
+        )
         SELECT
-            {enrollments_table}.*,
+            enrollments.*,
             {metrics_columns}
-        FROM {enrollments_table}
+        FROM enrollments
         {metrics_joins}
         """.format(
             metrics_columns=",\n        ".join(metrics_columns),
@@ -527,7 +549,7 @@ class Experiment:
             metrics_joins.append(
                 """    LEFT JOIN (
         {query}
-        ) ds_{i} USING (client_id, analysis_window_start, analysis_window_end)
+        ) ds_{i} USING (client_id, branch, analysis_window_start, analysis_window_end)
                 """.format(
                     query=query_for_metrics, i=i
                 )
@@ -591,7 +613,7 @@ class Experiment:
             segments_joins.append(
                 """    LEFT JOIN (
         {query}
-        ) ds_{i} USING (client_id)
+        ) ds_{i} USING (client_id, branch)
                 """.format(
                     query=query_for_segments, i=i
                 )
@@ -880,7 +902,7 @@ class TimeSeriesResult:
                     "AnalysisWindow not found with start of {}".format(analysis_window)
                 )
 
-        return bq_context.run_query_and_fetch(
+        return bq_context.run_query(
             self._build_analysis_window_subset_query(analysis_window)
         ).to_dataframe()
 

@@ -36,11 +36,20 @@ class BigQueryContext:
         self.project_id = project_id
         self.client = bigquery.Client(project=project_id)
 
-    def run_query_and_fetch(self, sql, results_table=None):
+    def run_query(self, sql, results_table=None):
         """Run a query and return the result.
+
         If ``results_table`` is provided, then save the results
         into there (or just query from there if it already exists).
         Returns a ``google.cloud.bigquery.table.RowIterator``
+
+        Args:
+            sql (str): A SQL query.
+            results_table (str, optional): A table name, not including
+                a project_id or dataset_id. The table name is used as a
+                cache key (if the table already exists, we ignore ``sql``
+                and return the table's contents), so it is wise for
+                ``results_table`` to include a hash of ``sql``.
         """
         if not results_table:
             return self.client.query(sql).result()
@@ -58,12 +67,14 @@ class BigQueryContext:
             return full_res
 
         except Conflict:
-            print("Full results table already exists. Reusing", results_table)
-            return self.client.list_rows(results_table)
+            print("Table already exists. Reusing", results_table)
+            return self.client.list_rows(
+                self.fully_qualify_table_name(results_table)
+            )
 
     def fully_qualify_table_name(self, table_name):
         """Given a table name, return it fully qualified."""
-        return "`{project_id}.{dataset_id}.{full_table_name}`".format(
+        return "{project_id}.{dataset_id}.{full_table_name}".format(
             project_id=self.project_id,
             dataset_id=self.dataset_id,
             full_table_name=table_name,

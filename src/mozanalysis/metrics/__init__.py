@@ -128,6 +128,7 @@ class DataSource:
         """
         return """SELECT
             e.client_id,
+            e.branch,
             e.analysis_window_start,
             e.analysis_window_end,
             {metrics}
@@ -139,7 +140,11 @@ class DataSource:
                     DATE_ADD(e.enrollment_date, interval e.analysis_window_start day)
                     AND DATE_ADD(e.enrollment_date, interval e.analysis_window_end day)
                 {ignore_pre_enroll_first_day}
-        GROUP BY e.client_id, e.analysis_window_start, e.analysis_window_end""".format(
+        GROUP BY
+            e.client_id,
+            e.branch,
+            e.analysis_window_start,
+            e.analysis_window_end""".format(
             client_id=self.client_id_column,
             submission_date=self.submission_date_column,
             from_expr=self.from_expr_for(from_expr_dataset),
