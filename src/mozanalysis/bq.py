@@ -38,9 +38,18 @@ class BigQueryContext:
 
     def run_query_and_fetch(self, sql, results_table=None):
         """Run a query and return the result.
+
         If ``results_table`` is provided, then save the results
         into there (or just query from there if it already exists).
         Returns a ``google.cloud.bigquery.table.RowIterator``
+
+        Args:
+            sql (str): A SQL query.
+            results_table (str, optional): A table name, not including
+                a project_id or dataset_id. The table name is used as a
+                cache key (if the table already exists, we ignore ``sql``
+                and return the table's contents), so it is wise for
+                ``results_table`` to include a hash of ``sql``.
         """
         if not results_table:
             return self.client.query(sql).result()

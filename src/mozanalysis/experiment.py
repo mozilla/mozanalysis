@@ -376,8 +376,6 @@ class Experiment:
                 {analysis_windows_query}
             ),
             raw_enrollments AS ({enrollments_query}),
-            -- TODO: enforce that raw_enrollments is uniquely keyed
-            -- by (client_id, branch)
             segmented_enrollments AS ({segments_query})
 
             SELECT
@@ -421,14 +419,10 @@ class Experiment:
         )
 
         return """
-        WITH enrollments AS (
-            SELECT *
-            FROM {enrollments_table}
-        )
         SELECT
             enrollments.*,
             {metrics_columns}
-        FROM enrollments
+        FROM `{enrollments_table}` AS enrollments
         {metrics_joins}
         """.format(
             metrics_columns=",\n        ".join(metrics_columns),
