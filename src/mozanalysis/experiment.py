@@ -427,10 +427,14 @@ class Experiment:
         )
 
         return """
+        WITH enrollments AS (
+            SELECT *
+            FROM `{enrollments_table}`
+        )
         SELECT
             enrollments.*,
             {metrics_columns}
-        FROM `{enrollments_table}` AS enrollments
+        FROM enrollments
         {metrics_joins}
         """.format(
             metrics_columns=",\n        ".join(metrics_columns),
