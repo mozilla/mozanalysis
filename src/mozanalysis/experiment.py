@@ -202,7 +202,7 @@ class Experiment:
             )
         )
 
-        bq_context.run_query_and_fetch(
+        bq_context.run_query(
             enrollments_sql, enrollments_table_name
         )
 
@@ -218,7 +218,7 @@ class Experiment:
             "_".join([last_date_full_data, self.experiment_slug, hash_ish(metrics_sql)])
         )
 
-        return bq_context.run_query_and_fetch(
+        return bq_context.run_query(
             metrics_sql, full_res_table_name
         ).to_dataframe()
 
@@ -309,7 +309,7 @@ class Experiment:
             )
         )
 
-        bq_context.run_query_and_fetch(
+        bq_context.run_query(
             enrollments_sql, enrollments_table_name
         )
 
@@ -325,7 +325,7 @@ class Experiment:
             "_".join([last_date_full_data, self.experiment_slug, hash_ish(metrics_sql)])
         )
 
-        bq_context.run_query_and_fetch(metrics_sql, full_res_table_name)
+        bq_context.run_query(metrics_sql, full_res_table_name)
 
         return TimeSeriesResult(
             fully_qualified_table_name=bq_context.fully_qualify_table_name(
@@ -890,7 +890,7 @@ class TimeSeriesResult:
                     "AnalysisWindow not found with start of {}".format(analysis_window)
                 )
 
-        return bq_context.run_query_and_fetch(
+        return bq_context.run_query(
             self._build_analysis_window_subset_query(analysis_window)
         ).to_dataframe()
 

@@ -36,7 +36,7 @@ class BigQueryContext:
         self.project_id = project_id
         self.client = bigquery.Client(project=project_id)
 
-    def run_query_and_fetch(self, sql, results_table=None):
+    def run_query(self, sql, results_table=None):
         """Run a query and return the result.
 
         If ``results_table`` is provided, then save the results
