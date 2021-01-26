@@ -346,7 +346,7 @@ days_of_use = Metric(
 )
 
 #: Metric: Clicks to disable Pocket in New Tab
-pocket_rec_clicks = Metric(
+disable_pocket_clicks = Metric(
     name="disable_pocket_clicks",
     data_source=activity_stream_events,
     select_expr="""COUNTIF(
@@ -363,7 +363,7 @@ pocket_rec_clicks = Metric(
 )
 
 #: Metric: Clicks to disable Pocket sponsored content in New Tab
-pocket_spoc_clicks = Metric(
+disable_pocket_spocs_clicks = Metric(
     name="disable_pocket_spocs_clicks",
     data_source=activity_stream_events,
     select_expr="""COUNTIF(
@@ -374,7 +374,8 @@ pocket_spoc_clicks = Metric(
     friendly_name="Disabled Pocket sponsored content in New Tab",
     description=dedent(
         """\
-         Counts the number of clicks to disable Pocket sponsored content in New Tab made by each client.
+         Counts the number of clicks to disable Pocket sponsored content
+         in New Tab made by each client.
     """
     ),
 )
