@@ -369,7 +369,7 @@ disable_pocket_spocs_clicks = Metric(
     select_expr="""COUNTIF(
                 event = 'PREF_CHANGED'
                 AND source = 'POCKET_SPOCS'
-                AND JSON_EXTRACT_SCALAR(value, '$.status') = false
+                AND JSON_EXTRACT_SCALAR(value, '$.status') = 'false'
             )""",
     friendly_name="Disabled Pocket sponsored content in New Tab",
     description=dedent(
