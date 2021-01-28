@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>mozanalysis.metrics.desktop &mdash; mozanalysis  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -51,7 +54,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> mozanalysis
+            <a href="../../index.html" class="icon icon-home"> mozanalysis
           
 
           
@@ -140,6 +143,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -153,7 +158,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/api/metrics/desktop.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -438,6 +443,28 @@ reduces bytes queried compared to counting rows from the generic events DataSour
 </dl>
 </dd></dl>
 
+<dl class="py data">
+<dt id="mozanalysis.metrics.desktop.disable_pocket_clicks">
+<code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">disable_pocket_clicks</code><em class="property"> = Metric(name='disable_pocket_clicks', data_source=DataSource(name='activity_stream_events', _from_expr='(\n                SELECT\n                    *,\n                    DATE(submission_timestamp) AS submission_date\n                FROM `moz-fx-data-shared-prod`.activity_stream.events\n            )', experiments_column_type='native', client_id_column='client_id', submission_date_column='submission_date', default_dataset=None), select_expr=&quot;COUNTIF(\n                event = 'PREF_CHANGED'\n                AND source = 'TOP_STORIES'\n                AND JSON_EXTRACT_SCALAR(value, '$.status') = 'false'\n            )&quot;, friendly_name='Disabled Pocket in New Tab', description='Counts the number of clicks to disable Pocket in New Tab made by each client.\n', bigger_is_better=True)</em><a class="headerlink" href="#mozanalysis.metrics.desktop.disable_pocket_clicks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clicks to disable Pocket in New Tab</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric">Metric</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt id="mozanalysis.metrics.desktop.disable_pocket_spocs_clicks">
+<code class="sig-prename descclassname">mozanalysis.metrics.desktop.</code><code class="sig-name descname">disable_pocket_spocs_clicks</code><em class="property"> = Metric(name='disable_pocket_spocs_clicks', data_source=DataSource(name='activity_stream_events', _from_expr='(\n                SELECT\n                    *,\n                    DATE(submission_timestamp) AS submission_date\n                FROM `moz-fx-data-shared-prod`.activity_stream.events\n            )', experiments_column_type='native', client_id_column='client_id', submission_date_column='submission_date', default_dataset=None), select_expr=&quot;COUNTIF(\n                event = 'PREF_CHANGED'\n                AND source = 'POCKET_SPOCS'\n                AND JSON_EXTRACT_SCALAR(value, '$.status') = 'false'\n            )&quot;, friendly_name='Disabled Pocket sponsored content in New Tab', description='Counts the number of clicks to disable Pocket sponsored content\nin New Tab made by each client.\n', bigger_is_better=True)</em><a class="headerlink" href="#mozanalysis.metrics.desktop.disable_pocket_spocs_clicks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clicks to disable Pocket sponsored content in New Tab</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric">Metric</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 
 
@@ -445,37 +472,29 @@ reduces bytes queried compared to counting rows from the generic events DataSour
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../segments.html" class="btn btn-neutral float-right" title="mozanalysis.segments" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="../metrics.html" class="btn btn-neutral float-left" title="mozanalysis.metrics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="../segments.html" class="btn btn-neutral float-right" title="mozanalysis.segments" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../metrics.html" class="btn btn-neutral float-left" title="mozanalysis.metrics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Mozilla
+        &#169; Copyright 2019, Mozilla.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
