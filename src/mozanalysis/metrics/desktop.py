@@ -344,3 +344,38 @@ days_of_use = Metric(
     friendly_name="Days of use",
     description="The number of days in the interval that each client sent a main ping.",
 )
+
+#: Metric: Clicks to disable Pocket in New Tab
+disable_pocket_clicks = Metric(
+    name="disable_pocket_clicks",
+    data_source=activity_stream_events,
+    select_expr="""COUNTIF(
+                event = 'PREF_CHANGED'
+                AND source = 'TOP_STORIES'
+                AND JSON_EXTRACT_SCALAR(value, '$.status') = 'false'
+            )""",
+    friendly_name="Disabled Pocket in New Tab",
+    description=dedent(
+        """\
+         Counts the number of clicks to disable Pocket in New Tab made by each client.
+    """
+    ),
+)
+
+#: Metric: Clicks to disable Pocket sponsored content in New Tab
+disable_pocket_spocs_clicks = Metric(
+    name="disable_pocket_spocs_clicks",
+    data_source=activity_stream_events,
+    select_expr="""COUNTIF(
+                event = 'PREF_CHANGED'
+                AND source = 'POCKET_SPOCS'
+                AND JSON_EXTRACT_SCALAR(value, '$.status') = 'false'
+            )""",
+    friendly_name="Disabled Pocket sponsored content in New Tab",
+    description=dedent(
+        """\
+         Counts the number of clicks to disable Pocket sponsored content
+         in New Tab made by each client.
+    """
+    ),
+)
