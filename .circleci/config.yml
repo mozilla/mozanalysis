@@ -140,7 +140,7 @@ workflows:
             - docs
           filters:
             branches:
-              only: master
+              only: main
   tagged-deploy:
     jobs:
       - deploy:

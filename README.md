@@ -40,7 +40,7 @@ and invoking:
 circleci build --job py37
 ```
 
-See [.circleci/config.yml](https://github.com/mozilla/mozanalysis/blob/master/.circleci/config.yml)
+See [.circleci/config.yml](https://github.com/mozilla/mozanalysis/blob/main/.circleci/config.yml)
 for the other configured job names (for running tests on different python versions).
 
 ## Deploying a new release
