@@ -23,3 +23,8 @@ def process(app, what, name, obj, options, lines):
 
 def setup(app):
     app.connect("autodoc-process-docstring", process)
+    return {
+        "version": "1.0.0",
+        "parallel_read_safe": True,
+        "parallel_write_safe": True,
+    }
