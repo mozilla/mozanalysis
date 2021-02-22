@@ -369,10 +369,6 @@ class Experiment:
         Returns:
             A string containing a BigQuery SQL expression.
         """
-        analysis_windows_query = self._build_analysis_windows_query(
-            time_limits.analysis_windows
-        )
-
         enrollments_query = custom_enrollments_query or self._build_enrollments_query(
             time_limits, enrollments_query_type
         )
@@ -380,19 +376,12 @@ class Experiment:
         segments_query = self._build_segments_query(segment_list, time_limits)
 
         return """
-            WITH analysis_windows AS (
-                {analysis_windows_query}
-            ),
-            raw_enrollments AS ({enrollments_query}),
+            WITH raw_enrollments AS ({enrollments_query}),
             segmented_enrollments AS ({segments_query})
 
-            SELECT
-                se.*,
-                aw.*
+            SELECT se.*
             FROM segmented_enrollments se
-            CROSS JOIN analysis_windows aw
         """.format(
-            analysis_windows_query=analysis_windows_query,
             enrollments_query=enrollments_query,
             segments_query=segments_query,
         )
@@ -422,14 +411,24 @@ class Experiment:
 
         Building this query is the main goal of this module.
         """
+        analysis_windows_query = self._build_analysis_windows_query(
+            time_limits.analysis_windows
+        )
+
         metrics_columns, metrics_joins = self._build_metrics_query_bits(
             metric_list, time_limits
         )
 
         return """
-        WITH enrollments AS (
-            SELECT *
-            FROM `{enrollments_table}`
+        WITH analysis_windows AS (
+            {analysis_windows_query}
+        ),
+        enrollments AS (
+            SELECT
+                e.*,
+                aw.*
+            FROM `{enrollments_table}` e
+            CROSS JOIN analysis_windows aw
         )
         SELECT
             enrollments.*,
@@ -437,6 +436,7 @@ class Experiment:
         FROM enrollments
         {metrics_joins}
         """.format(
+            analysis_windows_query=analysis_windows_query,
             metrics_columns=",\n        ".join(metrics_columns),
             metrics_joins="\n".join(metrics_joins),
             enrollments_table=enrollments_table,
