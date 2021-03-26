@@ -763,7 +763,13 @@ class TimeLimits:
                 enrollments. This is a mandatory argument because it
                 determines the number of points in the time series.
         """
-        if time_series_period not in ("daily", "weekly"):
+        period_duration = {
+            "daily": 1,
+            "weekly": 7,
+            "28_day": 28
+        }
+
+        if time_series_period not in period_duration:
             raise ValueError(
                 "Unsupported time series period {}".format(time_series_period)
             )
@@ -771,7 +777,7 @@ class TimeLimits:
         if num_dates_enrollment <= 0:
             raise ValueError("Number of enrollment dates must be a positive number")
 
-        analysis_window_length_dates = 1 if time_series_period == "daily" else 7
+        analysis_window_length_dates = period_duration[time_series_period]
 
         last_enrollment_date = add_days(first_enrollment_date, num_dates_enrollment - 1)
         max_dates_of_data = date_sub(last_date_full_data, last_enrollment_date) + 1
