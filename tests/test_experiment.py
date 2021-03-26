@@ -200,6 +200,23 @@ def test_ts_time_limits_create3():
     assert tl.last_date_data_required == "2019-01-14"
 
 
+def test_ts_time_limits_create4():
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-02-15",
+        time_series_period="28_day",
+        num_dates_enrollment=8,
+    )
+
+    assert tl.first_enrollment_date == "2019-01-01"
+    assert tl.last_enrollment_date == "2019-01-08"
+    assert len(tl.analysis_windows) == 1
+    assert tl.analysis_windows[0].start == 0
+    assert tl.analysis_windows[0].end == 27
+    assert tl.first_date_data_required == "2019-01-01"
+    assert tl.last_date_data_required == "2019-02-04"
+
+
 def test_ts_time_limits_create_not_enough_data():
     with pytest.raises(ValueError):
         TimeLimits.for_ts(

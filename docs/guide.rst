@@ -76,7 +76,7 @@ A metric must be computed over some `analysis window`, a period of time defined 
 
 The first two arguments to :meth:`mozanalysis.experiment.Experiment.get_time_series_data()` should be clear by this point. ``last_date_full_data`` is the last date for which we want to use data. For a currently-running experiment, it would typically be yesterday's date (we have incomplete data for incomplete days!).
 
-``time_series_period`` can be ``'daily'`` or ``'weekly'``. A ``'weekly'`` time series neatly sidesteps/masks weekly seasonality issues: most of the experiment subjects will enroll within a day of the experiment launching - typically a Tuesday, leading to ``'daily'`` time series reflecting a non-uniform convolution of the metrics' weekly seasonalities with the uneven enrollment numbers across the week.
+``time_series_period`` can be ``'daily'``, ``'weekly'`` or ``'28_day'``. A ``'weekly'`` time series neatly sidesteps/masks weekly seasonality issues: most of the experiment subjects will enroll within a day of the experiment launching - typically a Tuesday, leading to ``'daily'`` time series reflecting a non-uniform convolution of the metrics' weekly seasonalities with the uneven enrollment numbers across the week.
 
 :meth:`mozanalysis.experiment.Experiment.get_time_series_data()` returns a :class:`mozanalysis.experiment.TimeSeriesResult` object, which can return DataFrames keyed by the start of their analysis windows (measured in days after enrollment)::
 
