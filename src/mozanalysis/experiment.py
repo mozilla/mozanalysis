@@ -458,8 +458,6 @@ class Experiment:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == "normandy":
             return self._build_enrollments_query_normandy(time_limits)
-        elif enrollments_query_type == "fenix-fallback":
-            return self._build_enrollments_query_fenix_baseline(time_limits)
         elif enrollments_query_type == "glean-event":
             if not self.app_id:
                 raise ValueError(
@@ -467,6 +465,10 @@ class Experiment:
                 )
             return self._build_enrollments_query_glean_baseline(
                 time_limits, self.app_id
+            )
+        elif enrollments_query_type == "fenix-fallback":
+            return self._build_enrollments_query_glean_baseline(
+                time_limits, self.app_id or "org_mozilla_firefox"
             )
         else:
             raise ValueError
@@ -508,35 +510,28 @@ class Experiment:
         # Try to ignore users who enrolled early - but only consider a
         # 7 day window
         return """
-        SELECT
-            b.client_info.client_id AS client_id,
-            mozfun.map.get_key(
-                b.ping_info.experiments,
-                '{experiment_slug}'
-            ).branch,
-            DATE(MIN(b.submission_timestamp)) AS enrollment_date
-        FROM `moz-fx-data-shared-prod.{dataset}.baseline` b
-        WHERE
-            DATE(b.submission_timestamp)
+            SELECT events.client_info.client_id AS client_id,
+                mozfun.map.get_key(
+                    e.extra,
+                    'branch'
+                ) AS branch,
+                DATE(MIN(events.submission_timestamp)) AS enrollment_date
+            FROM `moz-fx-data-shared-prod.{dataset}.events` events,
+            UNNEST(events.events) AS e
+            WHERE
+                DATE(events.submission_timestamp)
                 BETWEEN DATE_SUB('{first_enrollment_date}', INTERVAL 7 DAY)
                 AND '{last_enrollment_date}'
-            AND mozfun.map.get_key(
-                b.ping_info.experiments,
-                '{experiment_slug}'
-            ).branch IS NOT NULL
-        GROUP BY client_id, branch
-        HAVING enrollment_date >= '{first_enrollment_date}'
+                AND e.category = "nimbus_events"
+                AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
+                AND e.name = 'enrollment'
+            GROUP BY client_id, branch
+            HAVING enrollment_date >= '{first_enrollment_date}'
             """.format(
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
             dataset=self.app_id or dataset,
-        )
-
-    def _build_enrollments_query_fenix_baseline(self, time_limits):
-        """Return SQL to query enrollments for a Fenix no-event experiment"""
-        return self._build_enrollments_query_glean_baseline(
-            time_limits, self.app_id or "org_mozilla_firefox"
         )
 
     def _build_metrics_query_bits(self, metric_list, time_limits):
