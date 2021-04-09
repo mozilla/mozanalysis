@@ -50,7 +50,10 @@ normandy_events = DataSource(
     experiments_column_type="native",
 )
 
-#: DataSource: The telemetry.main ping table.
+#: DataSource: The telemetry_stable.main_v4 ping table.
+#: The main_v4 table is what backs the telemetry.main view.
+#: Referencing the table directly helps us stay under the BigQuery
+#: query complexity budget.
 main = DataSource(
     name="main",
     from_expr="""(
