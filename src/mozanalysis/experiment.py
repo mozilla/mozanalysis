@@ -137,7 +137,7 @@ class Experiment:
                 collected outside this analysis window.
             analysis_length_days (int): the length of the analysis window,
                 measured in days.
-            enrollments_query_type ('normandy' or 'fenix-fallback'):
+            enrollments_query_type ('normandy', 'glean-event' or 'fenix-fallback'):
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
@@ -206,9 +206,7 @@ class Experiment:
             )
         )
 
-        bq_context.run_query(
-            enrollments_sql, enrollments_table_name
-        )
+        bq_context.run_query(enrollments_sql, enrollments_table_name)
 
         metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
@@ -222,9 +220,7 @@ class Experiment:
             "_".join([last_date_full_data, self.experiment_slug, hash_ish(metrics_sql)])
         )
 
-        return bq_context.run_query(
-            metrics_sql, full_res_table_name
-        ).to_dataframe()
+        return bq_context.run_query(metrics_sql, full_res_table_name).to_dataframe()
 
     def get_time_series_data(
         self,
@@ -251,7 +247,7 @@ class Experiment:
                 experiment recipe was deactivated), then do that here.
             time_series_period ('daily' or 'weekly'): How long each
                 analysis window should be.
-            enrollments_query_type ('normandy' or 'fenix-fallback'):
+            enrollments_query_type ('normandy', 'glean-event' or 'fenix-fallback'):
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
@@ -317,9 +313,7 @@ class Experiment:
             )
         )
 
-        bq_context.run_query(
-            enrollments_sql, enrollments_table_name
-        )
+        bq_context.run_query(enrollments_sql, enrollments_table_name)
 
         metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
@@ -354,7 +348,7 @@ class Experiment:
         Args:
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
-            enrollments_query_type ('normandy' or 'fenix-fallback'):
+            enrollments_query_type ('normandy', 'glean-event' or 'fenix-fallback'):
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
@@ -466,6 +460,14 @@ class Experiment:
             return self._build_enrollments_query_normandy(time_limits)
         elif enrollments_query_type == "fenix-fallback":
             return self._build_enrollments_query_fenix_baseline(time_limits)
+        elif enrollments_query_type == "glean-event":
+            if not self.app_id:
+                raise ValueError(
+                    "App ID must be defined for building Glean enrollments query"
+                )
+            return self._build_enrollments_query_glean_baseline(
+                time_limits, self.app_id
+            )
         else:
             raise ValueError
 
@@ -493,8 +495,8 @@ class Experiment:
             last_enrollment_date=time_limits.last_enrollment_date,
         )
 
-    def _build_enrollments_query_fenix_baseline(self, time_limits):
-        """Return SQL to query enrollments for a Fenix no-event experiment
+    def _build_enrollments_query_glean_baseline(self, time_limits, dataset):
+        """Return SQL to query enrollments for a Glean no-event experiment
 
         If enrollment events are available for this experiment, then you
         can take a better approach than this method. But in the absence
@@ -528,7 +530,13 @@ class Experiment:
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
-            dataset=self.app_id or "org_mozilla_firefox",
+            dataset=self.app_id or dataset,
+        )
+
+    def _build_enrollments_query_fenix_baseline(self, time_limits):
+        """Return SQL to query enrollments for a Fenix no-event experiment"""
+        return self._build_enrollments_query_glean_baseline(
+            time_limits, self.app_id or "org_mozilla_firefox"
         )
 
     def _build_metrics_query_bits(self, metric_list, time_limits):
@@ -763,11 +771,7 @@ class TimeLimits:
                 enrollments. This is a mandatory argument because it
                 determines the number of points in the time series.
         """
-        period_duration = {
-            "daily": 1,
-            "weekly": 7,
-            "28_day": 28
-        }
+        period_duration = {"daily": 1, "weekly": 7, "28_day": 28}
 
         if time_series_period not in period_duration:
             raise ValueError(

@@ -3,6 +3,7 @@ from cheap_lint import sql_lint
 
 import mozanalysis.metrics.desktop as mad
 import mozanalysis.metrics.fenix
+import mozanalysis.metrics.firefox_ios
 import mozanalysis.segments.desktop as msd
 from mozanalysis.experiment import AnalysisWindow, Experiment, TimeLimits
 from mozanalysis.metrics import Metric
@@ -395,5 +396,53 @@ def test_query_not_detectably_malformed_fenix_fallback():
         time_limits=tl,
         enrollments_table="enrollments",
     )
+
+    sql_lint(metrics_sql)
+
+
+def test_firefox_ios_app_id_propagation():
+    exp = Experiment("slug", "2019-01-01", 8, app_id="my_cool_app")
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    sds = SegmentDataSource(
+        name="cool_data_source",
+        from_expr="`moz-fx-data-shared-prod`.{dataset}.cool_table",
+        default_dataset="org_mozilla_ios_firefox",
+    )
+
+    segment = Segment(
+        name="cool_segment",
+        select_expr="COUNT(*)",
+        data_source=sds,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl,
+        segment_list=[segment],
+        enrollments_query_type="glean-event",
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=[
+            m
+            for m in mozanalysis.metrics.firefox_ios.__dict__.values()
+            if isinstance(m, Metric)
+        ],
+        time_limits=tl,
+        enrollments_table="enrollments",
+    )
+
+    sql_lint(metrics_sql)
+
+    assert "org_mozilla_ios_firefox" not in enrollments_sql
+    assert "my_cool_app" in enrollments_sql
 
     sql_lint(metrics_sql)
