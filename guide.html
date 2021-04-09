@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Guide &mdash; mozanalysis  documentation</title>
@@ -86,7 +85,7 @@
               
             
             
-              <p><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="about.html">About Mozanalysis</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Guide</a><ul>
@@ -167,9 +166,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="guide">
+  <div class="section" id="guide">
 <h1>Guide<a class="headerlink" href="#guide" title="Permalink to this headline">¶</a></h1>
-<section id="basic-experiment-get-the-data-crunch-the-stats">
+<div class="section" id="basic-experiment-get-the-data-crunch-the-stats">
 <h2>Basic experiment: get the data &amp; crunch the stats<a class="headerlink" href="#basic-experiment-get-the-data-crunch-the-stats" title="Permalink to this headline">¶</a></h2>
 <p>Let’s start by analysing a straightforward pref-flip experiment on the desktop browser.</p>
 <p>If we’re using a Colab notebook, we begin by installing the latest version of <code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis</span></code> into the notebook. It’s a good idea to specify the specific version (<a class="reference external" href="https://pypi.org/project/mozanalysis/">from pypi</a>), for reproducibility:</p>
@@ -351,10 +350,10 @@
 </pre></div>
 </div>
 <p><code class="xref py py-mod docutils literal notranslate"><span class="pre">dscontrib.flawrence.plot_experiments</span></code> has some (shaky) support for visualising stats over time series experiment results.</p>
-</section>
-<section id="get-the-data-cookbook">
+</div>
+<div class="section" id="get-the-data-cookbook">
 <h2>Get the data: cookbook<a class="headerlink" href="#get-the-data-cookbook" title="Permalink to this headline">¶</a></h2>
-<section id="time-series-of-analysis-windows">
+<div class="section" id="time-series-of-analysis-windows">
 <h3>Time series (of analysis windows)<a class="headerlink" href="#time-series-of-analysis-windows" title="Permalink to this headline">¶</a></h3>
 <p>Condensing the above example for simpler copying and pasting:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!pip install mozanalysis==&#39;{current_version}&#39;
@@ -385,8 +384,8 @@ ts_res = exp.get_time_series_data(
 res = dict(ts_res.items(bq_context))
 </pre></div>
 </div>
-</section>
-<section id="one-analysis-window">
+</div>
+<div class="section" id="one-analysis-window">
 <h3>One analysis window<a class="headerlink" href="#one-analysis-window" title="Permalink to this headline">¶</a></h3>
 <p>If we’re only interested in users’ (say) second week in the experiment, then we don’t need to get a full time series.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!pip install mozanalysis==&#39;{current_version}&#39;
@@ -414,9 +413,9 @@ res = exp.get_single_window_data(
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">last_date_full_data</span></code> is less important for <a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.experiment.Experiment.get_single_window_data()</span></code></a> than for <a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data" title="mozanalysis.experiment.Experiment.get_time_series_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.experiment.Experiment.get_time_series_data()</span></code></a>: while <code class="docutils literal notranslate"><span class="pre">last_date_full_data</span></code> determines the length of the time series, here it simply sanity checks that the specified analysis window doesn’t stretch into the future for any enrolled users.</p>
-</section>
-</section>
-<section id="crunch-the-stats">
+</div>
+</div>
+<div class="section" id="crunch-the-stats">
 <h2>Crunch the stats<a class="headerlink" href="#crunch-the-stats" title="Permalink to this headline">¶</a></h2>
 <p>Each stats technique has a module in <a class="reference internal" href="api/bayesian_stats.html#module-mozanalysis.bayesian_stats" title="mozanalysis.bayesian_stats"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a> or <code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats</span></code>, and a function <code class="docutils literal notranslate"><span class="pre">compare_branches()</span></code>; for example <a class="reference internal" href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.compare_branches" title="mozanalysis.bayesian_stats.binary.compare_branches"><code class="xref py py-func docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary.compare_branches()</span></code></a>. This function accepts a pandas DataFrame in “the standard format”, and must be passed the name of the column containing the metric to be studied.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.binary</span> <span class="k">as</span> <span class="nn">mabsbin</span>
@@ -436,8 +435,8 @@ res = exp.get_single_window_data(
 <span class="n">sf_search_week_2</span> <span class="o">=</span> <span class="n">mabssf</span><span class="o">.</span><span class="n">compare_branches</span><span class="p">(</span><span class="n">gpcd_res</span><span class="p">,</span> <span class="s1">&#39;search_count&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

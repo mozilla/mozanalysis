@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>mozanalysis.metrics.desktop &mdash; mozanalysis  documentation</title>
@@ -86,7 +85,7 @@
               
             
             
-              <p><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guide.html">Guide</a></li>
@@ -173,7 +172,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="module-mozanalysis.metrics.desktop">
+  <div class="section" id="module-mozanalysis.metrics.desktop">
 <span id="mozanalysis-metrics-desktop"></span><h1><a class="reference internal" href="#module-mozanalysis.metrics.desktop" title="mozanalysis.metrics.desktop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a><a class="headerlink" href="#module-mozanalysis.metrics.desktop" title="Permalink to this headline">¶</a></h1>
 <dl class="py data">
 <dt id="mozanalysis.metrics.desktop.clients_daily">
@@ -237,8 +236,11 @@ reduces bytes queried compared to counting rows from the generic events DataSour
 
 <dl class="py data">
 <dt id="mozanalysis.metrics.desktop.main">
-<code class="sig-prename descclassname"><span class="pre">mozanalysis.metrics.desktop.</span></code><code class="sig-name descname"><span class="pre">main</span></code><em class="property"> <span class="pre">=</span> <span class="pre">DataSource(name='main',</span> <span class="pre">_from_expr='(\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">SELECT\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">*,\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">DATE(submission_timestamp)</span> <span class="pre">AS</span> <span class="pre">submission_date,\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">environment.experiments\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">FROM</span> <span class="pre">`moz-fx-data-shared-prod`.telemetry.main\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">)',</span> <span class="pre">experiments_column_type='native',</span> <span class="pre">client_id_column='client_id',</span> <span class="pre">submission_date_column='submission_date',</span> <span class="pre">default_dataset=None)</span></em><a class="headerlink" href="#mozanalysis.metrics.desktop.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>The telemetry.main ping table.</p>
+<code class="sig-prename descclassname"><span class="pre">mozanalysis.metrics.desktop.</span></code><code class="sig-name descname"><span class="pre">main</span></code><em class="property"> <span class="pre">=</span> <span class="pre">DataSource(name='main',</span> <span class="pre">_from_expr='(\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">SELECT\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">*,\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">DATE(submission_timestamp)</span> <span class="pre">AS</span> <span class="pre">submission_date,\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">environment.experiments\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">FROM</span> <span class="pre">`moz-fx-data-shared-prod`.telemetry_stable.main_v4\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">)',</span> <span class="pre">experiments_column_type='native',</span> <span class="pre">client_id_column='client_id',</span> <span class="pre">submission_date_column='submission_date',</span> <span class="pre">default_dataset=None)</span></em><a class="headerlink" href="#mozanalysis.metrics.desktop.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>The telemetry_stable.main_v4 ping table.
+The main_v4 table is what backs the telemetry.main view.
+Referencing the table directly helps us stay under the BigQuery
+query complexity budget.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="../metrics.html#mozanalysis.metrics.DataSource" title="mozanalysis.metrics.DataSource">DataSource</a></p>
@@ -489,7 +491,7 @@ the start of the experiment and remained connected.</p>
 </dl>
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
