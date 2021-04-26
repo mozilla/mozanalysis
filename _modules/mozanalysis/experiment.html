@@ -293,7 +293,7 @@
 <span class="sd">                collected outside this analysis window.</span>
 <span class="sd">            analysis_length_days (int): the length of the analysis window,</span>
 <span class="sd">                measured in days.</span>
-<span class="sd">            enrollments_query_type (&#39;normandy&#39; or &#39;fenix-fallback&#39;):</span>
+<span class="sd">            enrollments_query_type (&#39;normandy&#39;, &#39;glean-event&#39; or &#39;fenix-fallback&#39;):</span>
 <span class="sd">                Specifies the query type to use to get the experiment&#39;s</span>
 <span class="sd">                enrollments, unless overridden by</span>
 <span class="sd">                ``custom_enrollments_query``.</span>
@@ -362,9 +362,7 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">enrollments_sql</span><span class="p">,</span> <span class="n">enrollments_table_name</span>
-        <span class="p">)</span>
+        <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span><span class="n">enrollments_sql</span><span class="p">,</span> <span class="n">enrollments_table_name</span><span class="p">)</span>
 
         <span class="n">metrics_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_metrics_query</span><span class="p">(</span>
             <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span>
@@ -378,9 +376,7 @@
             <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">last_date_full_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="n">hash_ish</span><span class="p">(</span><span class="n">metrics_sql</span><span class="p">)])</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">metrics_sql</span><span class="p">,</span> <span class="n">full_res_table_name</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span><span class="n">metrics_sql</span><span class="p">,</span> <span class="n">full_res_table_name</span><span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Experiment.get_time_series_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -407,7 +403,7 @@
 <span class="sd">                experiment recipe was deactivated), then do that here.</span>
 <span class="sd">            time_series_period (&#39;daily&#39; or &#39;weekly&#39;): How long each</span>
 <span class="sd">                analysis window should be.</span>
-<span class="sd">            enrollments_query_type (&#39;normandy&#39; or &#39;fenix-fallback&#39;):</span>
+<span class="sd">            enrollments_query_type (&#39;normandy&#39;, &#39;glean-event&#39; or &#39;fenix-fallback&#39;):</span>
 <span class="sd">                Specifies the query type to use to get the experiment&#39;s</span>
 <span class="sd">                enrollments, unless overridden by</span>
 <span class="sd">                ``custom_enrollments_query``.</span>
@@ -473,9 +469,7 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">enrollments_sql</span><span class="p">,</span> <span class="n">enrollments_table_name</span>
-        <span class="p">)</span>
+        <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span><span class="n">enrollments_sql</span><span class="p">,</span> <span class="n">enrollments_table_name</span><span class="p">)</span>
 
         <span class="n">metrics_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_metrics_query</span><span class="p">(</span>
             <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span>
@@ -510,7 +504,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            time_limits (TimeLimits): An object describing the</span>
 <span class="sd">                interval(s) to query</span>
-<span class="sd">            enrollments_query_type (&#39;normandy&#39; or &#39;fenix-fallback&#39;):</span>
+<span class="sd">            enrollments_query_type (&#39;normandy&#39;, &#39;glean-event&#39; or &#39;fenix-fallback&#39;):</span>
 <span class="sd">                Specifies the query type to use to get the experiment&#39;s</span>
 <span class="sd">                enrollments, unless overridden by</span>
 <span class="sd">                ``custom_enrollments_query``.</span>
@@ -620,6 +614,12 @@
         <span class="sd">&quot;&quot;&quot;Return SQL to query a list of enrollments and their branches&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s2">&quot;normandy&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_normandy</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s2">&quot;glean-event&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;App ID must be defined for building Glean enrollments query&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_glean_event</span><span class="p">(</span><span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s2">&quot;fenix-fallback&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_fenix_baseline</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -651,7 +651,6 @@
 
     <span class="k">def</span> <span class="nf">_build_enrollments_query_fenix_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a Fenix no-event experiment</span>
-
 <span class="sd">        If enrollment events are available for this experiment, then you</span>
 <span class="sd">        can take a better approach than this method. But in the absence</span>
 <span class="sd">        of enrollment events (e.g. in a Mako-based experiment, which</span>
@@ -685,6 +684,39 @@
             <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span>
             <span class="n">last_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span>
             <span class="n">dataset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span> <span class="ow">or</span> <span class="s2">&quot;org_mozilla_firefox&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_enrollments_query_glean_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a Glean no-event experiment</span>
+
+<span class="sd">        If enrollment events are available for this experiment, then you</span>
+<span class="sd">        can take a better approach than this method. But in the absence</span>
+<span class="sd">        of enrollment events (e.g. in a Mako-based experiment, which</span>
+<span class="sd">        does not send enrollment events), you need to fall back to using</span>
+<span class="sd">        ``ping_info.experiments`` to get a list of who is in what branch</span>
+<span class="sd">        and when they enrolled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT events.client_info.client_id AS client_id,</span>
+<span class="s2">                mozfun.map.get_key(</span>
+<span class="s2">                    e.extra,</span>
+<span class="s2">                    &#39;branch&#39;</span>
+<span class="s2">                ) AS branch,</span>
+<span class="s2">                DATE(MIN(events.submission_timestamp)) AS enrollment_date</span>
+<span class="s2">            FROM `moz-fx-data-shared-prod.</span><span class="si">{dataset}</span><span class="s2">.events` events,</span>
+<span class="s2">            UNNEST(events.events) AS e</span>
+<span class="s2">            WHERE</span>
+<span class="s2">                DATE(events.submission_timestamp)</span>
+<span class="s2">                BETWEEN &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39; AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
+<span class="s2">                AND e.category = &quot;nimbus_events&quot;</span>
+<span class="s2">                AND mozfun.map.get_key(e.extra, &quot;experiment&quot;) = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
+<span class="s2">                AND e.name = &#39;enrollment&#39;</span>
+<span class="s2">            GROUP BY client_id, branch</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
+            <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span>
+            <span class="n">last_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span> <span class="ow">or</span> <span class="n">dataset</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_build_metrics_query_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
@@ -919,11 +951,7 @@
 <span class="sd">                enrollments. This is a mandatory argument because it</span>
 <span class="sd">                determines the number of points in the time series.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">period_duration</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;daily&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-            <span class="s2">&quot;weekly&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
-            <span class="s2">&quot;28_day&quot;</span><span class="p">:</span> <span class="mi">28</span>
-        <span class="p">}</span>
+        <span class="n">period_duration</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;daily&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;weekly&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s2">&quot;28_day&quot;</span><span class="p">:</span> <span class="mi">28</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">time_series_period</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">period_duration</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>

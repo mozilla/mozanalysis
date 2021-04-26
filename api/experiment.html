@@ -321,7 +321,7 @@ measured in ‘days since the client enrolled’. We ignore data
 collected outside this analysis window.</p></li>
 <li><p><strong>analysis_length_days</strong> (<em>int</em>) – the length of the analysis window,
 measured in days.</p></li>
-<li><p><strong>enrollments_query_type</strong> (<em>'normandy'</em><em> or </em><em>'fenix-fallback'</em>) – Specifies the query type to use to get the experiment’s
+<li><p><strong>enrollments_query_type</strong> (<em>'normandy'</em><em>, </em><em>'glean-event'</em><em> or </em><em>'fenix-fallback'</em>) – Specifies the query type to use to get the experiment’s
 enrollments, unless overridden by
 <code class="docutils literal notranslate"><span class="pre">custom_enrollments_query</span></code>.</p></li>
 <li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
@@ -387,7 +387,7 @@ all data collected after a certain date (e.g. when the
 experiment recipe was deactivated), then do that here.</p></li>
 <li><p><strong>time_series_period</strong> (<em>'daily'</em><em> or </em><em>'weekly'</em>) – How long each
 analysis window should be.</p></li>
-<li><p><strong>enrollments_query_type</strong> (<em>'normandy'</em><em> or </em><em>'fenix-fallback'</em>) – Specifies the query type to use to get the experiment’s
+<li><p><strong>enrollments_query_type</strong> (<em>'normandy'</em><em>, </em><em>'glean-event'</em><em> or </em><em>'fenix-fallback'</em>) – Specifies the query type to use to get the experiment’s
 enrollments, unless overridden by
 <code class="docutils literal notranslate"><span class="pre">custom_enrollments_query</span></code>.</p></li>
 <li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
@@ -443,7 +443,7 @@ supports sanity checks.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>time_limits</strong> (<a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><em>TimeLimits</em></a>) – An object describing the
 interval(s) to query</p></li>
-<li><p><strong>enrollments_query_type</strong> (<em>'normandy'</em><em> or </em><em>'fenix-fallback'</em>) – Specifies the query type to use to get the experiment’s
+<li><p><strong>enrollments_query_type</strong> (<em>'normandy'</em><em>, </em><em>'glean-event'</em><em> or </em><em>'fenix-fallback'</em>) – Specifies the query type to use to get the experiment’s
 enrollments, unless overridden by
 <code class="docutils literal notranslate"><span class="pre">custom_enrollments_query</span></code>.</p></li>
 <li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
