@@ -117,6 +117,7 @@ class Experiment:
         enrollments_query_type="normandy",
         custom_enrollments_query=None,
         segment_list=None,
+        exposure=None,
     ):
         """Return a DataFrame containing per-client metric values.
 
@@ -152,6 +153,8 @@ class Experiment:
 
             segment_list (list of mozanalysis.segment.Segment): The user
                 segments to study.
+            exposure (Segment): segment definition that determines whether
+                a client has been exposed to the experiment
 
         Returns:
             A pandas DataFrame of experiment data. One row per ``client_id``.
@@ -193,6 +196,7 @@ class Experiment:
             enrollments_query_type=enrollments_query_type,
             custom_enrollments_query=custom_enrollments_query,
             segment_list=segment_list,
+            exposure=exposure,
         )
 
         enrollments_table_name = sanitize_table_name_for_bq(
@@ -231,6 +235,7 @@ class Experiment:
         enrollments_query_type="normandy",
         custom_enrollments_query=None,
         segment_list=None,
+        exposure=None,
     ):
         """Return a TimeSeriesResult with per-client metric values.
 
@@ -262,6 +267,8 @@ class Experiment:
 
             segment_list (list of mozanalysis.segment.Segment): The user
                 segments to study.
+            exposure (Segment): segment definition that determines whether
+                a client has been exposed to the experiment
 
         Returns:
             A :class:`mozanalysis.experiment.TimeSeriesResult` object,
@@ -300,6 +307,7 @@ class Experiment:
             enrollments_query_type=enrollments_query_type,
             custom_enrollments_query=custom_enrollments_query,
             segment_list=segment_list,
+            exposure=exposure,
         )
 
         enrollments_table_name = sanitize_table_name_for_bq(
@@ -342,6 +350,7 @@ class Experiment:
         enrollments_query_type="normandy",
         custom_enrollments_query=None,
         segment_list=None,
+        exposure=None,
     ) -> str:
         """Return a SQL query for querying enrollments data.
 
@@ -359,6 +368,8 @@ class Experiment:
 
             segment_list (list of mozanalysis.segment.Segment): The user
                 segments to study.
+            exposure (Segment): segment definition that determines whether
+                a client has been exposed to the experiment
 
         Returns:
             A string containing a BigQuery SQL expression.
@@ -366,6 +377,16 @@ class Experiment:
         enrollments_query = custom_enrollments_query or self._build_enrollments_query(
             time_limits, enrollments_query_type
         )
+
+        if exposure:
+            # ensure segment column for exposure is named "exposed"
+            if exposure.name != "exposed":
+                raise ValueError("Exposure segment must be named 'exposed'.")
+
+            if segment_list is None:
+                segment_list = [exposure]
+            else:
+                segment_list.append(exposure)
 
         segments_query = self._build_segments_query(segment_list, time_limits)
 

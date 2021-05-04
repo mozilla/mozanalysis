@@ -92,10 +92,10 @@ class SegmentDataSource:
         FROM raw_enrollments e
             LEFT JOIN {from_expr} ds
                 ON ds.{client_id} = e.client_id
-                AND ds.{submission_date} BETWEEN
+                AND DATE(ds.{submission_date}) BETWEEN
                     DATE_ADD('{first_enrollment}', interval {window_start} day)
                     AND DATE_ADD('{last_enrollment}', interval {window_end} day)
-                AND ds.{submission_date} BETWEEN
+                AND DATE(ds.{submission_date}) BETWEEN
                     DATE_ADD(e.enrollment_date, interval {window_start} day)
                     AND DATE_ADD(e.enrollment_date, interval {window_end} day)
         GROUP BY e.client_id, e.branch""".format(

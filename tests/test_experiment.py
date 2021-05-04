@@ -6,7 +6,7 @@ import mozanalysis.metrics.fenix
 import mozanalysis.metrics.firefox_ios
 import mozanalysis.segments.desktop as msd
 from mozanalysis.experiment import AnalysisWindow, Experiment, TimeLimits
-from mozanalysis.metrics import Metric
+from mozanalysis.metrics import Metric, agg_sum
 from mozanalysis.segments import Segment, SegmentDataSource
 
 
@@ -446,3 +446,39 @@ def test_firefox_ios_app_id_propagation():
     assert "my_cool_app" in enrollments_sql
 
     sql_lint(metrics_sql)
+
+
+def test_exposure_metric():
+    exp = Experiment("slug", "2019-01-01", 8, app_id="org_mozilla_fenix")
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl,
+        enrollments_query_type="glean-event",
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl,
+        enrollments_query_type="glean-event",
+        exposure=Segment(
+            name="exposed",
+            data_source=SegmentDataSource(
+                name="baseline",
+                from_expr="`moz-fx-data-shared-prod.org_mozilla_firefox.baseline`",
+                client_id_column="client_info.client_id",
+                submission_date_column="submission_timestamp",
+            ),
+            select_expr=f'{agg_sum("metrics.counter.events_total_uri_count")} > 0',
+            description="Clients that visited at least one URI",
+        ),
+    )
+
+    sql_lint(enrollments_sql)
+
+    assert "exposed" in enrollments_sql
