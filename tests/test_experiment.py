@@ -458,11 +458,39 @@ def test_exposure_query():
         num_dates_enrollment=8,
     )
 
-    exposure_sql = exp.build_exposure_query(
+    enrollment_sql = exp.build_enrollments_query(
         time_limits=tl,
-        query_type="glean-event",
+        enrollments_query_type="glean-event",
     )
 
-    sql_lint(exposure_sql)
+    sql_lint(enrollment_sql)
 
-    assert "exposure" in exposure_sql
+    assert "exposure" in enrollment_sql
+
+
+def test_exposure_metric_query():
+    exp = Experiment("slug", "2019-01-01", 8, app_id="my_cool_app")
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollment_sql = exp.build_enrollments_query(
+        time_limits=tl,
+        enrollments_query_type="glean-event",
+        exposure_metric=Metric(
+            name="exposure",
+            data_source=mozanalysis.metrics.fenix.baseline,
+            select_expr="metrics.counter.events_total_uri_count > 0",
+            friendly_name="URI visited exposure",
+            description="Exposed when URI visited",
+        ),
+    )
+
+    sql_lint(enrollment_sql)
+
+    assert "exposure" in enrollment_sql
+    assert "metrics.counter.events_total_uri_count > 0" in enrollment_sql
