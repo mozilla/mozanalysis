@@ -446,3 +446,23 @@ def test_firefox_ios_app_id_propagation():
     assert "my_cool_app" in enrollments_sql
 
     sql_lint(metrics_sql)
+
+
+def test_exposure_query():
+    exp = Experiment("slug", "2019-01-01", 8, app_id="my_cool_app")
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    exposure_sql = exp.build_exposure_query(
+        time_limits=tl,
+        query_type="glean-event",
+    )
+
+    sql_lint(exposure_sql)
+
+    assert "exposure" in exposure_sql

@@ -344,7 +344,6 @@ class Experiment:
         segment_list=None,
     ) -> str:
         """Return a SQL query for querying enrollments data.
-
         Args:
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
@@ -354,12 +353,9 @@ class Experiment:
                 ``custom_enrollments_query``.
             custom_enrollments_query (str): A full SQL query to be used
                 in the main query::
-
                     WITH raw_enrollments AS ({custom_enrollments_query})
-
             segment_list (list of mozanalysis.segment.Segment): The user
                 segments to study.
-
         Returns:
             A string containing a BigQuery SQL expression.
         """
@@ -372,12 +368,74 @@ class Experiment:
         return """
             WITH raw_enrollments AS ({enrollments_query}),
             segmented_enrollments AS ({segments_query})
-
             SELECT se.*
             FROM segmented_enrollments se
         """.format(
             enrollments_query=enrollments_query,
             segments_query=segments_query,
+        )
+
+    def build_exposure_query(
+        self,
+        time_limits,
+        query_type="normandy",
+        custom_enrollments_query=None,
+        custom_exposure_query=None,
+        exposure_metric=None,
+        segment_list=None,
+    ) -> str:
+        """Return a SQL query for querying exposure data.
+
+        Args:
+            time_limits (TimeLimits): An object describing the
+                interval(s) to query
+            enrollments_query_type ('normandy', 'glean-event' or 'fenix-fallback'):
+                Specifies the query type to use to get the experiment's
+                enrollments, unless overridden by
+                ``custom_enrollments_query``.
+            custom_enrollments_query (str): A full SQL query to be used
+                in the main query::
+
+                    WITH raw_enrollments AS ({custom_enrollments_query})
+            custom_exposure_query (str): A full SQL query to be used in the main
+                query::
+
+                    WITH ...
+                    exposures AS ({custom_exposure_query})
+            exposure_metric (Metric): Optional metric definition of when a
+                client has been exposed to the experiment
+
+            segment_list (list of mozanalysis.segment.Segment): The user
+                segments to study.
+
+        Returns:
+            A string containing a BigQuery SQL expression.
+        """
+        enrollments_query = custom_enrollments_query or self._build_enrollments_query(
+            time_limits, query_type
+        )
+
+        exposure_query = custom_exposure_query or self._build_exposure_query(
+            time_limits, query_type
+        )
+
+        segments_query = self._build_segments_query(segment_list, time_limits)
+
+        return """
+            WITH raw_enrollments AS ({enrollments_query}),
+            segmented_enrollments AS ({segments_query}),
+            exposures AS ({exposure_query})
+
+            SELECT
+                se.*,
+                e.*
+            FROM segmented_enrollments se
+            LEFT JOIN exposures e
+            USING (client_id, branch)
+        """.format(
+            enrollments_query=enrollments_query,
+            segments_query=segments_query,
+            exposure_query=exposure_query,
         )
 
     def build_metrics_query(
@@ -469,6 +527,19 @@ class Experiment:
         else:
             raise ValueError
 
+    def _build_exposure_query(self, time_limits, exposure_query_type):
+        """Return SQL to query a list of enrollments and their branches"""
+        if exposure_query_type == "normandy":
+            return self._build_exposure_query_normandy(time_limits)
+        elif exposure_query_type in ("glean-event", "fenix-fallback"):
+            if not self.app_id:
+                raise ValueError(
+                    "App ID must be defined for building Glean enrollments query"
+                )
+            return self._build_exposure_query_glean_event(time_limits, self.app_id)
+        else:
+            raise ValueError
+
     def _build_enrollments_query_normandy(self, time_limits):
         """Return SQL to query enrollments for a normandy experiment"""
         return """
@@ -555,6 +626,56 @@ class Experiment:
                 AND e.category = "nimbus_events"
                 AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
                 AND e.name = 'enrollment'
+            GROUP BY client_id, branch
+            """.format(
+            experiment_slug=self.experiment_slug,
+            first_enrollment_date=time_limits.first_enrollment_date,
+            last_enrollment_date=time_limits.last_enrollment_date,
+            dataset=self.app_id or dataset,
+        )
+
+    def _build_exposure_query_normandy(self, time_limits):
+        """Return SQL to query exposures for a normandy experiment"""
+        return """
+        SELECT
+            e.client_id,
+            `mozfun.map.get_key`(e.event_map_values, 'branch')
+                AS branch,
+            min(e.submission_date) AS exposure_date,
+            COUNT(e.submission_date) AS num_exposure_events
+        FROM
+            `moz-fx-data-shared-prod.telemetry.events` e
+        WHERE
+            e.event_category = 'normandy'
+            AND (e.event_method = 'exposure' AND e.event_method = 'expose')
+            AND e.submission_date
+                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+            AND e.event_string_value = '{experiment_slug}'
+        GROUP BY e.client_id, branch
+            """.format(
+            experiment_slug=self.experiment_slug,
+            first_enrollment_date=time_limits.first_enrollment_date,
+            last_enrollment_date=time_limits.last_enrollment_date,
+        )
+
+    def _build_exposure_query_glean_event(self, time_limits, dataset):
+        """Return SQL to query exposures for a Glean no-event experiment"""
+        return """
+            SELECT events.client_info.client_id AS client_id,
+                mozfun.map.get_key(
+                    e.extra,
+                    'branch'
+                ) AS branch,
+                DATE(MIN(events.submission_timestamp)) AS exposure_date,
+                COUNT(events.submission_timestamp) AS num_exposure_events
+            FROM `moz-fx-data-shared-prod.{dataset}.events` events,
+            UNNEST(events.events) AS e
+            WHERE
+                DATE(events.submission_timestamp)
+                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+                AND e.category = "nimbus_events"
+                AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
+                AND (e.name = 'expose' OR e.name = 'exposure')
             GROUP BY client_id, branch
             """.format(
             experiment_slug=self.experiment_slug,
