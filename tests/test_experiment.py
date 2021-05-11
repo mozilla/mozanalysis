@@ -495,3 +495,35 @@ def test_exposure_signal_query():
 
     assert "exposure" in enrollment_sql
     assert "metrics.counter.events_total_uri_count > 0" in enrollment_sql
+
+
+def test_metrics_query_based_on_exposure():
+    exp = Experiment("slug", "2019-01-01", 8)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type="fenix-fallback"
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=[
+            m
+            for m in mozanalysis.metrics.fenix.__dict__.values()
+            if isinstance(m, Metric)
+        ],
+        time_limits=tl,
+        enrollments_table="enrollments",
+        exposure_based=True,
+    )
+
+    sql_lint(metrics_sql)
+
+    assert "e.exposure_date" in metrics_sql
