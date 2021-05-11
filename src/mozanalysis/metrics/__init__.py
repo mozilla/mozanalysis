@@ -120,6 +120,7 @@ class DataSource:
         time_limits,
         experiment_slug,
         from_expr_dataset=None,
+        exposure_based=False
     ):
         """Return a nearly-self contained SQL query.
 
@@ -137,8 +138,8 @@ class DataSource:
                 ON ds.{client_id} = e.client_id
                 AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
                 AND ds.{submission_date} BETWEEN
-                    DATE_ADD(e.enrollment_date, interval e.analysis_window_start day)
-                    AND DATE_ADD(e.enrollment_date, interval e.analysis_window_end day)
+                    DATE_ADD(e.{date}, interval e.analysis_window_start day)
+                    AND DATE_ADD(e.{date}, interval e.analysis_window_end day)
                 {ignore_pre_enroll_first_day}
         GROUP BY
             e.client_id,
@@ -156,6 +157,7 @@ class DataSource:
                 )
                 for m in metric_list
             ),
+            date="exposure_date" if exposure_based else "enrollment_date",
             ignore_pre_enroll_first_day=self.experiments_column_expr.format(
                 submission_date=self.submission_date_column,
                 experiment_slug=experiment_slug,
