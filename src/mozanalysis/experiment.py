@@ -442,10 +442,7 @@ class Experiment:
         )
 
     def build_metrics_query(
-        self,
-        metric_list,
-        time_limits,
-        enrollments_table,
+        self, metric_list, time_limits, enrollments_table, exposure_based=False
     ) -> str:
         """Return a SQL query for querying metric data.
 
@@ -460,6 +457,8 @@ class Experiment:
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
             enrollments_table (str): The name of the enrollments table
+            exposure_based (bool): Use exposures as basis for calculating
+                metrics if True, otherwise use enrollments.
 
         Returns:
             A string containing a BigQuery SQL expression.
@@ -471,7 +470,7 @@ class Experiment:
         )
 
         metrics_columns, metrics_joins = self._build_metrics_query_bits(
-            metric_list, time_limits
+            metric_list, time_limits, exposure_based
         )
 
         return """
@@ -713,7 +712,7 @@ class Experiment:
             dataset=self.app_id or dataset,
         )
 
-    def _build_metrics_query_bits(self, metric_list, time_limits):
+    def _build_metrics_query_bits(self, metric_list, time_limits, exposure_based=False):
         """Return lists of SQL fragments corresponding to metrics."""
         ds_metrics = self._partition_by_data_source(metric_list)
         ds_metrics = {
@@ -726,7 +725,11 @@ class Experiment:
 
         for i, ds in enumerate(ds_metrics.keys()):
             query_for_metrics = ds.build_query(
-                ds_metrics[ds], time_limits, self.experiment_slug, self.app_id
+                ds_metrics[ds],
+                time_limits,
+                self.experiment_slug,
+                self.app_id,
+                exposure_based,
             )
             metrics_joins.append(
                 """    LEFT JOIN (
