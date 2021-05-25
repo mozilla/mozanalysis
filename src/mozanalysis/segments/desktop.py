@@ -68,8 +68,10 @@ new_unique_profiles = Segment(
     data_source=clients_last_seen,
     select_expr="COALESCE(ANY_VALUE(first_seen_date) >= submission_date, TRUE)",
     friendly_name="New unique profiles",
-    description=dedent("""\
+    description=dedent(
+        """\
         Clients that enrolled the first date their client_id ever appeared
         in telemetry (i.e. new, unique profiles).
-    """)
+    """
+    ),
 )
