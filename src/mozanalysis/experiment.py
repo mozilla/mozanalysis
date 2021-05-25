@@ -272,8 +272,14 @@ class Experiment:
                     WITH ...
                     exposures AS ({custom_exposure_query})
 
+                If not provided, the exposure will be determined based on
+                `exposure_metric`, if provided, or Normandy and Nimbus exposure events.
+                `custom_exposure_query` takes precedence over `exposure_metric`.
+
             exposure_metric (Metric): Optional metric definition of when a
-                client has been exposed to the experiment
+                client has been exposed to the experiment. If not provided,
+                the exposure will be determined based on Normandy exposure events
+                for desktop and Nimbus exposure events for Fenix and iOS.
             segment_list (list of mozanalysis.segment.Segment): The user
                 segments to study.
 
@@ -663,29 +669,29 @@ class Experiment:
         """Return SQL to query exposures for a Glean no-event experiment"""
         return """
             SELECT
-                e.client_id,
-                e.branch,
-                DATE(MIN(e.submission_date)) AS exposure_date,
-                COUNT(e.submission_date) AS num_exposure_events
+                exposures.client_id,
+                exposures.branch,
+                DATE(MIN(exposures.submission_date)) AS exposure_date,
+                COUNT(exposures.submission_date) AS num_exposure_events
             FROM raw_enrollments re
             LEFT JOIN (
                 SELECT
                     client_info.client_id,
-                    `mozfun.map.get_key`(e.extra, 'branch') AS branch,
+                    `mozfun.map.get_key`(event.extra, 'branch') AS branch,
                     DATE(events.submission_timestamp) AS submission_date
                 FROM
                     `moz-fx-data-shared-prod.{dataset}.events` events,
-                    UNNEST(events.events) AS e
+                    UNNEST(events.events) AS event
                 WHERE
                     DATE(events.submission_timestamp)
                     BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
-                    AND e.category = "nimbus_events"
-                    AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
-                    AND (e.name = 'expose' OR e.name = 'exposure')
-            ) e
-            ON re.client_id = e.client_id AND
-                re.branch = e.branch AND
-                e.submission_date >= re.enrollment_date
+                    AND event.category = "nimbus_events"
+                    AND mozfun.map.get_key(event.extra, "experiment") = '{experiment_slug}'
+                    AND (event.name = 'expose' OR event.name = 'exposure')
+            ) exposures
+            ON re.client_id = exposures.client_id AND
+                re.branch = exposures.branch AND
+                exposures.submission_date >= re.enrollment_date
             GROUP BY client_id, branch
             """.format(
             experiment_slug=self.experiment_slug,

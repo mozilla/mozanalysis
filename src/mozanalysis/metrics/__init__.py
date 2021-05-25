@@ -166,7 +166,6 @@ class DataSource:
         self,
         exposure_metric,
         time_limits,
-        experiment_slug
     ):
         """Return a nearly self-contained query for determining exposures.
 
