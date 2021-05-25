@@ -6,6 +6,7 @@ import mozanalysis.metrics.fenix
 import mozanalysis.metrics.firefox_ios
 import mozanalysis.segments.desktop as msd
 from mozanalysis.experiment import AnalysisWindow, Experiment, TimeLimits
+from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import Metric
 from mozanalysis.segments import Segment, SegmentDataSource
 
@@ -468,7 +469,7 @@ def test_exposure_query():
     assert "exposure" in enrollment_sql
 
 
-def test_exposure_metric_query():
+def test_exposure_signal_query():
     exp = Experiment("slug", "2019-01-01", 8, app_id="my_cool_app")
 
     tl = TimeLimits.for_ts(
@@ -481,7 +482,7 @@ def test_exposure_metric_query():
     enrollment_sql = exp.build_enrollments_query(
         time_limits=tl,
         enrollments_query_type="glean-event",
-        exposure_metric=Metric(
+        exposure_signal=ExposureSignal(
             name="exposure",
             data_source=mozanalysis.metrics.fenix.baseline,
             select_expr="metrics.counter.events_total_uri_count > 0",
