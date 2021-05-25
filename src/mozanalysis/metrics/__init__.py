@@ -162,45 +162,6 @@ class DataSource:
             ),
         )
 
-    def build_exposure_query(
-        self,
-        exposure_metric,
-        time_limits,
-    ):
-        """Return a nearly self-contained query for determining exposures.
-
-        This query does not define ``enrollments`` but otherwise could
-        be executed to query all exposures based on the exposure metric
-        from this data source.
-        """
-        return """SELECT
-            e.client_id,
-            e.branch,
-            MIN(ds.submission_date) AS exposure_date,
-            COUNT(ds.submission_date) AS num_exposure_events
-        FROM raw_enrollments e
-            LEFT JOIN (
-                SELECT
-                    {client_id} AS client_id,
-                    {submission_date} AS submission_date
-                FROM {from_expr}
-                WHERE {submission_date}
-                    BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
-                    AND {exposure_metric}
-            ) AS ds
-            ON ds.client_id = e.client_id AND
-                ds.submission_date >= e.enrollment_date
-        GROUP BY
-            e.client_id,
-            e.branch""".format(
-            client_id=self.client_id_column,
-            submission_date=self.submission_date_column,
-            from_expr=self.from_expr_for(None),
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-            exposure_metric=exposure_metric.select_expr,
-        )
-
     def get_sanity_metrics(self, experiment_slug):
         if self.experiments_column_type is None:
             return []

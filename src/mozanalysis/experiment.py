@@ -117,7 +117,7 @@ class Experiment:
         enrollments_query_type="normandy",
         custom_enrollments_query=None,
         custom_exposure_query=None,
-        exposure_metric=None,
+        exposure_signal=None,
         segment_list=None,
     ):
         """Return a DataFrame containing per-client metric values.
@@ -152,6 +152,20 @@ class Experiment:
                 (client_id, branch), or else your results will be subtly
                 wrong.
 
+            custom_exposure_query (str): A full SQL query to be used in the main
+                query::
+
+                    WITH ...
+                    exposures AS ({custom_exposure_query})
+
+                If not provided, the exposure will be determined based on
+                `exposure_signal`, if provided, or Normandy and Nimbus exposure events.
+                `custom_exposure_query` takes precedence over `exposure_signal`.
+
+            exposure_signal (ExposureSignal): Optional signal definition of when a
+                client has been exposed to the experiment. If not provided,
+                the exposure will be determined based on Normandy exposure events
+                for desktop and Nimbus exposure events for Fenix and iOS.
             segment_list (list of mozanalysis.segment.Segment): The user
                 segments to study.
 
@@ -195,7 +209,7 @@ class Experiment:
             enrollments_query_type=enrollments_query_type,
             custom_enrollments_query=custom_enrollments_query,
             custom_exposure_query=custom_exposure_query,
-            exposure_metric=exposure_metric,
+            exposure_signal=exposure_signal,
             segment_list=segment_list,
         )
 
@@ -235,7 +249,7 @@ class Experiment:
         enrollments_query_type="normandy",
         custom_enrollments_query=None,
         custom_exposure_query=None,
-        exposure_metric=None,
+        exposure_signal=None,
         segment_list=None,
     ):
         """Return a TimeSeriesResult with per-client metric values.
@@ -273,10 +287,10 @@ class Experiment:
                     exposures AS ({custom_exposure_query})
 
                 If not provided, the exposure will be determined based on
-                `exposure_metric`, if provided, or Normandy and Nimbus exposure events.
-                `custom_exposure_query` takes precedence over `exposure_metric`.
+                `exposure_signal`, if provided, or Normandy and Nimbus exposure events.
+                `custom_exposure_query` takes precedence over `exposure_signal`.
 
-            exposure_metric (Metric): Optional metric definition of when a
+            exposure_signal (ExposureSignal): Optional signal definition of when a
                 client has been exposed to the experiment. If not provided,
                 the exposure will be determined based on Normandy exposure events
                 for desktop and Nimbus exposure events for Fenix and iOS.
@@ -320,7 +334,7 @@ class Experiment:
             enrollments_query_type=enrollments_query_type,
             custom_enrollments_query=custom_enrollments_query,
             custom_exposure_query=custom_exposure_query,
-            exposure_metric=exposure_metric,
+            exposure_signal=exposure_signal,
             segment_list=segment_list,
         )
 
@@ -364,7 +378,7 @@ class Experiment:
         enrollments_query_type="normandy",
         custom_enrollments_query=None,
         custom_exposure_query=None,
-        exposure_metric=None,
+        exposure_signal=None,
         segment_list=None,
     ) -> str:
         """Return a SQL query for querying enrollment and exposure data.
@@ -386,7 +400,7 @@ class Experiment:
                     WITH ...
                     exposures AS ({custom_exposure_query})
 
-            exposure_metric (Metric): Optional metric definition of when a
+            exposure_signal (ExposureSignal): Optional signal definition of when a
                 client has been exposed to the experiment
 
             segment_list (list of mozanalysis.segment.Segment): The user
@@ -399,12 +413,9 @@ class Experiment:
             time_limits, enrollments_query_type
         )
 
-        if exposure_metric:
-            exposure_query = (
-                custom_exposure_query
-                or exposure_metric.data_source.build_exposure_query(
-                    exposure_metric, time_limits, self.experiment_slug
-                )
+        if exposure_signal:
+            exposure_query = custom_exposure_query or exposure_signal.build_query(
+                time_limits
             )
         else:
             exposure_query = custom_exposure_query or self._build_exposure_query(
@@ -686,7 +697,9 @@ class Experiment:
                     DATE(events.submission_timestamp)
                     BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
                     AND event.category = "nimbus_events"
-                    AND mozfun.map.get_key(event.extra, "experiment") = '{experiment_slug}'
+                    AND mozfun.map.get_key(
+                        event.extra,
+                        "experiment") = '{experiment_slug}'
                     AND (event.name = 'expose' OR event.name = 'exposure')
             ) exposures
             ON re.client_id = exposures.client_id AND
