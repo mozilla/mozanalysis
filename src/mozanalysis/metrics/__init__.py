@@ -5,6 +5,8 @@ from typing import Optional
 
 import attr
 
+from mozanalysis.experiment import AnalysisBasis
+
 
 @attr.s(frozen=True, slots=True)
 class DataSource:
@@ -120,7 +122,7 @@ class DataSource:
         time_limits,
         experiment_slug,
         from_expr_dataset=None,
-        exposure_based=False
+        analysis_basis=AnalysisBasis.ENROLLMENT,
     ):
         """Return a nearly-self contained SQL query.
 
@@ -157,7 +159,9 @@ class DataSource:
                 )
                 for m in metric_list
             ),
-            date="exposure_date" if exposure_based else "enrollment_date",
+            date="exposure_date"
+            if analysis_basis == AnalysisBasis.EXPOSURE
+            else "enrollment_date",
             ignore_pre_enroll_first_day=self.experiments_column_expr.format(
                 submission_date=self.submission_date_column,
                 experiment_slug=experiment_slug,

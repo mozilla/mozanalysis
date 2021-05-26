@@ -5,7 +5,7 @@ import mozanalysis.metrics.desktop as mad
 import mozanalysis.metrics.fenix
 import mozanalysis.metrics.firefox_ios
 import mozanalysis.segments.desktop as msd
-from mozanalysis.experiment import AnalysisWindow, Experiment, TimeLimits
+from mozanalysis.experiment import AnalysisBasis, AnalysisWindow, Experiment, TimeLimits
 from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import Metric
 from mozanalysis.segments import Segment, SegmentDataSource
@@ -521,7 +521,7 @@ def test_metrics_query_based_on_exposure():
         ],
         time_limits=tl,
         enrollments_table="enrollments",
-        exposure_based=True,
+        analysis_basis=AnalysisBasis.EXPOSURE,
     )
 
     sql_lint(metrics_sql)
