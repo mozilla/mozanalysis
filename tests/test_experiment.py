@@ -5,7 +5,7 @@ import mozanalysis.metrics.desktop as mad
 import mozanalysis.metrics.fenix
 import mozanalysis.metrics.firefox_ios
 import mozanalysis.segments.desktop as msd
-from mozanalysis.experiment import AnalysisWindow, Experiment, TimeLimits
+from mozanalysis.experiment import AnalysisBasis, AnalysisWindow, Experiment, TimeLimits
 from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import Metric
 from mozanalysis.segments import Segment, SegmentDataSource
@@ -466,7 +466,7 @@ def test_exposure_query():
 
     sql_lint(enrollment_sql)
 
-    assert "exposure" in enrollment_sql
+    assert "exposures" in enrollment_sql
 
 
 def test_exposure_signal_query():
@@ -483,7 +483,7 @@ def test_exposure_signal_query():
         time_limits=tl,
         enrollments_query_type="glean-event",
         exposure_signal=ExposureSignal(
-            name="exposure",
+            name="exposures",
             data_source=mozanalysis.metrics.fenix.baseline,
             select_expr="metrics.counter.events_total_uri_count > 0",
             friendly_name="URI visited exposure",
@@ -493,7 +493,7 @@ def test_exposure_signal_query():
 
     sql_lint(enrollment_sql)
 
-    assert "exposure" in enrollment_sql
+    assert "exposures" in enrollment_sql
     assert "metrics.counter.events_total_uri_count > 0" in enrollment_sql
 
 
@@ -521,7 +521,7 @@ def test_metrics_query_based_on_exposure():
         ],
         time_limits=tl,
         enrollments_table="enrollments",
-        exposure_based=True,
+        analysis_basis=AnalysisBasis.EXPOSURES,
     )
 
     sql_lint(metrics_sql)

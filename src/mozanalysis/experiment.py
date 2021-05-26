@@ -1,10 +1,19 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from enum import Enum
+
 import attr
 
 from mozanalysis.bq import sanitize_table_name_for_bq
 from mozanalysis.utils import add_days, date_sub, hash_ish
+
+
+class AnalysisBasis(Enum):
+    """Determines what the population used for the analysis will be based on."""
+
+    ENROLLMENTS = "enrollments"
+    EXPOSURES = "exposures"
 
 
 @attr.s(frozen=True, slots=True)
@@ -442,7 +451,11 @@ class Experiment:
         )
 
     def build_metrics_query(
-        self, metric_list, time_limits, enrollments_table, exposure_based=False
+        self,
+        metric_list,
+        time_limits,
+        enrollments_table,
+        analysis_basis=AnalysisBasis.ENROLLMENTS,
     ) -> str:
         """Return a SQL query for querying metric data.
 
@@ -457,7 +470,7 @@ class Experiment:
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
             enrollments_table (str): The name of the enrollments table
-            exposure_based (bool): Use exposures as basis for calculating
+            basis (AnalysisBasis): Use exposures as basis for calculating
                 metrics if True, otherwise use enrollments.
 
         Returns:
@@ -470,7 +483,7 @@ class Experiment:
         )
 
         metrics_columns, metrics_joins = self._build_metrics_query_bits(
-            metric_list, time_limits, exposure_based
+            metric_list, time_limits, analysis_basis
         )
 
         return """
@@ -712,7 +725,9 @@ class Experiment:
             dataset=self.app_id or dataset,
         )
 
-    def _build_metrics_query_bits(self, metric_list, time_limits, exposure_based=False):
+    def _build_metrics_query_bits(
+        self, metric_list, time_limits, analysis_basis=AnalysisBasis.ENROLLMENTS
+    ):
         """Return lists of SQL fragments corresponding to metrics."""
         ds_metrics = self._partition_by_data_source(metric_list)
         ds_metrics = {
@@ -729,7 +744,7 @@ class Experiment:
                 time_limits,
                 self.experiment_slug,
                 self.app_id,
-                exposure_based,
+                analysis_basis,
             )
             metrics_joins.append(
                 """    LEFT JOIN (
