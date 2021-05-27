@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
 
   
   
@@ -29,6 +31,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
@@ -175,8 +178,8 @@
   <div class="section" id="module-mozanalysis.experiment">
 <span id="mozanalysis-experiment"></span><h1><a class="reference internal" href="#module-mozanalysis.experiment" title="mozanalysis.experiment"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a><a class="headerlink" href="#module-mozanalysis.experiment" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
-<dt id="mozanalysis.experiment.Experiment">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></code><code class="sig-name descname"><span class="pre">Experiment</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_slug</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.Experiment">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_slug</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query experiment data; store experiment metadata.</p>
 <p>The methods here query data in a way compatible with the following
 principles, which are important for experiment analysis:</p>
@@ -259,8 +262,8 @@ dataset derived from its app ID, like <cite>org_mozilla_firefox</cite>.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="mozanalysis.experiment.Experiment.experiment_slug">
-<code class="sig-name descname"><span class="pre">experiment_slug</span></code><a class="headerlink" href="#mozanalysis.experiment.Experiment.experiment_slug" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.experiment_slug">
+<span class="sig-name descname"><span class="pre">experiment_slug</span></span><a class="headerlink" href="#mozanalysis.experiment.Experiment.experiment_slug" title="Permalink to this definition">¶</a></dt>
 <dd><p>Name of the study, used to identify
 the enrollment events specific to this study.</p>
 <dl class="field-list simple">
@@ -271,8 +274,8 @@ the enrollment events specific to this study.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="mozanalysis.experiment.Experiment.start_date">
-<code class="sig-name descname"><span class="pre">start_date</span></code><a class="headerlink" href="#mozanalysis.experiment.Experiment.start_date" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.start_date">
+<span class="sig-name descname"><span class="pre">start_date</span></span><a class="headerlink" href="#mozanalysis.experiment.Experiment.start_date" title="Permalink to this definition">¶</a></dt>
 <dd><p>e.g. ‘2019-01-01’. First date on which enrollment
 events were received.</p>
 <dl class="field-list simple">
@@ -283,8 +286,8 @@ events were received.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="mozanalysis.experiment.Experiment.num_dates_enrollment">
-<code class="sig-name descname"><span class="pre">num_dates_enrollment</span></code><a class="headerlink" href="#mozanalysis.experiment.Experiment.num_dates_enrollment" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.num_dates_enrollment">
+<span class="sig-name descname"><span class="pre">num_dates_enrollment</span></span><a class="headerlink" href="#mozanalysis.experiment.Experiment.num_dates_enrollment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Only include this many days
 of enrollments. If <code class="docutils literal notranslate"><span class="pre">None</span></code> then use the maximum number of days
 as determined by the metric’s analysis window and
@@ -300,8 +303,8 @@ before UTC midnight.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="mozanalysis.experiment.Experiment.get_single_window_data">
-<code class="sig-name descname"><span class="pre">get_single_window_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_start_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_length_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_single_window_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.get_single_window_data">
+<span class="sig-name descname"><span class="pre">get_single_window_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_start_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_length_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_exposure_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_single_window_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a DataFrame containing per-client metric values.</p>
 <p>Also store them in a permanent table in BigQuery. The name of
 this table will be printed. Subsequent calls to this function
@@ -333,6 +336,20 @@ in the main query:</p>
 (client_id, branch), or else your results will be subtly
 wrong.</p>
 </p></li>
+<li><p><strong>custom_exposure_query</strong> (<em>str</em>) – <p>A full SQL query to be used in the main
+query:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="o">...</span>
+<span class="n">exposures</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_exposure_query</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>If not provided, the exposure will be determined based on
+<cite>exposure_signal</cite>, if provided, or Normandy and Nimbus exposure events.
+<cite>custom_exposure_query</cite> takes precedence over <cite>exposure_signal</cite>.</p>
+</p></li>
+<li><p><strong>exposure_signal</strong> (<em>ExposureSignal</em>) – Optional signal definition of when a
+client has been exposed to the experiment. If not provided,
+the exposure will be determined based on Normandy exposure events
+for desktop and Nimbus exposure events for Fenix and iOS.</p></li>
 <li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em>) – The user
 segments to study.</p></li>
 </ul>
@@ -371,8 +388,8 @@ standard format for queried experimental data.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="mozanalysis.experiment.Experiment.get_time_series_data">
-<code class="sig-name descname"><span class="pre">get_time_series_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_series_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'weekly'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.get_time_series_data">
+<span class="sig-name descname"><span class="pre">get_time_series_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_series_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'weekly'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_exposure_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a TimeSeriesResult with per-client metric values.</p>
 <p>Roughly equivalent to looping over <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_single_window_data()</span></code></a>
 with different analysis windows, and reorganising the results.</p>
@@ -399,6 +416,20 @@ in the main query:</p>
 (client_id, branch), or else your results will be subtly
 wrong.</p>
 </p></li>
+<li><p><strong>custom_exposure_query</strong> (<em>str</em>) – <p>A full SQL query to be used in the main
+query:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="o">...</span>
+<span class="n">exposures</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_exposure_query</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>If not provided, the exposure will be determined based on
+<cite>exposure_signal</cite>, if provided, or Normandy and Nimbus exposure events.
+<cite>custom_exposure_query</cite> takes precedence over <cite>exposure_signal</cite>.</p>
+</p></li>
+<li><p><strong>exposure_signal</strong> (<em>ExposureSignal</em>) – Optional signal definition of when a
+client has been exposed to the experiment. If not provided,
+the exposure will be determined based on Normandy exposure events
+for desktop and Nimbus exposure events for Fenix and iOS.</p></li>
 <li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em>) – The user
 segments to study.</p></li>
 </ul>
@@ -435,9 +466,9 @@ supports sanity checks.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="mozanalysis.experiment.Experiment.build_enrollments_query">
-<code class="sig-name descname"><span class="pre">build_enrollments_query</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_limits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_enrollments_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_enrollments_query" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a SQL query for querying enrollments data.</p>
+<dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.build_enrollments_query">
+<span class="sig-name descname"><span class="pre">build_enrollments_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_limits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_exposure_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_enrollments_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_enrollments_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a SQL query for querying enrollment and exposure data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -452,6 +483,15 @@ in the main query:</p>
 </pre></div>
 </div>
 </p></li>
+<li><p><strong>custom_exposure_query</strong> (<em>str</em>) – <p>A full SQL query to be used in the main
+query:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="o">...</span>
+<span class="n">exposures</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_exposure_query</span><span class="p">})</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>exposure_signal</strong> (<em>ExposureSignal</em>) – Optional signal definition of when a
+client has been exposed to the experiment</p></li>
 <li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em>) – The user
 segments to study.</p></li>
 </ul>
@@ -463,8 +503,8 @@ segments to study.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="mozanalysis.experiment.Experiment.build_metrics_query">
-<code class="sig-name descname"><span class="pre">build_metrics_query</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_limits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_table</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_metrics_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_metrics_query" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.build_metrics_query">
+<span class="sig-name descname"><span class="pre">build_metrics_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_limits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_table</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_metrics_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_metrics_query" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a SQL query for querying metric data.</p>
 <p>For interactive use, prefer <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="mozanalysis.experiment.Experiment.get_time_series_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_time_series_data()</span></code></a> or
 <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_single_window_data()</span></code></a>, according to your use case,
@@ -489,8 +529,8 @@ interval(s) to query</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="mozanalysis.experiment.TimeLimits">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></code><code class="sig-name descname"><span class="pre">TimeLimits</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_enrollment_date</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_enrollment_date</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_date_data_required</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_data_required</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_windows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.TimeLimits">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></span><span class="sig-name descname"><span class="pre">TimeLimits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_enrollment_date</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_enrollment_date</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_date_data_required</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_data_required</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_windows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits" title="Permalink to this definition">¶</a></dt>
 <dd><p>Expresses time limits for different kinds of analysis windows.</p>
 <p>Instantiated and used by the <a class="reference internal" href="#mozanalysis.experiment.Experiment" title="mozanalysis.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a> class; end users
 should not need to interact with it.</p>
@@ -525,8 +565,8 @@ state and validate” strategy was chosen over “store minimal state
 and compute on the fly” because different state is supplied in
 different contexts.</p>
 <dl class="py method">
-<dt id="mozanalysis.experiment.TimeLimits.for_single_analysis_window">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">for_single_analysis_window</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_enrollment_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_start_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_length_dates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.for_single_analysis_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.for_single_analysis_window" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.TimeLimits.for_single_analysis_window">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">for_single_analysis_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_enrollment_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_start_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_length_dates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.for_single_analysis_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.for_single_analysis_window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a <code class="docutils literal notranslate"><span class="pre">TimeLimits</span></code> instance with the following parameters</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -555,8 +595,8 @@ hours before UTC midnight.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="mozanalysis.experiment.TimeLimits.for_ts">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">for_ts</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_enrollment_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_series_period</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.for_ts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.for_ts" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.TimeLimits.for_ts">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">for_ts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_enrollment_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_series_period</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.for_ts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.for_ts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a <code class="docutils literal notranslate"><span class="pre">TimeLimits</span></code> instance for a time series.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -579,8 +619,8 @@ determines the number of points in the time series.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="mozanalysis.experiment.AnalysisWindow">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></code><code class="sig-name descname"><span class="pre">AnalysisWindow</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#AnalysisWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.AnalysisWindow" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.AnalysisWindow">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></span><span class="sig-name descname"><span class="pre">AnalysisWindow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#AnalysisWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.AnalysisWindow" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents the range of days in which to measure a metric.</p>
 <p>The range is measured in “days after enrollment”, and is inclusive.</p>
 <p>For example, <code class="docutils literal notranslate"><span class="pre">AnalysisWindow(0,</span> <span class="pre">6)</span></code> is the first week after enrollment.</p>
@@ -597,8 +637,8 @@ enrollment.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="mozanalysis.experiment.TimeSeriesResult">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></code><code class="sig-name descname"><span class="pre">TimeSeriesResult</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fully_qualified_table_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_windows</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeSeriesResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeSeriesResult" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.TimeSeriesResult">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></span><span class="sig-name descname"><span class="pre">TimeSeriesResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fully_qualified_table_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_windows</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeSeriesResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeSeriesResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>Result from a time series query.</p>
 <p>For each analysis window, this object lets us get a dataframe in
 “the standard format” (one row per client).</p>
@@ -616,8 +656,8 @@ their analysis windows.</p>
 </pre></div>
 </div>
 <dl class="py method">
-<dt id="mozanalysis.experiment.TimeSeriesResult.get">
-<code class="sig-name descname"><span class="pre">get</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_window</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeSeriesResult.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeSeriesResult.get" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.experiment.TimeSeriesResult.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_window</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeSeriesResult.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeSeriesResult.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the DataFrame for a specific analysis window.</p>
 <p>N.B. this makes a BigQuery query each time it is run; caching
 results is your responsibility.</p>

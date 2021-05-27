@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
 
   
   
@@ -29,6 +31,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -175,8 +178,8 @@
   <div class="section" id="module-mozanalysis.bayesian_stats.survival_func">
 <span id="mozanalysis-bayesian-stats-survival-func"></span><h1><a class="reference internal" href="#module-mozanalysis.bayesian_stats.survival_func" title="mozanalysis.bayesian_stats.survival_func"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a><a class="headerlink" href="#module-mozanalysis.bayesian_stats.survival_func" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt id="mozanalysis.bayesian_stats.survival_func.compare_branches">
-<code class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.survival_func.</span></code><code class="sig-name descname"><span class="pre">compare_branches</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_branch_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'control'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/survival_func.html#compare_branches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.survival_func.compare_branches" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.bayesian_stats.survival_func.compare_branches">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.survival_func.</span></span><span class="sig-name descname"><span class="pre">compare_branches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_branch_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'control'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/survival_func.html#compare_branches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.survival_func.compare_branches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the survival functions and relative uplifts thereupon.</p>
 <p>This function generates data for a metric’s survival function
 (1 - cumulative distribution function) for each branch, and
@@ -237,8 +240,8 @@ for
 </dd></dl>
 
 <dl class="py function">
-<dt id="mozanalysis.bayesian_stats.survival_func.get_thresholds">
-<code class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.survival_func.</span></code><code class="sig-name descname"><span class="pre">get_thresholds</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_num_thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">101</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/survival_func.html#get_thresholds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.survival_func.get_thresholds" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.bayesian_stats.survival_func.get_thresholds">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.survival_func.</span></span><span class="sig-name descname"><span class="pre">get_thresholds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_num_thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">101</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/survival_func.html#get_thresholds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.survival_func.get_thresholds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a set of interesting thresholds for the dataset <code class="docutils literal notranslate"><span class="pre">col</span></code></p>
 <p>Assumes that the values are non-negative, with zero as a special case.</p>
 <dl class="field-list simple">

@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
 
   
   
@@ -29,6 +31,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -224,9 +227,7 @@
 
         <span class="k">except</span> <span class="n">Conflict</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Table already exists. Reusing&quot;</span><span class="p">,</span> <span class="n">results_table</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">list_rows</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span><span class="n">results_table</span><span class="p">)</span>
-            <span class="p">)</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">list_rows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span><span class="n">results_table</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="BigQueryContext.fully_qualify_table_name"><a class="viewcode-back" href="../../api/bq.html#mozanalysis.bq.BigQueryContext.fully_qualify_table_name">[docs]</a>    <span class="k">def</span> <span class="nf">fully_qualify_table_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Given a table name, return it fully qualified.&quot;&quot;&quot;</span>

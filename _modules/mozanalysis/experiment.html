@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
 
   
   
@@ -29,6 +31,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -272,6 +275,8 @@
         <span class="n">analysis_length_days</span><span class="p">,</span>
         <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s2">&quot;normandy&quot;</span><span class="p">,</span>
         <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_exposure_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a DataFrame containing per-client metric values.</span>
@@ -306,6 +311,20 @@
 <span class="sd">                (client_id, branch), or else your results will be subtly</span>
 <span class="sd">                wrong.</span>
 
+<span class="sd">            custom_exposure_query (str): A full SQL query to be used in the main</span>
+<span class="sd">                query::</span>
+
+<span class="sd">                    WITH ...</span>
+<span class="sd">                    exposures AS ({custom_exposure_query})</span>
+
+<span class="sd">                If not provided, the exposure will be determined based on</span>
+<span class="sd">                `exposure_signal`, if provided, or Normandy and Nimbus exposure events.</span>
+<span class="sd">                `custom_exposure_query` takes precedence over `exposure_signal`.</span>
+
+<span class="sd">            exposure_signal (ExposureSignal): Optional signal definition of when a</span>
+<span class="sd">                client has been exposed to the experiment. If not provided,</span>
+<span class="sd">                the exposure will be determined based on Normandy exposure events</span>
+<span class="sd">                for desktop and Nimbus exposure events for Fenix and iOS.</span>
 <span class="sd">            segment_list (list of mozanalysis.segment.Segment): The user</span>
 <span class="sd">                segments to study.</span>
 
@@ -348,6 +367,8 @@
             <span class="n">time_limits</span><span class="o">=</span><span class="n">time_limits</span><span class="p">,</span>
             <span class="n">enrollments_query_type</span><span class="o">=</span><span class="n">enrollments_query_type</span><span class="p">,</span>
             <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="n">custom_enrollments_query</span><span class="p">,</span>
+            <span class="n">custom_exposure_query</span><span class="o">=</span><span class="n">custom_exposure_query</span><span class="p">,</span>
+            <span class="n">exposure_signal</span><span class="o">=</span><span class="n">exposure_signal</span><span class="p">,</span>
             <span class="n">segment_list</span><span class="o">=</span><span class="n">segment_list</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -386,6 +407,8 @@
         <span class="n">time_series_period</span><span class="o">=</span><span class="s2">&quot;weekly&quot;</span><span class="p">,</span>
         <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s2">&quot;normandy&quot;</span><span class="p">,</span>
         <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_exposure_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a TimeSeriesResult with per-client metric values.</span>
@@ -416,6 +439,20 @@
 <span class="sd">                (client_id, branch), or else your results will be subtly</span>
 <span class="sd">                wrong.</span>
 
+<span class="sd">            custom_exposure_query (str): A full SQL query to be used in the main</span>
+<span class="sd">                query::</span>
+
+<span class="sd">                    WITH ...</span>
+<span class="sd">                    exposures AS ({custom_exposure_query})</span>
+
+<span class="sd">                If not provided, the exposure will be determined based on</span>
+<span class="sd">                `exposure_signal`, if provided, or Normandy and Nimbus exposure events.</span>
+<span class="sd">                `custom_exposure_query` takes precedence over `exposure_signal`.</span>
+
+<span class="sd">            exposure_signal (ExposureSignal): Optional signal definition of when a</span>
+<span class="sd">                client has been exposed to the experiment. If not provided,</span>
+<span class="sd">                the exposure will be determined based on Normandy exposure events</span>
+<span class="sd">                for desktop and Nimbus exposure events for Fenix and iOS.</span>
 <span class="sd">            segment_list (list of mozanalysis.segment.Segment): The user</span>
 <span class="sd">                segments to study.</span>
 
@@ -455,6 +492,8 @@
             <span class="n">time_limits</span><span class="o">=</span><span class="n">time_limits</span><span class="p">,</span>
             <span class="n">enrollments_query_type</span><span class="o">=</span><span class="n">enrollments_query_type</span><span class="p">,</span>
             <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="n">custom_enrollments_query</span><span class="p">,</span>
+            <span class="n">custom_exposure_query</span><span class="o">=</span><span class="n">custom_exposure_query</span><span class="p">,</span>
+            <span class="n">exposure_signal</span><span class="o">=</span><span class="n">exposure_signal</span><span class="p">,</span>
             <span class="n">segment_list</span><span class="o">=</span><span class="n">segment_list</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -497,9 +536,11 @@
         <span class="n">time_limits</span><span class="p">,</span>
         <span class="n">enrollments_query_type</span><span class="o">=</span><span class="s2">&quot;normandy&quot;</span><span class="p">,</span>
         <span class="n">custom_enrollments_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_exposure_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return a SQL query for querying enrollments data.</span>
+        <span class="sd">&quot;&quot;&quot;Return a SQL query for querying enrollment and exposure data.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            time_limits (TimeLimits): An object describing the</span>
@@ -512,6 +553,14 @@
 <span class="sd">                in the main query::</span>
 
 <span class="sd">                    WITH raw_enrollments AS ({custom_enrollments_query})</span>
+<span class="sd">            custom_exposure_query (str): A full SQL query to be used in the main</span>
+<span class="sd">                query::</span>
+
+<span class="sd">                    WITH ...</span>
+<span class="sd">                    exposures AS ({custom_exposure_query})</span>
+
+<span class="sd">            exposure_signal (ExposureSignal): Optional signal definition of when a</span>
+<span class="sd">                client has been exposed to the experiment</span>
 
 <span class="sd">            segment_list (list of mozanalysis.segment.Segment): The user</span>
 <span class="sd">                segments to study.</span>
@@ -523,17 +572,32 @@
             <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span>
         <span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">exposure_signal</span><span class="p">:</span>
+            <span class="n">exposure_query</span> <span class="o">=</span> <span class="n">custom_exposure_query</span> <span class="ow">or</span> <span class="n">exposure_signal</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
+                <span class="n">time_limits</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">exposure_query</span> <span class="o">=</span> <span class="n">custom_exposure_query</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query</span><span class="p">(</span>
+                <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span>
+            <span class="p">)</span>
+
         <span class="n">segments_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_segments_query</span><span class="p">(</span><span class="n">segment_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            WITH raw_enrollments AS (</span><span class="si">{enrollments_query}</span><span class="s2">),</span>
-<span class="s2">            segmented_enrollments AS (</span><span class="si">{segments_query}</span><span class="s2">)</span>
+<span class="s2">            segmented_enrollments AS (</span><span class="si">{segments_query}</span><span class="s2">),</span>
+<span class="s2">            exposures AS (</span><span class="si">{exposure_query}</span><span class="s2">)</span>
 
-<span class="s2">            SELECT se.*</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                se.*,</span>
+<span class="s2">                e.* EXCEPT (client_id, branch)</span>
 <span class="s2">            FROM segmented_enrollments se</span>
+<span class="s2">            LEFT JOIN exposures e</span>
+<span class="s2">            USING (client_id, branch)</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">enrollments_query</span><span class="o">=</span><span class="n">enrollments_query</span><span class="p">,</span>
             <span class="n">segments_query</span><span class="o">=</span><span class="n">segments_query</span><span class="p">,</span>
+            <span class="n">exposure_query</span><span class="o">=</span><span class="n">exposure_query</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Experiment.build_metrics_query"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.build_metrics_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_metrics_query</span><span class="p">(</span>
@@ -625,6 +689,23 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
 
+    <span class="k">def</span> <span class="nf">_build_exposure_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">exposure_query_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL to query a list of exposures and their branches&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="s2">&quot;normandy&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_normandy</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="s2">&quot;glean-event&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;App ID must be defined for building Glean enrollments query&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_glean_event</span><span class="p">(</span><span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="s2">&quot;fenix-fallback&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_glean_event</span><span class="p">(</span>
+                <span class="n">time_limits</span><span class="p">,</span> <span class="s2">&quot;org_mozilla_firefox&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+
     <span class="k">def</span> <span class="nf">_build_enrollments_query_normandy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a normandy experiment&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
@@ -632,8 +713,8 @@
 <span class="s2">            e.client_id,</span>
 <span class="s2">            `mozfun.map.get_key`(e.event_map_values, &#39;branch&#39;)</span>
 <span class="s2">                AS branch,</span>
-<span class="s2">            min(e.submission_date) AS enrollment_date,</span>
-<span class="s2">            count(e.submission_date) AS num_enrollment_events</span>
+<span class="s2">            MIN(e.submission_date) AS enrollment_date,</span>
+<span class="s2">            COUNT(e.submission_date) AS num_enrollment_events</span>
 <span class="s2">        FROM</span>
 <span class="s2">            `moz-fx-data-shared-prod.telemetry.events` e</span>
 <span class="s2">        WHERE</span>
@@ -667,7 +748,8 @@
 <span class="s2">                b.ping_info.experiments,</span>
 <span class="s2">                &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">            ).branch,</span>
-<span class="s2">            DATE(MIN(b.submission_timestamp)) AS enrollment_date</span>
+<span class="s2">            DATE(MIN(b.submission_timestamp)) AS enrollment_date,</span>
+<span class="s2">            COUNT(b.submission_date) AS num_enrollment_events</span>
 <span class="s2">        FROM `moz-fx-data-shared-prod.</span><span class="si">{dataset}</span><span class="s2">.baseline` b</span>
 <span class="s2">        WHERE</span>
 <span class="s2">            DATE(b.submission_timestamp)</span>
@@ -702,7 +784,8 @@
 <span class="s2">                    e.extra,</span>
 <span class="s2">                    &#39;branch&#39;</span>
 <span class="s2">                ) AS branch,</span>
-<span class="s2">                DATE(MIN(events.submission_timestamp)) AS enrollment_date</span>
+<span class="s2">                DATE(MIN(events.submission_timestamp)) AS enrollment_date,</span>
+<span class="s2">                COUNT(events.submission_timestamp) AS num_enrollment_events</span>
 <span class="s2">            FROM `moz-fx-data-shared-prod.</span><span class="si">{dataset}</span><span class="s2">.events` events,</span>
 <span class="s2">            UNNEST(events.events) AS e</span>
 <span class="s2">            WHERE</span>
@@ -711,6 +794,76 @@
 <span class="s2">                AND e.category = &quot;nimbus_events&quot;</span>
 <span class="s2">                AND mozfun.map.get_key(e.extra, &quot;experiment&quot;) = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">                AND e.name = &#39;enrollment&#39;</span>
+<span class="s2">            GROUP BY client_id, branch</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
+            <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span>
+            <span class="n">last_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span> <span class="ow">or</span> <span class="n">dataset</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_exposure_query_normandy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL to query exposures for a normandy experiment&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            e.client_id,</span>
+<span class="s2">            e.branch,</span>
+<span class="s2">            min(e.submission_date) AS exposure_date,</span>
+<span class="s2">            COUNT(e.submission_date) AS num_exposure_events</span>
+<span class="s2">        FROM raw_enrollments re</span>
+<span class="s2">        LEFT JOIN (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                client_id,</span>
+<span class="s2">                `mozfun.map.get_key`(event_map_values, &#39;branch&#39;) AS branch,</span>
+<span class="s2">                submission_date</span>
+<span class="s2">            FROM</span>
+<span class="s2">                `moz-fx-data-shared-prod.telemetry.events`</span>
+<span class="s2">            WHERE</span>
+<span class="s2">                event_category = &#39;normandy&#39;</span>
+<span class="s2">                AND (event_method = &#39;exposure&#39; AND event_method = &#39;expose&#39;)</span>
+<span class="s2">                AND submission_date</span>
+<span class="s2">                    BETWEEN &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39; AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
+<span class="s2">                AND event_string_value = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
+<span class="s2">        ) e</span>
+<span class="s2">        ON re.client_id = e.client_id AND</span>
+<span class="s2">            re.branch = e.branch AND</span>
+<span class="s2">            e.submission_date &gt;= re.enrollment_date</span>
+<span class="s2">        GROUP BY e.client_id, e.branch</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
+            <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span>
+            <span class="n">last_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_exposure_query_glean_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL to query exposures for a Glean no-event experiment&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                exposures.client_id,</span>
+<span class="s2">                exposures.branch,</span>
+<span class="s2">                DATE(MIN(exposures.submission_date)) AS exposure_date,</span>
+<span class="s2">                COUNT(exposures.submission_date) AS num_exposure_events</span>
+<span class="s2">            FROM raw_enrollments re</span>
+<span class="s2">            LEFT JOIN (</span>
+<span class="s2">                SELECT</span>
+<span class="s2">                    client_info.client_id,</span>
+<span class="s2">                    `mozfun.map.get_key`(event.extra, &#39;branch&#39;) AS branch,</span>
+<span class="s2">                    DATE(events.submission_timestamp) AS submission_date</span>
+<span class="s2">                FROM</span>
+<span class="s2">                    `moz-fx-data-shared-prod.</span><span class="si">{dataset}</span><span class="s2">.events` events,</span>
+<span class="s2">                    UNNEST(events.events) AS event</span>
+<span class="s2">                WHERE</span>
+<span class="s2">                    DATE(events.submission_timestamp)</span>
+<span class="s2">                    BETWEEN &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39; AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
+<span class="s2">                    AND event.category = &quot;nimbus_events&quot;</span>
+<span class="s2">                    AND mozfun.map.get_key(</span>
+<span class="s2">                        event.extra,</span>
+<span class="s2">                        &quot;experiment&quot;) = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
+<span class="s2">                    AND (event.name = &#39;expose&#39; OR event.name = &#39;exposure&#39;)</span>
+<span class="s2">            ) exposures</span>
+<span class="s2">            ON re.client_id = exposures.client_id AND</span>
+<span class="s2">                re.branch = exposures.branch AND</span>
+<span class="s2">                exposures.submission_date &gt;= re.enrollment_date</span>
 <span class="s2">            GROUP BY client_id, branch</span>
 <span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>

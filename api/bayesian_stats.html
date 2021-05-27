@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
 
   
   
@@ -29,6 +31,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
@@ -175,8 +178,8 @@
   <div class="section" id="module-mozanalysis.bayesian_stats">
 <span id="mozanalysis-bayesian-stats"></span><h1><a class="reference internal" href="#module-mozanalysis.bayesian_stats" title="mozanalysis.bayesian_stats"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a><a class="headerlink" href="#module-mozanalysis.bayesian_stats" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt id="mozanalysis.bayesian_stats.compare_samples">
-<code class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.</span></code><code class="sig-name descname"><span class="pre">compare_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_branch_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">individual_summary_quantiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.005,</span> <span class="pre">0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975,</span> <span class="pre">0.995)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comparative_summary_quantiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.005,</span> <span class="pre">0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975,</span> <span class="pre">0.995)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#compare_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.compare_samples" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.bayesian_stats.compare_samples">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.</span></span><span class="sig-name descname"><span class="pre">compare_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_branch_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">individual_summary_quantiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.005,</span> <span class="pre">0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975,</span> <span class="pre">0.995)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comparative_summary_quantiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.005,</span> <span class="pre">0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975,</span> <span class="pre">0.995)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#compare_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.compare_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return descriptive statistics for branch stats and uplifts.</p>
 <p>Given per-branch samples for some quantity, return summary
 statistics (percentiles and the mean) for the quantity for each
@@ -223,8 +226,8 @@ the columns of a value of <code class="docutils literal notranslate"><span class
 </dd></dl>
 
 <dl class="py function">
-<dt id="mozanalysis.bayesian_stats.summarize_one_branch_samples">
-<code class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.</span></code><code class="sig-name descname"><span class="pre">summarize_one_branch_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.005,</span> <span class="pre">0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975,</span> <span class="pre">0.995)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#summarize_one_branch_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.summarize_one_branch_samples" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.bayesian_stats.summarize_one_branch_samples">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.</span></span><span class="sig-name descname"><span class="pre">summarize_one_branch_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.005,</span> <span class="pre">0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975,</span> <span class="pre">0.995)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#summarize_one_branch_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.summarize_one_branch_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return descriptive statistics for sampled population-level stats.</p>
 <p>Given samples from one or more distributions, calculate some
 quantiles and the mean.</p>
@@ -255,8 +258,8 @@ the columns contain the stringified <code class="docutils literal notranslate"><
 </dd></dl>
 
 <dl class="py function">
-<dt id="mozanalysis.bayesian_stats.summarize_joint_samples">
-<code class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.</span></code><code class="sig-name descname"><span class="pre">summarize_joint_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">focus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.005,</span> <span class="pre">0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975,</span> <span class="pre">0.995)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#summarize_joint_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.summarize_joint_samples" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mozanalysis.bayesian_stats.summarize_joint_samples">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.</span></span><span class="sig-name descname"><span class="pre">summarize_joint_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">focus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.005,</span> <span class="pre">0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975,</span> <span class="pre">0.995)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bayesian_stats.html#summarize_joint_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.summarize_joint_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return descriptive statistics for uplifts.</p>
 <p>The intended use case of this function is to compare a ‘focus’
 experiment branch to a ‘reference’ experiment branch (e.g. the
