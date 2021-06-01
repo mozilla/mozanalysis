@@ -764,6 +764,7 @@
 <span class="s2">            COUNT(b.submission_date) AS num_enrollment_events</span>
 <span class="s2">        FROM `moz-fx-data-shared-prod.</span><span class="si">{dataset}</span><span class="s2">.baseline` b</span>
 <span class="s2">        WHERE</span>
+<span class="s2">            b.client_info.client_id IS NOT NULL AND</span>
 <span class="s2">            DATE(b.submission_timestamp)</span>
 <span class="s2">                BETWEEN DATE_SUB(&#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39;, INTERVAL 7 DAY)</span>
 <span class="s2">                AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
@@ -801,6 +802,7 @@
 <span class="s2">            FROM `moz-fx-data-shared-prod.</span><span class="si">{dataset}</span><span class="s2">.events` events,</span>
 <span class="s2">            UNNEST(events.events) AS e</span>
 <span class="s2">            WHERE</span>
+<span class="s2">                events.client_info.client_id IS NOT NULL AND</span>
 <span class="s2">                DATE(events.submission_timestamp)</span>
 <span class="s2">                BETWEEN &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39; AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
 <span class="s2">                AND e.category = &quot;nimbus_events&quot;</span>
