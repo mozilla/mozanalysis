@@ -605,6 +605,7 @@ class Experiment:
             COUNT(b.submission_date) AS num_enrollment_events
         FROM `moz-fx-data-shared-prod.{dataset}.baseline` b
         WHERE
+            b.client_info.client_id IS NOT NULL AND
             DATE(b.submission_timestamp)
                 BETWEEN DATE_SUB('{first_enrollment_date}', INTERVAL 7 DAY)
                 AND '{last_enrollment_date}'
@@ -642,6 +643,7 @@ class Experiment:
             FROM `moz-fx-data-shared-prod.{dataset}.events` events,
             UNNEST(events.events) AS e
             WHERE
+                events.client_info.client_id IS NOT NULL AND
                 DATE(events.submission_timestamp)
                 BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
                 AND e.category = "nimbus_events"
