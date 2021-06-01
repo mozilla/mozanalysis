@@ -75,8 +75,8 @@ def filter_outliers(branch_data, threshold_quantile):
         The subset of branch_data that was at or below the threshold
         quantile.
     """
-    if threshold_quantile >= 1 or threshold_quantile < 0.5:
-        raise ValueError("'threshold_quantile' should be close to 1")
+    if threshold_quantile > 1 or threshold_quantile < 0.5:
+        raise ValueError("'threshold_quantile' should be close to, and <= 1")
 
     threshold_val = np.quantile(branch_data, threshold_quantile)
 
