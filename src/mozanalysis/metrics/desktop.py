@@ -65,7 +65,7 @@ main = DataSource(
                     *,
                     DATE(submission_timestamp) AS submission_date,
                     environment.experiments
-                FROM mozdata.telemetry_stable.main_v4
+                FROM `moz-fx-data-shared-prod`.telemetry_stable.main_v4
             )""",
     experiments_column_type="native",
 )
