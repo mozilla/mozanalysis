@@ -8,7 +8,7 @@ from mozanalysis.metrics import DataSource, Metric, agg_any, agg_sum
 #: DataSource: The clients_daily table.
 clients_daily = DataSource(
     name="clients_daily",
-    from_expr="`moz-fx-data-shared-prod.telemetry.clients_daily`",
+    from_expr="mozdata.telemetry.clients_daily",
 )
 
 #: DataSource: The `search_clients_engines_sources_daily`_ table.
@@ -19,7 +19,7 @@ clients_daily = DataSource(
 #:    datasets/search/search_clients_engines_sources_daily/reference.html
 search_clients_engines_sources_daily = DataSource(
     name="search_clients_engines_sources_daily",
-    from_expr="`moz-fx-data-shared-prod.search.search_clients_engines_sources_daily`",
+    from_expr="mozdata.search.search_clients_engines_sources_daily",
     experiments_column_type=None,
 )
 
@@ -29,13 +29,13 @@ search_clients_daily = search_clients_engines_sources_daily
 
 #: DataSource: The main_summary table.
 main_summary = DataSource(
-    name="main_summary", from_expr="`moz-fx-data-shared-prod.telemetry.main_summary`"
+    name="main_summary", from_expr="mozdata.telemetry.main_summary"
 )
 
 #: DataSource: The events table.
 events = DataSource(
     name="events",
-    from_expr="`moz-fx-data-shared-prod.telemetry.events`",
+    from_expr="mozdata.telemetry.events",
     experiments_column_type="native",
 )
 
@@ -48,7 +48,7 @@ normandy_events = DataSource(
     from_expr="""(
         SELECT
             *
-        FROM `moz-fx-data-shared-prod`.telemetry.events
+        FROM mozdata.telemetry.events
         WHERE event_category = 'normandy'
     )""",
     experiments_column_type="native",
@@ -65,7 +65,7 @@ main = DataSource(
                     *,
                     DATE(submission_timestamp) AS submission_date,
                     environment.experiments
-                FROM `moz-fx-data-shared-prod`.telemetry_stable.main_v4
+                FROM mozdata.telemetry_stable.main_v4
             )""",
     experiments_column_type="native",
 )
@@ -78,7 +78,7 @@ crash = DataSource(
                     *,
                     DATE(submission_timestamp) AS submission_date,
                     environment.experiments
-                FROM `moz-fx-data-shared-prod`.telemetry.crash
+                FROM mozdata.telemetry.crash
             )""",
     experiments_column_type="native",
 )
@@ -102,7 +102,7 @@ activity_stream_events = DataSource(
                 SELECT
                     *,
                     DATE(submission_timestamp) AS submission_date
-                FROM `moz-fx-data-shared-prod`.activity_stream.events
+                FROM mozdata.activity_stream.events
             )""",
     experiments_column_type="native",
 )
