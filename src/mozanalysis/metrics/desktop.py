@@ -16,7 +16,7 @@ clients_daily = DataSource(
 #: it contains one row per (client_id, submission_date, engine, source).
 #:
 #: .. _`search_clients_engines_sources_daily`: https://docs.telemetry.mozilla.org/
-#:    datasets/search/search_clients_daily/reference.html
+#:    datasets/search/search_clients_engines_sources_daily/reference.html
 search_clients_engines_sources_daily = DataSource(
     name="search_clients_engines_sources_daily",
     from_expr="`moz-fx-data-shared-prod.search.search_clients_engines_sources_daily`",
