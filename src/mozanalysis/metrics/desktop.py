@@ -8,30 +8,34 @@ from mozanalysis.metrics import DataSource, Metric, agg_any, agg_sum
 #: DataSource: The clients_daily table.
 clients_daily = DataSource(
     name="clients_daily",
-    from_expr="`moz-fx-data-shared-prod.telemetry.clients_daily`",
+    from_expr="mozdata.telemetry.clients_daily",
 )
 
-#: DataSource: The `search_clients_daily`_ table.
+#: DataSource: The `search_clients_engines_sources_daily`_ table.
 #: This table unpacks search counts from the main ping;
 #: it contains one row per (client_id, submission_date, engine, source).
 #:
-#: .. _`search_clients_daily`: https://docs.telemetry.mozilla.org/datasets/
-#:    search/search_clients_daily/reference.html
-search_clients_daily = DataSource(
-    name="search_clients_daily",
-    from_expr="`moz-fx-data-shared-prod.search.search_clients_daily`",
+#: .. _`search_clients_engines_sources_daily`: https://docs.telemetry.mozilla.org/
+#:    datasets/search/search_clients_engines_sources_daily/reference.html
+search_clients_engines_sources_daily = DataSource(
+    name="search_clients_engines_sources_daily",
+    from_expr="mozdata.search.search_clients_engines_sources_daily",
     experiments_column_type=None,
 )
 
+#: DataSource: A clone of `search_clients_engines_sources_daily`.
+#: Exists for backwards compatibility; new uses should use the new name.
+search_clients_daily = search_clients_engines_sources_daily
+
 #: DataSource: The main_summary table.
 main_summary = DataSource(
-    name="main_summary", from_expr="`moz-fx-data-shared-prod.telemetry.main_summary`"
+    name="main_summary", from_expr="mozdata.telemetry.main_summary"
 )
 
 #: DataSource: The events table.
 events = DataSource(
     name="events",
-    from_expr="`moz-fx-data-shared-prod.telemetry.events`",
+    from_expr="mozdata.telemetry.events",
     experiments_column_type="native",
 )
 
@@ -44,7 +48,7 @@ normandy_events = DataSource(
     from_expr="""(
         SELECT
             *
-        FROM `moz-fx-data-shared-prod`.telemetry.events
+        FROM mozdata.telemetry.events
         WHERE event_category = 'normandy'
     )""",
     experiments_column_type="native",
@@ -74,7 +78,7 @@ crash = DataSource(
                     *,
                     DATE(submission_timestamp) AS submission_date,
                     environment.experiments
-                FROM `moz-fx-data-shared-prod`.telemetry.crash
+                FROM mozdata.telemetry.crash
             )""",
     experiments_column_type="native",
 )
@@ -98,7 +102,7 @@ activity_stream_events = DataSource(
                 SELECT
                     *,
                     DATE(submission_timestamp) AS submission_date
-                FROM `moz-fx-data-shared-prod`.activity_stream.events
+                FROM mozdata.activity_stream.events
             )""",
     experiments_column_type="native",
 )
@@ -136,7 +140,7 @@ uri_count = Metric(
 #: Metric: ...
 search_count = Metric(
     name="search_count",
-    data_source=search_clients_daily,
+    data_source=search_clients_engines_sources_daily,
     select_expr=agg_sum("sap"),
     friendly_name="SAP searches",
     description=dedent(
@@ -152,7 +156,7 @@ search_count = Metric(
 #: Metric: ...
 tagged_search_count = Metric(
     name="tagged_search_count",
-    data_source=search_clients_daily,
+    data_source=search_clients_engines_sources_daily,
     select_expr=agg_sum("tagged_sap"),
     friendly_name="Tagged SAP searches",
     description=dedent(
@@ -169,7 +173,7 @@ tagged_search_count = Metric(
 #: Metric: ...
 tagged_follow_on_search_count = Metric(
     name="tagged_follow_on_search_count",
-    data_source=search_clients_daily,
+    data_source=search_clients_engines_sources_daily,
     select_expr=agg_sum("tagged_follow_on"),
     friendly_name="Tagged follow-on searches",
     description=dedent(
@@ -186,7 +190,7 @@ tagged_follow_on_search_count = Metric(
 #: Metric: ...
 ad_clicks = Metric(
     name="ad_clicks",
-    data_source=search_clients_daily,
+    data_source=search_clients_engines_sources_daily,
     select_expr=agg_sum("ad_click"),
     friendly_name="Ad clicks",
     description=dedent(
@@ -200,7 +204,7 @@ ad_clicks = Metric(
 #: Metric: ...
 searches_with_ads = Metric(
     name="searches_with_ads",
-    data_source=search_clients_daily,
+    data_source=search_clients_engines_sources_daily,
     select_expr=agg_sum("search_with_ads"),
     friendly_name="Search result pages with ads",
     description=dedent(
@@ -216,7 +220,7 @@ searches_with_ads = Metric(
 #: Metric: ...
 organic_search_count = Metric(
     name="organic_search_count",
-    data_source=search_clients_daily,
+    data_source=search_clients_engines_sources_daily,
     select_expr=agg_sum("organic"),
     friendly_name="Organic searches",
     description=dedent(
