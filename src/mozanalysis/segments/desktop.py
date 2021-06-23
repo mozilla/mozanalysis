@@ -9,7 +9,7 @@ from mozanalysis.segments import Segment, SegmentDataSource
 #: SegmentDataSource: The clients_last_seen table.
 clients_last_seen = SegmentDataSource(
     name="clients_last_seen",
-    from_expr="`moz-fx-data-shared-prod.telemetry.clients_last_seen`",
+    from_expr="mozdata.telemetry.clients_last_seen",
     window_start=0,
     window_end=0,
 )
