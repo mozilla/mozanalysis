@@ -4,6 +4,7 @@
 
 from mozanalysis.metrics import DataSource, Metric, agg_sum
 
+#: DataSource: The baseline ping table.
 baseline = DataSource(
     name="baseline",
     from_expr="""(
@@ -18,6 +19,9 @@ baseline = DataSource(
 )
 
 
+#: DataSource: Events table.
+#: For convenience, this is exploded to one-row-per-event
+#: like the ``telemetry.events`` dataset.
 events = DataSource(
     name="events",
     from_expr="""(
@@ -36,6 +40,7 @@ events = DataSource(
 )
 
 
+#: DataSource: Metrics ping table.
 metrics = DataSource(
     name="metrics",
     from_expr="""(
@@ -50,6 +55,7 @@ metrics = DataSource(
 )
 
 
+#: Metric: ...
 uri_count = Metric(
     name="uri_count",
     data_source=baseline,
@@ -58,6 +64,7 @@ uri_count = Metric(
     description="Counts the number of URIs each client visited",
 )
 
+#: Metric: ...
 user_reports_site_issue_count = Metric(
     name="user_reports_site_issue_count",
     data_source=events,
@@ -67,6 +74,7 @@ user_reports_site_issue_count = Metric(
     description="Counts the number of times clients reported an issue with a site.",
 )
 
+#: Metric: ...
 user_reload_count = Metric(
     name="user_reload_count",
     data_source=events,
@@ -77,6 +85,7 @@ user_reload_count = Metric(
     bigger_is_better=False,
 )
 
+#: Metric: ...
 baseline_ping_count = Metric(
     name="baseline_ping_count",
     data_source=baseline,
@@ -85,6 +94,7 @@ baseline_ping_count = Metric(
     description="Counts the number of `baseline` pings received from each client.",
 )
 
+#: Metric: ...
 metric_ping_count = Metric(
     name="metric_ping_count",
     data_source=metrics,
@@ -93,6 +103,7 @@ metric_ping_count = Metric(
     description="Counts the number of `metrics` pings received from each client.",
 )
 
+#: Metric: ...
 first_run_date = Metric(
     name="first_run_date",
     data_source=baseline,
