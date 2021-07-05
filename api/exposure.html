@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>mozanalysis.bq &mdash; mozanalysis  documentation</title>
+  <title>mozanalysis.exposure &mdash; mozanalysis  documentation</title>
   
 
   
@@ -42,8 +42,8 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="mozanalysis.experiment" href="experiment.html" />
-    <link rel="prev" title="mozanalysis.bayesian_stats.survival_func" href="bayesian_stats/survival_func.html" /> 
+    <link rel="next" title="mozanalysis.frequentist_stats.bootstrap" href="frequentist_stats/bootstrap.html" />
+    <link rel="prev" title="mozanalysis.experiment" href="experiment.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -97,9 +97,9 @@
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/binary.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bq.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="exposure.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
@@ -159,13 +159,13 @@
         
           <li><a href="../api.html">API Documentation</a> &raquo;</li>
         
-      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></li>
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></li>
     
     
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/api/bq.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/api/exposure.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -178,46 +178,33 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-mozanalysis.bq">
-<span id="mozanalysis-bq"></span><h1><a class="reference internal" href="#module-mozanalysis.bq" title="mozanalysis.bq"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a><a class="headerlink" href="#module-mozanalysis.bq" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-mozanalysis.exposure">
+<span id="mozanalysis-exposure"></span><h1><a class="reference internal" href="#module-mozanalysis.exposure" title="mozanalysis.exposure"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></a><a class="headerlink" href="#module-mozanalysis.exposure" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="mozanalysis.bq.BigQueryContext">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">mozanalysis.bq.</span></span><span class="sig-name descname"><span class="pre">BigQueryContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'moz-fx-data-bq-data-science'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext" title="Permalink to this definition">¶</a></dt>
-<dd><p>Holds a BigQuery client, and some configuration.</p>
+<dt class="sig sig-object py" id="mozanalysis.exposure.ExposureSignal">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">mozanalysis.exposure.</span></span><span class="sig-name descname"><span class="pre">ExposureSignal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="metrics.html#mozanalysis.metrics.DataSource" title="mozanalysis.metrics.DataSource"><span class="pre">mozanalysis.metrics.DataSource</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">select_expr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">friendly_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/exposure.html#ExposureSignal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.exposure.ExposureSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a signal that determines an exposure has happened.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset_id</strong> (<em>str</em>) – Your <a class="reference external" href="https://cloud.google.com/bigquery/docs/datasets">BigQuery dataset id</a>.</p></li>
-<li><p><strong>project_id</strong> (<em>str</em><em>, </em><em>optional</em>) – Your BigQuery project_id.
-Defaults to the DS team’s project.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – A slug; uniquely identifies this exposure signal in tables</p></li>
+<li><p><strong>data_source</strong> (<a class="reference internal" href="metrics.html#mozanalysis.metrics.DataSource" title="mozanalysis.metrics.DataSource"><em>DataSource</em></a>) – data source to query from</p></li>
+<li><p><strong>select_expr</strong> (<em>str</em>) – a SQL snippet representing a clause of a SELECT
+expression describing how to compute the exposure signal; must
+be a boolean condition</p></li>
+<li><p><strong>friendly_name</strong> (<em>str</em>) – A human-readable dashboard title for this exposure signal</p></li>
+<li><p><strong>description</strong> (<em>str</em>) – A paragraph of Markdown-formatted text describing
+what the exposure signal represents, to be shown on dashboards</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="mozanalysis.bq.BigQueryContext.run_query">
-<span class="sig-name descname"><span class="pre">run_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sql</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.run_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.run_query" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a query and return the result.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">results_table</span></code> is provided, then save the results
-into there (or just query from there if it already exists).
-Returns a <code class="docutils literal notranslate"><span class="pre">google.cloud.bigquery.table.RowIterator</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sql</strong> (<em>str</em>) – A SQL query.</p></li>
-<li><p><strong>results_table</strong> (<em>str</em><em>, </em><em>optional</em>) – A table name, not including
-a project_id or dataset_id. The table name is used as a
-cache key (if the table already exists, we ignore <code class="docutils literal notranslate"><span class="pre">sql</span></code>
-and return the table’s contents), so it is wise for
-<code class="docutils literal notranslate"><span class="pre">results_table</span></code> to include a hash of <code class="docutils literal notranslate"><span class="pre">sql</span></code>.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mozanalysis.bq.BigQueryContext.fully_qualify_table_name">
-<span class="sig-name descname"><span class="pre">fully_qualify_table_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.fully_qualify_table_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.fully_qualify_table_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a table name, return it fully qualified.</p>
+<dt class="sig sig-object py" id="mozanalysis.exposure.ExposureSignal.build_query">
+<span class="sig-name descname"><span class="pre">build_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_limits</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/exposure.html#ExposureSignal.build_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.exposure.ExposureSignal.build_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a nearly self-contained query for determining exposures.</p>
+<p>This query does not define <code class="docutils literal notranslate"><span class="pre">enrollments</span></code> but otherwise could
+be executed to query all exposures based on the exposure metric
+from this data source.</p>
 </dd></dl>
 
 </dd></dl>
@@ -230,8 +217,8 @@ and return the table’s contents), so it is wise for
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="experiment.html" class="btn btn-neutral float-right" title="mozanalysis.experiment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="bayesian_stats/survival_func.html" class="btn btn-neutral float-left" title="mozanalysis.bayesian_stats.survival_func" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="frequentist_stats/bootstrap.html" class="btn btn-neutral float-right" title="mozanalysis.frequentist_stats.bootstrap" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="experiment.html" class="btn btn-neutral float-left" title="mozanalysis.experiment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
