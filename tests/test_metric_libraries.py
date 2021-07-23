@@ -4,6 +4,8 @@ from cheap_lint import sql_lint
 import mozanalysis.metrics.desktop as mmd
 import mozanalysis.metrics.fenix as mmf
 import mozanalysis.metrics.firefox_ios as mmios
+import mozanalysis.metrics.focus_android as mmfoc
+import mozanalysis.metrics.klar_android as mmk
 from mozanalysis.metrics import DataSource, Metric
 
 from . import enumerate_included
@@ -13,16 +15,18 @@ def test_imported_ok():
     assert mmd.active_hours
     assert mmf.uri_count
     assert mmios.baseline_ping_count
+    assert mmfoc.metric_ping_count
+    assert mmk.baseline_ping_count
 
 
 @pytest.fixture()
 def included_metrics():
-    return enumerate_included((mmd, mmf, mmios), Metric)
+    return enumerate_included((mmd, mmf, mmios, mmk, mmfoc), Metric)
 
 
 @pytest.fixture()
 def included_datasources():
-    return enumerate_included((mmd, mmf, mmios), DataSource)
+    return enumerate_included((mmd, mmf, mmios, mmk, mmfoc), DataSource)
 
 
 def test_sql_not_detectably_malformed(included_metrics, included_datasources):
