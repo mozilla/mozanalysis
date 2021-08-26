@@ -447,7 +447,7 @@
     <span class="sd">&quot;&quot;&quot;Produces an expression for the mean of an unparsed histogram.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;SAFE_DIVIDE(</span>
 <span class="s2">                SUM(CAST(JSON_EXTRACT_SCALAR(</span><span class="si">{</span><span class="n">select_expr</span><span class="si">}</span><span class="s2">, &quot;$.sum&quot;) AS int64)),</span>
-<span class="s2">                SUM((SELECT SUM(value) FROM UNNEST(`moz-fx-data-shared-prod`.udf.json_extract_histogram(</span><span class="si">{</span><span class="n">select_expr</span><span class="si">}</span><span class="s2">).values)))</span>
+<span class="s2">                SUM((SELECT SUM(value) FROM UNNEST(mozfun.hist.extract(</span><span class="si">{</span><span class="n">select_expr</span><span class="si">}</span><span class="s2">).values)))</span>
 <span class="s2">            )&quot;&quot;&quot;</span>  <span class="c1"># noqa</span></div>
 </pre></div>
 
