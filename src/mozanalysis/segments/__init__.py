@@ -14,10 +14,8 @@ class SegmentDataSource:
     to determine whether each client fits a segment. Ideally this
     window ends at/before the moment of enrollment, so that user's
     branches can't bias the segment assignment. ``window_start`` and
-    ``window_end`` are non-positive integers, representing the number
-    of days before enrollment::
-
-        window_start <= window_end <= 0
+    ``window_end`` are integers, representing the number
+    of days before or after enrollment.
 
 
     Args:
@@ -110,11 +108,6 @@ class SegmentDataSource:
                 f"{m.select_expr} AS {m.name}" for m in segment_list
             ),
         )
-
-    @window_end.validator
-    def window_end_is_not_positive(self, attribute, value):
-        if value > 0:
-            raise ValueError("window_end must be <= 0")
 
     @window_start.validator
     def window_start_lte_window_end(self, attribute, value):

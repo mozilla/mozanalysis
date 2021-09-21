@@ -43,13 +43,19 @@ def test_segment_data_source_window_end_validates():
         window_end=0,
     )
 
-    with pytest.raises(ValueError):
-        msd.SegmentDataSource(
-            name="bla",
-            from_expr="bla",
-            window_start=0,
-            window_end=1,
-        )
+    msd.SegmentDataSource(
+        name="bla",
+        from_expr="bla",
+        window_start=0,
+        window_end=1,
+    )
+
+    msd.SegmentDataSource(
+        name="bla",
+        from_expr="bla",
+        window_start=1,
+        window_end=3,
+    )
 
 
 def test_segment_data_source_window_start_validates():
