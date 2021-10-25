@@ -5,7 +5,9 @@ import mozanalysis.metrics.desktop as mmd
 import mozanalysis.metrics.fenix as mmf
 import mozanalysis.metrics.firefox_ios as mmios
 import mozanalysis.metrics.focus_android as mmfoc
+import mozanalysis.metrics.focus_ios as iosfoc
 import mozanalysis.metrics.klar_android as mmk
+import mozanalysis.metrics.klar_ios as iosk
 from mozanalysis.metrics import DataSource, Metric
 
 from . import enumerate_included
@@ -16,7 +18,9 @@ def test_imported_ok():
     assert mmf.uri_count
     assert mmios.baseline_ping_count
     assert mmfoc.metric_ping_count
+    assert iosfoc.metric_ping_count
     assert mmk.baseline_ping_count
+    assert iosk.baseline_ping_count
 
 
 @pytest.fixture()
