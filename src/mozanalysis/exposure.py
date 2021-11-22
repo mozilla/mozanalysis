@@ -13,6 +13,15 @@ from mozanalysis.metrics import DataSource
 class ExposureSignal:
     """Represents a signal that determines an exposure has happened.
 
+    The optional ``window_start`` and ``window_end`` parameters define
+    the window of data used to determine whether each client has been exposed.
+    ``window_start`` and ``window_end`` are integers, representing the number
+    of days before or after the first enrollment date.
+    If ``window_start`` is set to None, then by default the first enrollment date
+    is used. If ``window_end`` is set to None, then by default the last enrollment
+    date is used.
+
+
     Args:
         name (str): A slug; uniquely identifies this exposure signal in tables
         data_source (DataSource): data source to query from
@@ -22,6 +31,8 @@ class ExposureSignal:
         friendly_name (str): A human-readable dashboard title for this exposure signal
         description (str): A paragraph of Markdown-formatted text describing
             what the exposure signal represents, to be shown on dashboards
+        window_start (int): Optional, see above
+        window_end (int): Optional, see above
     """
 
     name = attr.ib(type=str)
@@ -29,6 +40,8 @@ class ExposureSignal:
     select_expr = attr.ib(type=str)
     friendly_name = attr.ib(type=Optional[str], default=None)
     description = attr.ib(type=Optional[str], default=None)
+    window_start = attr.ib(type=Optional[int], default=None)
+    window_end = attr.ib(type=Optional[int], default=None)
 
     def build_query(
         self,
@@ -52,7 +65,8 @@ class ExposureSignal:
                     {submission_date} AS submission_date
                 FROM {from_expr}
                 WHERE {submission_date}
-                    BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+                    BETWEEN DATE_ADD('{date_start}', INTERVAL {window_start} DAY)
+                    AND DATE_ADD('{date_end}', INTERVAL {window_end} DAY)
                     AND {exposure_signal}
             ) AS ds
             ON ds.client_id = e.client_id AND
@@ -63,7 +77,11 @@ class ExposureSignal:
             client_id=self.data_source.client_id_column,
             submission_date=self.data_source.submission_date_column,
             from_expr=self.data_source.from_expr_for(None),
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
+            date_start=time_limits.first_enrollment_date,
+            date_end=time_limits.first_enrollment_date
+            if self.window_end
+            else time_limits.last_enrollment_date,
+            window_start=self.window_start or 0,
+            window_end=self.window_end or 0,
             exposure_signal=self.select_expr,
         )
