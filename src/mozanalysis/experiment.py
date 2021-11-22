@@ -456,6 +456,7 @@ class Experiment:
         time_limits,
         enrollments_table,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
+        exposure_signal=None,
     ) -> str:
         """Return a SQL query for querying metric data.
 
@@ -472,6 +473,9 @@ class Experiment:
             enrollments_table (str): The name of the enrollments table
             basis (AnalysisBasis): Use exposures as basis for calculating
                 metrics if True, otherwise use enrollments.
+            exposure_signal (Optional[ExposureSignal]): Optional exposure
+                signal parameter that will be used for computing metrics
+                for certain analysis bases (such as exposures).
 
         Returns:
             A string containing a BigQuery SQL expression.
@@ -483,7 +487,7 @@ class Experiment:
         )
 
         metrics_columns, metrics_joins = self._build_metrics_query_bits(
-            metric_list, time_limits, analysis_basis
+            metric_list, time_limits, analysis_basis, exposure_signal
         )
 
         return """
@@ -728,7 +732,11 @@ class Experiment:
         )
 
     def _build_metrics_query_bits(
-        self, metric_list, time_limits, analysis_basis=AnalysisBasis.ENROLLMENTS
+        self,
+        metric_list,
+        time_limits,
+        analysis_basis=AnalysisBasis.ENROLLMENTS,
+        exposure_signal=None,
     ):
         """Return lists of SQL fragments corresponding to metrics."""
         ds_metrics = self._partition_by_data_source(metric_list)
@@ -747,6 +755,7 @@ class Experiment:
                 self.experiment_slug,
                 self.app_id,
                 analysis_basis,
+                exposure_signal,
             )
             metrics_joins.append(
                 """    LEFT JOIN (

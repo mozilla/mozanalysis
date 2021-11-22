@@ -123,19 +123,46 @@ class DataSource:
         experiment_slug,
         from_expr_dataset=None,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
+        exposure_signal=None,
     ):
         """Return a nearly-self contained SQL query.
 
         This query does not define ``enrollments`` but otherwise could
         be executed to query all metrics from this data source.
         """
-        return """SELECT
+        if exposure_signal:
+            exposure_query = exposure_signal.build_query(time_limits)
+        else:
+            exposure_query = """
+                SELECT
+                    *
+                FROM enrollments e
+            """
+
+        return """
+        WITH raw_enrollments AS (
+            SELECT
+                *
+            FROM enrollments e
+        ), exposures AS (
+            {exposure_query}
+        ), active_clients (
+            SELECT
+                e.client_id,
+                e.branch,
+                e.analysis_window_start,
+                e.analysis_window_end,
+            FROM exposures
+                LEFT JOIN enrollments e
+                USING (client_id, branch)
+        )
+        SELECT
             e.client_id,
             e.branch,
             e.analysis_window_start,
             e.analysis_window_end,
             {metrics}
-        FROM enrollments e
+        FROM active_clients e
             LEFT JOIN {from_expr} ds
                 ON ds.{client_id} = e.client_id
                 AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
@@ -148,6 +175,7 @@ class DataSource:
             e.branch,
             e.analysis_window_start,
             e.analysis_window_end""".format(
+            exposure_query=exposure_query,
             client_id=self.client_id_column,
             submission_date=self.submission_date_column,
             from_expr=self.from_expr_for(from_expr_dataset),
@@ -160,7 +188,7 @@ class DataSource:
                 for m in metric_list
             ),
             date="exposure_date"
-            if analysis_basis == AnalysisBasis.EXPOSURES
+            if analysis_basis == AnalysisBasis.EXPOSURES and exposure_signal is None
             else "enrollment_date",
             ignore_pre_enroll_first_day=self.experiments_column_expr.format(
                 submission_date=self.submission_date_column,
