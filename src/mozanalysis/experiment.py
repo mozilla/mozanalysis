@@ -465,6 +465,11 @@ class Experiment:
         which will run the query for you and return a materialized
         dataframe.
 
+        The optional ``exposure_signal`` parameter allows to check if
+        clients have received the exposure signal during enrollment or
+        after. When using the exposures analysis basis, metrics will
+        be computed for these clients.
+
         Args:
             metric_list (list of mozanalysis.metric.Metric):
                 The metrics to analyze.
@@ -490,16 +495,47 @@ class Experiment:
             metric_list, time_limits, analysis_basis, exposure_signal
         )
 
+        if exposure_signal and analysis_basis != AnalysisBasis.ENROLLMENTS:
+            exposure_query = f"""
+            SELECT * FROM (
+                {exposure_signal.build_query(time_limits)}
+            )
+            WHERE num_exposure_events > 0
+            """
+        else:
+            exposure_query = """
+                SELECT
+                    *
+                FROM raw_enrollments e
+            """
+
         return """
         WITH analysis_windows AS (
             {analysis_windows_query}
         ),
-        enrollments AS (
+        raw_enrollments AS (
+            -- needed by "exposures" sub query
             SELECT
                 e.*,
                 aw.*
             FROM `{enrollments_table}` e
             CROSS JOIN analysis_windows aw
+        ),
+        exposures AS (
+            {exposure_query}
+        ),
+        enrollments AS (
+            SELECT
+                e.client_id,
+                e.branch,
+                e.analysis_window_start,
+                e.analysis_window_end,
+                e.enrollment_date,
+                x.exposure_date,
+                x.num_exposure_events,
+            FROM exposures x
+                LEFT JOIN raw_enrollments e
+                USING (client_id, branch)
         )
         SELECT
             enrollments.*,
@@ -508,6 +544,7 @@ class Experiment:
         {metrics_joins}
         """.format(
             analysis_windows_query=analysis_windows_query,
+            exposure_query=exposure_query,
             metrics_columns=",\n        ".join(metrics_columns),
             metrics_joins="\n".join(metrics_joins),
             enrollments_table=enrollments_table,
