@@ -525,6 +525,7 @@
         <span class="n">time_limits</span><span class="p">,</span>
         <span class="n">enrollments_table</span><span class="p">,</span>
         <span class="n">analysis_basis</span><span class="o">=</span><span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">,</span>
+        <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Return a SQL query for querying metric data.</span>
 
@@ -532,6 +533,11 @@
 <span class="sd">        :meth:`.get_single_window_data`, according to your use case,</span>
 <span class="sd">        which will run the query for you and return a materialized</span>
 <span class="sd">        dataframe.</span>
+
+<span class="sd">        The optional ``exposure_signal`` parameter allows to check if</span>
+<span class="sd">        clients have received the exposure signal during enrollment or</span>
+<span class="sd">        after. When using the exposures analysis basis, metrics will</span>
+<span class="sd">        be computed for these clients.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            metric_list (list of mozanalysis.metric.Metric):</span>
@@ -541,6 +547,9 @@
 <span class="sd">            enrollments_table (str): The name of the enrollments table</span>
 <span class="sd">            basis (AnalysisBasis): Use exposures as basis for calculating</span>
 <span class="sd">                metrics if True, otherwise use enrollments.</span>
+<span class="sd">            exposure_signal (Optional[ExposureSignal]): Optional exposure</span>
+<span class="sd">                signal parameter that will be used for computing metrics</span>
+<span class="sd">                for certain analysis bases (such as exposures).</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A string containing a BigQuery SQL expression.</span>
@@ -552,19 +561,50 @@
         <span class="p">)</span>
 
         <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_metrics_query_bits</span><span class="p">(</span>
-            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">analysis_basis</span>
+            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">analysis_basis</span><span class="p">,</span> <span class="n">exposure_signal</span>
         <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">exposure_signal</span> <span class="ow">and</span> <span class="n">analysis_basis</span> <span class="o">!=</span> <span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">:</span>
+            <span class="n">exposure_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT * FROM (</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">exposure_signal</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">            )</span>
+<span class="s2">            WHERE num_exposure_events &gt; 0</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">exposure_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT</span>
+<span class="s2">                    *</span>
+<span class="s2">                FROM raw_enrollments e</span>
+<span class="s2">            &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        WITH analysis_windows AS (</span>
 <span class="s2">            </span><span class="si">{analysis_windows_query}</span><span class="s2"></span>
 <span class="s2">        ),</span>
-<span class="s2">        enrollments AS (</span>
+<span class="s2">        raw_enrollments AS (</span>
+<span class="s2">            -- needed by &quot;exposures&quot; sub query</span>
 <span class="s2">            SELECT</span>
 <span class="s2">                e.*,</span>
 <span class="s2">                aw.*</span>
 <span class="s2">            FROM `</span><span class="si">{enrollments_table}</span><span class="s2">` e</span>
 <span class="s2">            CROSS JOIN analysis_windows aw</span>
+<span class="s2">        ),</span>
+<span class="s2">        exposures AS (</span>
+<span class="s2">            </span><span class="si">{exposure_query}</span><span class="s2"></span>
+<span class="s2">        ),</span>
+<span class="s2">        enrollments AS (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                e.client_id,</span>
+<span class="s2">                e.branch,</span>
+<span class="s2">                e.analysis_window_start,</span>
+<span class="s2">                e.analysis_window_end,</span>
+<span class="s2">                e.enrollment_date,</span>
+<span class="s2">                x.exposure_date,</span>
+<span class="s2">                x.num_exposure_events,</span>
+<span class="s2">            FROM exposures x</span>
+<span class="s2">                LEFT JOIN raw_enrollments e</span>
+<span class="s2">                USING (client_id, branch)</span>
 <span class="s2">        )</span>
 <span class="s2">        SELECT</span>
 <span class="s2">            enrollments.*,</span>
@@ -573,6 +613,7 @@
 <span class="s2">        </span><span class="si">{metrics_joins}</span><span class="s2"></span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">analysis_windows_query</span><span class="o">=</span><span class="n">analysis_windows_query</span><span class="p">,</span>
+            <span class="n">exposure_query</span><span class="o">=</span><span class="n">exposure_query</span><span class="p">,</span>
             <span class="n">metrics_columns</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_columns</span><span class="p">),</span>
             <span class="n">metrics_joins</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">),</span>
             <span class="n">enrollments_table</span><span class="o">=</span><span class="n">enrollments_table</span><span class="p">,</span>
@@ -797,7 +838,11 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_build_metrics_query_bits</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">analysis_basis</span><span class="o">=</span><span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">metric_list</span><span class="p">,</span>
+        <span class="n">time_limits</span><span class="p">,</span>
+        <span class="n">analysis_basis</span><span class="o">=</span><span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">,</span>
+        <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to metrics.&quot;&quot;&quot;</span>
         <span class="n">ds_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_by_data_source</span><span class="p">(</span><span class="n">metric_list</span><span class="p">)</span>
@@ -816,6 +861,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">,</span>
                 <span class="n">analysis_basis</span><span class="p">,</span>
+                <span class="n">exposure_signal</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">metrics_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="sd">&quot;&quot;&quot;    LEFT JOIN (</span>

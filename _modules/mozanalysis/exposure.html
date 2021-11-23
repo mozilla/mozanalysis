@@ -82,6 +82,15 @@
 <span class="k">class</span> <span class="nc">ExposureSignal</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Represents a signal that determines an exposure has happened.</span>
 
+<span class="sd">    The optional ``window_start`` and ``window_end`` parameters define</span>
+<span class="sd">    the window of data used to determine whether each client has been exposed.</span>
+<span class="sd">    ``window_start`` and ``window_end`` are integers, representing the number</span>
+<span class="sd">    of days before or after the first enrollment date.</span>
+<span class="sd">    If ``window_start`` is set to None, then by default the first enrollment date</span>
+<span class="sd">    is used. If ``window_end`` is set to None, then by default the last enrollment</span>
+<span class="sd">    date is used.</span>
+
+
 <span class="sd">    Args:</span>
 <span class="sd">        name (str): A slug; uniquely identifies this exposure signal in tables</span>
 <span class="sd">        data_source (DataSource): data source to query from</span>
@@ -91,6 +100,8 @@
 <span class="sd">        friendly_name (str): A human-readable dashboard title for this exposure signal</span>
 <span class="sd">        description (str): A paragraph of Markdown-formatted text describing</span>
 <span class="sd">            what the exposure signal represents, to be shown on dashboards</span>
+<span class="sd">        window_start (int): Optional, see above</span>
+<span class="sd">        window_end (int): Optional, see above</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
@@ -98,6 +109,8 @@
     <span class="n">select_expr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">friendly_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">description</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">window_start</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">window_end</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ExposureSignal.build_query"><a class="viewcode-back" href="../../api/exposure.html#mozanalysis.exposure.ExposureSignal.build_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_query</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -121,7 +134,8 @@
 <span class="s2">                    </span><span class="si">{submission_date}</span><span class="s2"> AS submission_date</span>
 <span class="s2">                FROM </span><span class="si">{from_expr}</span><span class="s2"></span>
 <span class="s2">                WHERE </span><span class="si">{submission_date}</span><span class="s2"></span>
-<span class="s2">                    BETWEEN &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39; AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
+<span class="s2">                    BETWEEN DATE_ADD(&#39;</span><span class="si">{date_start}</span><span class="s2">&#39;, INTERVAL </span><span class="si">{window_start}</span><span class="s2"> DAY)</span>
+<span class="s2">                    AND DATE_ADD(&#39;</span><span class="si">{date_end}</span><span class="s2">&#39;, INTERVAL </span><span class="si">{window_end}</span><span class="s2"> DAY)</span>
 <span class="s2">                    AND </span><span class="si">{exposure_signal}</span><span class="s2"></span>
 <span class="s2">            ) AS ds</span>
 <span class="s2">            ON ds.client_id = e.client_id AND</span>
@@ -132,8 +146,12 @@
             <span class="n">client_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">client_id_column</span><span class="p">,</span>
             <span class="n">submission_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">submission_date_column</span><span class="p">,</span>
             <span class="n">from_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">from_expr_for</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
-            <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span>
-            <span class="n">last_enrollment_date</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span>
+            <span class="n">date_start</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span>
+            <span class="n">date_end</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_end</span>
+            <span class="k">else</span> <span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span>
+            <span class="n">window_start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_start</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">window_end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_end</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
             <span class="n">exposure_signal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">select_expr</span><span class="p">,</span>
         <span class="p">)</span></div></div>
 </pre></div>
