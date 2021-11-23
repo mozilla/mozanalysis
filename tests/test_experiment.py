@@ -593,6 +593,38 @@ def test_exposure_signal_query():
     assert "metrics.counter.events_total_uri_count > 0" in enrollment_sql
 
 
+def test_exposure_signal_query_custom_windows():
+    exp = Experiment("slug", "2019-01-01", 8, app_id="my_cool_app")
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollment_sql = exp.build_enrollments_query(
+        time_limits=tl,
+        enrollments_query_type="glean-event",
+        exposure_signal=ExposureSignal(
+            name="exposures",
+            data_source=mozanalysis.metrics.fenix.baseline,
+            select_expr="metrics.counter.events_total_uri_count > 0",
+            friendly_name="URI visited exposure",
+            description="Exposed when URI visited",
+            window_start=1,
+            window_end=3,
+        ),
+    )
+
+    sql_lint(enrollment_sql)
+
+    assert "exposures" in enrollment_sql
+    assert "metrics.counter.events_total_uri_count > 0" in enrollment_sql
+    assert "DATE_ADD('2019-01-01', INTERVAL 1 DAY)" in enrollment_sql
+    assert "DATE_ADD('2019-01-01', INTERVAL 3 DAY)" in enrollment_sql
+
+
 def test_metrics_query_based_on_exposure():
     exp = Experiment("slug", "2019-01-01", 8)
 
@@ -623,3 +655,85 @@ def test_metrics_query_based_on_exposure():
     sql_lint(metrics_sql)
 
     assert "e.exposure_date" in metrics_sql
+
+
+def test_metrics_query_with_exposure_signal_custom_windows():
+    exp = Experiment("slug", "2019-01-01", 8)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type="fenix-fallback"
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=[
+            m
+            for m in mozanalysis.metrics.fenix.__dict__.values()
+            if isinstance(m, Metric)
+        ],
+        time_limits=tl,
+        enrollments_table="enrollments",
+        analysis_basis=AnalysisBasis.EXPOSURES,
+        exposure_signal=ExposureSignal(
+            name="exposures",
+            data_source=mozanalysis.metrics.fenix.baseline,
+            select_expr="metrics.counter.events_total_uri_count > 0",
+            friendly_name="URI visited exposure",
+            description="Exposed when URI visited",
+            window_start=1,
+            window_end=3,
+        ),
+    )
+
+    sql_lint(metrics_sql)
+
+    assert "DATE_ADD('2019-01-01', INTERVAL 1 DAY)" in metrics_sql
+    assert "DATE_ADD('2019-01-01', INTERVAL 3 DAY)" in metrics_sql
+
+
+def test_metrics_query_with_exposure_signal():
+    exp = Experiment("slug", "2019-01-01", 8)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type="fenix-fallback"
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=[
+            m
+            for m in mozanalysis.metrics.fenix.__dict__.values()
+            if isinstance(m, Metric)
+        ],
+        time_limits=tl,
+        enrollments_table="enrollments",
+        analysis_basis=AnalysisBasis.EXPOSURES,
+        exposure_signal=ExposureSignal(
+            name="exposures",
+            data_source=mozanalysis.metrics.fenix.baseline,
+            select_expr="metrics.counter.events_total_uri_count > 0",
+            friendly_name="URI visited exposure",
+            description="Exposed when URI visited",
+        ),
+    )
+
+    sql_lint(metrics_sql)
+
+    assert "DATE_ADD('2019-01-01', INTERVAL 0 DAY)" in metrics_sql
+    assert "DATE_ADD('2019-01-08', INTERVAL 0 DAY)" in metrics_sql
