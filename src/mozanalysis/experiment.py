@@ -526,13 +526,9 @@ class Experiment:
         ),
         enrollments AS (
             SELECT
-                e.client_id,
-                e.branch,
-                e.analysis_window_start,
-                e.analysis_window_end,
-                e.enrollment_date,
+                e.* EXCEPT (exposure_date, num_exposure_events),
                 x.exposure_date,
-                x.num_exposure_events,
+                x.num_exposure_events
             FROM exposures x
                 LEFT JOIN raw_enrollments e
                 USING (client_id, branch)
