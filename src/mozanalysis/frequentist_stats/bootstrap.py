@@ -184,7 +184,7 @@ def get_bootstrap_samples(
               with columns set to the dict keys.
     """
     if not type(data) == np.ndarray:
-        data = np.array(data)
+        data = np.array(data.to_numpy(dtype='float', na_value=np.nan))
 
     if np.isnan(data).any():
         raise ValueError("'data' contains null values")
