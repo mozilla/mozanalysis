@@ -356,13 +356,13 @@ qualified_cumulative_days_of_use = Metric(
     name="qualified_cumulative_days_of_use",
     data_source=clients_daily,
     select_expr="""COUNTIF(
-            active_hours_sum > 0 AND 
-            scalar_parent_browser_engagement_total_uri_count_normal_and_private_mode_sum > 0
-        )""",
+        active_hours_sum > 0 AND
+        scalar_parent_browser_engagement_total_uri_count_normal_and_private_mode_sum > 0
+      )""",
     friendly_name="QCDOU",
     description=dedent(
         """\
-         The number of days in the interval that each client sent a main ping, 
+         The number of days in the interval that each client sent a main ping,
          given that the client had >0 active hours and >0 URIs loaded.
         """
     ),
