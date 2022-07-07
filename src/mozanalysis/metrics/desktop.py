@@ -352,6 +352,14 @@ days_of_use = Metric(
     description="The number of days in the interval that each client sent a main ping.",
 )
 
+days_of_use = Metric(
+    name="qualified_cumulative_days_of_use",
+    data_source=clients_daily,
+    select_expr="COUNTIF(active_hours_sum > 0 AND scalar_parent_browser_engagement_total_uri_count_normal_and_private_mode_sum > 0)",
+    friendly_name="QCDOU",
+    description="The number of days in the interval that each client sent a main ping, given that the client had >0 active hours and >0 URIs loaded.",
+)
+
 #: Metric: Clicks to disable Pocket in New Tab
 disable_pocket_clicks = Metric(
     name="disable_pocket_clicks",
