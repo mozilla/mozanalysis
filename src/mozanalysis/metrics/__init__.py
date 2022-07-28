@@ -174,6 +174,47 @@ class DataSource:
             ),
         )
 
+    def build_query_targets(
+        self,
+        metric_list,
+        time_limits,
+        experiment_name,
+        from_expr_dataset=None
+    ):
+        """Return a nearly-self contained SQL query that constructs
+        the metrics query for targeting historical data without
+        an associated experiment slug.
+
+        This query does not define ``targets`` but otherwise could
+        be executed to query all metrics from this data source.
+        """
+        return """
+        SELECT
+            e.client_id,
+            e.analysis_window_start,
+            e.analysis_window_end
+            {metrics}
+        FROM enrollments e
+            LEFT JOIN {from_expr} ds
+                ON ds.{client_id} = e.client_id
+                AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
+        GROUP BY
+            e.client_id,
+            e.analysis_window_start,
+            e.analysis_window_end""".format(
+            client_id=self.client_id_column,
+            submission_date=self.submission_date_column,
+            from_expr=self.from_expr_for(from_expr_dataset),
+            fddr=time_limits.first_date_data_required,
+            lddr=time_limits.last_date_data_required,
+            metrics=",\n            ".join(
+                "{se} AS {n}".format(
+                    se=m.select_expr.format(experiment_name=experiment_name), n=m.name
+                )
+                for m in metric_list
+            )            
+        )
+
     def get_sanity_metrics(self, experiment_slug):
         if self.experiments_column_type is None:
             return []
