@@ -10,7 +10,7 @@ from mozanalysis.bq import sanitize_table_name_for_bq
 from mozanalysis.utils import add_days, date_sub, hash_ish
 from mozanalysis.experiment import AnalysisWindow, TimeSeriesResult, TimeLimits
 
-@attr.s(frozen=True, slots=True)
+@attr.s(frozen=True, slots=False)
 class HistoricalTarget:
     """Query historical data.
 
@@ -24,18 +24,19 @@ class HistoricalTarget:
         start_date (str): e.g. '2019-01-01'. First date for historical data to be
             retrieved.
         num_dates_enrollment (int, optional): Only include this many dates
-            of enrollments. If ``None`` then use the maximum number of dates
+            of dummy enrollments, where clients that satisfy the target
+            criteria are added to the analysis's dataset. 
+            If ``None`` then use the maximum number of dates
             as determined by the metric's analysis window and
             ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The
             factor '7' removes weekly seasonality, and the ``+1`` accounts
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
-        app_id (str, optional): For a Glean app, the name of the BigQuery
-            dataset derived from its app ID, like `org_mozilla_firefox`.
+        analysis_length (int, optional): Number of days to include for analysis
 
     Attributes:
-        experiment_name (str): Name of the study, used to identify
-            the enrollment events specific to this study.
+        experiment_name (str): Name of the study, used in naming tables
+            related to this analysis.
         start_date (str): e.g. '2019-01-01'. First date on which enrollment
             events were received.
         num_dates_enrollment (int, optional): Only include this many days
@@ -45,9 +46,10 @@ class HistoricalTarget:
             factor '7' removes weekly seasonality, and the ``+1`` accounts
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
+        analysis_length (int, optional): Number of days to include for analysis
     """
 
-    experiment_name = attr.ib(default='')
+    experiment_name = attr.ib()
     start_date = attr.ib()
     num_dates_enrollment = attr.ib(default=None)
     analysis_length= attr.ib(default=None)
@@ -81,17 +83,15 @@ class HistoricalTarget:
                 collected outside this analysis window.
             analysis_length_days (int): the length of the analysis window,
                 measured in days.
-            enrollments_query_type ('normandy', 'glean-event' or 'fenix-fallback'):
-                Specifies the query type to use to get the experiment's
-                enrollments, unless overridden by
-                ``custom_enrollments_query``.
-            custom_enrollments_query (str): A full SQL query to be used
+            target_list (list of mozanalysis.historical_targets.Target): The targets
+                that define clients to be included in the analysis.
+            custom_targets_query (str): A full SQL query to be used
                 in the main query::
 
-                    WITH raw_enrollments AS ({custom_enrollments_query})
+                    WITH targets AS ({custom_targets_query})
 
                 N.B. this query's results must be uniquely keyed by
-                (client_id, branch), or else your results will be subtly
+                (client_id), or else your results will be subtly
                 wrong.
 
         Returns:
@@ -101,8 +101,8 @@ class HistoricalTarget:
             Columns (not necessarily in order):
 
                 * client_id (str): Not necessary for "happy path" analyses.
-                * branch (str): The client's branch
-                * other columns of ``enrollments``.
+                * Analysis window (int): Start and end of analysis window, in
+                  days of entire analysis included in the window
                 * [metric 1]: The client's value for the first metric in
                   ``metric_list``.
                 * ...
@@ -176,27 +176,17 @@ class HistoricalTarget:
     ) -> str:
         """Return a SQL query for querying metric data.
 
-        For interactive use, prefer :meth:`.get_time_series_data` or
-        :meth:`.get_single_window_data`, according to your use case,
+        For interactive use, prefer :meth:`.get_single_window_data`
+        or TODO :meth:`.get_time_series_data`, according to your use case,
         which will run the query for you and return a materialized
         dataframe.
-
-        The optional ``exposure_signal`` parameter allows to check if
-        clients have received the exposure signal during enrollment or
-        after. When using the exposures analysis basis, metrics will
-        be computed for these clients.
 
         Args:
             metric_list (list of mozanalysis.metric.Metric):
                 The metrics to analyze.
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
-            enrollments_table (str): The name of the enrollments table
-            basis (AnalysisBasis): Use exposures as basis for calculating
-                metrics if True, otherwise use enrollments.
-            exposure_signal (Optional[ExposureSignal]): Optional exposure
-                signal parameter that will be used for computing metrics
-                for certain analysis bases (such as exposures).
+            targets_table (str): The name of the targets BigQuery table
 
         Returns:
             A string containing a BigQuery SQL expression.
@@ -239,7 +229,7 @@ class HistoricalTarget:
         """Return SQL to construct a table of analysis windows.
 
         To query a time series, we construct a table of analysis windows
-        and cross join it with the enrollments table to get one row per
+        and cross join it with the targets table to get one row per
         pair of client and analysis window.
 
         This method writes the SQL to define the analysis window table.
@@ -280,13 +270,13 @@ class HistoricalTarget:
 
                 if len(target_list)==1:
                     return targets_join
-
-            targets_join += """  LEFT JOIN (
-        {query}
-        ) ds_{i} USING (client_id)
-                """.format(
-                    query=query_for_targets, i=i
-                )
+            else:
+                targets_join += """  LEFT JOIN (
+            {query}
+            ) ds_{i} USING (client_id)
+                    """.format(
+                        query=query_for_targets, i=i
+                    )
         return  targets_join
 
     def _build_metrics_query_bits(
@@ -297,7 +287,7 @@ class HistoricalTarget:
         """Return lists of SQL fragments corresponding to metrics."""
         ds_metrics = self._partition_by_data_source(metric_list)
         ds_metrics = {
-            ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
+            ds: metrics
             for ds, metrics in ds_metrics.items()
         }
 

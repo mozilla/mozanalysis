@@ -11,10 +11,6 @@ class TargetDataSource:
     """Represents a table or view, from which historical data may be defined
     to size experiments.
 
-    ``start_date`` and ``end_date`` define the dates between which 
-    historical data will be queried. ``end_date`` will default to today's
-    date.
-
     Args:
         name (str): Name for the Data Source. Should be unique to avoid
             confusion.
@@ -23,9 +19,6 @@ class TargetDataSource:
             ``{dataset}`` which will be replaced with an app-specific
             dataset for Glean apps. If the expression is templated
             on dataset, default_dataset is mandatory.
-        start_date (str): See above.
-        end_date (str, optional): See above.
-        num_analysis_date (int, optional): See above.
         client_id_column (str, optional): Name of the column that
             contains the ``client_id`` (join key). Defaults to
             'client_id'.
@@ -40,8 +33,6 @@ class TargetDataSource:
 
     name = attr.ib(validator=attr.validators.instance_of(str))
     _from_expr = attr.ib(validator=attr.validators.instance_of(str))
-    start_date = attr.ib(type=str)
-    end_date = attr.ib(default=str(datetime.date.today()), type=str)
     client_id_column = attr.ib(default="client_id", type=str)
     submission_date_column = attr.ib(default="submission_date", type=str)
     default_dataset = attr.ib(default=None, type=Optional[str])
@@ -49,10 +40,6 @@ class TargetDataSource:
     @default_dataset.validator
     def _check_default_dataset_provided_if_needed(self, attribute, value):
         self.from_expr_for(None)
-
-    @start_date.validator
-    def _validate_start_date(self, attribute, value):
-        assert self.start_date < self.end_date
 
     def from_expr_for(self, dataset: Optional[str]) -> str:
         """Expands the ``from_expr`` template for the given dataset.
@@ -74,18 +61,18 @@ class TargetDataSource:
 
     def build_query(
         self,
-        target,
+        target_list,
         time_limits,
-        experiment_slug,
         from_expr_dataset=None,
     ):
         """Return a nearly-self contained SQL query.
 
-        This query does not define ``enrollments`` but otherwise could
-        be executed to query all metrics from this data source.
+        This query returns all distinct client IDs that satisfy the criteria
+        for inclusion in the analysis for this datasource. Separate sub-queries
+        are constructed for each additional data source in the analysis.
         """
         return """
-        SELECT
+        SELECT DISTINCT
             ds.{client_id} as client_id
         FROM {from_expr} ds
         WHERE {where_expr}
@@ -96,7 +83,8 @@ class TargetDataSource:
             from_expr=self.from_expr_for(from_expr_dataset),
             fddr=time_limits.first_enrollment_date,
             lddr=time_limits.last_enrollment_date,
-            where_expr = target.where_expr,
+            where_expr = " \n AND ".join([target.where_expr for target in target_list]) if len(target_list) > 1
+                    else target_list[0].where_expr ,
         )
 
 @attr.s(frozen=True, slots=True)
@@ -117,4 +105,5 @@ class Target:
     name = attr.ib(type=str)
     data_source = attr.ib(validator=attr.validators.instance_of(TargetDataSource))
     where_expr = attr.ib(type=str)
+    friendly_name = attr.ib(type=Optional[str], default=None)
     description = attr.ib(type=Optional[str], default=None)

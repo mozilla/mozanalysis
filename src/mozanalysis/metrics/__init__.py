@@ -190,18 +190,18 @@ class DataSource:
         """
         return """
         SELECT
-            e.client_id,
-            e.analysis_window_start,
-            e.analysis_window_end
+            t.client_id,
+            t.analysis_window_start,
+            t.analysis_window_end
             {metrics}
-        FROM enrollments e
+        FROM targets t
             LEFT JOIN {from_expr} ds
-                ON ds.{client_id} = e.client_id
+                ON ds.{client_id} = t.client_id
                 AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
         GROUP BY
-            e.client_id,
-            e.analysis_window_start,
-            e.analysis_window_end""".format(
+            t.client_id,
+            t.analysis_window_start,
+            t.analysis_window_end""".format(
             client_id=self.client_id_column,
             submission_date=self.submission_date_column,
             from_expr=self.from_expr_for(from_expr_dataset),

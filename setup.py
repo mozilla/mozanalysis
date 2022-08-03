@@ -34,6 +34,7 @@ setup(
         "scipy",
         "google-cloud-bigquery",
         "google-cloud-bigquery-storage",
+        "statsmodels"
     ],
     setup_requires=["pytest-runner", "setuptools_scm"],
     extras_require={
