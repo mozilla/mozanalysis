@@ -192,7 +192,7 @@ class DataSource:
         SELECT
             t.client_id,
             t.analysis_window_start,
-            t.analysis_window_end
+            t.analysis_window_end,
             {metrics}
         FROM targets t
             LEFT JOIN {from_expr} ds

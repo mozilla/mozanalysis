@@ -17,6 +17,39 @@ class HistoricalTarget:
     The methods here query data in a way compatible with the following
     principles, which are important for experiment analysis:
 
+    Example usage (in a colab notebook):
+
+        from google.colab import auth
+        auth.authenticate_user()
+        print('Authenticated')
+
+        from mozanalysis.sizing import HistoricalTarget
+        from mozanalysis.bq import BigQueryContext
+        from mozanalysis.metrics.desktop import active_hours, uri_count
+
+        bq_context = BigQueryContext(
+            dataset_id='your-dataset-id',  # e.g. mine's mbowerman
+            project_id='moz-fx-data-bq-data-science'  # this is the default anyway
+        )
+
+        ht = HistoricalTarget(
+            experiment_name='my_test_name',
+            start_date='2021-01-01',
+            num_dates_enrollment=8,
+            print_queries=True
+        )
+
+        # Run the query and get the results as a DataFrame
+        res = experiment.get_single_window_data(
+            bq_context,
+            [
+                active_hours,
+                uri_count
+            ],
+            last_date_full_data='2021-01-30',
+            analysis_start_days=0,
+            analysis_length_days=21
+        )
 
     Args:
         experiment_name (str): A simple name of this analysis, which is used
@@ -33,6 +66,8 @@ class HistoricalTarget:
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
         analysis_length (int, optional): Number of days to include for analysis
+        print_queries (bool, optional): Print the queries used to create tables
+            for the analysis
 
     Attributes:
         experiment_name (str): Name of the study, used in naming tables
@@ -47,12 +82,15 @@ class HistoricalTarget:
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
         analysis_length (int, optional): Number of days to include for analysis
+        print_queries (bool, optional): Print the queries used to create tables
+            for the analysis
     """
 
     experiment_name = attr.ib()
     start_date = attr.ib()
     num_dates_enrollment = attr.ib(default=None)
-    analysis_length= attr.ib(default=None)
+    analysis_length = attr.ib(default=None)
+    print_queries = attr.ib(default=False)
 
     def get_single_window_data(
         self,
@@ -154,6 +192,9 @@ class HistoricalTarget:
             )
         )
 
+        if self.print_queries:
+            print("Ran target query: \n" + targets_sql)
+            print("\n  ####### \n Ran metrics query: \n" + metrics_sql)
         return bq_context.run_query(metrics_sql, full_res_table_name).to_dataframe()
 
     def build_targets_query(self, time_limits, target_list=None, custom_targets_query=None):
