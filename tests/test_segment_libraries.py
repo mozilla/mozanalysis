@@ -36,21 +36,21 @@ def test_consistency_of_segment_and_variable_names(included_segments):
 
 
 def test_segment_data_source_window_end_validates():
-    msd.SegmentDataSource(
+    SegmentDataSource(
         name="bla",
         from_expr="bla",
         window_start=0,
         window_end=0,
     )
 
-    msd.SegmentDataSource(
+    SegmentDataSource(
         name="bla",
         from_expr="bla",
         window_start=0,
         window_end=1,
     )
 
-    msd.SegmentDataSource(
+    SegmentDataSource(
         name="bla",
         from_expr="bla",
         window_start=1,
@@ -59,7 +59,7 @@ def test_segment_data_source_window_end_validates():
 
 
 def test_segment_data_source_window_start_validates():
-    msd.SegmentDataSource(
+    SegmentDataSource(
         name="bla",
         from_expr="bla",
         window_start=-1,
@@ -67,7 +67,7 @@ def test_segment_data_source_window_start_validates():
     )
 
     with pytest.raises(ValueError):
-        msd.SegmentDataSource(
+        SegmentDataSource(
             name="bla",
             from_expr="bla",
             window_start=0,
@@ -77,7 +77,7 @@ def test_segment_data_source_window_start_validates():
 
 def test_segment_validates_not_metric_data_source():
     with pytest.raises(TypeError):
-        msd.Segment(
+        Segment(
             name="bla",
             data_source=mmd.clients_daily,
             select_expr="bla",
@@ -91,11 +91,11 @@ def test_included_segments_have_docs(included_segments):
 
 def test_complains_about_template_without_default():
     with pytest.raises(ValueError):
-        msd.SegmentDataSource(
+        SegmentDataSource(
             name="foo",
             from_expr="moz-fx-data-shared-prod.{dataset}.foo",
         )
-    msd.SegmentDataSource(
+    SegmentDataSource(
         name="foo",
         from_expr="moz-fx-data-shared-prod.{dataset}.foo",
         default_dataset="dataset",

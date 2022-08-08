@@ -120,20 +120,22 @@ class Experiment:
     app_id = attr.ib(default=None)
     app_name = attr.ib(default=None)
 
-    def get_app_name(self) -> str:
+    def get_app_name(self):
         """
         Determine the correct app name.
-        
+
         If no explicit app name has been passed into Experiment, lookup app name from
         a pre-defined list. (this is deprecated)
         """
         if self.app_name is None:
-            print("Experiment without `app_name` is deprecated. "+"Please specify an app_name explicitly")
+            print(
+                "Experiment without `app_name` is deprecated. "
+                + "Please specify an app_name explicitly"
+            )
             app_name = next(key for key, value in APPS.items() if self.app_id in value)
             if app_name is None:
                 raise Exception(f"No app name for app_id {self.app_id}")
         return self.app_name
-
 
     def get_single_window_data(
         self,
@@ -797,7 +799,7 @@ class Experiment:
                 metrics.append(ConfigLoader.get_metric(metric, self.get_app_name()))
             else:
                 metrics.append(metric)
-        
+
         ds_metrics = self._partition_by_data_source(metrics)
         ds_metrics = {
             ds: metrics + ds.get_sanity_metrics(self.experiment_slug)

@@ -297,7 +297,7 @@ def test_megaquery_not_detectably_malformed():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
+        metric_list=[m for m in mad.__dict__.values() if isinstance(m, Metric)],
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -317,14 +317,14 @@ def test_segments_megaquery_not_detectably_malformed():
 
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
-        segment_list=[s for s in msd.__dict__.values() if isinstance(s, msd.Segment)],
+        segment_list=[s for s in msd.__dict__.values() if isinstance(s, Segment)],
         enrollments_query_type="normandy",
     )
 
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[m for m in mad.__dict__.values() if isinstance(m, mad.Metric)],
+        metric_list=[m for m in mad.__dict__.values() if isinstance(m, Metric)],
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -739,3 +739,60 @@ def test_metrics_query_with_exposure_signal():
 
     assert "DATE_ADD('2019-01-01', INTERVAL 0 DAY)" in metrics_sql
     assert "DATE_ADD('2019-01-08', INTERVAL 0 DAY)" in metrics_sql
+
+
+def test_resolve_metric_slugs():
+    exp = Experiment("slug", "2019-01-01", 8, "org_mozilla_fenix", "fenix")
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=["baseline_ping_count"],
+        time_limits=tl,
+        enrollments_table="enrollments",
+    )
+
+    sql_lint(metrics_sql)
+
+    assert "baseline" in metrics_sql
+
+
+def test_resolve_invalid_metric_slugs():
+    exp = Experiment("slug", "2019-01-01", 8, "org_mozilla_fenix", "fenix")
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(Exception):
+        exp.build_metrics_query(
+            metric_list=["not_exist"],
+            time_limits=tl,
+            enrollments_table="enrollments",
+        )
+
+
+def test_resolve_invalid_app_name():
+    exp = Experiment("slug", "2019-01-01", 8, "unknown", "unknown")
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(Exception):
+        exp.build_metrics_query(
+            metric_list=["baseline_ping_count"],
+            time_limits=tl,
+            enrollments_table="enrollments",
+        )
