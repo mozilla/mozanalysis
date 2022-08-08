@@ -13,7 +13,9 @@ metrics = ConfigLoader.get_data_source("metrics", "fenix")
 
 uri_count = ConfigLoader.get_metric("uri_count", "fenix")
 
-user_reports_site_issue_count = ConfigLoader.get_metric("user_reports_site_issue_count", "fenix")
+user_reports_site_issue_count = ConfigLoader.get_metric(
+    "user_reports_site_issue_count", "fenix"
+)
 
 user_reload_count = ConfigLoader.get_metric("user_reload_count", "fenix")
 

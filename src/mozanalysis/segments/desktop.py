@@ -4,12 +4,16 @@
 
 from mozanalysis.config import ConfigLoader
 
-clients_last_seen = ConfigLoader.get_segment_data_source("clients_last_seen", "firefox_desktop")
+clients_last_seen = ConfigLoader.get_segment_data_source(
+    "clients_last_seen", "firefox_desktop"
+)
 
-regular_users_v3 = ConfigLoader.get_segment_data_source("regular_users_v3", "firefox_desktop")
 
-new_or_resurrected_v3 = ConfigLoader.get_segment_data_source("new_or_resurrected_v3", "firefox_desktop")
+regular_users_v3 = ConfigLoader.get_segment("regular_users_v3", "firefox_desktop")
 
+new_or_resurrected_v3 = ConfigLoader.get_segment(
+    "new_or_resurrected_v3", "firefox_desktop"
+)
 
 weekday_regular_v1 = ConfigLoader.get_segment("weekday_regular_v1", "firefox_desktop")
 
