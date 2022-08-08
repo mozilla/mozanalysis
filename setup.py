@@ -28,6 +28,7 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "attrs",
+        "jetstream-config-parser",
         "numpy",
         "pandas",
         "pyarrow",
