@@ -4,7 +4,6 @@
 
 from mozanalysis.config import ConfigLoader
 
-
 baseline = ConfigLoader.get_data_source("baseline", "fenix")
 
 events = ConfigLoader.get_data_source("events", "fenix")
