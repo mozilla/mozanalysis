@@ -18,7 +18,7 @@ def test_multiple_datasource():
 
     test_sds = SegmentDataSource(
         'test_ds',
-        'test_table')        
+        'test_table')
     test_seg = Segment(
         'test_seg',
         test_sds,
@@ -79,7 +79,7 @@ def test_megaquery_not_detectably_malformed():
     metrics_sql = test_target.build_metrics_query(
         time_limits=tl,
         metric_list=[
-            m for m in mad.__dict__.values() if isinstance(m, mad.Metric) 
+            m for m in mad.__dict__.values() if isinstance(m, mad.Metric)
             and 'experiment_slug' not in m.select_expr
             ],
         targets_table="targets")

@@ -69,7 +69,7 @@ class HistoricalTarget:
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
         analysis_length (int, optional): Number of days to include for analysis
-        targets_sql (str, optional): The SQL query that was executed to create 
+        targets_sql (str, optional): The SQL query that was executed to create
             the targets
             table; only defined after get_single_window_data method is called.
         metrics_sql (str, optional): The SQL query that was executed to create the final
@@ -216,10 +216,11 @@ class HistoricalTarget:
             full_res_table_name).to_dataframe()
 
     def build_targets_query(
-        self, 
-        time_limits, 
-        target_list=None, 
-        custom_targets_query=None):
+        self,
+        time_limits,
+        target_list=None,
+        custom_targets_query=None
+    ):
 
         return """
         WITH targets AS (
@@ -229,7 +230,7 @@ class HistoricalTarget:
             t.client_id
         FROM targets t
         """.format(
-            targets_query=custom_targets_query or 
+            targets_query=custom_targets_query or
             self._build_targets_query(target_list, time_limits)
         )
 
@@ -300,7 +301,7 @@ class HistoricalTarget:
         This method writes the SQL to define the analysis window table.
         """
         return "\n        UNION ALL\n        ".join(
-            """(SELECT {aws} AS analysis_window_start, 
+            """(SELECT {aws} AS analysis_window_start,
                 {awe} AS analysis_window_end)""".format(
                 aws=aw.start,
                 awe=aw.end,

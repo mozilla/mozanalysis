@@ -11,7 +11,8 @@ def sample_size_calc(
     rel_effect_size=.01,
     alpha=.05,
     power=.90,
-    solver=None):
+    solver=None
+):
 
     """
     Perform sample size calculation for an experiment.
@@ -48,5 +49,5 @@ def sample_size_calc(
 
         return solver.solve_power(effect_size=es, alpha=alpha, power=power, nobs=None)
     metric_names = [m.name for m in metrics_list]
-    x = {col : _get_sample_size_col(col) for col in metric_names}
-    return {k : v for k, v in sorted(x.items(), key=lambda item: item[1], reverse=True)}
+    x = {col: _get_sample_size_col(col) for col in metric_names}
+    return {k: v for k, v in sorted(x.items(), key=lambda item: item[1], reverse=True)}

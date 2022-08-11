@@ -116,12 +116,12 @@ class SegmentDataSource:
         from_expr_dataset=None,
     ):
         """
-        Return a nearly-self contained SQL query, for use with 
+        Return a nearly-self contained SQL query, for use with
         mozanalysis.sizing.HistoricalTarget.
 
         This query returns all distinct client IDs that satisfy the criteria
-        for inclusion in a historical analysis using this datasource. 
-        Separate sub-queries are constructed for each additional data source 
+        for inclusion in a historical analysis using this datasource.
+        Separate sub-queries are constructed for each additional data source
         in the analysis.
         """
         return """
