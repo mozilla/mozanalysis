@@ -1,14 +1,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from enum import Enum
-
 import attr
-import datetime
 
 from mozanalysis.bq import sanitize_table_name_for_bq
 from mozanalysis.utils import hash_ish
 from mozanalysis.experiment import TimeLimits
+
 
 @attr.s(frozen=False, slots=True)
 class HistoricalTarget:
@@ -26,7 +24,7 @@ class HistoricalTarget:
         from mozanalysis.sizing import HistoricalTarget
         from mozanalysis.bq import BigQueryContext
         from mozanalysis.metrics.desktop import active_hours, uri_count
-        from mozanalysis.segments.desktop import new_unique_profiles, new_or_resurrected_v3
+        from mozanalysis.segments.desktop import new_unique_profiles
 
         bq_context = BigQueryContext(
             dataset_id='your-dataset-id',  # e.g. mine's mbowerman
@@ -51,7 +49,7 @@ class HistoricalTarget:
             analysis_start_days=0,
             analysis_length_days=21,
             target_list = [
-                new_unique_profiles, 
+                new_unique_profiles,
                 new_or_resurrected_v3
             ]
         )
@@ -63,7 +61,7 @@ class HistoricalTarget:
             retrieved.
         num_dates_enrollment (int, optional): Only include this many dates
             of dummy enrollments, where clients that satisfy the target
-            criteria are added to the analysis's dataset. 
+            criteria are added to the analysis's dataset.
             If ``None`` then use the maximum number of dates
             as determined by the metric's analysis window and
             ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The
@@ -71,7 +69,8 @@ class HistoricalTarget:
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
         analysis_length (int, optional): Number of days to include for analysis
-        targets_sql (str, optional): The SQL query that was executed to create the targets
+        targets_sql (str, optional): The SQL query that was executed to create 
+            the targets
             table; only defined after get_single_window_data method is called.
         metrics_sql (str, optional): The SQL query that was executed to create the final
             results table; only defined after get_single_wondow_data method is
@@ -136,8 +135,8 @@ class HistoricalTarget:
             analysis_length_days (int): the length of the analysis window,
                 measured in days.
             target_list (list of mozanalysis.segments.Segment): The targets
-                that define clients to be included in the analysis, based on 
-                inclusion in a defined user segment. 
+                that define clients to be included in the analysis, based on
+                inclusion in a defined user segment.
             custom_targets_query (str): A full SQL query to be used
                 in the main query::
 
@@ -174,8 +173,8 @@ class HistoricalTarget:
             analysis_length_days,
             self.num_dates_enrollment,
         )
-            
-        self.targets_sql =  self.build_targets_query(
+
+        self.targets_sql = self.build_targets_query(
             time_limits=time_limits,
             target_list=target_list,
             custom_targets_query=custom_targets_query
@@ -205,27 +204,35 @@ class HistoricalTarget:
         full_res_table_name = sanitize_table_name_for_bq(
             "_".join(
                 [
-                    time_limits.last_date_data_required, 
-                    self.experiment_name, 
+                    time_limits.last_date_data_required,
+                    self.experiment_name,
                     hash_ish(self.metrics_sql)
                 ]
             )
         )
 
-        return bq_context.run_query(self.metrics_sql, full_res_table_name).to_dataframe()
+        return bq_context.run_query(
+            self.metrics_sql,
+            full_res_table_name).to_dataframe()
 
-    def build_targets_query(self, time_limits, target_list=None, custom_targets_query=None):
+    def build_targets_query(
+        self, 
+        time_limits, 
+        target_list=None, 
+        custom_targets_query=None):
 
         return """
         WITH targets AS (
             {targets_query}
         )
-        SELECT 
+        SELECT
             t.client_id
         FROM targets t
         """.format(
-            targets_query = custom_targets_query or self._build_targets_query(target_list, time_limits)
+            targets_query=custom_targets_query or 
+            self._build_targets_query(target_list, time_limits)
         )
+
     def build_metrics_query(
         self,
         metric_list,
@@ -293,22 +300,22 @@ class HistoricalTarget:
         This method writes the SQL to define the analysis window table.
         """
         return "\n        UNION ALL\n        ".join(
-            "(SELECT {aws} AS analysis_window_start, {awe} AS analysis_window_end)".format(
+            """(SELECT {aws} AS analysis_window_start, 
+                {awe} AS analysis_window_end)""".format(
                 aws=aw.start,
                 awe=aw.end,
             )
             for aw in analysis_windows
         )
 
-
     def _partition_by_data_source(self, metric_or_target_list):
-            """Return a dict mapping data sources to target/metric lists."""
-            data_sources = {m.data_source for m in metric_or_target_list}
+        """Return a dict mapping data sources to target/metric lists."""
+        data_sources = {m.data_source for m in metric_or_target_list}
 
-            return {
-                ds: [m for m in metric_or_target_list if m.data_source == ds]
-                for ds in data_sources
-            }
+        return {
+            ds: [m for m in metric_or_target_list if m.data_source == ds]
+            for ds in data_sources
+        }
 
     def _build_targets_query(self, target_list, time_limits):
         """Return lists of SQL fragments corresponding to targets."""
@@ -318,7 +325,7 @@ class HistoricalTarget:
             query_for_targets = ds.build_query_target(
                 ds_targets[ds], time_limits
             )
-            if i==0:
+            if i == 0:
                 targets_join = """SELECT
                     ds_0.client_id
                 FROM (
@@ -326,7 +333,7 @@ class HistoricalTarget:
                 ) ds_0
                 """.format(query=query_for_targets)
 
-                if len(target_list)==1:
+                if len(target_list) == 1:
                     return targets_join
             else:
                 targets_join += """  LEFT JOIN (
@@ -335,7 +342,7 @@ class HistoricalTarget:
                     """.format(
                         query=query_for_targets, i=i
                     )
-        return  targets_join
+        return targets_join
 
     def _build_metrics_query_bits(
         self,

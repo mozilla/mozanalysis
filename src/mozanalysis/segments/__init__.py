@@ -115,11 +115,14 @@ class SegmentDataSource:
         time_limits,
         from_expr_dataset=None,
     ):
-        """Return a nearly-self contained SQL query, for use with mozanalysis.sizing.HistoricalTarget.
+        """
+        Return a nearly-self contained SQL query, for use with 
+        mozanalysis.sizing.HistoricalTarget.
 
         This query returns all distinct client IDs that satisfy the criteria
-        for inclusion in a historical analysis using this datasource. Separate sub-queries
-        are constructed for each additional data source in the analysis.
+        for inclusion in a historical analysis using this datasource. 
+        Separate sub-queries are constructed for each additional data source 
+        in the analysis.
         """
         return """
         SELECT {client_id} as client_id
@@ -142,7 +145,7 @@ class SegmentDataSource:
                 f"{m.name}" for m in target_list
             ),
         )
-        
+
     @window_start.validator
     def window_start_lte_window_end(self, attribute, value):
         if value > self.window_end:

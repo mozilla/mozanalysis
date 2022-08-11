@@ -212,7 +212,7 @@ class DataSource:
                     se=m.select_expr.format(experiment_name=experiment_name), n=m.name
                 )
                 for m in metric_list
-            )            
+            )
         )
 
     def get_sanity_metrics(self, experiment_slug):
