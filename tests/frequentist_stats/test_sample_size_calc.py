@@ -9,14 +9,16 @@ from mozanalysis.metrics.desktop import search_clients_daily, uri_count
 
 
 def test_sample_size_calc_desktop():
-    df = pd.DataFrame({
-        search_clients_daily.name: np.random.normal(size=100),
-        uri_count.name: np.random.normal(size=100)
-    })
+    df = pd.DataFrame(
+        {
+            search_clients_daily.name: np.random.normal(size=100),
+            uri_count.name: np.random.normal(size=100),
+        }
+    )
 
     res = sample_size_calc(df, [search_clients_daily, uri_count])
 
-    assert all([df.columns in res.keys()])
+    assert all([c in res.keys() for c in df.columns])
 
     assert res[search_clients_daily.name] > 1000000
     assert res[uri_count.name] > 1000000
