@@ -24,18 +24,18 @@ class HistoricalTarget:
         from mozanalysis.sizing import HistoricalTarget
         from mozanalysis.bq import BigQueryContext
         from mozanalysis.metrics.desktop import active_hours, uri_count
-        from mozanalysis.segments.desktop import new_unique_profiles
+        from mozanalysis.segments.desktop import new_unique_profiles, \
+            new_or_resurrected_v3
 
         bq_context = BigQueryContext(
-            dataset_id='your-dataset-id',  # e.g. mine's mbowerman
+            dataset_id='mbowerman',  # e.g. mine's mbowerman
             project_id='moz-fx-data-bq-data-science'  # this is the default anyway
         )
 
         ht = HistoricalTarget(
             experiment_name='my_test_name',
             start_date='2021-01-01',
-            num_dates_enrollment=8,
-            print_queries=True
+            num_dates_enrollment=8
         )
 
         # Run the query and get the results as a DataFrame
