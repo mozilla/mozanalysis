@@ -81,7 +81,9 @@ class _ConfigLoader:
             data_source=self.get_segment_data_source(
                 segment_definition.data_source.name, app_name
             ),
-            select_expr=segment_definition.select_expression,
+            select_expr=self.configs.get_env()
+            .from_string(segment_definition.select_expression)
+            .render(),
             friendly_name=segment_definition.friendly_name,
             description=segment_definition.description,
         )
