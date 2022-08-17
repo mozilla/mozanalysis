@@ -71,10 +71,13 @@
 <span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
 
 <span class="kn">from</span> <span class="nn">google.api_core.exceptions</span> <span class="kn">import</span> <span class="n">Conflict</span>
 <span class="kn">from</span> <span class="nn">google.cloud</span> <span class="kn">import</span> <span class="n">bigquery</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">sanitize_table_name_for_bq</span><span class="p">(</span><span class="n">table_name</span><span class="p">):</span>
@@ -133,11 +136,11 @@
                     <span class="p">)</span>
                 <span class="p">),</span>
             <span class="p">)</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Saved into&quot;</span><span class="p">,</span> <span class="n">results_table</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saved into&quot;</span><span class="p">,</span> <span class="n">results_table</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">full_res</span>
 
         <span class="k">except</span> <span class="n">Conflict</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Table already exists. Reusing&quot;</span><span class="p">,</span> <span class="n">results_table</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Table already exists. Reusing&quot;</span><span class="p">,</span> <span class="n">results_table</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">list_rows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span><span class="n">results_table</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="BigQueryContext.fully_qualify_table_name"><a class="viewcode-back" href="../../api/bq.html#mozanalysis.bq.BigQueryContext.fully_qualify_table_name">[docs]</a>    <span class="k">def</span> <span class="nf">fully_qualify_table_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>

@@ -74,9 +74,14 @@
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 
 <span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 
+<span class="kn">from</span> <span class="nn">mozanalysis</span> <span class="kn">import</span> <span class="n">APPS</span>
 <span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">sanitize_table_name_for_bq</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.config</span> <span class="kn">import</span> <span class="n">ConfigLoader</span>
 <span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="kn">import</span> <span class="n">add_days</span><span class="p">,</span> <span class="n">date_sub</span><span class="p">,</span> <span class="n">hash_ish</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="AnalysisBasis"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.AnalysisBasis">[docs]</a><span class="k">class</span> <span class="nc">AnalysisBasis</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
@@ -166,6 +171,7 @@
 <span class="sd">            before UTC midnight.</span>
 <span class="sd">        app_id (str, optional): For a Glean app, the name of the BigQuery</span>
 <span class="sd">            dataset derived from its app ID, like `org_mozilla_firefox`.</span>
+<span class="sd">        app_name (str, optional): The Glean app name, like `fenix`.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        experiment_slug (str): Name of the study, used to identify</span>
@@ -185,6 +191,24 @@
     <span class="n">start_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
     <span class="n">num_dates_enrollment</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">app_id</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">app_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Experiment.get_app_name"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_app_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_app_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine the correct app name.</span>
+
+<span class="sd">        If no explicit app name has been passed into Experiment, lookup app name from</span>
+<span class="sd">        a pre-defined list. (this is deprecated)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Experiment without `app_name` is deprecated. &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;Please specify an app_name explicitly&quot;</span>
+            <span class="p">)</span>
+            <span class="n">app_name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">APPS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">app_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No app name for app_id </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_name</span></div>
 
 <div class="viewcode-block" id="Experiment.get_single_window_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_single_window_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_window_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -207,7 +231,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            bq_context (BigQueryContext): BigQuery configuration and client.</span>
-<span class="sd">            metric_list (list of mozanalysis.metric.Metric): The metrics</span>
+<span class="sd">            metric_list (list of mozanalysis.metric.Metric or str): The metrics</span>
 <span class="sd">                to analyze.</span>
 <span class="sd">            last_date_full_data (str): The most recent date for which we</span>
 <span class="sd">                have complete data, e.g. &#39;2019-03-22&#39;. If you want to ignore</span>
@@ -245,7 +269,7 @@
 <span class="sd">                client has been exposed to the experiment. If not provided,</span>
 <span class="sd">                the exposure will be determined based on Normandy exposure events</span>
 <span class="sd">                for desktop and Nimbus exposure events for Fenix and iOS.</span>
-<span class="sd">            segment_list (list of mozanalysis.segment.Segment): The user</span>
+<span class="sd">            segment_list (list of mozanalysis.segment.Segment or str): The user</span>
 <span class="sd">                segments to study.</span>
 
 <span class="sd">        Returns:</span>
@@ -482,7 +506,7 @@
 <span class="sd">            exposure_signal (ExposureSignal): Optional signal definition of when a</span>
 <span class="sd">                client has been exposed to the experiment</span>
 
-<span class="sd">            segment_list (list of mozanalysis.segment.Segment): The user</span>
+<span class="sd">            segment_list (list of mozanalysis.segment.Segment or str): The user</span>
 <span class="sd">                segments to study.</span>
 
 <span class="sd">        Returns:</span>
@@ -541,7 +565,7 @@
 <span class="sd">        be computed for these clients.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            metric_list (list of mozanalysis.metric.Metric):</span>
+<span class="sd">            metric_list (list of mozanalysis.metric.Metric or str):</span>
 <span class="sd">                The metrics to analyze.</span>
 <span class="sd">            time_limits (TimeLimits): An object describing the</span>
 <span class="sd">                interval(s) to query</span>
@@ -842,7 +866,14 @@
         <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to metrics.&quot;&quot;&quot;</span>
-        <span class="n">ds_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_by_data_source</span><span class="p">(</span><span class="n">metric_list</span><span class="p">)</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_app_name</span><span class="p">()))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+
+        <span class="n">ds_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_by_data_source</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
         <span class="n">ds_metrics</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">ds</span><span class="p">:</span> <span class="n">metrics</span> <span class="o">+</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_sanity_metrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="n">metrics</span> <span class="ow">in</span> <span class="n">ds_metrics</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
@@ -915,7 +946,16 @@
 
     <span class="k">def</span> <span class="nf">_build_segments_query_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to segments.&quot;&quot;&quot;</span>
-        <span class="n">ds_segments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_by_data_source</span><span class="p">(</span><span class="n">segment_list</span><span class="p">)</span>
+
+        <span class="c1"># resolve segment slugs</span>
+        <span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">segment_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_segment</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_app_name</span><span class="p">()))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+
+        <span class="n">ds_segments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_by_data_source</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span>
 
         <span class="n">segments_columns</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">segments_joins</span> <span class="o">=</span> <span class="p">[]</span>

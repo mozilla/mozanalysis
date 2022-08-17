@@ -19,7 +19,6 @@ We take the per-notebook daily trudge::
 
 Then we import the necessary classes for getting the data, and for analysing the data, and for interacting with BigQuery::
 
-    import mozanalysis.metrics.desktop as mmd
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
     from mozanalysis.bq import BigQueryContext
@@ -45,7 +44,8 @@ We start by instantiating our :class:`mozanalysis.experiment.Experiment` object:
     exp = Experiment(
         experiment_slug='pref-fingerprinting-protections-retention-study-release-70',
         start_date='2019-10-29',
-        num_dates_enrollment=8
+        num_dates_enrollment=8,
+        app_name="firefox_desktop"
     )
 
 ``start_date`` is the ``submission_date`` of the first enrollment (``submission_date`` is in UTC). If you intended to study one week's worth of enrollments, then set ``num_dates_enrollment=8``: Normandy experiments typically go live in the evening UTC-time, so 8 days of data is a better approximation than 7.
@@ -65,16 +65,18 @@ A metric must be computed over some `analysis window`, a period of time defined 
     ts_res = exp.get_time_series_data(
         bq_context=bq_context,
         metric_list=[
-            mmd.active_hours,
-            mmd.uri_count,
-            mmd.ad_clicks,
-            mmd.search_count,
+            "active_hours",
+            "uri_count",
+            "ad_clicks",
+            "search_count",
         ],
         last_date_full_data='2019-11-28',
         time_series_period='weekly'
     )
 
 The first two arguments to :meth:`mozanalysis.experiment.Experiment.get_time_series_data()` should be clear by this point. ``last_date_full_data`` is the last date for which we want to use data. For a currently-running experiment, it would typically be yesterday's date (we have incomplete data for incomplete days!).
+
+Metrics are pulled in from [jetstream-config](https://github.com/mozilla/jetstream-config) based on the provided metric slugs.
 
 ``time_series_period`` can be ``'daily'``, ``'weekly'`` or ``'28_day'``. A ``'weekly'`` time series neatly sidesteps/masks weekly seasonality issues: most of the experiment subjects will enroll within a day of the experiment launching - typically a Tuesday, leading to ``'daily'`` time series reflecting a non-uniform convolution of the metrics' weekly seasonalities with the uneven enrollment numbers across the week.
 
@@ -113,7 +115,7 @@ And we can do the usual pandas DataFrame things - e.g. calculate the mean active
     Cohort_3    6.468948
     Name: active_hours, dtype: float64
 
-Suppose we want to see whether the user had any active hours in their second week in the experiment. This information can be calculated from the ``mmd.active_hours`` metric - we add this as a column to the results pandas DataFrame, then use :mod:`mozanalysis.bayesian_stats.binary` to analyse this data::
+Suppose we want to see whether the user had any active hours in their second week in the experiment. This information can be calculated from the ``active_hours`` metric - we add this as a column to the results pandas DataFrame, then use :mod:`mozanalysis.bayesian_stats.binary` to analyse this data::
 
     res[7]['active_hours_gt_0'] = res[7]['active_hours'] > 0
 
@@ -218,7 +220,6 @@ Condensing the above example for simpler copying and pasting::
     auth.authenticate_user()
     print('Authenticated')
 
-    import mozanalysis.metrics.desktop as mmd
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
     from mozanalysis.bq import BigQueryContext
@@ -228,10 +229,10 @@ Condensing the above example for simpler copying and pasting::
     ts_res = exp.get_time_series_data(
         bq_context=bq_context,
         metric_list=[
-            mmd.active_hours,
-            mmd.uri_count,
-            mmd.ad_clicks,
-            mmd.search_count,
+            "active_hours",
+            "uri_count",
+            "ad_clicks",
+            "search_count",
         ],
         last_date_full_data='2019-11-28',
         time_series_period='weekly'
@@ -251,7 +252,6 @@ If we're only interested in users' (say) second week in the experiment, then we 
     auth.authenticate_user()
     print('Authenticated')
 
-    import mozanalysis.metrics.desktop as mmd
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
     from mozanalysis.bq import BigQueryContext
@@ -261,7 +261,7 @@ If we're only interested in users' (say) second week in the experiment, then we 
     res = exp.get_single_window_data(
         bq_context=bq_context,
         metric_list=[
-            mmd.active_hours,
+            "active_hours",
         ],
         last_date_full_data='2019-01-07',
         analysis_start_days=7,

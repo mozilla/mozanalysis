@@ -97,7 +97,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mozanalysis.experiment.Experiment">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_slug</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_slug</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment" title="Permalink to this definition"></a></dt>
 <dd><p>Query experiment data; store experiment metadata.</p>
 <p>The methods here query data in a way compatible with the following
 principles, which are important for experiment analysis:</p>
@@ -176,6 +176,7 @@ for the fact that enrollment typically starts a few hours
 before UTC midnight.</p></li>
 <li><p><strong>app_id</strong> (<em>str</em><em>, </em><em>optional</em>) – For a Glean app, the name of the BigQuery
 dataset derived from its app ID, like <cite>org_mozilla_firefox</cite>.</p></li>
+<li><p><strong>app_name</strong> (<em>str</em><em>, </em><em>optional</em>) – The Glean app name, like <cite>fenix</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -221,6 +222,14 @@ before UTC midnight.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.get_app_name">
+<span class="sig-name descname"><span class="pre">get_app_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_app_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_app_name" title="Permalink to this definition"></a></dt>
+<dd><p>Determine the correct app name.</p>
+<p>If no explicit app name has been passed into Experiment, lookup app name from
+a pre-defined list. (this is deprecated)</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.get_single_window_data">
 <span class="sig-name descname"><span class="pre">get_single_window_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_start_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_length_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_exposure_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_single_window_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="Permalink to this definition"></a></dt>
 <dd><p>Return a DataFrame containing per-client metric values.</p>
@@ -231,7 +240,7 @@ will simply read the results from this table.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bq_context</strong> (<a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><em>BigQueryContext</em></a>) – BigQuery configuration and client.</p></li>
-<li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics
+<li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em><em> or </em><em>str</em>) – The metrics
 to analyze.</p></li>
 <li><p><strong>last_date_full_data</strong> (<em>str</em>) – The most recent date for which we
 have complete data, e.g. ‘2019-03-22’. If you want to ignore
@@ -268,7 +277,7 @@ query:</p>
 client has been exposed to the experiment. If not provided,
 the exposure will be determined based on Normandy exposure events
 for desktop and Nimbus exposure events for Fenix and iOS.</p></li>
-<li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em>) – The user
+<li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em><em> or </em><em>str</em>) – The user
 segments to study.</p></li>
 </ul>
 </dd>
@@ -410,7 +419,7 @@ query:</p>
 </p></li>
 <li><p><strong>exposure_signal</strong> (<a class="reference internal" href="exposure.html#mozanalysis.exposure.ExposureSignal" title="mozanalysis.exposure.ExposureSignal"><em>ExposureSignal</em></a>) – Optional signal definition of when a
 client has been exposed to the experiment</p></li>
-<li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em>) – The user
+<li><p><strong>segment_list</strong> (<em>list of mozanalysis.segment.Segment</em><em> or </em><em>str</em>) – The user
 segments to study.</p></li>
 </ul>
 </dd>
@@ -435,7 +444,7 @@ be computed for these clients.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em>) – The metrics to analyze.</p></li>
+<li><p><strong>metric_list</strong> (<em>list of mozanalysis.metric.Metric</em><em> or </em><em>str</em>) – The metrics to analyze.</p></li>
 <li><p><strong>time_limits</strong> (<a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><em>TimeLimits</em></a>) – An object describing the
 interval(s) to query</p></li>
 <li><p><strong>enrollments_table</strong> (<em>str</em>) – The name of the enrollments table</p></li>

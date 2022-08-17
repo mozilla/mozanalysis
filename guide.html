@@ -95,8 +95,7 @@
 </pre></div>
 </div>
 <p>Then we import the necessary classes for getting the data, and for analysing the data, and for interacting with BigQuery:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mozanalysis.metrics.desktop</span> <span class="k">as</span> <span class="nn">mmd</span>
-<span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.binary</span> <span class="k">as</span> <span class="nn">mabsbin</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.binary</span> <span class="k">as</span> <span class="nn">mabsbin</span>
 <span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">Experiment</span>
 <span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">BigQueryContext</span>
 </pre></div>
@@ -115,14 +114,15 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span>
     <span class="n">experiment_slug</span><span class="o">=</span><span class="s1">&#39;pref-fingerprinting-protections-retention-study-release-70&#39;</span><span class="p">,</span>
     <span class="n">start_date</span><span class="o">=</span><span class="s1">&#39;2019-10-29&#39;</span><span class="p">,</span>
-    <span class="n">num_dates_enrollment</span><span class="o">=</span><span class="mi">8</span>
+    <span class="n">num_dates_enrollment</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="n">app_name</span><span class="o">=</span><span class="s2">&quot;firefox_desktop&quot;</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">start_date</span></code> is the <code class="docutils literal notranslate"><span class="pre">submission_date</span></code> of the first enrollment (<code class="docutils literal notranslate"><span class="pre">submission_date</span></code> is in UTC). If you intended to study one week’s worth of enrollments, then set <code class="docutils literal notranslate"><span class="pre">num_dates_enrollment=8</span></code>: Normandy experiments typically go live in the evening UTC-time, so 8 days of data is a better approximation than 7.</p>
 <p>We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you’re interested will already be in a metrics library, a submodule of <a class="reference internal" href="api/metrics.html#module-mozanalysis.metrics" title="mozanalysis.metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a>. If not, then you can define your own - see <a class="reference internal" href="api/metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.metrics.Metric()</span></code></a> for examples - and ideally submit a PR to add them to the library for the next experiment. In this example, we’ll compute four metrics:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="api/metrics/desktop.html#mozanalysis.metrics.desktop.active_hours" title="mozanalysis.metrics.desktop.active_hours"><code class="xref py py-const docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop.active_hours</span></code></a></p></li>
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop.active_hours</span></code></p></li>
 <li><p>uri count</p></li>
 <li><p>ad clicks</p></li>
 <li><p>search count</p></li>
@@ -132,10 +132,10 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ts_res</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get_time_series_data</span><span class="p">(</span>
     <span class="n">bq_context</span><span class="o">=</span><span class="n">bq_context</span><span class="p">,</span>
     <span class="n">metric_list</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">mmd</span><span class="o">.</span><span class="n">active_hours</span><span class="p">,</span>
-        <span class="n">mmd</span><span class="o">.</span><span class="n">uri_count</span><span class="p">,</span>
-        <span class="n">mmd</span><span class="o">.</span><span class="n">ad_clicks</span><span class="p">,</span>
-        <span class="n">mmd</span><span class="o">.</span><span class="n">search_count</span><span class="p">,</span>
+        <span class="s2">&quot;active_hours&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;uri_count&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ad_clicks&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;search_count&quot;</span><span class="p">,</span>
     <span class="p">],</span>
     <span class="n">last_date_full_data</span><span class="o">=</span><span class="s1">&#39;2019-11-28&#39;</span><span class="p">,</span>
     <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span>
@@ -143,6 +143,7 @@
 </pre></div>
 </div>
 <p>The first two arguments to <a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data" title="mozanalysis.experiment.Experiment.get_time_series_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.experiment.Experiment.get_time_series_data()</span></code></a> should be clear by this point. <code class="docutils literal notranslate"><span class="pre">last_date_full_data</span></code> is the last date for which we want to use data. For a currently-running experiment, it would typically be yesterday’s date (we have incomplete data for incomplete days!).</p>
+<p>Metrics are pulled in from [jetstream-config](<a class="reference external" href="https://github.com/mozilla/jetstream-config">https://github.com/mozilla/jetstream-config</a>) based on the provided metric slugs.</p>
 <p><code class="docutils literal notranslate"><span class="pre">time_series_period</span></code> can be <code class="docutils literal notranslate"><span class="pre">'daily'</span></code>, <code class="docutils literal notranslate"><span class="pre">'weekly'</span></code> or <code class="docutils literal notranslate"><span class="pre">'28_day'</span></code>. A <code class="docutils literal notranslate"><span class="pre">'weekly'</span></code> time series neatly sidesteps/masks weekly seasonality issues: most of the experiment subjects will enroll within a day of the experiment launching - typically a Tuesday, leading to <code class="docutils literal notranslate"><span class="pre">'daily'</span></code> time series reflecting a non-uniform convolution of the metrics’ weekly seasonalities with the uneven enrollment numbers across the week.</p>
 <p><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data" title="mozanalysis.experiment.Experiment.get_time_series_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.experiment.Experiment.get_time_series_data()</span></code></a> returns a <a class="reference internal" href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult" title="mozanalysis.experiment.TimeSeriesResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">mozanalysis.experiment.TimeSeriesResult</span></code></a> object, which can return DataFrames keyed by the start of their analysis windows (measured in days after enrollment):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ts_res</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
@@ -177,7 +178,7 @@
 <span class="go">Name: active_hours, dtype: float64</span>
 </pre></div>
 </div>
-<p>Suppose we want to see whether the user had any active hours in their second week in the experiment. This information can be calculated from the <code class="docutils literal notranslate"><span class="pre">mmd.active_hours</span></code> metric - we add this as a column to the results pandas DataFrame, then use <a class="reference internal" href="api/bayesian_stats/binary.html#module-mozanalysis.bayesian_stats.binary" title="mozanalysis.bayesian_stats.binary"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a> to analyse this data:</p>
+<p>Suppose we want to see whether the user had any active hours in their second week in the experiment. This information can be calculated from the <code class="docutils literal notranslate"><span class="pre">active_hours</span></code> metric - we add this as a column to the results pandas DataFrame, then use <a class="reference internal" href="api/bayesian_stats/binary.html#module-mozanalysis.bayesian_stats.binary" title="mozanalysis.bayesian_stats.binary"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a> to analyse this data:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">res</span><span class="p">[</span><span class="mi">7</span><span class="p">][</span><span class="s1">&#39;active_hours_gt_0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">7</span><span class="p">][</span><span class="s1">&#39;active_hours&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
 
 <span class="n">retention_week_2</span> <span class="o">=</span> <span class="n">mabsbin</span><span class="o">.</span><span class="n">compare_branches</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;active_hours_gt_0&#39;</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="s1">&#39;Cohort_1&#39;</span><span class="p">)</span>
@@ -275,7 +276,6 @@ from google.colab import auth
 auth.authenticate_user()
 print(&#39;Authenticated&#39;)
 
-import mozanalysis.metrics.desktop as mmd
 import mozanalysis.bayesian_stats.binary as mabsbin
 from mozanalysis.experiment import Experiment
 from mozanalysis.bq import BigQueryContext
@@ -285,10 +285,10 @@ bq_context = BigQueryContext(dataset_id=&#39;your_dataset_id&#39;)
 ts_res = exp.get_time_series_data(
     bq_context=bq_context,
     metric_list=[
-        mmd.active_hours,
-        mmd.uri_count,
-        mmd.ad_clicks,
-        mmd.search_count,
+        &quot;active_hours&quot;,
+        &quot;uri_count&quot;,
+        &quot;ad_clicks&quot;,
+        &quot;search_count&quot;,
     ],
     last_date_full_data=&#39;2019-11-28&#39;,
     time_series_period=&#39;weekly&#39;
@@ -307,7 +307,6 @@ from google.colab import auth
 auth.authenticate_user()
 print(&#39;Authenticated&#39;)
 
-import mozanalysis.metrics.desktop as mmd
 import mozanalysis.bayesian_stats.binary as mabsbin
 from mozanalysis.experiment import Experiment
 from mozanalysis.bq import BigQueryContext
@@ -317,7 +316,7 @@ bq_context = BigQueryContext(dataset_id=&#39;your_dataset_id&#39;)
 res = exp.get_single_window_data(
     bq_context=bq_context,
     metric_list=[
-        mmd.active_hours,
+        &quot;active_hours&quot;,
     ],
     last_date_full_data=&#39;2019-01-07&#39;,
     analysis_start_days=7,
