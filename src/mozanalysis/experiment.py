@@ -4,11 +4,14 @@
 from enum import Enum
 
 import attr
+import logging
 
 from mozanalysis import APPS
 from mozanalysis.bq import sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
 from mozanalysis.utils import add_days, date_sub, hash_ish
+
+logger = logging.getLogger(__name__)
 
 
 class AnalysisBasis(Enum):
@@ -128,7 +131,7 @@ class Experiment:
         a pre-defined list. (this is deprecated)
         """
         if self.app_name is None:
-            print(
+            logger.warning(
                 "Experiment without `app_name` is deprecated. "
                 + "Please specify an app_name explicitly"
             )

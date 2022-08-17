@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# These metric definitions are deprected.
+# These metric definitions are deprecated.
 # Instead use the metric slug to reference metrics defined
 # in https://github.com/mozilla/jetstream-config
 
@@ -14,9 +14,7 @@ search_clients_engines_sources_daily = ConfigLoader.get_data_source(
     "search_clients_engines_sources_daily", "firefox_desktop"
 )
 
-search_clients_daily = ConfigLoader.get_data_source(
-    "search_clients_engines_sources_daily", "firefox_desktop"
-)
+search_clients_daily = search_clients_engines_sources_daily
 
 main_summary = ConfigLoader.get_data_source("main_summary", "firefox_desktop")
 

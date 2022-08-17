@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# These segment definitions are deprected.
+# These segment definitions are deprecated.
 # Instead use the segment slug to reference segments defined
 # in https://github.com/mozilla/jetstream-config
 
