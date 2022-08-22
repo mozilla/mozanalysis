@@ -191,6 +191,7 @@ class DataSource:
         return """
         SELECT
             t.client_id,
+            t.enrollment_date,
             t.analysis_window_start,
             t.analysis_window_end,
             {metrics}
@@ -198,8 +199,12 @@ class DataSource:
             LEFT JOIN {from_expr} ds
                 ON ds.{client_id} = t.client_id
                 AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
+                AND ds.{submission_date} BETWEEN
+                    DATE_ADD(t.enrollment_date, interval t.analysis_window_start day)
+                    AND DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)
         GROUP BY
             t.client_id,
+            t.enrollment_date,
             t.analysis_window_start,
             t.analysis_window_end""".format(
             client_id=self.client_id_column,

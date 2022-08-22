@@ -5,7 +5,8 @@ import attr
 
 from mozanalysis.bq import sanitize_table_name_for_bq
 from mozanalysis.utils import hash_ish
-from mozanalysis.experiment import TimeLimits
+from mozanalysis.experiment import TimeLimits, add_days
+from datetime import date
 
 
 @attr.s(frozen=False, slots=True)
@@ -59,15 +60,8 @@ class HistoricalTarget:
             to create table names when saving results in BigQuery.
         start_date (str): e.g. '2019-01-01'. First date for historical data to be
             retrieved.
-        num_dates_enrollment (int, optional): Only include this many dates
-            of dummy enrollments, where clients that satisfy the target
-            criteria are added to the analysis's dataset.
-            If ``None`` then use the maximum number of dates
-            as determined by the metric's analysis window and
-            ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The
-            factor '7' removes weekly seasonality, and the ``+1`` accounts
-            for the fact that enrollment typically starts a few hours
-            before UTC midnight.
+        num_dates_enrollment (int): Number of days to consider to enroll clients
+            in the analysis.
         analysis_length (int, optional): Number of days to include for analysis
         targets_sql (str, optional): The SQL query that was executed to create
             the targets
@@ -82,13 +76,8 @@ class HistoricalTarget:
             related to this analysis.
         start_date (str): e.g. '2019-01-01'. First date on which enrollment
             events were received.
-        num_dates_enrollment (int, optional): Only include this many days
-            of enrollments. If ``None`` then use the maximum number of days
-            as determined by the metric's analysis window and
-            ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The
-            factor '7' removes weekly seasonality, and the ``+1`` accounts
-            for the fact that enrollment typically starts a few hours
-            before UTC midnight.
+        num_dates_enrollment (int): Number of days to consider to enroll clients
+            in the analysis.
         analysis_length (int, optional): Number of days to include for analysis
         targets_sql (str): The SQL query that was executed to create the targets
             table; only defined after get_single_window_data method is called.
@@ -100,18 +89,15 @@ class HistoricalTarget:
 
     experiment_name = attr.ib()
     start_date = attr.ib()
-    num_dates_enrollment = attr.ib(default=None)
+    num_dates_enrollment = attr.ib()
     analysis_length = attr.ib(default=None)
-    targets_sql = attr.ib(default='')
-    metrics_sql = attr.ib(default='')
+    _metrics_sql = attr.ib(default=None)
+    _targets_sql = attr.ib(default=None)
 
     def get_single_window_data(
         self,
         bq_context,
         metric_list,
-        last_date_full_data,
-        analysis_start_days,
-        analysis_length_days,
         target_list=None,
         custom_targets_query=None
     ):
@@ -136,7 +122,12 @@ class HistoricalTarget:
                 measured in days.
             target_list (list of mozanalysis.segments.Segment): The targets
                 that define clients to be included in the analysis, based on
-                inclusion in a defined user segment.
+                inclusion in a defined user segment. For each Segment included
+                in the list, client IDs are identified in the
+                SegmentDataSource that based on the select_for statement in
+                the Segment. Client IDs that satisfy the select_for
+                statement in every Segment in the target_list will be
+                returned by the query.
             custom_targets_query (str): A full SQL query to be used
                 in the main query::
 
@@ -166,15 +157,37 @@ class HistoricalTarget:
                 "Either custom_target_query or target_list must be provided"
             )
 
+        last_date_full_data = add_days(
+            self.start_date,
+            self.num_dates_enrollment + self.analysis_length - 1)
+
+        today = date.today().strftime('%Y-%m-%d')
+        if last_date_full_data >= today:
+            raise ValueError(
+                "Based on the start date, {}".format(
+                    self.start_date
+                )
+                + ", with {} days of enrollment ".format(
+                    self.num_dates_enrollment
+                )
+                + "and analysis of length {} days, ".format(
+                    self.analysis_length
+                )
+                + "the last day of analysis is {}".format(
+                    last_date_full_data
+                )
+                + ", which is in the future."
+            )
+
         time_limits = TimeLimits.for_single_analysis_window(
             self.start_date,
             last_date_full_data,
-            analysis_start_days,
-            analysis_length_days,
+            0,
+            self.analysis_length,
             self.num_dates_enrollment,
         )
 
-        self.targets_sql = self.build_targets_query(
+        self._targets_sql = self.build_targets_query(
             time_limits=time_limits,
             target_list=target_list,
             custom_targets_query=custom_targets_query
@@ -193,7 +206,7 @@ class HistoricalTarget:
 
         bq_context.run_query(self.targets_sql, targets_table_name)
 
-        self.metrics_sql = self.build_metrics_query(
+        self._metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
             time_limits=time_limits,
             targets_table=bq_context.fully_qualify_table_name(
@@ -223,12 +236,7 @@ class HistoricalTarget:
     ):
 
         return """
-        WITH targets AS (
-            {targets_query}
-        )
-        SELECT
-            t.client_id
-        FROM targets t
+        {targets_query}
         """.format(
             targets_query=custom_targets_query or
             self._build_targets_query(target_list, time_limits)
@@ -309,41 +317,100 @@ class HistoricalTarget:
             for aw in analysis_windows
         )
 
-    def _partition_by_data_source(self, metric_or_target_list):
+    def _partition_by_data_source(self, metric_list):
         """Return a dict mapping data sources to target/metric lists."""
-        data_sources = {m.data_source for m in metric_or_target_list}
+        data_sources = {m.data_source for m in metric_list}
 
         return {
-            ds: [m for m in metric_or_target_list if m.data_source == ds]
+            ds: [m for m in metric_list if m.data_source == ds]
             for ds in data_sources
         }
 
     def _build_targets_query(self, target_list, time_limits):
-        """Return lists of SQL fragments corresponding to targets."""
-        ds_targets = self._partition_by_data_source(target_list)
 
-        for i, ds in enumerate(ds_targets.keys()):
-            query_for_targets = ds.build_query_target(
-                ds_targets[ds], time_limits
+        target_queries = []
+        target_columns = []
+        dates_columns = []
+        target_joins = []
+
+        for i, t in enumerate(target_list):
+            query_for_target = t.data_source.build_query_target(
+                t, time_limits
             )
-            if i == 0:
-                targets_join = """SELECT
-                    ds_0.client_id
-                FROM (
-                    {query}
-                ) ds_0
-                """.format(query=query_for_targets)
 
-                if len(target_list) == 1:
-                    return targets_join
-            else:
-                targets_join += """  LEFT JOIN (
-            {query}
-            ) ds_{i} USING (client_id)
-                    """.format(
-                        query=query_for_targets, i=i
-                    )
-        return targets_join
+            target_queries.append(
+                """
+        ds_{i} AS (
+                {query}
+            ),""".format(i=i, query=query_for_target)
+            )
+
+            target_columns.append(
+                """
+                    ,ds_{i}.{name}
+                    ,ds_{i}.target_first_date as {name}_first_date
+                """.format(i=i, name=t.name)
+            )
+
+            if i != 0:
+                target_joins.append("""
+                    LEFT JOIN ds_{i}
+                        ON ds_{i}.client_id = ds_0.client_id
+                        AND ds_{i}.target_first_date <= ds_0.target_last_date
+                        AND ds_{i}.target_last_date >= ds_0.target_first_date
+                        """.format(
+                            i=i
+                        )
+                )
+
+            dates_columns.append(
+                "{name}_first_date".format(name=t.name)
+            )
+
+        target_def = "WITH" + " ".join(
+                    q for q in target_queries
+                )
+
+        joined_query = """
+        joined AS (
+            SELECT
+                ds_0.client_id
+                {target_columns}
+            FROM
+                ds_0
+                {target_joins}
+            ),""".format(target_columns=" ".join(
+                    c for c in target_columns
+                ),
+                target_joins=" ".join(
+                    j for j in target_joins
+                ),
+            )
+
+        unpivot_join = """
+         unpivoted AS (
+                SELECT * FROM joined
+                UNPIVOT(min_dates for target_date in ({target_first_dates}))
+            )
+        """.format(target_first_dates=", ".join(
+            c for c in dates_columns
+            )
+        )
+
+        return """
+        {query_for_targets}
+        {joined_query}
+        {final_table}
+        SELECT
+            client_id,
+            min(min_dates) as enrollment_date
+        FROM unpivoted
+        GROUP BY client_id
+        """.format(
+            query_for_targets=target_def,
+            joined_query=joined_query,
+            final_table=unpivot_join
+        )
 
     def _build_metrics_query_bits(
         self,
@@ -381,3 +448,17 @@ class HistoricalTarget:
                 )
 
         return metrics_columns, metrics_joins
+
+    def get_targets_sql(self):
+        if not self._targets_sql:
+            raise ValueError(
+                "Target SQL not available; call `get_single_window_data` first"
+            )
+        return self._targets_sql
+
+    def get_metrics_sql(self):
+        if not self._metrics_sql:
+            raise ValueError(
+                "Metric SQL not available; call `get_single_window_data` first"
+            )
+        return self._metrics_sql

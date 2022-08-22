@@ -111,7 +111,7 @@ class SegmentDataSource:
 
     def build_query_target(
         self,
-        target_list,
+        target,
         time_limits,
         from_expr_dataset=None,
     ):
@@ -121,29 +121,30 @@ class SegmentDataSource:
 
         This query returns all distinct client IDs that satisfy the criteria
         for inclusion in a historical analysis using this datasource.
-        Separate sub-queries are constructed for each additional data source
+        Separate sub-queries are constructed for each additional Segment
         in the analysis.
         """
         return """
-        SELECT {client_id} as client_id
+        SELECT
+            {client_id} as client_id,
+            target_first_date,
+            target_last_date,
+            {target_name}
         FROM (SELECT {client_id},
-                {segments}
+                MIN({submission_date}) as target_first_date,
+                MAX({submission_date}) as target_last_date,
+                {target}
             FROM {from_expr}
             WHERE {submission_date} BETWEEN '{fddr}' AND '{lddr}'
-            GROUP BY {client_id}, {submission_date})
-        WHERE {segment_names}
-        """.format(
+            GROUP BY {client_id})
+        WHERE {target_name}""".format(
             client_id=self.client_id_column,
             submission_date=self.submission_date_column,
             from_expr=self.from_expr_for(from_expr_dataset),
             fddr=time_limits.first_enrollment_date,
             lddr=time_limits.last_enrollment_date,
-            segments=",\n            ".join(
-                f"{m.select_expr} AS {m.name}" for m in target_list
-            ),
-            segment_names=" AND \n            ".join(
-                f"{m.name}" for m in target_list
-            ),
+            target=f"{target.select_expr} AS {target.name}",
+            target_name=target.name,
         )
 
     @window_start.validator
