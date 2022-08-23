@@ -22,10 +22,8 @@ class HistoricalTarget:
         auth.authenticate_user()
         print('Authenticated')
 
-        from mozanalysis.sizing import HistoricalTarget
-        from mozanalysis.bq import BigQueryContext
         from mozanalysis.metrics.desktop import active_hours, uri_count
-        from mozanalysis.segments.desktop import new_unique_profiles, \
+        from mozanalysis.segments.desktop import allweek_regular_v1, \
             new_or_resurrected_v3
 
         bq_context = BigQueryContext(
@@ -36,7 +34,8 @@ class HistoricalTarget:
         ht = HistoricalTarget(
             experiment_name='my_test_name',
             start_date='2021-01-01',
-            num_dates_enrollment=8
+            num_dates_enrollment=2,
+            analysis_length=4
         )
 
         # Run the query and get the results as a DataFrame
@@ -46,14 +45,17 @@ class HistoricalTarget:
                 active_hours,
                 uri_count
             ],
-            last_date_full_data='2021-01-30',
-            analysis_start_days=0,
-            analysis_length_days=21,
             target_list = [
-                new_unique_profiles,
+                allweek_regular_v1,
                 new_or_resurrected_v3
             ]
         )
+
+        # (Optional) After invoking `get_single_window_data`, return the targets
+        # and metrics queries used to construct the results DataFrame:
+        targets_sql = ht.get_targets_sql()
+
+        metrics_sql = ht.get_metrics_sql()
 
     Args:
         experiment_name (str): A simple name of this analysis, which is used
@@ -63,13 +65,6 @@ class HistoricalTarget:
         num_dates_enrollment (int): Number of days to consider to enroll clients
             in the analysis.
         analysis_length (int, optional): Number of days to include for analysis
-        targets_sql (str, optional): The SQL query that was executed to create
-            the targets
-            table; only defined after get_single_window_data method is called.
-        metrics_sql (str, optional): The SQL query that was executed to create the final
-            results table; only defined after get_single_wondow_data method is
-            called.
-
 
     Attributes:
         experiment_name (str): Name of the study, used in naming tables
@@ -79,12 +74,6 @@ class HistoricalTarget:
         num_dates_enrollment (int): Number of days to consider to enroll clients
             in the analysis.
         analysis_length (int, optional): Number of days to include for analysis
-        targets_sql (str): The SQL query that was executed to create the targets
-            table; only defined after get_single_window_data method is called.
-        metrics_sql (str): The SQL query that was executed to create the final
-            results table; only defined after get_single_wondow_data method is
-            called.
-
     """
 
     experiment_name = attr.ib()
@@ -111,15 +100,6 @@ class HistoricalTarget:
             bq_context (BigQueryContext): BigQuery configuration and client.
             metric_list (list of mozanalysis.metric.Metric): The metrics
                 to analyze.
-            last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '2019-03-22'. If you want to ignore
-                all data collected after a certain date (e.g. when the
-                experiment recipe was deactivated), then do that here.
-            analysis_start_days (int): the start of the analysis window,
-                measured in 'days since the client enrolled'. We ignore data
-                collected outside this analysis window.
-            analysis_length_days (int): the length of the analysis window,
-                measured in days.
             target_list (list of mozanalysis.segments.Segment): The targets
                 that define clients to be included in the analysis, based on
                 inclusion in a defined user segment. For each Segment included
@@ -129,13 +109,12 @@ class HistoricalTarget:
                 statement in every Segment in the target_list will be
                 returned by the query.
             custom_targets_query (str): A full SQL query to be used
-                in the main query::
-
-                    WITH targets AS ({custom_targets_query})
+                in the main query; must include a client_id column
+                to join to metrics tables and an enrollment_date:
 
                 N.B. this query's results must be uniquely keyed by
-                (client_id), or else your results will be subtly
-                wrong.
+                (client_id, enrollment_date), or else your results will be
+                subtly wrong.
 
         Returns:
             A pandas DataFrame of experiment data. One row per ``client_id``.
@@ -199,12 +178,12 @@ class HistoricalTarget:
                     time_limits.last_date_data_required,
                     "targets",
                     self.experiment_name,
-                    hash_ish(self.targets_sql),
+                    hash_ish(self._targets_sql),
                 ]
             )
         )
 
-        bq_context.run_query(self.targets_sql, targets_table_name)
+        bq_context.run_query(self._targets_sql, targets_table_name)
 
         self._metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
@@ -219,13 +198,13 @@ class HistoricalTarget:
                 [
                     time_limits.last_date_data_required,
                     self.experiment_name,
-                    hash_ish(self.metrics_sql)
+                    hash_ish(self._metrics_sql)
                 ]
             )
         )
 
         return bq_context.run_query(
-            self.metrics_sql,
+            self._metrics_sql,
             full_res_table_name).to_dataframe()
 
     def build_targets_query(
@@ -403,7 +382,7 @@ class HistoricalTarget:
         {final_table}
         SELECT
             client_id,
-            min(min_dates) as enrollment_date
+            max(min_dates) as enrollment_date
         FROM unpivoted
         GROUP BY client_id
         """.format(
