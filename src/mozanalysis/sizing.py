@@ -3,9 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import attr
 
-from mozanalysis.bq import sanitize_table_name_for_bq
+from typing import List, Optional, Tuple, Dict, Union
+
+from mozanalysis.bq import sanitize_table_name_for_bq, BigQueryContext
 from mozanalysis.utils import hash_ish
-from mozanalysis.experiment import TimeLimits, add_days
+from mozanalysis.experiment import AnalysisWindow, TimeLimits, add_days
+from mozanalysis.metrics import Metric, DataSource
+from mozanalysis.segments import Segment, SegmentDataSource
 from datetime import date
 
 
@@ -82,13 +86,14 @@ class HistoricalTarget:
     analysis_length = attr.ib(default=None)
     _metrics_sql = attr.ib(default=None)
     _targets_sql = attr.ib(default=None)
+    app_id = attr.ib(default=None)
 
     def get_single_window_data(
         self,
-        bq_context,
-        metric_list,
-        target_list=None,
-        custom_targets_query=None
+        bq_context: BigQueryContext,
+        metric_list: List[Metric],
+        target_list: Optional[List[Segment]] = None,
+        custom_targets_query: str = None,
     ):
         """Return a DataFrame containing per-client metric values.
 
@@ -137,24 +142,16 @@ class HistoricalTarget:
             )
 
         last_date_full_data = add_days(
-            self.start_date,
-            self.num_dates_enrollment + self.analysis_length - 1)
+            self.start_date, self.num_dates_enrollment + self.analysis_length - 1
+        )
 
-        today = date.today().strftime('%Y-%m-%d')
+        today = date.today().strftime("%Y-%m-%d")
         if last_date_full_data >= today:
             raise ValueError(
-                "Based on the start date, {}".format(
-                    self.start_date
-                )
-                + ", with {} days of enrollment ".format(
-                    self.num_dates_enrollment
-                )
-                + "and analysis of length {} days, ".format(
-                    self.analysis_length
-                )
-                + "the last day of analysis is {}".format(
-                    last_date_full_data
-                )
+                "Based on the start date, {}".format(self.start_date)
+                + ", with {} days of enrollment ".format(self.num_dates_enrollment)
+                + "and analysis of length {} days, ".format(self.analysis_length)
+                + "the last day of analysis is {}".format(last_date_full_data)
                 + ", which is in the future."
             )
 
@@ -169,7 +166,7 @@ class HistoricalTarget:
         self._targets_sql = self.build_targets_query(
             time_limits=time_limits,
             target_list=target_list,
-            custom_targets_query=custom_targets_query
+            custom_targets_query=custom_targets_query,
         )
 
         targets_table_name = sanitize_table_name_for_bq(
@@ -183,14 +180,13 @@ class HistoricalTarget:
             )
         )
 
+        print(self.targets_sql)
         bq_context.run_query(self._targets_sql, targets_table_name)
 
         self._metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
             time_limits=time_limits,
-            targets_table=bq_context.fully_qualify_table_name(
-                targets_table_name
-            ),
+            targets_table=bq_context.fully_qualify_table_name(targets_table_name),
         )
 
         full_res_table_name = sanitize_table_name_for_bq(
@@ -198,34 +194,34 @@ class HistoricalTarget:
                 [
                     time_limits.last_date_data_required,
                     self.experiment_name,
-                    hash_ish(self._metrics_sql)
+                    hash_ish(self._metrics_sql),
                 ]
             )
         )
 
         return bq_context.run_query(
-            self._metrics_sql,
-            full_res_table_name).to_dataframe()
+            self._metrics_sql, full_res_table_name
+        ).to_dataframe()
 
     def build_targets_query(
         self,
-        time_limits,
-        target_list=None,
-        custom_targets_query=None
+        time_limits: TimeLimits,
+        target_list: Optional[Segment] = None,
+        custom_targets_query: Optional[str] = None,
     ):
 
         return """
         {targets_query}
         """.format(
-            targets_query=custom_targets_query or
-            self._build_targets_query(target_list, time_limits)
+            targets_query=custom_targets_query
+            or self._build_targets_query(target_list, time_limits)
         )
 
     def build_metrics_query(
         self,
-        metric_list,
-        time_limits,
-        targets_table,
+        metric_list: List[Metric],
+        time_limits: TimeLimits,
+        targets_table: str,
     ) -> str:
         """Return a SQL query for querying metric data.
 
@@ -274,11 +270,11 @@ class HistoricalTarget:
             analysis_windows_query=analysis_windows_query,
             metrics_columns=",\n        ".join(metrics_columns),
             metrics_joins="\n".join(metrics_joins),
-            targets_table=targets_table
+            targets_table=targets_table,
         )
 
     @staticmethod
-    def _build_analysis_windows_query(analysis_windows):
+    def _build_analysis_windows_query(analysis_windows: Tuple[AnalysisWindow]):
         """Return SQL to construct a table of analysis windows.
 
         To query a time series, we construct a table of analysis windows
@@ -296,16 +292,17 @@ class HistoricalTarget:
             for aw in analysis_windows
         )
 
-    def _partition_by_data_source(self, metric_list):
+    def _partition_by_data_source(
+        self, metric_list
+    ) -> Dict[Union[DataSource, SegmentDataSource], List[Union[Metric, Segment]]]:
         """Return a dict mapping data sources to target/metric lists."""
         data_sources = {m.data_source for m in metric_list}
 
         return {
-            ds: [m for m in metric_list if m.data_source == ds]
-            for ds in data_sources
+            ds: [m for m in metric_list if m.data_source == ds] for ds in data_sources
         }
 
-    def _build_targets_query(self, target_list, time_limits):
+    def _build_targets_query(self, target_list: List[Segment], time_limits: TimeLimits):
 
         target_queries = []
         target_columns = []
@@ -313,42 +310,41 @@ class HistoricalTarget:
         target_joins = []
 
         for i, t in enumerate(target_list):
-            query_for_target = t.data_source.build_query_target(
-                t, time_limits
-            )
+            query_for_target = t.data_source.build_query_target(t, time_limits)
 
             target_queries.append(
                 """
         ds_{i} AS (
                 {query}
-            ),""".format(i=i, query=query_for_target)
+            ),""".format(
+                    i=i, query=query_for_target
+                )
             )
 
             target_columns.append(
                 """
                     ,ds_{i}.{name}
                     ,ds_{i}.target_first_date as {name}_first_date
-                """.format(i=i, name=t.name)
+                """.format(
+                    i=i, name=t.name
+                )
             )
 
             if i != 0:
-                target_joins.append("""
+                target_joins.append(
+                    """
                     LEFT JOIN ds_{i}
                         ON ds_{i}.client_id = ds_0.client_id
                         AND ds_{i}.target_first_date <= ds_0.target_last_date
                         AND ds_{i}.target_last_date >= ds_0.target_first_date
                         """.format(
-                            i=i
-                        )
+                        i=i
+                    )
                 )
 
-            dates_columns.append(
-                "{name}_first_date".format(name=t.name)
-            )
+            dates_columns.append("{name}_first_date".format(name=t.name))
 
-        target_def = "WITH" + " ".join(
-                    q for q in target_queries
-                )
+        target_def = "WITH" + " ".join(q for q in target_queries)
 
         joined_query = """
         joined AS (
@@ -358,22 +354,18 @@ class HistoricalTarget:
             FROM
                 ds_0
                 {target_joins}
-            ),""".format(target_columns=" ".join(
-                    c for c in target_columns
-                ),
-                target_joins=" ".join(
-                    j for j in target_joins
-                ),
-            )
+            ),""".format(
+            target_columns=" ".join(c for c in target_columns),
+            target_joins=" ".join(j for j in target_joins),
+        )
 
         unpivot_join = """
          unpivoted AS (
                 SELECT * FROM joined
                 UNPIVOT(min_dates for target_date in ({target_first_dates}))
             )
-        """.format(target_first_dates=", ".join(
-            c for c in dates_columns
-            )
+        """.format(
+            target_first_dates=", ".join(c for c in dates_columns)
         )
 
         return """
@@ -388,29 +380,22 @@ class HistoricalTarget:
         """.format(
             query_for_targets=target_def,
             joined_query=joined_query,
-            final_table=unpivot_join
+            final_table=unpivot_join,
         )
 
     def _build_metrics_query_bits(
-        self,
-        metric_list,
-        time_limits
-    ):
+        self, metric_list, time_limits
+    ) -> Tuple[List[str], List[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
         ds_metrics = self._partition_by_data_source(metric_list)
-        ds_metrics = {
-            ds: metrics
-            for ds, metrics in ds_metrics.items()
-        }
+        ds_metrics = {ds: metrics for ds, metrics in ds_metrics.items()}
 
         metrics_columns = []
         metrics_joins = []
 
         for i, ds in enumerate(ds_metrics.keys()):
             query_for_metrics = ds.build_query_targets(
-                ds_metrics[ds],
-                time_limits,
-                self.experiment_name
+                ds_metrics[ds], time_limits, self.experiment_name
             )
             metrics_joins.append(
                 """    LEFT JOIN (
