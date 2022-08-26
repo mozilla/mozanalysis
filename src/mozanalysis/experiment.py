@@ -1152,12 +1152,86 @@ class TimeSeriesResult:
             self._build_analysis_window_subset_query(analysis_window)
         ).to_dataframe()
 
+    def get_full_data(self, bq_context):
+        """Get the full DataFrame from TimeSeriesResult.
+
+        This DataFrame has a row for each client for each period of the time
+        series and may be very large. A warning will print the size of data
+        to be downloaded.
+
+        Args:
+            bq_context (BigQueryContext)
+        """
+        size = self._get_table_size(bq_context)
+
+        print(
+            "Downloading {full_table_name} ({size} GB)".format(
+                full_table_name=self.fully_qualified_table_name,
+                size=size
+            )
+        )
+
+        return bq_context.run_query(
+            """
+            SELECT * EXCEPT (client_id)
+            FROM {full_table_name}
+            """.format(
+                full_table_name=self.fully_qualified_table_name
+            )
+        ).to_dataframe()
+
+    def get_aggregated_data(
+        self,
+        bq_context,
+        metric_list,
+        aggregate_function="AVG"
+    ):
+        """Results from a time series query, aggregated over analysis windows
+        by a SQL aggregate function.
+
+        This DataFrame has a row for each analysis window, with a column
+        for each metric in the supplied metric_list.
+
+        Args:
+            bq_context (BigQueryContext)
+            metric_list (list of mozanalysis.metrics.Metric)
+            aggregate_fuction (str)
+        """
+
+        return bq_context.run_query(
+            self._build_aggregated_data_query(metric_list, aggregate_function)
+        ).to_dataframe()
+
     def keys(self):
         return [aw.start for aw in self.analysis_windows]
 
     def items(self, bq_context):
         for aw in self.analysis_windows:
             yield (aw.start, self.get(bq_context, aw))
+
+    def _get_table_size(self, bq_context):
+        """
+        Get table size being requested by `get_full_data`.
+        """
+
+        table_info = self.fully_qualified_table_name.split(".")
+
+        query = """
+                SELECT
+                    SUM(size_bytes)/pow(10,9) AS size
+                FROM
+                    `{project_id}.{table_id}`.__TABLES__
+                WHERE
+                  table_id = '{dataset_id}'
+                """.format(
+                    project_id=table_info[0],
+                    table_id=table_info[1],
+                    dataset_id=table_info[2]
+                )
+
+        size = bq_context.run_query(query).to_dataframe()
+
+        return size['size'].iloc[0].round(2)
 
     def _build_analysis_window_subset_query(self, analysis_window):
         """Return SQL for partitioning time series results.
@@ -1177,6 +1251,30 @@ class TimeSeriesResult:
             full_table_name=self.fully_qualified_table_name,
             aws=analysis_window.start,
             awe=analysis_window.end,
+        )
+
+    def _build_aggregated_data_query(self, metric_list, aggregate_function):
+
+        return """
+        SELECT
+            analysis_window_start,
+            analysis_window_end,
+            {agg_metrics}
+        FROM
+            {full_table_name}
+        GROUP BY
+            analysis_window_start, analysis_window_end
+        ORDER BY
+            analysis_window_start
+        """.format(
+            agg_metrics=",\n            ".join(
+                "{agg}({n}) AS {n}".format(
+                    agg=aggregate_function,
+                    n=m.name
+                )
+                for m in metric_list
+            ),
+            full_table_name=self.fully_qualified_table_name
         )
 
     @analysis_windows.validator

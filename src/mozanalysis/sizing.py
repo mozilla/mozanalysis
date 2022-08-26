@@ -5,7 +5,7 @@ import attr
 
 from mozanalysis.bq import sanitize_table_name_for_bq
 from mozanalysis.utils import hash_ish
-from mozanalysis.experiment import TimeLimits, add_days
+from mozanalysis.experiment import TimeLimits, TimeSeriesResult, add_days
 from datetime import date
 
 
@@ -21,6 +21,9 @@ class HistoricalTarget:
         from google.colab import auth
         auth.authenticate_user()
         print('Authenticated')
+        # Or, if running in a local notebook, authorize with gcloud CLI:
+        # `gcloud auth login --update-adc`
+
 
         from mozanalysis.metrics.desktop import active_hours, uri_count
         from mozanalysis.segments.desktop import allweek_regular_v1, \
@@ -138,7 +141,8 @@ class HistoricalTarget:
 
         last_date_full_data = add_days(
             self.start_date,
-            self.num_dates_enrollment + self.analysis_length - 1)
+            self.num_dates_enrollment + self.analysis_length - 1
+        )
 
         today = date.today().strftime('%Y-%m-%d')
         if last_date_full_data >= today:
@@ -206,6 +210,91 @@ class HistoricalTarget:
         return bq_context.run_query(
             self._metrics_sql,
             full_res_table_name).to_dataframe()
+
+    def get_time_series_data(
+            self,
+            bq_context,
+            metric_list,
+            time_series_period="weekly",
+            custom_targets_query=None,
+            target_list=None,
+    ):
+
+        last_date_full_data = add_days(
+            self.start_date,
+            self.num_dates_enrollment + self.analysis_length - 1
+        )
+
+        today = date.today().strftime('%Y-%m-%d')
+        if last_date_full_data >= today:
+            raise ValueError(
+                "Based on the start date, {}".format(
+                    self.start_date
+                )
+                + ", with {} days of enrollment ".format(
+                    self.num_dates_enrollment
+                )
+                + "and analysis of length {} days, ".format(
+                    self.analysis_length
+                )
+                + "the last day of analysis is {}".format(
+                    last_date_full_data
+                )
+                + ", which is in the future."
+            )
+
+        time_limits = TimeLimits.for_ts(
+            self.start_date,
+            last_date_full_data,
+            time_series_period,
+            self.num_dates_enrollment,
+        )
+
+        self._targets_sql = self.build_targets_query(
+            time_limits=time_limits,
+            target_list=target_list,
+            custom_targets_query=custom_targets_query
+        )
+
+        targets_table_name = sanitize_table_name_for_bq(
+            "_".join(
+                [
+                    time_limits.last_date_data_required,
+                    "targets",
+                    self.experiment_name,
+                    hash_ish(self._targets_sql),
+                ]
+            )
+        )
+
+        bq_context.run_query(self._targets_sql, targets_table_name)
+
+        self._metrics_sql = self.build_metrics_query(
+            metric_list=metric_list,
+            time_limits=time_limits,
+            targets_table=bq_context.fully_qualify_table_name(
+                targets_table_name
+            ),
+        )
+
+        full_res_table_name = sanitize_table_name_for_bq(
+            "_".join(
+                [
+                    time_limits.last_date_data_required,
+                    self.experiment_name,
+                    hash_ish(self._metrics_sql)
+                ]
+            )
+        )
+
+        bq_context.run_query(self._metrics_sql, full_res_table_name)
+
+        return TimeSeriesResult(
+            fully_qualified_table_name=bq_context.fully_qualify_table_name(
+                full_res_table_name
+            ),
+            analysis_windows=time_limits.analysis_windows,
+        )
 
     def build_targets_query(
         self,
