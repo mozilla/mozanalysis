@@ -91,7 +91,8 @@ class HistoricalTarget:
         bq_context,
         metric_list,
         target_list=None,
-        custom_targets_query=None
+        custom_targets_query=None,
+        replace_tables=False,
     ):
         """Return a DataFrame containing per-client metric values.
 
@@ -118,6 +119,9 @@ class HistoricalTarget:
                 N.B. this query's results must be uniquely keyed by
                 (client_id, enrollment_date), or else your results will be
                 subtly wrong.
+            replace_tables (bool): If True, delete tables that exist in
+                BigQuery with the same name; used to rerun analyses under
+                the same experiment name with different settings
 
         Returns:
             A pandas DataFrame of experiment data. One row per ``client_id``.
@@ -187,7 +191,11 @@ class HistoricalTarget:
             )
         )
 
-        bq_context.run_query(self._targets_sql, targets_table_name)
+        bq_context.run_query(
+            self._targets_sql,
+            targets_table_name,
+            replace_tables
+        )
 
         self._metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
@@ -209,7 +217,8 @@ class HistoricalTarget:
 
         return bq_context.run_query(
             self._metrics_sql,
-            full_res_table_name).to_dataframe()
+            full_res_table_name,
+            replace_tables).to_dataframe()
 
     def get_time_series_data(
             self,
@@ -218,8 +227,54 @@ class HistoricalTarget:
             time_series_period="weekly",
             custom_targets_query=None,
             target_list=None,
+            replace_tables=False,
     ):
+        """Return a TimeSeriesResult with per-client metric values.
 
+        Roughly equivalent to looping over :meth:`.get_single_window_data`
+        with different analysis windows, and reorganising the results.
+
+        Args:
+            bq_context (BigQueryContext): BigQuery configuration and client.
+            metric_list (list of mozanalysis.metric.Metric): The metrics
+                to analyze.
+            time_series_period (str): Period of the time series for which to
+                retrieve data. Options are daily, weekly, and 28_days.
+            target_list (list of mozanalysis.segments.Segment): The targets
+                that define clients to be included in the analysis, based on
+                inclusion in a defined user segment. For each Segment included
+                in the list, client IDs are identified in the
+                SegmentDataSource that based on the select_for statement in
+                the Segment. Client IDs that satisfy the select_for
+                statement in every Segment in the target_list will be
+                returned by the query.
+            custom_targets_query (str): A full SQL query to be used
+                in the main query; must include a client_id column
+                to join to metrics tables and an enrollment_date:
+
+                N.B. this query's results must be uniquely keyed by
+                (client_id, enrollment_date), or else your results will be
+                subtly wrong.
+            replace_tables (bool): If True, delete tables that exist in
+                BigQuery with the same name; used to rerun analyses under
+                the same experiment name with different settings
+
+        Returns:
+            A :class:`mozanalysis.experiment.TimeSeriesResult` object,
+            which may be used to obtain a
+            pandas DataFrame of per-client metric data, for each
+            analysis window. Each DataFrame is a pandas DataFrame in
+            "the standard format": one row per client, some metadata
+            columns, plus one column per metric and sanity-check metric.
+            Its columns (not necessarily in order):
+
+                * enrollment date and client_id
+                * [metric 1]: The client's value for the first metric in
+                  ``metric_list``.
+                * ...
+                * [metric n]: The client's value for the nth (final)
+                  metric in ``metric_list``.
+        """
         last_date_full_data = add_days(
             self.start_date,
             self.num_dates_enrollment + self.analysis_length - 1
@@ -267,7 +322,11 @@ class HistoricalTarget:
             )
         )
 
-        bq_context.run_query(self._targets_sql, targets_table_name)
+        bq_context.run_query(
+            self._targets_sql,
+            targets_table_name,
+            replace_tables
+        )
 
         self._metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
@@ -287,7 +346,11 @@ class HistoricalTarget:
             )
         )
 
-        bq_context.run_query(self._metrics_sql, full_res_table_name)
+        bq_context.run_query(
+            self._metrics_sql,
+            full_res_table_name,
+            replace_tables
+        )
 
         return TimeSeriesResult(
             fully_qualified_table_name=bq_context.fully_qualify_table_name(
