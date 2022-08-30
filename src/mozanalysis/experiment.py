@@ -1171,8 +1171,8 @@ class TimeSeriesResult:
             )
         )
 
-      table = bq_context.client.get_table(full_table_name)
-      return bq_context.client.list_rows(table).to_dataframe()
+        table = bq_context.client.get_table(self.fully_qualified_table_name)
+        return bq_context.client.list_rows(table).to_dataframe()
 
     def get_aggregated_data(
         self,
