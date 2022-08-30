@@ -1171,14 +1171,8 @@ class TimeSeriesResult:
             )
         )
 
-        return bq_context.run_query(
-            """
-            SELECT * EXCEPT (client_id)
-            FROM {full_table_name}
-            """.format(
-                full_table_name=self.fully_qualified_table_name
-            )
-        ).to_dataframe()
+      table = bq_context.client.get_table(full_table_name)
+      return bq_context.client.list_rows(table).to_dataframe()
 
     def get_aggregated_data(
         self,
@@ -1220,13 +1214,13 @@ class TimeSeriesResult:
                 SELECT
                     SUM(size_bytes)/pow(10,9) AS size
                 FROM
-                    `{project_id}.{table_id}`.__TABLES__
+                    `{project_id}.{dataset_id}`.__TABLES__
                 WHERE
-                  table_id = '{dataset_id}'
+                  table_id = '{table_id}'
                 """.format(
                     project_id=table_info[0],
-                    table_id=table_info[1],
-                    dataset_id=table_info[2]
+                    dataset_id=table_info[1],
+                    table_id=table_info[2]
                 )
 
         size = bq_context.run_query(query).to_dataframe()
