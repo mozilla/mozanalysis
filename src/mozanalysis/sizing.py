@@ -5,7 +5,8 @@ import attr
 
 from mozanalysis.bq import sanitize_table_name_for_bq
 from mozanalysis.utils import hash_ish
-from mozanalysis.experiment import TimeLimits, TimeSeriesResult, add_days
+from mozanalysis.experiment import TimeLimits, TimeSeriesResult, add_days,\
+        AnalysisWindow, date_sub
 from datetime import date
 
 
@@ -21,9 +22,6 @@ class HistoricalTarget:
         from google.colab import auth
         auth.authenticate_user()
         print('Authenticated')
-        # Or, if running in a local notebook, authorize with gcloud CLI:
-        # `gcloud auth login --update-adc`
-
 
         from mozanalysis.metrics.desktop import active_hours, uri_count
         from mozanalysis.segments.desktop import allweek_regular_v1, \
@@ -54,8 +52,6 @@ class HistoricalTarget:
             ]
         )
 
-        # (Optional) After invoking `get_single_window_data`, return the targets
-        # and metrics queries used to construct the results DataFrame:
         targets_sql = ht.get_targets_sql()
 
         metrics_sql = ht.get_metrics_sql()
@@ -65,9 +61,13 @@ class HistoricalTarget:
             to create table names when saving results in BigQuery.
         start_date (str): e.g. '2019-01-01'. First date for historical data to be
             retrieved.
-        num_dates_enrollment (int): Number of days to consider to enroll clients
+        analysis_length (int): Number of days to include for analysis
+        num_dates_enrollment (int, default 7): Number of days to consider to enroll clients
             in the analysis.
-        analysis_length (int, optional): Number of days to include for analysis
+        continuous_enrollment (bool): Indicates if the analysis dates
+            and enrollment should be overlap; clients that satisfy the
+            target conditions at any point in the analysis will be 
+            included for the entire window when calculating metrics.
 
     Attributes:
         experiment_name (str): Name of the study, used in naming tables
@@ -81,8 +81,9 @@ class HistoricalTarget:
 
     experiment_name = attr.ib()
     start_date = attr.ib()
-    num_dates_enrollment = attr.ib()
-    analysis_length = attr.ib(default=None)
+    analysis_length = attr.ib()
+    num_dates_enrollment = attr.ib(default=7)
+    continuous_enrollment = attr.ib(default=False)
     _metrics_sql = attr.ib(default=None)
     _targets_sql = attr.ib(default=None)
 
@@ -166,13 +167,20 @@ class HistoricalTarget:
                 + ", which is in the future."
             )
 
-        time_limits = TimeLimits.for_single_analysis_window(
-            self.start_date,
-            last_date_full_data,
-            0,
-            self.analysis_length,
-            self.num_dates_enrollment,
-        )
+        if self.continuous_enrollment:
+            time_limits = ContinuousEnrollmentTimeLimits.for_single_analysis_window(
+                self.start_date,
+                self.analysis_length,
+            )
+
+        else:
+            time_limits = TimeLimits.for_single_analysis_window(
+                self.start_date,
+                last_date_full_data,
+                0,
+                self.analysis_length,
+                self.num_dates_enrollment,
+            )
 
         self._targets_sql = self.build_targets_query(
             time_limits=time_limits,
@@ -562,7 +570,8 @@ class HistoricalTarget:
             query_for_metrics = ds.build_query_targets(
                 ds_metrics[ds],
                 time_limits,
-                self.experiment_name
+                self.experiment_name,
+                continuous_enrollment=self.continuous_enrollment
             )
             metrics_joins.append(
                 """    LEFT JOIN (
@@ -593,3 +602,92 @@ class HistoricalTarget:
                 "Metric SQL not available; call `get_single_window_data` first"
             )
         return self._metrics_sql
+
+
+@attr.s(frozen=True, slots=True)
+class ContinuousEnrollmentTimeLimits:
+    """Expresses time limits for different kinds of analysis windows.
+
+    Instantiated and used by the :class:`Experiment` class; end users
+    should not need to interact with it.
+
+    Do not directly instantiate: use the constructors provided.
+
+    There are several time constraints needed to specify a valid query
+    for experiment data:
+
+        * When did enrollments start?
+        * When did enrollments stop?
+        * How long after enrollment does the analysis window start?
+        * How long is the analysis window?
+
+    Even if these four quantities are specified directly, it is
+    important to check that they are consistent with the available
+    data - i.e. that we have data for the entire analysis window for
+    every enrollment.
+
+    Furthermore, there are some extra quantities that are useful for
+    writing efficient queries:
+
+        * What is the first date for which we need data from our data
+          source?
+        * What is the last date for which we need data from our data
+          source?
+
+    Instances of this class store all these quantities and do validation
+    to make sure that they're consistent. The "store lots of overlapping
+    state and validate" strategy was chosen over "store minimal state
+    and compute on the fly" because different state is supplied in
+    different contexts.
+    """
+
+    first_enrollment_date = attr.ib(type=str)
+    last_enrollment_date = attr.ib(type=str)
+
+    first_date_data_required = attr.ib(type=str)
+    last_date_data_required = attr.ib(type=str)
+
+    analysis_windows = attr.ib()  # type: tuple[AnalysisWindow]
+
+    @classmethod
+    def for_single_analysis_window(
+        cls,
+        first_date_full_data,
+        analysis_length_dates,
+    ):
+        """Return a ``TimeLimits`` instance with the following parameters
+
+        Args:
+            first_enrollment_date (str): First date on which enrollment
+                events were received; the start date of the experiment.
+            last_date_full_data (str): The most recent date for which we
+                have complete data, e.g. '2019-03-22'. If you want to ignore
+                all data collected after a certain date (e.g. when the
+                experiment recipe was deactivated), then do that here.
+            analysis_start_days (int): the start of the analysis window,
+                measured in 'days since the client enrolled'. We ignore data
+                collected outside this analysis window.
+            analysis_length_days (int): the length of the analysis window,
+                measured in days.
+            num_dates_enrollment (int, optional): Only include this many days
+                of enrollments. If ``None`` then use the maximum number of days
+                as determined by the metric's analysis window and
+                ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The
+                factor ``7`` removes weekly seasonality, and the ``+1``
+                accounts for the fact that enrollment typically starts a few
+                hours before UTC midnight.
+        """
+        analysis_window = AnalysisWindow(
+            0, analysis_length_dates - 1
+        )
+
+        last_date_data_required = add_days(first_date_full_data, analysis_length_dates)
+
+        tl = cls(
+            first_enrollment_date=first_date_full_data,
+            last_enrollment_date=last_date_data_required,
+            first_date_data_required=first_date_full_data,
+            last_date_data_required=last_date_data_required,
+            analysis_windows=(analysis_window,),
+        )
+        return tl

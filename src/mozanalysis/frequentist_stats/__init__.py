@@ -3,6 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from statsmodels.stats.power import zt_ind_solve_power
+import numpy as np
+
+
+from statsmodels.stats.power import zt_ind_solve_power
+import numpy as np
 
 
 def sample_size_calc(
@@ -12,6 +17,7 @@ def sample_size_calc(
     alpha=.05,
     power=.90,
     solver=None,
+    outlier_percentile=99.5,
     **solver_kwargs
 ):
 
@@ -34,6 +40,8 @@ def sample_size_calc(
             statsmodels.stats.power.zt_ind_solve_power is used
             (for those already implemented in statsmodels, see:
             https://www.statsmodels.org/dev/stats.html#power-and-sample-size-calculations)
+        outlier_percentile(float, default .995): Percentile at which to trim
+            each columns.
 
     Returns a sorted dictionary:
         Keys in the dictionary are the metrics column names from the DataFrame; values
@@ -45,9 +53,10 @@ def sample_size_calc(
         solver = zt_ind_solve_power
 
     def _get_sample_size_col(col):
-
-        sd = df[col].std()
-        mean = df[col].mean()
+        
+        p = np.percentile(df[col], q=[outlier_percentile])[0]
+        sd = df.loc[df[col] <= p, col].std()
+        mean = df.loc[df[col] <= p, col].mean()
         es = (rel_effect_size*mean)/sd
 
         return solver(

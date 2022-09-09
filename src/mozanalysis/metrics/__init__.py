@@ -179,7 +179,8 @@ class DataSource:
         metric_list,
         time_limits,
         experiment_name,
-        from_expr_dataset=None
+        from_expr_dataset=None,
+        continuous_enrollment=False
     ):
         """Return a nearly-self contained SQL query that constructs
         the metrics query for targeting historical data without
@@ -199,9 +200,7 @@ class DataSource:
             LEFT JOIN {from_expr} ds
                 ON ds.{client_id} = t.client_id
                 AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
-                AND ds.{submission_date} BETWEEN
-                    DATE_ADD(t.enrollment_date, interval t.analysis_window_start day)
-                    AND DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)
+                {enrollment_condition}
         GROUP BY
             t.client_id,
             t.enrollment_date,
@@ -217,7 +216,13 @@ class DataSource:
                     se=m.select_expr.format(experiment_name=experiment_name), n=m.name
                 )
                 for m in metric_list
-            )
+            ),
+            enrollment_condition="" if continuous_enrollment else
+                """AND ds.{submission_date} BETWEEN
+                    DATE_ADD(t.enrollment_date, interval t.analysis_window_start day)
+                    AND DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)""".format(
+                        submission_date=self.submission_date_column
+                    )
         )
 
     def get_sanity_metrics(self, experiment_slug):
