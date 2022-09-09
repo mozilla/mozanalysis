@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from mozanalysis.metrics import DataSource, Metric, agg_sum
+from mozanalysis.metrics import DataSource, Metric, agg_sum, agg_any
 
 #: DataSource: The baseline ping table.
 baseline = DataSource(
@@ -110,4 +110,26 @@ first_run_date = Metric(
     select_expr="MIN(client_info.first_run_date)",
     friendly_name="First run date",
     description="The earliest first-run date reported by each client.",
+)
+
+#: Metric: ...
+one_week_retention = Metric(
+    name='retained',
+    friendly_name="Retention",
+    description="Did the client return in the week after enrollment",
+    select_expr=agg_any(
+        """submission_date BETWEEN DATE_ADD(t.enrollment_date, interval 7 day)
+        AND DATE_ADD(t.enrollment_date, interval 14 day)"""
+    ),
+    data_source=baseline
+)
+
+#: Metric: ...
+days_of_use = Metric(
+    name='dou',
+    friendly_name="Days of use",
+    description="""The number of days in an observation window
+    that clients used the browser.""",
+    select_expr="COUNT(DISTINCT DATE(submission_timestamp))",
+    data_source=baseline
 )

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from statsmodels.stats.power import TTestPower
+from statsmodels.stats.power import zt_ind_solve_power
 
 
 def sample_size_calc(
@@ -11,7 +11,8 @@ def sample_size_calc(
     rel_effect_size=.01,
     alpha=.05,
     power=.90,
-    solver=None
+    solver=None,
+    **solver_kwargs
 ):
 
     """
@@ -28,9 +29,11 @@ def sample_size_calc(
         alpha (float, default .05): Significance level for the experiment.
         power (float, default .90): Probability of detecting an effect,
             when a significant effect exists.
-        solver (class with solve_power method, default None): User-defined
+        solver (method, default None): User-defined
             sample size solver; defaults to None, in which case
-            statsmodels.stats.power.TTestPower.solve_power is used
+            statsmodels.stats.power.zt_ind_solve_power is used
+            (for those already implemented in statsmodels, see:
+            https://www.statsmodels.org/dev/stats.html#power-and-sample-size-calculations)
 
     Returns a sorted dictionary:
         Keys in the dictionary are the metrics column names from the DataFrame; values
@@ -39,7 +42,7 @@ def sample_size_calc(
     """
 
     if not solver:
-        solver = TTestPower()
+        solver = zt_ind_solve_power
 
     def _get_sample_size_col(col):
 
@@ -47,7 +50,9 @@ def sample_size_calc(
         mean = df[col].mean()
         es = (rel_effect_size*mean)/sd
 
-        return solver.solve_power(effect_size=es, alpha=alpha, power=power, nobs=None)
+        return solver(
+            effect_size=es, alpha=alpha, power=power, nobs1=None, **solver_kwargs
+        )
     metric_names = [m.name for m in metrics_list]
     x = {col: _get_sample_size_col(col) for col in metric_names}
     return {k: v for k, v in sorted(x.items(), key=lambda item: item[1], reverse=True)}
