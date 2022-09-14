@@ -200,7 +200,9 @@ class DataSource:
             LEFT JOIN {from_expr} ds
                 ON ds.{client_id} = t.client_id
                 AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
-                {enrollment_condition}
+                AND ds.{submission_date} BETWEEN
+                    DATE_ADD(t.enrollment_date, interval t.analysis_window_start day)
+                    AND DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)
         GROUP BY
             t.client_id,
             t.enrollment_date,
@@ -217,12 +219,6 @@ class DataSource:
                 )
                 for m in metric_list
             ),
-            enrollment_condition="" if continuous_enrollment else
-                """AND ds.{submission_date} BETWEEN
-                    DATE_ADD(t.enrollment_date, interval t.analysis_window_start day)
-                    AND DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)""".format(
-                        submission_date=self.submission_date_column
-                    )
         )
 
     def get_sanity_metrics(self, experiment_slug):

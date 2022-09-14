@@ -114,7 +114,7 @@ first_run_date = Metric(
 
 #: Metric: ...
 one_week_retention = Metric(
-    name='retained',
+    name='one_week_retention',
     friendly_name="Retention",
     description="Did the client return in the week after enrollment",
     select_expr=agg_any(
@@ -126,7 +126,7 @@ one_week_retention = Metric(
 
 #: Metric: ...
 days_of_use = Metric(
-    name='dou',
+    name='days_of_use',
     friendly_name="Days of use",
     description="""The number of days in an observation window
     that clients used the browser.""",

@@ -6,7 +6,7 @@ import attr
 from mozanalysis.bq import sanitize_table_name_for_bq
 from mozanalysis.utils import hash_ish
 from mozanalysis.experiment import TimeLimits, TimeSeriesResult, add_days,\
-        AnalysisWindow, date_sub
+        AnalysisWindow
 from datetime import date
 
 
@@ -62,11 +62,11 @@ class HistoricalTarget:
         start_date (str): e.g. '2019-01-01'. First date for historical data to be
             retrieved.
         analysis_length (int): Number of days to include for analysis
-        num_dates_enrollment (int, default 7): Number of days to consider to enroll clients
-            in the analysis.
+        num_dates_enrollment (int, default 7): Number of days to consider to
+            enroll clients in the analysis.
         continuous_enrollment (bool): Indicates if the analysis dates
             and enrollment should be overlap; clients that satisfy the
-            target conditions at any point in the analysis will be 
+            target conditions at any point in the analysis will be
             included for the entire window when calculating metrics.
 
     Attributes:
