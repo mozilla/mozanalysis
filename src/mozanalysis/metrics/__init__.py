@@ -179,6 +179,7 @@ class DataSource:
         metric_list,
         time_limits,
         experiment_name,
+        analysis_length,
         from_expr_dataset=None,
         continuous_enrollment=False
     ):
@@ -199,10 +200,7 @@ class DataSource:
         FROM targets t
             LEFT JOIN {from_expr} ds
                 ON ds.{client_id} = t.client_id
-                AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
-                AND ds.{submission_date} BETWEEN
-                    DATE_ADD(t.enrollment_date, interval t.analysis_window_start day)
-                    AND DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)
+                {date_clause}
         GROUP BY
             t.client_id,
             t.enrollment_date,
@@ -211,14 +209,29 @@ class DataSource:
             client_id=self.client_id_column,
             submission_date=self.submission_date_column,
             from_expr=self.from_expr_for(from_expr_dataset),
-            fddr=time_limits.first_date_data_required,
-            lddr=time_limits.last_date_data_required,
+            
             metrics=",\n            ".join(
                 "{se} AS {n}".format(
                     se=m.select_expr.format(experiment_name=experiment_name), n=m.name
                 )
                 for m in metric_list
             ),
+            date_clause="""
+                AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
+                AND ds.{submission_date} BETWEEN
+                    DATE_ADD(t.enrollment_date, interval t.analysis_window_start day)
+                    AND DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)""".format(
+                        client_id=self.client_id_column,
+                        submission_date=self.submission_date_column,
+                        fddr=time_limits.first_date_data_required,
+                        lddr=time_limits.last_date_data_required,
+                    ) if not continuous_enrollment else
+                    """AND ds.{submission_date} BETWEEN
+                    t.enrollment_date
+                    AND DATE_ADD(t.enrollment_date, interval {analysis_length} day)""".format(
+                        submission_date=self.submission_date_column,
+                        analysis_length=analysis_length
+                    )
         )
 
     def get_sanity_metrics(self, experiment_slug):

@@ -1194,7 +1194,9 @@ class TimeSeriesResult:
 
         return bq_context.run_query(
             self._build_aggregated_data_query(metric_list, aggregate_function)
-        ).to_dataframe()
+        ).to_dataframe(), bq_context.run_query(
+            self._table_sample_size_query()
+        ).to_dataframe()["population_size"].values[0]
 
     def keys(self):
         return [aw.start for aw in self.analysis_windows]
@@ -1270,6 +1272,19 @@ class TimeSeriesResult:
             ),
             full_table_name=self.fully_qualified_table_name
         )
+
+    def _table_sample_size_query(self, client_id_column="client_id"):
+        return """
+        SELECT 
+            COUNT(*) as population_size
+        FROM
+            (SELECT DISTINCT
+                {client_column}
+            FROM
+                {full_table_name})    
+        """.format(
+            client_column=client_id_column,
+            full_table_name=self.fully_qualified_table_name)
 
     @analysis_windows.validator
     def _check_analysis_windows(self, attribute, value):

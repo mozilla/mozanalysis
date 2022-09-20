@@ -571,6 +571,7 @@ class HistoricalTarget:
                 ds_metrics[ds],
                 time_limits,
                 self.experiment_name,
+                analysis_length=self.analysis_length,
                 continuous_enrollment=self.continuous_enrollment
             )
             metrics_joins.append(

@@ -9,6 +9,7 @@ from mozanalysis.bq import BigQueryContext
 from mozanalysis.experiment import TimeSeriesResult
 from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
 import numpy as np
+import pandas as pd
 
 
 def difference_of_proportions_sample_size_calc(
@@ -61,8 +62,15 @@ def difference_of_proportions_sample_size_calc(
         )
 
     metric_names = [m.name for m in metrics_list]
-    x = {col: _get_sample_size_col(col) for col in metric_names}
-    return {k: v for k, v in sorted(x.items(), key=lambda item: item[1], reverse=True)}
+    results = {}
+    for col in metric_names:
+        sample_size = _get_sample_size_col(col)
+        pop_percent = 100.*(sample_size/len(df))
+        results[col] = {
+            "sample_size": sample_size,
+            "population_percent": pop_percent
+        }
+    return results
 
 
 def z_or_t_ind_sample_size_calc(
@@ -119,8 +127,15 @@ def z_or_t_ind_sample_size_calc(
         )
 
     metric_names = [m.name for m in metrics_list]
-    x = {col: _get_sample_size_col(col) for col in metric_names}
-    return {k: v for k, v in sorted(x.items(), key=lambda item: item[1], reverse=True)}
+    results = {}
+    for col in metric_names:
+        sample_size = _get_sample_size_col(col)
+        pop_percent = 100.*(sample_size/len(df))
+        results[col] = {
+            "sample_size": sample_size,
+            "population_percent": pop_percent
+        }
+    return results
 
 
 def empirical_effect_size_sample_size_calc(
@@ -199,7 +214,7 @@ def empirical_effect_size_sample_size_calc(
 
         return t_sample_size*are[parent_distribution]
 
-    res_mean = res.get_aggregated_data(
+    res_mean, pop_size = res.get_aggregated_data(
         bq_context=bq_context,
         metric_list=metric_list,
         aggregate_function="AVG"
@@ -207,17 +222,17 @@ def empirical_effect_size_sample_size_calc(
 
     res_mean.sort_values(by="analysis_window_start", ascending=True, inplace=True)
     effect_size = {
-        m.name: res_mean[m.name].diff().quantile(q=quantile) for m in metric_list
+        m.name: res_mean[m.name].diff().abs().quantile(q=quantile) for m in metric_list
         }
 
-    res_std = res.get_aggregated_data(
+    res_std, _ = res.get_aggregated_data(
         bq_context=bq_context,
         metric_list=metric_list,
         aggregate_function="STDDEV"
     )
     std = {m.name: res_std[m.name].quantile(q=quantile) for m in metric_list}
 
-    return {
+    size_dict = {
         m.name: {
             "effect_size": effect_size[m.name],
             "std_dev": std[m.name],
@@ -230,6 +245,11 @@ def empirical_effect_size_sample_size_calc(
             )
         } for m in metric_list
     }
+
+    for k in size_dict.keys():
+        size_dict[k]["population_percent"] = 100.*(size_dict[k]["sample_size"]/pop_size)
+
+    return size_dict
 
 
 def poisson_diff_solve_sample_size(
@@ -259,10 +279,9 @@ def poisson_diff_solve_sample_size(
         outlier_percentile(float, default .995): Percentile at which to trim
             each columns.
 
-    Returns a sorted dictionary:
+    Returns a dictionary:
         Keys in the dictionary are the metrics column names from the DataFrame; values
         are the required sample size to achieve the desired power for that metric.
-        The dictionary is sorted by required sample size, in descending order.
     """
 
     def _get_sample_size_col(col):
@@ -276,8 +295,17 @@ def poisson_diff_solve_sample_size(
         z_power = norm.ppf(power)
 
         denom = (es/(z_alpha+z_power))**2
-        return (mean+es)/denom
+        sample_size = (mean+es)/denom
+        return sample_size
 
     metric_names = [m.name for m in metrics_list]
-    x = {col: _get_sample_size_col(col) for col in metric_names}
-    return {k: v for k, v in sorted(x.items(), key=lambda item: item[1], reverse=True)}
+    results = {}
+    for col in metric_names:
+        sample_size = _get_sample_size_col(col)
+        pop_percent = 100.*(sample_size/len(df))
+        results[col] = {
+            "sample_size": sample_size,
+            "population_percent": pop_percent
+        }
+    return results
+    
