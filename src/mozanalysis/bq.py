@@ -1,10 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import logging
 import re
 
 from google.api_core.exceptions import Conflict
 from google.cloud import bigquery
+
+logger = logging.getLogger(__name__)
 
 
 def sanitize_table_name_for_bq(table_name):
@@ -36,7 +39,7 @@ class BigQueryContext:
         self.project_id = project_id
         self.client = bigquery.Client(project=project_id)
 
-    def run_query(self, sql, results_table=None):
+    def run_query(self, sql, results_table=None, replace_tables=False):
         """Run a query and return the result.
 
         If ``results_table`` is provided, then save the results
@@ -50,9 +53,17 @@ class BigQueryContext:
                 cache key (if the table already exists, we ignore ``sql``
                 and return the table's contents), so it is wise for
                 ``results_table`` to include a hash of ``sql``.
+            replace_tables (bool): Indicates if the results table should
+                be replaced with new results, if that table is found.
         """
         if not results_table:
             return self.client.query(sql).result()
+
+        if replace_tables:
+            self.client.delete_table(
+                self.fully_qualify_table_name(results_table),
+                not_found_ok=True,
+            )
 
         try:
             full_res = self.client.query(
@@ -63,11 +74,11 @@ class BigQueryContext:
                     )
                 ),
             ).result()
-            print("Saved into", results_table)
+            logger.info("Saved into", results_table)
             return full_res
 
         except Conflict:
-            print("Table already exists. Reusing", results_table)
+            logger.info("Table already exists. Reusing", results_table)
             return self.client.list_rows(self.fully_qualify_table_name(results_table))
 
     def fully_qualify_table_name(self, table_name):

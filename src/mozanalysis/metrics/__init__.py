@@ -4,8 +4,11 @@
 from typing import Optional
 
 import attr
+import logging
 
 from mozanalysis.experiment import AnalysisBasis
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(frozen=True, slots=True)
@@ -179,7 +182,9 @@ class DataSource:
         metric_list,
         time_limits,
         experiment_name,
-        from_expr_dataset=None
+        analysis_length,
+        from_expr_dataset=None,
+        continuous_enrollment=False
     ):
         """Return a nearly-self contained SQL query that constructs
         the metrics query for targeting historical data without
@@ -198,25 +203,36 @@ class DataSource:
         FROM targets t
             LEFT JOIN {from_expr} ds
                 ON ds.{client_id} = t.client_id
-                AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
-                AND ds.{submission_date} BETWEEN
-                    DATE_ADD(t.enrollment_date, interval t.analysis_window_start day)
-                    AND DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)
+                {date_clause}
         GROUP BY
             t.client_id,
             t.enrollment_date,
             t.analysis_window_start,
             t.analysis_window_end""".format(
             client_id=self.client_id_column,
-            submission_date=self.submission_date_column,
             from_expr=self.from_expr_for(from_expr_dataset),
-            fddr=time_limits.first_date_data_required,
-            lddr=time_limits.last_date_data_required,
+
             metrics=",\n            ".join(
                 "{se} AS {n}".format(
                     se=m.select_expr.format(experiment_name=experiment_name), n=m.name
                 )
                 for m in metric_list
+            ),
+            date_clause="""
+        AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
+        AND ds.{submission_date} BETWEEN
+            DATE_ADD(t.enrollment_date, interval t.analysis_window_start day) AND
+            DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)""".format(
+                        submission_date=self.submission_date_column,
+                        fddr=time_limits.first_date_data_required,
+                        lddr=time_limits.last_date_data_required,
+                    ) if not continuous_enrollment else
+            """AND ds.{submission_date} BETWEEN
+            t.enrollment_date AND
+            DATE_ADD(t.enrollment_date, interval {analysis_length} day)
+            """.format(
+                submission_date=self.submission_date_column,
+                analysis_length=analysis_length
             )
         )
 
@@ -328,16 +344,19 @@ class Metric:
 
 def agg_sum(select_expr):
     """Return a SQL fragment for the sum over the data, with 0-filled nulls."""
+    logger.warning("The use of mozanalysis.metrics.agg_sum() is deprecated")
     return "COALESCE(SUM({}), 0)".format(select_expr)
 
 
 def agg_any(select_expr):
     """Return the logical OR, with FALSE-filled nulls."""
+    logger.warning("The use of mozanalysis.metrics.agg_any() is deprecated")
     return "COALESCE(LOGICAL_OR({}), FALSE)".format(select_expr)
 
 
 def agg_histogram_mean(select_expr):
     """Produces an expression for the mean of an unparsed histogram."""
+    logger.warning("The use of mozanalysis.metrics.agg_histogram_mean() is deprecated")
     return f"""SAFE_DIVIDE(
                 SUM(CAST(JSON_EXTRACT_SCALAR({select_expr}, "$.sum") AS int64)),
                 SUM((SELECT SUM(value) FROM UNNEST(mozfun.hist.extract({select_expr}).values)))

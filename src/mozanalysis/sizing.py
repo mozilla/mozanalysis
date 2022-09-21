@@ -7,7 +7,12 @@ from typing import List, Optional, Tuple, Dict, Union
 
 from mozanalysis.bq import sanitize_table_name_for_bq, BigQueryContext
 from mozanalysis.utils import hash_ish
-from mozanalysis.experiment import AnalysisWindow, TimeLimits, add_days
+from mozanalysis.experiment import (
+    AnalysisWindow,
+    TimeLimits,
+    add_days,
+    TimeSeriesResult,
+)
 from mozanalysis.metrics import Metric, DataSource
 from mozanalysis.segments import Segment, SegmentDataSource
 from datetime import date
@@ -55,8 +60,6 @@ class HistoricalTarget:
             ]
         )
 
-        # (Optional) After invoking `get_single_window_data`, return the targets
-        # and metrics queries used to construct the results DataFrame:
         targets_sql = ht.get_targets_sql()
 
         metrics_sql = ht.get_metrics_sql()
@@ -66,11 +69,15 @@ class HistoricalTarget:
             to create table names when saving results in BigQuery.
         start_date (str): e.g. '2019-01-01'. First date for historical data to be
             retrieved.
-        num_dates_enrollment (int): Number of days to consider to enroll clients
-            in the analysis.
-        analysis_length (int, optional): Number of days to include for analysis
-        app_id (str, optional): For a Glean app, the name of the BigQuery
-        dataset derived from its app ID, like `org_mozilla_firefox`.
+        analysis_length (int): Number of days to include for analysis
+        num_dates_enrollment (int, default 7): Number of days to consider to
+            enroll clients in the analysis.
+        continuous_enrollment (bool): Indicates if the analysis dates
+            and enrollment should be overlap; clients that satisfy the
+            target conditions at any point in the analysis will be
+            included for the entire window when calculating metrics.
+        app_id (str, optional): For a Glean app, the name of the BigQuery     
+        dataset derived from its app ID, like `org_mozilla_firefox`.       
 
     Attributes:
         experiment_name (str): Name of the study, used in naming tables
@@ -84,9 +91,11 @@ class HistoricalTarget:
 
     experiment_name = attr.ib()
     start_date = attr.ib()
-    num_dates_enrollment = attr.ib()
-    analysis_length = attr.ib(default=None)
+    analysis_length = attr.ib()
+    num_dates_enrollment = attr.ib(default=7)
+    continuous_enrollment = attr.ib(default=False)
     app_id = attr.ib(default=None)
+
     _metrics_sql = attr.ib(default=None)
     _targets_sql = attr.ib(default=None)
 
@@ -96,6 +105,7 @@ class HistoricalTarget:
         metric_list: List[Metric],
         target_list: Optional[List[Segment]] = None,
         custom_targets_query: str = None,
+        replace_tables: bool = False,
     ):
         """Return a DataFrame containing per-client metric values.
 
@@ -122,6 +132,9 @@ class HistoricalTarget:
                 N.B. this query's results must be uniquely keyed by
                 (client_id, enrollment_date), or else your results will be
                 subtly wrong.
+            replace_tables (bool): If True, delete tables that exist in
+                BigQuery with the same name; used to rerun analyses under
+                the same experiment name with different settings
 
         Returns:
             A pandas DataFrame of experiment data. One row per ``client_id``.
@@ -157,11 +170,133 @@ class HistoricalTarget:
                 + ", which is in the future."
             )
 
-        time_limits = TimeLimits.for_single_analysis_window(
+        if self.continuous_enrollment:
+            time_limits = ContinuousEnrollmentTimeLimits.for_single_analysis_window(
+                self.start_date,
+                self.analysis_length,
+            )
+
+        else:
+            time_limits = TimeLimits.for_single_analysis_window(
+                self.start_date,
+                last_date_full_data,
+                0,
+                self.analysis_length,
+                self.num_dates_enrollment,
+            )
+
+        self._targets_sql = self.build_targets_query(
+            time_limits=time_limits,
+            target_list=target_list,
+            custom_targets_query=custom_targets_query,
+        )
+
+        targets_table_name = sanitize_table_name_for_bq(
+            "_".join(
+                [
+                    time_limits.last_date_data_required,
+                    "targets",
+                    self.experiment_name,
+                    hash_ish(self._targets_sql),
+                ]
+            )
+        )
+
+        bq_context.run_query(self._targets_sql, targets_table_name, replace_tables)
+
+        self._metrics_sql = self.build_metrics_query(
+            metric_list=metric_list,
+            time_limits=time_limits,
+            targets_table=bq_context.fully_qualify_table_name(targets_table_name),
+        )
+
+        full_res_table_name = sanitize_table_name_for_bq(
+            "_".join(
+                [
+                    time_limits.last_date_data_required,
+                    self.experiment_name,
+                    hash_ish(self._metrics_sql),
+                ]
+            )
+        )
+
+        return bq_context.run_query(
+            self._metrics_sql, full_res_table_name, replace_tables
+        ).to_dataframe()
+
+    def get_time_series_data(
+        self,
+        bq_context,
+        metric_list,
+        time_series_period="weekly",
+        custom_targets_query=None,
+        target_list=None,
+        replace_tables=False,
+    ):
+        """Return a TimeSeriesResult with per-client metric values.
+
+        Roughly equivalent to looping over :meth:`.get_single_window_data`
+        with different analysis windows, and reorganising the results.
+
+        Args:
+            bq_context (BigQueryContext): BigQuery configuration and client.
+            metric_list (list of mozanalysis.metric.Metric): The metrics
+                to analyze.
+            time_series_period (str): Period of the time series for which to
+                retrieve data. Options are daily, weekly, and 28_days.
+            target_list (list of mozanalysis.segments.Segment): The targets
+                that define clients to be included in the analysis, based on
+                inclusion in a defined user segment. For each Segment included
+                in the list, client IDs are identified in the
+                SegmentDataSource that based on the select_for statement in
+                the Segment. Client IDs that satisfy the select_for
+                statement in every Segment in the target_list will be
+                returned by the query.
+            custom_targets_query (str): A full SQL query to be used
+                in the main query; must include a client_id column
+                to join to metrics tables and an enrollment_date:
+
+                N.B. this query's results must be uniquely keyed by
+                (client_id, enrollment_date), or else your results will be
+                subtly wrong.
+            replace_tables (bool): If True, delete tables that exist in
+                BigQuery with the same name; used to rerun analyses under
+                the same experiment name with different settings
+
+        Returns:
+            A :class:`mozanalysis.experiment.TimeSeriesResult` object,
+            which may be used to obtain a
+            pandas DataFrame of per-client metric data, for each
+            analysis window. Each DataFrame is a pandas DataFrame in
+            "the standard format": one row per client, some metadata
+            columns, plus one column per metric and sanity-check metric.
+            Its columns (not necessarily in order):
+
+                * enrollment date and client_id
+                * [metric 1]: The client's value for the first metric in
+                  ``metric_list``.
+                * ...
+                * [metric n]: The client's value for the nth (final)
+                  metric in ``metric_list``.
+        """
+        last_date_full_data = add_days(
+            self.start_date, self.num_dates_enrollment + self.analysis_length - 1
+        )
+
+        today = date.today().strftime("%Y-%m-%d")
+        if last_date_full_data >= today:
+            raise ValueError(
+                "Based on the start date, {}".format(self.start_date)
+                + ", with {} days of enrollment ".format(self.num_dates_enrollment)
+                + "and analysis of length {} days, ".format(self.analysis_length)
+                + "the last day of analysis is {}".format(last_date_full_data)
+                + ", which is in the future."
+            )
+
+        time_limits = TimeLimits.for_ts(
             self.start_date,
             last_date_full_data,
-            0,
-            self.analysis_length,
+            time_series_period,
             self.num_dates_enrollment,
         )
 
@@ -182,7 +317,7 @@ class HistoricalTarget:
             )
         )
 
-        bq_context.run_query(self._targets_sql, targets_table_name)
+        bq_context.run_query(self._targets_sql, targets_table_name, replace_tables)
 
         self._metrics_sql = self.build_metrics_query(
             metric_list=metric_list,
@@ -200,9 +335,14 @@ class HistoricalTarget:
             )
         )
 
-        return bq_context.run_query(
-            self._metrics_sql, full_res_table_name
-        ).to_dataframe()
+        bq_context.run_query(self._metrics_sql, full_res_table_name, replace_tables)
+
+        return TimeSeriesResult(
+            fully_qualified_table_name=bq_context.fully_qualify_table_name(
+                full_res_table_name
+            ),
+            analysis_windows=time_limits.analysis_windows,
+        )
 
     def build_targets_query(
         self,
@@ -398,7 +538,12 @@ class HistoricalTarget:
 
         for i, ds in enumerate(ds_metrics.keys()):
             query_for_metrics = ds.build_query_targets(
-                ds_metrics[ds], time_limits, self.experiment_name, self.app_id
+                ds_metrics[ds],
+                time_limits,
+                self.experiment_name,
+                analysis_length=self.analysis_length,
+                continuous_enrollment=self.continuous_enrollment,
+                app_id=self.app_id,
             )
             metrics_joins.append(
                 """    LEFT JOIN (
@@ -429,3 +574,90 @@ class HistoricalTarget:
                 "Metric SQL not available; call `get_single_window_data` first"
             )
         return self._metrics_sql
+
+
+@attr.s(frozen=True, slots=True)
+class ContinuousEnrollmentTimeLimits:
+    """Expresses time limits for different kinds of analysis windows.
+
+    Instantiated and used by the :class:`Experiment` class; end users
+    should not need to interact with it.
+
+    Do not directly instantiate: use the constructors provided.
+
+    There are several time constraints needed to specify a valid query
+    for experiment data:
+
+        * When did enrollments start?
+        * When did enrollments stop?
+        * How long after enrollment does the analysis window start?
+        * How long is the analysis window?
+
+    Even if these four quantities are specified directly, it is
+    important to check that they are consistent with the available
+    data - i.e. that we have data for the entire analysis window for
+    every enrollment.
+
+    Furthermore, there are some extra quantities that are useful for
+    writing efficient queries:
+
+        * What is the first date for which we need data from our data
+          source?
+        * What is the last date for which we need data from our data
+          source?
+
+    Instances of this class store all these quantities and do validation
+    to make sure that they're consistent. The "store lots of overlapping
+    state and validate" strategy was chosen over "store minimal state
+    and compute on the fly" because different state is supplied in
+    different contexts.
+    """
+
+    first_enrollment_date = attr.ib(type=str)
+    last_enrollment_date = attr.ib(type=str)
+
+    first_date_data_required = attr.ib(type=str)
+    last_date_data_required = attr.ib(type=str)
+
+    analysis_windows = attr.ib()  # type: tuple[AnalysisWindow]
+
+    @classmethod
+    def for_single_analysis_window(
+        cls,
+        first_date_full_data,
+        analysis_length_dates,
+    ):
+        """Return a ``TimeLimits`` instance with the following parameters
+
+        Args:
+            first_enrollment_date (str): First date on which enrollment
+                events were received; the start date of the experiment.
+            last_date_full_data (str): The most recent date for which we
+                have complete data, e.g. '2019-03-22'. If you want to ignore
+                all data collected after a certain date (e.g. when the
+                experiment recipe was deactivated), then do that here.
+            analysis_start_days (int): the start of the analysis window,
+                measured in 'days since the client enrolled'. We ignore data
+                collected outside this analysis window.
+            analysis_length_days (int): the length of the analysis window,
+                measured in days.
+            num_dates_enrollment (int, optional): Only include this many days
+                of enrollments. If ``None`` then use the maximum number of days
+                as determined by the metric's analysis window and
+                ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The
+                factor ``7`` removes weekly seasonality, and the ``+1``
+                accounts for the fact that enrollment typically starts a few
+                hours before UTC midnight.
+        """
+        analysis_window = AnalysisWindow(0, analysis_length_dates - 1)
+
+        last_date_data_required = add_days(first_date_full_data, analysis_length_dates)
+
+        tl = cls(
+            first_enrollment_date=first_date_full_data,
+            last_enrollment_date=last_date_data_required,
+            first_date_data_required=first_date_full_data,
+            last_date_data_required=last_date_data_required,
+            analysis_windows=(analysis_window,),
+        )
+        return tl

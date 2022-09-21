@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<<<<<<< HEAD
 
 from curses.ascii import alt
 from statsmodels.stats.power import zt_ind_solve_power
@@ -55,3 +56,5 @@ def sample_size_calc(
     metric_names = [m.name for m in metrics_list]
     x = {col: _get_sample_size_col(col) for col in metric_names}
     return {k: v for k, v in sorted(x.items(), key=lambda item: item[1], reverse=True)}
+=======
+>>>>>>> 178a84fe79e636856de47befc9410f3b3c5ce161
