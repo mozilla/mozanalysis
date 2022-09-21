@@ -69,6 +69,8 @@ class HistoricalTarget:
         num_dates_enrollment (int): Number of days to consider to enroll clients
             in the analysis.
         analysis_length (int, optional): Number of days to include for analysis
+        app_id (str, optional): For a Glean app, the name of the BigQuery
+        dataset derived from its app ID, like `org_mozilla_firefox`.
 
     Attributes:
         experiment_name (str): Name of the study, used in naming tables
@@ -84,9 +86,9 @@ class HistoricalTarget:
     start_date = attr.ib()
     num_dates_enrollment = attr.ib()
     analysis_length = attr.ib(default=None)
+    app_id = attr.ib(default=None)
     _metrics_sql = attr.ib(default=None)
     _targets_sql = attr.ib(default=None)
-    app_id = attr.ib(default=None)
 
     def get_single_window_data(
         self,
@@ -180,7 +182,6 @@ class HistoricalTarget:
             )
         )
 
-        print(self.targets_sql)
         bq_context.run_query(self._targets_sql, targets_table_name)
 
         self._metrics_sql = self.build_metrics_query(
@@ -310,7 +311,9 @@ class HistoricalTarget:
         target_joins = []
 
         for i, t in enumerate(target_list):
-            query_for_target = t.data_source.build_query_target(t, time_limits)
+            query_for_target = t.data_source.build_query_target(
+                t, time_limits, self.app_id
+            )
 
             target_queries.append(
                 """
@@ -395,7 +398,7 @@ class HistoricalTarget:
 
         for i, ds in enumerate(ds_metrics.keys()):
             query_for_metrics = ds.build_query_targets(
-                ds_metrics[ds], time_limits, self.experiment_name
+                ds_metrics[ds], time_limits, self.experiment_name, self.app_id
             )
             metrics_joins.append(
                 """    LEFT JOIN (
