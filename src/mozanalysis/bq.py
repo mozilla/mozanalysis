@@ -1,10 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import logging
 import re
 
 from google.api_core.exceptions import Conflict
 from google.cloud import bigquery
+
+logger = logging.getLogger(__name__)
 
 
 def sanitize_table_name_for_bq(table_name):
@@ -71,11 +74,11 @@ class BigQueryContext:
                     )
                 ),
             ).result()
-            print("Saved into", results_table)
+            logger.info("Saved into", results_table)
             return full_res
 
         except Conflict:
-            print("Table already exists. Reusing", results_table)
+            logger.info("Table already exists. Reusing", results_table)
             return self.client.list_rows(self.fully_qualify_table_name(results_table))
 
     def fully_qualify_table_name(self, table_name):

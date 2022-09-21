@@ -4,9 +4,14 @@
 from enum import Enum
 
 import attr
+import logging
 
+from mozanalysis import APPS
 from mozanalysis.bq import sanitize_table_name_for_bq
+from mozanalysis.config import ConfigLoader
 from mozanalysis.utils import add_days, date_sub, hash_ish
+
+logger = logging.getLogger(__name__)
 
 
 class AnalysisBasis(Enum):
@@ -96,6 +101,7 @@ class Experiment:
             before UTC midnight.
         app_id (str, optional): For a Glean app, the name of the BigQuery
             dataset derived from its app ID, like `org_mozilla_firefox`.
+        app_name (str, optional): The Glean app name, like `fenix`.
 
     Attributes:
         experiment_slug (str): Name of the study, used to identify
@@ -115,6 +121,24 @@ class Experiment:
     start_date = attr.ib()
     num_dates_enrollment = attr.ib(default=None)
     app_id = attr.ib(default=None)
+    app_name = attr.ib(default=None)
+
+    def get_app_name(self):
+        """
+        Determine the correct app name.
+
+        If no explicit app name has been passed into Experiment, lookup app name from
+        a pre-defined list. (this is deprecated)
+        """
+        if self.app_name is None:
+            logger.warning(
+                "Experiment without `app_name` is deprecated. "
+                + "Please specify an app_name explicitly"
+            )
+            app_name = next(key for key, value in APPS.items() if self.app_id in value)
+            if app_name is None:
+                raise Exception(f"No app name for app_id {self.app_id}")
+        return self.app_name
 
     def get_single_window_data(
         self,
@@ -137,7 +161,7 @@ class Experiment:
 
         Args:
             bq_context (BigQueryContext): BigQuery configuration and client.
-            metric_list (list of mozanalysis.metric.Metric): The metrics
+            metric_list (list of mozanalysis.metric.Metric or str): The metrics
                 to analyze.
             last_date_full_data (str): The most recent date for which we
                 have complete data, e.g. '2019-03-22'. If you want to ignore
@@ -175,7 +199,7 @@ class Experiment:
                 client has been exposed to the experiment. If not provided,
                 the exposure will be determined based on Normandy exposure events
                 for desktop and Nimbus exposure events for Fenix and iOS.
-            segment_list (list of mozanalysis.segment.Segment): The user
+            segment_list (list of mozanalysis.segment.Segment or str): The user
                 segments to study.
 
         Returns:
@@ -412,7 +436,7 @@ class Experiment:
             exposure_signal (ExposureSignal): Optional signal definition of when a
                 client has been exposed to the experiment
 
-            segment_list (list of mozanalysis.segment.Segment): The user
+            segment_list (list of mozanalysis.segment.Segment or str): The user
                 segments to study.
 
         Returns:
@@ -471,7 +495,7 @@ class Experiment:
         be computed for these clients.
 
         Args:
-            metric_list (list of mozanalysis.metric.Metric):
+            metric_list (list of mozanalysis.metric.Metric or str):
                 The metrics to analyze.
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
@@ -772,7 +796,14 @@ class Experiment:
         exposure_signal=None,
     ):
         """Return lists of SQL fragments corresponding to metrics."""
-        ds_metrics = self._partition_by_data_source(metric_list)
+        metrics = []
+        for metric in metric_list:
+            if isinstance(metric, str):
+                metrics.append(ConfigLoader.get_metric(metric, self.get_app_name()))
+            else:
+                metrics.append(metric)
+
+        ds_metrics = self._partition_by_data_source(metrics)
         ds_metrics = {
             ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
             for ds, metrics in ds_metrics.items()
@@ -845,7 +876,16 @@ class Experiment:
 
     def _build_segments_query_bits(self, segment_list, time_limits):
         """Return lists of SQL fragments corresponding to segments."""
-        ds_segments = self._partition_by_data_source(segment_list)
+
+        # resolve segment slugs
+        segments = []
+        for segment in segment_list:
+            if isinstance(segment, str):
+                segments.append(ConfigLoader.get_segment(segment, self.get_app_name()))
+            else:
+                segments.append(segment)
+
+        ds_segments = self._partition_by_data_source(segments)
 
         segments_columns = []
         segments_joins = []

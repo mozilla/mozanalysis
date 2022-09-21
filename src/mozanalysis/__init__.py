@@ -20,3 +20,14 @@ for root, subdirs, files in os.walk(basedir):
     if os.path.basename(root) in __all__:
         module_files = [os.path.basename(root) + "." + f for f in module_files]
     __all__ += module_files
+
+# lookup app_name via app_id
+# used for backwards compatibility
+APPS = {
+    "firefox_desktop": {"firefox_desktop"},
+    "fenix": {"org_mozilla_fenix"},
+    "focus_android": {"org_mozilla_focus"},
+    "firefox_ios": {"org_mozilla_ios_FirefoxBeta"},
+    "focus_ios": {"org_mozilla_ios_Focus"},
+    "klar_ios": {"org_mozilla_ios_Klar"},
+}

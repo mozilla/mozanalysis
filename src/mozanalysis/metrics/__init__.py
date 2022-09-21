@@ -4,8 +4,11 @@
 from typing import Optional
 
 import attr
+import logging
 
 from mozanalysis.experiment import AnalysisBasis
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(frozen=True, slots=True)
@@ -341,16 +344,19 @@ class Metric:
 
 def agg_sum(select_expr):
     """Return a SQL fragment for the sum over the data, with 0-filled nulls."""
+    logger.warning("The use of mozanalysis.metrics.agg_sum() is deprecated")
     return "COALESCE(SUM({}), 0)".format(select_expr)
 
 
 def agg_any(select_expr):
     """Return the logical OR, with FALSE-filled nulls."""
+    logger.warning("The use of mozanalysis.metrics.agg_any() is deprecated")
     return "COALESCE(LOGICAL_OR({}), FALSE)".format(select_expr)
 
 
 def agg_histogram_mean(select_expr):
     """Produces an expression for the mean of an unparsed histogram."""
+    logger.warning("The use of mozanalysis.metrics.agg_histogram_mean() is deprecated")
     return f"""SAFE_DIVIDE(
                 SUM(CAST(JSON_EXTRACT_SCALAR({select_expr}, "$.sum") AS int64)),
                 SUM((SELECT SUM(value) FROM UNNEST(mozfun.hist.extract({select_expr}).values)))
