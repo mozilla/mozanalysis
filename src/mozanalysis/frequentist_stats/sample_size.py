@@ -67,6 +67,7 @@ def difference_of_proportions_sample_size_calc(
         pop_percent = 100.*(sample_size/len(df))
         results[col] = {
             "sample_size": sample_size,
+            "population_size": len(df),
             "population_percent": pop_percent
         }
     return results
@@ -132,6 +133,7 @@ def z_or_t_ind_sample_size_calc(
         pop_percent = 100.*(sample_size/len(df))
         results[col] = {
             "sample_size": sample_size,
+            "population_size": len(df),
             "population_percent": pop_percent
         }
     return results
@@ -246,6 +248,7 @@ def empirical_effect_size_sample_size_calc(
     }
 
     for k in size_dict.keys():
+        size_dict[k]["population_size"] = pop_size
         size_dict[k]["population_percent"] = 100.*(size_dict[k]["sample_size"]/pop_size)
 
     return size_dict
@@ -304,6 +307,7 @@ def poisson_diff_solve_sample_size(
         pop_percent = 100.*(sample_size/len(df))
         results[col] = {
             "sample_size": sample_size,
+            "population_size": len(df),
             "population_percent": pop_percent
         }
     return results

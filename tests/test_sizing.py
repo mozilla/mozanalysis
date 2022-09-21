@@ -5,6 +5,7 @@ import mozanalysis.segments.desktop as msd
 from mozanalysis.experiment import TimeLimits
 from mozanalysis.sizing import HistoricalTarget
 from mozanalysis.segments import Segment, SegmentDataSource
+from mozanalysis.metrics import Metric
 
 
 def test_multiple_datasource():
@@ -66,7 +67,7 @@ def test_megaquery_not_detectably_malformed():
 
     target_sql = test_target.build_targets_query(
         time_limits=tl,
-        target_list=[s for s in msd.__dict__.values() if isinstance(s, msd.Segment)],
+        target_list=[s for s in msd.__dict__.values() if isinstance(s, Segment)],
     )
 
     sql_lint(target_sql)
@@ -76,7 +77,7 @@ def test_megaquery_not_detectably_malformed():
         metric_list=[
             m
             for m in mad.__dict__.values()
-            if isinstance(m, mad.Metric) and "experiment_slug" not in m.select_expr
+            if isinstance(m, Metric) and "experiment_slug" not in m.select_expr
         ],
         targets_table="targets",
     )
