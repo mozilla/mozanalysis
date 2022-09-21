@@ -1275,13 +1275,13 @@ class TimeSeriesResult:
 
     def _table_sample_size_query(self, client_id_column="client_id"):
         return """
-        SELECT 
+        SELECT
             COUNT(*) as population_size
         FROM
             (SELECT DISTINCT
                 {client_column}
             FROM
-                {full_table_name})    
+                {full_table_name})
         """.format(
             client_column=client_id_column,
             full_table_name=self.fully_qualified_table_name)

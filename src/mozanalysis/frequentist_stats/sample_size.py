@@ -9,7 +9,6 @@ from mozanalysis.bq import BigQueryContext
 from mozanalysis.experiment import TimeSeriesResult
 from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
 import numpy as np
-import pandas as pd
 
 
 def difference_of_proportions_sample_size_calc(
@@ -22,7 +21,7 @@ def difference_of_proportions_sample_size_calc(
 ):
 
     """
-    Perform sample size calculation for an experiment to test for a 
+    Perform sample size calculation for an experiment to test for a
     difference in proportions.
 
     Args:
@@ -308,4 +307,3 @@ def poisson_diff_solve_sample_size(
             "population_percent": pop_percent
         }
     return results
-    
