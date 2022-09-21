@@ -76,8 +76,8 @@ class HistoricalTarget:
             and enrollment should be overlap; clients that satisfy the
             target conditions at any point in the analysis will be
             included for the entire window when calculating metrics.
-        app_id (str, optional): For a Glean app, the name of the BigQuery     
-        dataset derived from its app ID, like `org_mozilla_firefox`.       
+        app_id (str, optional): For a Glean app, the name of the BigQuery
+        dataset derived from its app ID, like `org_mozilla_firefox`.
 
     Attributes:
         experiment_name (str): Name of the study, used in naming tables
@@ -452,7 +452,7 @@ class HistoricalTarget:
 
         for i, t in enumerate(target_list):
             query_for_target = t.data_source.build_query_target(
-                t, time_limits, self.app_id
+                t, time_limits, from_expr_dataset=self.app_id
             )
 
             target_queries.append(
@@ -543,7 +543,7 @@ class HistoricalTarget:
                 self.experiment_name,
                 analysis_length=self.analysis_length,
                 continuous_enrollment=self.continuous_enrollment,
-                app_id=self.app_id,
+                from_expr_dataset=self.app_id,
             )
             metrics_joins.append(
                 """    LEFT JOIN (
