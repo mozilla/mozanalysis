@@ -7,9 +7,9 @@ import mozanalysis.metrics.firefox_ios
 import mozanalysis.metrics.klar_ios
 import mozanalysis.metrics.klar_android
 import mozanalysis.segments.desktop as msd
-from mozanalysis.experiment import AnalysisBasis, AnalysisWindow, Experiment, TimeLimits
+from mozanalysis.experiment import AnalysisWindow, Experiment, TimeLimits
 from mozanalysis.exposure import ExposureSignal
-from mozanalysis.metrics import Metric
+from mozanalysis.metrics import Metric, AnalysisBasis
 from mozanalysis.segments import Segment, SegmentDataSource
 
 

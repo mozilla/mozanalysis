@@ -1,9 +1,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import annotations
+
 import attr
 
 from typing import List, Optional, Tuple, Dict, Union
+from pandas import DataFrame
 
 from mozanalysis.bq import sanitize_table_name_for_bq, BigQueryContext
 from mozanalysis.utils import hash_ish
@@ -104,9 +107,9 @@ class HistoricalTarget:
         bq_context: BigQueryContext,
         metric_list: List[Metric],
         target_list: Optional[List[Segment]] = None,
-        custom_targets_query: str = None,
+        custom_targets_query: Optional[str] = None,
         replace_tables: bool = False,
-    ):
+    ) -> DataFrame:
         """Return a DataFrame containing per-client metric values.
 
         Also store them in a permanent table in BigQuery. The name of
@@ -226,13 +229,13 @@ class HistoricalTarget:
 
     def get_time_series_data(
         self,
-        bq_context,
-        metric_list,
-        time_series_period="weekly",
-        custom_targets_query=None,
-        target_list=None,
-        replace_tables=False,
-    ):
+        bq_context: BigQueryContext,
+        metric_list: List[Metric],
+        time_series_period: str = "weekly",
+        custom_targets_query: Optional[str] = None,
+        target_list: Optional[List[HistoricalTarget]] = None,
+        replace_tables: bool = False,
+    ) -> TimeSeriesResult:
         """Return a TimeSeriesResult with per-client metric values.
 
         Roughly equivalent to looping over :meth:`.get_single_window_data`
@@ -349,7 +352,7 @@ class HistoricalTarget:
         time_limits: TimeLimits,
         target_list: Optional[Segment] = None,
         custom_targets_query: Optional[str] = None,
-    ):
+    ) -> str:
 
         return """
         {targets_query}
@@ -415,7 +418,7 @@ class HistoricalTarget:
         )
 
     @staticmethod
-    def _build_analysis_windows_query(analysis_windows: Tuple[AnalysisWindow]):
+    def _build_analysis_windows_query(analysis_windows: Tuple[AnalysisWindow]) -> str:
         """Return SQL to construct a table of analysis windows.
 
         To query a time series, we construct a table of analysis windows
@@ -434,7 +437,7 @@ class HistoricalTarget:
         )
 
     def _partition_by_data_source(
-        self, metric_list
+        self, metric_list: List[Metric]
     ) -> Dict[Union[DataSource, SegmentDataSource], List[Union[Metric, Segment]]]:
         """Return a dict mapping data sources to target/metric lists."""
         data_sources = {m.data_source for m in metric_list}
@@ -443,7 +446,9 @@ class HistoricalTarget:
             ds: [m for m in metric_list if m.data_source == ds] for ds in data_sources
         }
 
-    def _build_targets_query(self, target_list: List[Segment], time_limits: TimeLimits):
+    def _build_targets_query(
+        self, target_list: List[Segment], time_limits: TimeLimits
+    ) -> str:
 
         target_queries = []
         target_columns = []
@@ -527,7 +532,7 @@ class HistoricalTarget:
         )
 
     def _build_metrics_query_bits(
-        self, metric_list, time_limits
+        self, metric_list: List[Metric], time_limits: TimeLimits
     ) -> Tuple[List[str], List[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
         ds_metrics = self._partition_by_data_source(metric_list)
@@ -619,15 +624,16 @@ class ContinuousEnrollmentTimeLimits:
     first_date_data_required = attr.ib(type=str)
     last_date_data_required = attr.ib(type=str)
 
-    analysis_windows = attr.ib()  # type: tuple[AnalysisWindow]
+    analysis_windows = attr.ib(type=Tuple[AnalysisWindow])
 
     @classmethod
     def for_single_analysis_window(
         cls,
-        first_date_full_data,
-        analysis_length_dates,
-    ):
-        """Return a ``TimeLimits`` instance with the following parameters
+        first_date_full_data: str,
+        analysis_length_dates: str,
+    ) -> ContinuousEnrollmentTimeLimits:
+        """Return a ``ContinuousEnrollmentTimeLimits`` instance with the following
+        parameters:
 
         Args:
             first_enrollment_date (str): First date on which enrollment
