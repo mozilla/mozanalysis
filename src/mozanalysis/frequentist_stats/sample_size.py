@@ -46,10 +46,11 @@ def sample_size_curves(
             when a significant effect exists.
         **solver_kwargs (dict): Arguments necessary for the provided solver.
 
-    Returns a dictionary of pd.DataFrame:
-        An item in the dictionary is created for each metric in metric_list, containing
-        a DataFrame of sample size, population size, and population proportion at
-        each value of the iterable parameter.
+    Returns:
+        A dictionary of pd.DataFrame objects. An item in the dictionary is
+        created for each metric in metric_list, containing a DataFrame of sample
+        size, population size, and population proportion at each value of the iterable
+        parameter.
     """
 
     params = {"effect_size": effect_size, "power": power, "alpha": alpha}
@@ -101,18 +102,18 @@ def difference_of_proportions_sample_size_calc(
             of these metrics are used to return results for sample size
             calculation for each
         effect_size (float, default .01): Difference in proportion for the
-            minimum detectable effect:
-                effect_size = p(event under alt) - p(event under null)
+            minimum detectable effect --
+            effect_size = p(event under alt) - p(event under null)
         alpha (float, default .05): Significance level for the experiment.
         power (float, default .90): Probability of detecting an effect,
             when a significant effect exists.
         outlier_percentile(float, default .995): Percentile at which to trim
             each columns.
 
-    Returns a sorted dictionary:
-        Keys in the dictionary are the metrics column names from the DataFrame; values
-        are the required sample size to achieve the desired power for that metric.
-        The dictionary is sorted by required sample size, in descending order.
+    Returns:
+        A dictionary. Keys in the dictionary are the metrics column names from
+        the DataFrame; values are the required sample size to achieve the
+        desired power for that metric.
     """
 
     def _get_sample_size_col(col):
@@ -167,10 +168,10 @@ def z_or_t_ind_sample_size_calc(
         outlier_percentile(float, default .995): Percentile at which to trim
             each columns.
 
-    Returns a sorted dictionary:
-        Keys in the dictionary are the metrics column names from the DataFrame; values
-        are the required sample size to achieve the desired power for that metric.
-        The dictionary is sorted by required sample size, in descending order.
+    Returns:
+        A dictionary. Keys in the dictionary are the metrics column names from
+        the DataFrame; values are the required sample size to achieve the
+        desired power for that metric.
     """
     tests = {
         "normal": zt_ind_solve_power,
@@ -240,10 +241,10 @@ def empirical_effect_size_sample_size_calc(
         parent_distribution (str, default "normal"): Distribution of the parent data;
             must be normal, uniform, logistic, or laplace.
 
-    Returns a sorted dictionary:
-        Keys in the dictionary are the metrics column names from the DataFrame; values
-        are the required sample size to achieve the desired power for that metric.
-        The dictionary is sorted by required sample size, in descending order.
+    Returns:
+        A dictionary. Keys in the dictionary are the metrics column names from
+        the DataFrame; values are the required sample size to achieve the
+        desired power for that metric.
     """
 
     def _mann_whitney_solve_sample_size_approximation(
@@ -352,9 +353,10 @@ def poisson_diff_solve_sample_size(
         outlier_percentile(float, default .995): Percentile at which to trim
             each columns.
 
-    Returns a dictionary:
-        Keys in the dictionary are the metrics column names from the DataFrame; values
-        are the required sample size to achieve the desired power for that metric.
+    Returns:
+        A dictionary. Keys in the dictionary are the metrics column names from
+        the DataFrame; values are the required sample size to achieve the
+        desired power for that metric.
     """
 
     def _get_sample_size_col(col):

@@ -28,7 +28,7 @@ class HistoricalTarget:
     The methods here query data in a way compatible with the following
     principles, which are important for experiment analysis:
 
-    Example usage (in a colab notebook):
+    Example usage (in a colab notebook)::
 
         from google.colab import auth
         auth.authenticate_user()
@@ -80,7 +80,7 @@ class HistoricalTarget:
             target conditions at any point in the analysis will be
             included for the entire window when calculating metrics.
         app_id (str, optional): For a Glean app, the name of the BigQuery
-        dataset derived from its app ID, like `org_mozilla_firefox`.
+            dataset derived from its app ID, like `org_mozilla_firefox`.
 
     Attributes:
         experiment_name (str): Name of the study, used in naming tables
