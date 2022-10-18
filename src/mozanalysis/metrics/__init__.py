@@ -219,7 +219,7 @@ class DataSource:
             t.enrollment_date,
             t.analysis_window_start,
             t.analysis_window_end""".format(
-            client_id=self.client_id_column,
+            client_id=self.client_id_column or "client_id",
             from_expr=self.from_expr_for(from_expr_dataset),
             metrics=",\n            ".join(
                 "{se} AS {n}".format(
@@ -232,7 +232,7 @@ class DataSource:
         AND ds.{submission_date} BETWEEN
             DATE_ADD(t.enrollment_date, interval t.analysis_window_start day) AND
             DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)""".format(
-                submission_date=self.submission_date_column,
+                submission_date=self.submission_date_column or "submission_date",
                 fddr=time_limits.first_date_data_required,
                 lddr=time_limits.last_date_data_required,
             )
@@ -241,7 +241,7 @@ class DataSource:
             t.enrollment_date AND
             DATE_ADD(t.enrollment_date, interval {analysis_length} day)
             """.format(
-                submission_date=self.submission_date_column,
+                submission_date=self.submission_date_column or "submission_date",
                 analysis_length=analysis_length,
             ),
         )

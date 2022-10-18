@@ -138,8 +138,8 @@ class SegmentDataSource:
             WHERE {submission_date} BETWEEN '{fddr}' AND '{lddr}'
             GROUP BY {client_id})
         WHERE {target_name}""".format(
-            client_id=self.client_id_column,
-            submission_date=self.submission_date_column,
+            client_id=self.client_id_column or "client_id",
+            submission_date=self.submission_date_column or "submission_date",
             from_expr=self.from_expr_for(from_expr_dataset),
             fddr=time_limits.first_enrollment_date,
             lddr=time_limits.last_enrollment_date,
