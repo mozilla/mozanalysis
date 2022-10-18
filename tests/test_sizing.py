@@ -5,7 +5,7 @@ import mozanalysis.segments.desktop as msd
 from mozanalysis.experiment import TimeLimits
 from mozanalysis.sizing import HistoricalTarget
 from mozanalysis.segments import Segment, SegmentDataSource
-from mozanalysis.metrics import Metric
+from mozanalysis.metrics import Metric, DataSource
 
 
 def test_multiple_datasource():
@@ -114,3 +114,45 @@ def test_custom_query_override_target():
         "custom_query_target_table" in target_sql
         and "TEST AGG SELECT STATEMENT" not in target_sql
     )
+
+
+def test_resolve_missing_column_names():
+    test_ds = DataSource(
+        name="test_ds",
+        from_expr="SELECT client_id FROM test_set",
+        client_id_column=None,
+        submission_date_column=None,
+    )
+
+    test_metric = Metric(name="test_metric", data_source=test_ds, select_expr="")
+
+    tl = TimeLimits.for_single_analysis_window(
+        first_enrollment_date="2022-01-01",
+        last_date_full_data="2022-01-13",
+        analysis_start_days=0,
+        analysis_length_dates=7,
+    )
+
+    test_sds = SegmentDataSource(
+        name="test_sds",
+        from_expr="SELECT * FROM test_sds",
+        client_id_column=None,
+        submission_date_column=None,
+    )
+
+    test_seg = Segment(name="test_seg", data_source=test_sds, select_expr="")
+
+    test_targ = HistoricalTarget(
+        experiment_name="test_exp",
+        start_date="2022-01-01",
+        analysis_length=7,
+    )
+
+    targets_sql = test_targ.build_targets_query(time_limits=tl, target_list=[test_seg])
+
+    metrics_sql = test_targ.build_metrics_query(
+        time_limits=tl, metric_list=[test_metric], targets_table="test_targ_enrollment"
+    )
+
+    assert "None" not in targets_sql
+    assert "None" not in metrics_sql

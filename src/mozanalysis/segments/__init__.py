@@ -97,8 +97,8 @@ class SegmentDataSource:
                     DATE_ADD(e.enrollment_date, interval {window_start} day)
                     AND DATE_ADD(e.enrollment_date, interval {window_end} day)
         GROUP BY e.client_id, e.branch""".format(
-            client_id=self.client_id_column,
-            submission_date=self.submission_date_column,
+            client_id=self.client_id_column or "client_id",
+            submission_date=self.submission_date_column or "submission_date",
             from_expr=self.from_expr_for(from_expr_dataset),
             first_enrollment=time_limits.first_enrollment_date,
             last_enrollment=time_limits.last_enrollment_date,

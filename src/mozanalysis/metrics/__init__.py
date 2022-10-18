@@ -167,8 +167,8 @@ class DataSource:
             e.exposure_date,
             e.analysis_window_start,
             e.analysis_window_end""".format(
-            client_id=self.client_id_column,
-            submission_date=self.submission_date_column,
+            client_id=self.client_id_column or "client_id",
+            submission_date=self.submission_date_column or "submission_date",
             from_expr=self.from_expr_for(from_expr_dataset),
             fddr=time_limits.first_date_data_required,
             lddr=time_limits.last_date_data_required,
@@ -182,7 +182,7 @@ class DataSource:
             if analysis_basis == AnalysisBasis.EXPOSURES and exposure_signal is None
             else "enrollment_date",
             ignore_pre_enroll_first_day=self.experiments_column_expr.format(
-                submission_date=self.submission_date_column,
+                submission_date=self.submission_date_column or "submission_date",
                 experiment_slug=experiment_slug,
             ),
         )
