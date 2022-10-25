@@ -3,27 +3,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import numpy as np
 import pytest
-
+import pandas as pd
 from mozanalysis.utils import add_days, all_, any_, date_sub, filter_outliers
 
 
-def test_all_(spark):
-    df = spark.createDataFrame(
+def test_all_():
+    df = pd.DataFrame(
         data=[
             [True, False, False],
             [True, False, True],
             [True, False, False],
             [True, False, True],
         ],
-        schema=["all_true", "all_false", "mixed"],
+        columns=["all_true", "all_false", "mixed"],
     )
-    pres = df.select(
-        all_([df.all_true, df.all_true, df.all_true]).alias("true_1"),
-        all_([df.all_true, df.all_false]).alias("false_2"),
-        all_([df.all_false, df.all_false]).alias("false_3"),
-        all_([df.mixed, df.all_false]).alias("false_4"),
-        all_([df.mixed, df.all_true]).alias("mixed_5"),
-    ).toPandas()
+    pres = pd.DataFrame(
+        {
+            "true_1": all_([df.all_true, df.all_true, df.all_true]),
+            "false_2": all_([df.all_true, df.all_false]),
+            "false_3": all_([df.all_false, df.all_false]),
+            "false_4": all_([df.mixed, df.all_false]),
+            "mixed_5": all_([df.mixed, df.all_true]),
+        }
+    )
+
     assert pres.shape == (4, 5)
     assert not pres.isnull().any().any()
     assert pres["true_1"].all()
@@ -38,23 +41,25 @@ def test_all_(spark):
         all([df.all_true, df.all_true])
 
 
-def test_any_(spark):
-    df = spark.createDataFrame(
+def test_any_():
+    df = pd.DataFrame(
         data=[
             [True, False, False],
             [True, False, True],
             [True, False, False],
             [True, False, True],
         ],
-        schema=["all_true", "all_false", "mixed"],
+        columns=["all_true", "all_false", "mixed"],
     )
-    pres = df.select(
-        any_([df.all_true, df.all_true, df.all_true]).alias("true_1"),
-        any_([df.all_true, df.all_false]).alias("true_2"),
-        any_([df.all_false, df.all_false]).alias("false_3"),
-        any_([df.mixed, df.all_true]).alias("true_4"),
-        any_([df.mixed, df.all_false]).alias("mixed_5"),
-    ).toPandas()
+    pres = pd.DataFrame(
+        {
+            "true_1": any_([df.all_true, df.all_true, df.all_true]),
+            "true_2": any_([df.all_true, df.all_false]),
+            "false_3": any_([df.all_false, df.all_false]),
+            "true_4": any_([df.mixed, df.all_true]),
+            "mixed_5": any_([df.mixed, df.all_false]),
+        }
+    )
     assert pres.shape == (4, 5)
     assert not pres.isnull().any().any()
     assert pres["true_1"].all()

@@ -1,24 +1,20 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from enum import Enum
-
+from __future__ import annotations
 import attr
 import logging
+from pandas import DataFrame
+from typing import Dict, Tuple, Optional, List, Union
 
 from mozanalysis import APPS
-from mozanalysis.bq import sanitize_table_name_for_bq
+from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
+from mozanalysis.metrics import DataSource, Metric, AnalysisBasis
+from mozanalysis.segments import Segment, SegmentDataSource
 from mozanalysis.utils import add_days, date_sub, hash_ish
 
 logger = logging.getLogger(__name__)
-
-
-class AnalysisBasis(Enum):
-    """Determines what the population used for the analysis will be based on."""
-
-    ENROLLMENTS = "enrollments"
-    EXPOSURES = "exposures"
 
 
 @attr.s(frozen=True, slots=True)
@@ -142,17 +138,17 @@ class Experiment:
 
     def get_single_window_data(
         self,
-        bq_context,
-        metric_list,
-        last_date_full_data,
-        analysis_start_days,
-        analysis_length_days,
-        enrollments_query_type="normandy",
-        custom_enrollments_query=None,
-        custom_exposure_query=None,
+        bq_context: BigQueryContext,
+        metric_list: list,
+        last_date_full_data: str,
+        analysis_start_days: int,
+        analysis_length_days: int,
+        enrollments_query_type: str = "normandy",
+        custom_enrollments_query: Optional[str] = None,
+        custom_exposure_query: Optional[str] = None,
         exposure_signal=None,
         segment_list=None,
-    ):
+    ) -> DataFrame:
         """Return a DataFrame containing per-client metric values.
 
         Also store them in a permanent table in BigQuery. The name of
@@ -275,16 +271,16 @@ class Experiment:
 
     def get_time_series_data(
         self,
-        bq_context,
-        metric_list,
-        last_date_full_data,
-        time_series_period="weekly",
-        enrollments_query_type="normandy",
-        custom_enrollments_query=None,
-        custom_exposure_query=None,
+        bq_context: BigQueryContext,
+        metric_list: list,
+        last_date_full_data: str,
+        time_series_period: str = "weekly",
+        enrollments_query_type: str = "normandy",
+        custom_enrollments_query: Optional[str] = None,
+        custom_exposure_query: Optional[str] = None,
         exposure_signal=None,
         segment_list=None,
-    ):
+    ) -> TimeSeriesResult:
         """Return a TimeSeriesResult with per-client metric values.
 
         Roughly equivalent to looping over :meth:`.get_single_window_data`
@@ -407,10 +403,10 @@ class Experiment:
 
     def build_enrollments_query(
         self,
-        time_limits,
-        enrollments_query_type="normandy",
-        custom_enrollments_query=None,
-        custom_exposure_query=None,
+        time_limits: TimeLimits,
+        enrollments_query_type: str = "normandy",
+        custom_enrollments_query: Optional[str] = None,
+        custom_exposure_query: Optional[str] = None,
         exposure_signal=None,
         segment_list=None,
     ) -> str:
@@ -476,9 +472,9 @@ class Experiment:
 
     def build_metrics_query(
         self,
-        metric_list,
-        time_limits,
-        enrollments_table,
+        metric_list: list,
+        time_limits: TimeLimits,
+        enrollments_table: str,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal=None,
     ) -> str:
@@ -571,7 +567,7 @@ class Experiment:
         )
 
     @staticmethod
-    def _build_analysis_windows_query(analysis_windows):
+    def _build_analysis_windows_query(analysis_windows) -> str:
         """Return SQL to construct a table of analysis windows.
 
         To query a time series, we construct a table of analysis windows
@@ -588,7 +584,9 @@ class Experiment:
             for aw in analysis_windows
         )
 
-    def _build_enrollments_query(self, time_limits, enrollments_query_type):
+    def _build_enrollments_query(
+        self, time_limits: TimeLimits, enrollments_query_type: str
+    ) -> str:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == "normandy":
             return self._build_enrollments_query_normandy(time_limits)
@@ -603,7 +601,9 @@ class Experiment:
         else:
             raise ValueError
 
-    def _build_exposure_query(self, time_limits, exposure_query_type):
+    def _build_exposure_query(
+        self, time_limits: TimeLimits, exposure_query_type: str
+    ) -> str:
         """Return SQL to query a list of exposures and their branches"""
         if exposure_query_type == "normandy":
             return self._build_exposure_query_normandy(time_limits)
@@ -620,7 +620,7 @@ class Experiment:
         else:
             raise ValueError
 
-    def _build_enrollments_query_normandy(self, time_limits):
+    def _build_enrollments_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
         return """
         SELECT
@@ -644,7 +644,7 @@ class Experiment:
             last_enrollment_date=time_limits.last_enrollment_date,
         )
 
-    def _build_enrollments_query_fenix_baseline(self, time_limits):
+    def _build_enrollments_query_fenix_baseline(self, time_limits: TimeLimits) -> str:
         """Return SQL to query enrollments for a Fenix no-event experiment
         If enrollment events are available for this experiment, then you
         can take a better approach than this method. But in the absence
@@ -683,7 +683,9 @@ class Experiment:
             dataset=self.app_id or "org_mozilla_firefox",
         )
 
-    def _build_enrollments_query_glean_event(self, time_limits, dataset):
+    def _build_enrollments_query_glean_event(
+        self, time_limits: TimeLimits, dataset: str
+    ) -> str:
         """Return SQL to query enrollments for a Glean no-event experiment
 
         If enrollment events are available for this experiment, then you
@@ -718,7 +720,7 @@ class Experiment:
             dataset=self.app_id or dataset,
         )
 
-    def _build_exposure_query_normandy(self, time_limits):
+    def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query exposures for a normandy experiment"""
         return """
         SELECT
@@ -751,7 +753,9 @@ class Experiment:
             last_enrollment_date=time_limits.last_enrollment_date,
         )
 
-    def _build_exposure_query_glean_event(self, time_limits, dataset):
+    def _build_exposure_query_glean_event(
+        self, time_limits: TimeLimits, dataset: str
+    ) -> str:
         """Return SQL to query exposures for a Glean no-event experiment"""
         return """
             SELECT
@@ -790,11 +794,11 @@ class Experiment:
 
     def _build_metrics_query_bits(
         self,
-        metric_list,
-        time_limits,
+        metric_list: List[Metric],
+        time_limits: TimeLimits,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal=None,
-    ):
+    ) -> Tuple[List[str], List[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
         metrics = []
         for metric in metric_list:
@@ -837,7 +841,9 @@ class Experiment:
 
         return metrics_columns, metrics_joins
 
-    def _partition_by_data_source(self, metric_or_segment_list):
+    def _partition_by_data_source(
+        self, metric_or_segment_list: Union[List[Metric], List[Segment]]
+    ) -> Dict[Union[DataSource, SegmentDataSource], List[Union[Metric, Segment]]]:
         """Return a dict mapping data sources to metric/segment lists."""
         data_sources = {m.data_source for m in metric_or_segment_list}
 
@@ -846,7 +852,9 @@ class Experiment:
             for ds in data_sources
         }
 
-    def _build_segments_query(self, segment_list, time_limits):
+    def _build_segments_query(
+        self, segment_list: List[Segment], time_limits: TimeLimits
+    ) -> str:
         """Build a query adding segment columns to the enrollments view.
 
         The query takes a ``raw_enrollments`` view, and defines a new
@@ -874,7 +882,9 @@ class Experiment:
             segments_joins="\n".join(segments_joins),
         )
 
-    def _build_segments_query_bits(self, segment_list, time_limits):
+    def _build_segments_query_bits(
+        self, segment_list: List[Segment], time_limits: TimeLimits
+    ) -> Tuple[List[str], List[str]]:
         """Return lists of SQL fragments corresponding to segments."""
 
         # resolve segment slugs
@@ -959,12 +969,12 @@ class TimeLimits:
     @classmethod
     def for_single_analysis_window(
         cls,
-        first_enrollment_date,
-        last_date_full_data,
-        analysis_start_days,
-        analysis_length_dates,
-        num_dates_enrollment=None,
-    ):
+        first_enrollment_date: str,
+        last_date_full_data: str,
+        analysis_start_days: int,
+        analysis_length_dates: int,
+        num_dates_enrollment: Optional[int] = None,
+    ) -> TimeLimits:
         """Return a ``TimeLimits`` instance with the following parameters
 
         Args:
@@ -1028,11 +1038,11 @@ class TimeLimits:
     @classmethod
     def for_ts(
         cls,
-        first_enrollment_date,
-        last_date_full_data,
-        time_series_period,
-        num_dates_enrollment,
-    ):
+        first_enrollment_date: str,
+        last_date_full_data: str,
+        time_series_period: str,
+        num_dates_enrollment: int,
+    ) -> TimeLimits:
         """Return a ``TimeLimits`` instance for a time series.
 
         Args:
@@ -1167,7 +1177,7 @@ class TimeSeriesResult:
     fully_qualified_table_name = attr.ib(type=str)
     analysis_windows = attr.ib(type=list)
 
-    def get(self, bq_context, analysis_window):
+    def get(self, bq_context: BigQueryContext, analysis_window) -> DataFrame:
         """Get the DataFrame for a specific analysis window.
 
         N.B. this makes a BigQuery query each time it is run; caching
@@ -1192,6 +1202,54 @@ class TimeSeriesResult:
             self._build_analysis_window_subset_query(analysis_window)
         ).to_dataframe()
 
+    def get_full_data(self, bq_context: BigQueryContext) -> DataFrame:
+        """Get the full DataFrame from TimeSeriesResult.
+
+        This DataFrame has a row for each client for each period of the time
+        series and may be very large. A warning will print the size of data
+        to be downloaded.
+
+        Args:
+            bq_context (BigQueryContext)
+        """
+        size = self._get_table_size(bq_context)
+
+        print(
+            "Downloading {full_table_name} ({size} GB)".format(
+                full_table_name=self.fully_qualified_table_name, size=size
+            )
+        )
+
+        table = bq_context.client.get_table(self.fully_qualified_table_name)
+        return bq_context.client.list_rows(table).to_dataframe()
+
+    def get_aggregated_data(
+        self,
+        bq_context: BigQueryContext,
+        metric_list: list,
+        aggregate_function: str = "AVG",
+    ) -> Tuple[DataFrame, int]:
+        """Results from a time series query, aggregated over analysis windows
+        by a SQL aggregate function.
+
+        This DataFrame has a row for each analysis window, with a column
+        for each metric in the supplied metric_list.
+
+        Args:
+            bq_context (BigQueryContext)
+            metric_list (list of mozanalysis.metrics.Metric)
+            aggregate_fuction (str)
+        """
+
+        return (
+            bq_context.run_query(
+                self._build_aggregated_data_query(metric_list, aggregate_function)
+            ).to_dataframe(),
+            bq_context.run_query(self._table_sample_size_query())
+            .to_dataframe()["population_size"]
+            .values[0],
+        )
+
     def keys(self):
         return [aw.start for aw in self.analysis_windows]
 
@@ -1199,7 +1257,31 @@ class TimeSeriesResult:
         for aw in self.analysis_windows:
             yield (aw.start, self.get(bq_context, aw))
 
-    def _build_analysis_window_subset_query(self, analysis_window):
+    def _get_table_size(self, bq_context: BigQueryContext) -> float:
+        """
+        Get table size in memory for table being requested by `get_full_data`.
+        """
+
+        table_info = self.fully_qualified_table_name.split(".")
+
+        query = """
+                SELECT
+                    SUM(size_bytes)/pow(10,9) AS size
+                FROM
+                    `{project_id}.{dataset_id}`.__TABLES__
+                WHERE
+                  table_id = '{table_id}'
+                """.format(
+            project_id=table_info[0], dataset_id=table_info[1], table_id=table_info[2]
+        )
+
+        size = bq_context.run_query(query).to_dataframe()
+
+        return size["size"].iloc[0].round(2)
+
+    def _build_analysis_window_subset_query(
+        self, analysis_window: AnalysisWindow
+    ) -> str:
         """Return SQL for partitioning time series results.
 
         When we query data for a time series, we query it for all
@@ -1217,6 +1299,43 @@ class TimeSeriesResult:
             full_table_name=self.fully_qualified_table_name,
             aws=analysis_window.start,
             awe=analysis_window.end,
+        )
+
+    def _build_aggregated_data_query(
+        self, metric_list: List[Metric], aggregate_function: str
+    ) -> str:
+
+        return """
+        SELECT
+            analysis_window_start,
+            analysis_window_end,
+            {agg_metrics}
+        FROM
+            {full_table_name}
+        GROUP BY
+            analysis_window_start, analysis_window_end
+        ORDER BY
+            analysis_window_start
+        """.format(
+            agg_metrics=",\n            ".join(
+                "{agg}({n}) AS {n}".format(agg=aggregate_function, n=m.name)
+                for m in metric_list
+            ),
+            full_table_name=self.fully_qualified_table_name,
+        )
+
+    def _table_sample_size_query(self, client_id_column: str = "client_id") -> str:
+        return """
+        SELECT
+            COUNT(*) as population_size
+        FROM
+            (SELECT DISTINCT
+                {client_column}
+            FROM
+                {full_table_name})
+        """.format(
+            client_column=client_id_column,
+            full_table_name=self.fully_qualified_table_name,
         )
 
     @analysis_windows.validator

@@ -39,11 +39,6 @@ test_settings: &test_settings
 version: 2
 jobs:
 
-  py36:
-    <<: *test_settings
-    docker:
-      - image: python:3.6-stretch
-
   py38:
     <<: *test_settings
     docker:
@@ -131,7 +126,6 @@ workflows:
   version: 2
   build:
     jobs:
-      - py36
       - py38
       - lint
       - docs

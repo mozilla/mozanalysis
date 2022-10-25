@@ -97,8 +97,8 @@ class SegmentDataSource:
                     DATE_ADD(e.enrollment_date, interval {window_start} day)
                     AND DATE_ADD(e.enrollment_date, interval {window_end} day)
         GROUP BY e.client_id, e.branch""".format(
-            client_id=self.client_id_column,
-            submission_date=self.submission_date_column,
+            client_id=self.client_id_column or "client_id",
+            submission_date=self.submission_date_column or "submission_date",
             from_expr=self.from_expr_for(from_expr_dataset),
             first_enrollment=time_limits.first_enrollment_date,
             last_enrollment=time_limits.last_enrollment_date,
@@ -107,6 +107,44 @@ class SegmentDataSource:
             segments=",\n            ".join(
                 f"{m.select_expr} AS {m.name}" for m in segment_list
             ),
+        )
+
+    def build_query_target(
+        self,
+        target,
+        time_limits,
+        from_expr_dataset=None,
+    ):
+        """
+        Return a nearly-self contained SQL query, for use with
+        mozanalysis.sizing.HistoricalTarget.
+
+        This query returns all distinct client IDs that satisfy the criteria
+        for inclusion in a historical analysis using this datasource.
+        Separate sub-queries are constructed for each additional Segment
+        in the analysis.
+        """
+        return """
+        SELECT
+            {client_id} as client_id,
+            target_first_date,
+            target_last_date,
+            {target_name}
+        FROM (SELECT {client_id},
+                MIN({submission_date}) as target_first_date,
+                MAX({submission_date}) as target_last_date,
+                {target}
+            FROM {from_expr}
+            WHERE {submission_date} BETWEEN '{fddr}' AND '{lddr}'
+            GROUP BY {client_id})
+        WHERE {target_name}""".format(
+            client_id=self.client_id_column or "client_id",
+            submission_date=self.submission_date_column or "submission_date",
+            from_expr=self.from_expr_for(from_expr_dataset),
+            fddr=time_limits.first_enrollment_date,
+            lddr=time_limits.last_enrollment_date,
+            target=f"{target.select_expr} AS {target.name}",
+            target_name=target.name,
         )
 
     @window_start.validator

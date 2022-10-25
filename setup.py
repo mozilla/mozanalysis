@@ -12,7 +12,6 @@ tests_require = [
     "pytest-black",
     "pytest-cov",
     "pytest-timeout",
-    "pyspark",
 ]
 
 docs_require = ["Sphinx", "sphinx-autobuild", "sphinx-rtd-theme"]
@@ -35,6 +34,7 @@ setup(
         "scipy",
         "google-cloud-bigquery",
         "google-cloud-bigquery-storage",
+        "statsmodels",
     ],
     setup_requires=["pytest-runner", "setuptools_scm"],
     extras_require={

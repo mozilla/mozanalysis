@@ -10,12 +10,12 @@ import mozanalysis.bayesian_stats.binary as mabsbin
 import mozanalysis.frequentist_stats.bootstrap as mafsb
 
 
-def test_bootstrap_vs_beta(spark_context_or_none):
+def test_bootstrap_vs_beta():
     num_enrollments = 10000
     fake_data = pd.Series(np.zeros(num_enrollments))
     fake_data[:300] = 1
 
-    boot_res = mafsb.bootstrap_one_branch(fake_data, sc=spark_context_or_none)
+    boot_res = mafsb.bootstrap_one_branch(fake_data)
     beta_res = mabsbin.summarize_one_branch_from_agg(
         pd.Series(
             {
@@ -44,7 +44,7 @@ def test_bootstrap_vs_beta(spark_context_or_none):
         ), l
 
 
-def test_bayesian_bootstrap_vs_beta(spark_context_or_none):
+def test_bayesian_bootstrap_vs_beta():
     # The two distributions should be mathematically identical for binary data
     # like this; differences could emerge from
     # 1. implementation errors
@@ -53,7 +53,7 @@ def test_bayesian_bootstrap_vs_beta(spark_context_or_none):
     fake_data = pd.Series(np.zeros(num_enrollments))
     fake_data[:300] = 1
 
-    boot_res = mabsbb.bootstrap_one_branch(fake_data, sc=spark_context_or_none)
+    boot_res = mabsbb.bootstrap_one_branch(fake_data)
     beta_res = mabsbin.summarize_one_branch_from_agg(
         pd.Series(
             {
@@ -74,14 +74,14 @@ def test_bayesian_bootstrap_vs_beta(spark_context_or_none):
         ), (l, boot_res, beta_res)
 
 
-def test_bayesian_bootstrap_vs_bootstrap_geometric(spark_context_or_none):
+def test_bayesian_bootstrap_vs_bootstrap_geometric():
     num_enrollments = 20000
 
     rs = np.random.RandomState(42)
     data = rs.geometric(p=0.1, size=num_enrollments)
 
-    bb_res = mabsbb.bootstrap_one_branch(data, sc=spark_context_or_none)
-    pboot_res = mafsb.bootstrap_one_branch(data, sc=spark_context_or_none)
+    bb_res = mabsbb.bootstrap_one_branch(data)
+    pboot_res = mafsb.bootstrap_one_branch(data)
 
     assert bb_res["mean"] == pytest.approx(10, rel=1e-2)
     assert bb_res["0.5"] == pytest.approx(10, rel=1e-2)
@@ -94,7 +94,7 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric(spark_context_or_none):
         )
 
 
-def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(spark_context_or_none):
+def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles():
     num_enrollments = 20000
 
     rs = np.random.RandomState(42)
@@ -108,10 +108,10 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(spark_context_or_no
     bb_res = mabsbb.bootstrap_one_branch(
         data,
         stat_fn=mabsbb.make_bb_quantile_closure(quantiles),
-        sc=spark_context_or_none,
     )
     pboot_res = mafsb.bootstrap_one_branch(
-        data, stat_fn=calc_quantiles, sc=spark_context_or_none
+        data,
+        stat_fn=calc_quantiles,
     )
 
     for q in bb_res.index:
@@ -124,14 +124,14 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles(spark_context_or_no
             )
 
 
-def test_bayesian_bootstrap_vs_bootstrap_poisson(spark_context_or_none):
+def test_bayesian_bootstrap_vs_bootstrap_poisson():
     num_enrollments = 10001
 
     rs = np.random.RandomState(42)
     data = rs.poisson(lam=10, size=num_enrollments)
 
-    bb_res = mabsbb.bootstrap_one_branch(data, sc=spark_context_or_none)
-    pboot_res = mafsb.bootstrap_one_branch(data, sc=spark_context_or_none)
+    bb_res = mabsbb.bootstrap_one_branch(data)
+    pboot_res = mafsb.bootstrap_one_branch(data)
 
     assert bb_res["mean"] == pytest.approx(10, rel=1e-2)
     assert bb_res["0.5"] == pytest.approx(10, rel=1e-2)
@@ -144,7 +144,7 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson(spark_context_or_none):
         )
 
 
-def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles(spark_context_or_none):
+def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles():
     num_enrollments = 10001
 
     rs = np.random.RandomState(42)
@@ -158,10 +158,10 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles(spark_context_or_none
     bb_res = mabsbb.bootstrap_one_branch(
         data,
         stat_fn=mabsbb.make_bb_quantile_closure(quantiles),
-        sc=spark_context_or_none,
     )
     pboot_res = mafsb.bootstrap_one_branch(
-        data, stat_fn=calc_quantiles, sc=spark_context_or_none
+        data,
+        stat_fn=calc_quantiles,
     )
 
     for q in bb_res.index:

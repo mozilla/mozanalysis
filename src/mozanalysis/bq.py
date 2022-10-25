@@ -39,7 +39,7 @@ class BigQueryContext:
         self.project_id = project_id
         self.client = bigquery.Client(project=project_id)
 
-    def run_query(self, sql, results_table=None):
+    def run_query(self, sql, results_table=None, replace_tables=False):
         """Run a query and return the result.
 
         If ``results_table`` is provided, then save the results
@@ -53,9 +53,17 @@ class BigQueryContext:
                 cache key (if the table already exists, we ignore ``sql``
                 and return the table's contents), so it is wise for
                 ``results_table`` to include a hash of ``sql``.
+            replace_tables (bool): Indicates if the results table should
+                be replaced with new results, if that table is found.
         """
         if not results_table:
             return self.client.query(sql).result()
+
+        if replace_tables:
+            self.client.delete_table(
+                self.fully_qualify_table_name(results_table),
+                not_found_ok=True,
+            )
 
         try:
             full_res = self.client.query(

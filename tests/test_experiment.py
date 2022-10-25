@@ -7,9 +7,9 @@ import mozanalysis.metrics.firefox_ios
 import mozanalysis.metrics.klar_ios
 import mozanalysis.metrics.klar_android
 import mozanalysis.segments.desktop as msd
-from mozanalysis.experiment import AnalysisBasis, AnalysisWindow, Experiment, TimeLimits
+from mozanalysis.experiment import AnalysisWindow, Experiment, TimeLimits
 from mozanalysis.exposure import ExposureSignal
-from mozanalysis.metrics import Metric
+from mozanalysis.metrics import Metric, AnalysisBasis, DataSource
 from mozanalysis.segments import Segment, SegmentDataSource
 
 
@@ -796,3 +796,29 @@ def test_resolve_invalid_app_name():
             time_limits=tl,
             enrollments_table="enrollments",
         )
+
+
+def test_resolve_missing_column_names():
+    test_ds = DataSource(
+        name="test_ds",
+        from_expr="SELECT client_id FROM test_set",
+        client_id_column=None,
+        submission_date_column=None,
+    )
+
+    test_metric = Metric(name="test_metric", data_source=test_ds, select_expr="")
+
+    tl = TimeLimits.for_single_analysis_window(
+        first_enrollment_date="2022-01-01",
+        last_date_full_data="2022-01-13",
+        analysis_start_days=0,
+        analysis_length_dates=7,
+    )
+
+    test_exp = Experiment(experiment_slug="test_exp", start_date="2022-01-01")
+
+    metric_sql = test_exp.build_metrics_query(
+        metric_list=[test_metric], time_limits=tl, enrollments_table="test_table"
+    )
+
+    assert "None" not in metric_sql

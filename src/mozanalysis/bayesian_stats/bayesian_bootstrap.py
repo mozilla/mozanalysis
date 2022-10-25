@@ -102,7 +102,6 @@ def compare_branches(
     threshold_quantile=None,
     individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
     comparative_summary_quantiles=mabs.DEFAULT_QUANTILES,
-    sc=None,
 ):
     """Jointly sample bootstrapped statistics then compare them.
 
@@ -140,7 +139,6 @@ def compare_branches(
             statistics (i.e. the change relative to the reference
             branch, probably the control). Change these when making
             Bonferroni corrections.
-        sc (optional): The Spark context, if available
 
     Returns:
         If ``stat_fn`` returns a scalar (this is the default), then
@@ -176,7 +174,6 @@ def compare_branches(
             stat_fn,
             num_samples,
             threshold_quantile=threshold_quantile,
-            sc=sc,
         )
         for b in branch_list
     }
@@ -196,7 +193,6 @@ def bootstrap_one_branch(
     seed_start=None,
     threshold_quantile=None,
     summary_quantiles=mabs.DEFAULT_QUANTILES,
-    sc=None,
 ):
     """Bootstrap ``stat_fn`` for one branch on its own.
 
@@ -227,10 +223,9 @@ def bootstrap_one_branch(
         summary_quantiles (list, optional): Quantiles to determine the
             confidence bands on the branch statistics. Change these
             when making Bonferroni corrections.
-        sc (optional): The Spark context, if available
     """
     samples = get_bootstrap_samples(
-        data, stat_fn, num_samples, seed_start, threshold_quantile, sc
+        data, stat_fn, num_samples, seed_start, threshold_quantile
     )
 
     return mabs.summarize_one_branch_samples(samples, summary_quantiles)
@@ -242,7 +237,6 @@ def get_bootstrap_samples(
     num_samples=10000,
     seed_start=None,
     threshold_quantile=None,
-    sc=None,
 ):
     """Return ``stat_fn`` evaluated on resampled data.
 
@@ -273,7 +267,6 @@ def get_bootstrap_samples(
 
         threshold_quantile (float, optional): An optional threshold
             quantile, above which to discard outliers. E.g. ``0.9999``.
-        sc (optional): The Spark context, if available
 
     Returns:
         A Series or DataFrame with one row per sample and one column
@@ -305,33 +298,10 @@ def get_bootstrap_samples(
     # Need to ensure every call has a unique, deterministic seed.
     seed_range = range(seed_start, seed_start + num_samples)
 
-    if sc is None:
-        summary_stat_samples = [
-            _resample_and_agg_once(data_values, data_counts, stat_fn, unique_seed)
-            for unique_seed in seed_range
-        ]
-
-    else:
-        try:
-            broadcast_data_values = sc.broadcast(data_values)
-            broadcast_data_counts = sc.broadcast(data_counts)
-
-            summary_stat_samples = (
-                sc.parallelize(seed_range)
-                .map(
-                    lambda seed: _resample_and_agg_once_bcast(
-                        broadcast_data_values=broadcast_data_values,
-                        broadcast_data_counts=broadcast_data_counts,
-                        stat_fn=stat_fn,
-                        unique_seed=seed % np.iinfo(np.uint32).max,
-                    )
-                )
-                .collect()
-            )
-
-        finally:
-            broadcast_data_values.unpersist()
-            broadcast_data_counts.unpersist()
+    summary_stat_samples = [
+        _resample_and_agg_once(data_values, data_counts, stat_fn, unique_seed)
+        for unique_seed in seed_range
+    ]
 
     summary_df = pd.DataFrame(summary_stat_samples)
     if len(summary_df.columns) == 1:
@@ -340,14 +310,6 @@ def get_bootstrap_samples(
 
     # Else return a DataFrame if stat_fn returns a dict
     return summary_df
-
-
-def _resample_and_agg_once_bcast(
-    broadcast_data_values, broadcast_data_counts, stat_fn, unique_seed
-):
-    return _resample_and_agg_once(
-        broadcast_data_values.value, broadcast_data_counts.value, stat_fn, unique_seed
-    )
 
 
 def _resample_and_agg_once(data_values, data_counts, stat_fn, unique_seed=None):
