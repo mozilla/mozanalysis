@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mozanalysis.frequentist_stats.sample_size &mdash; mozanalysis  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> mozanalysis
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About Mozanalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide.html">Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mozanalysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>mozanalysis.frequentist_stats.sample_size</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mozanalysis.frequentist_stats.sample_size</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
+<span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
+<span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">norm</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="kn">from</span> <span class="nn">statsmodels.stats.power</span> <span class="kn">import</span> <span class="n">tt_ind_solve_power</span><span class="p">,</span> <span class="n">zt_ind_solve_power</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">BigQueryContext</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">TimeSeriesResult</span>
+<span class="kn">from</span> <span class="nn">statsmodels.stats.proportion</span> <span class="kn">import</span> <span class="n">samplesize_proportions_2indep_onetail</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span>
+
+
+<div class="viewcode-block" id="sample_size_curves"><a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.sample_size_curves">[docs]</a><span class="k">def</span> <span class="nf">sample_size_curves</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">metrics_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">solver</span><span class="p">,</span>
+    <span class="n">effect_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">power</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="mf">0.80</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">solver_kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loop over a list of different parameters to produce sample size estimates given</span>
+<span class="sd">    those parameters. A single parameter in [effect_size, power, alpha] should</span>
+<span class="sd">    be passed a list; the sample size curve will be calculated with this as</span>
+<span class="sd">    the variable.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df: A pandas DataFrame of queried historical data.</span>
+<span class="sd">        metrics_list (list of mozanalysis.metrics.Metric): List of metrics</span>
+<span class="sd">            used to construct the results df from HistoricalTarget. The names</span>
+<span class="sd">            of these metrics are used to return results for sample size</span>
+<span class="sd">            calculation for each.</span>
+<span class="sd">        solver (any function that returns sample size as function of</span>
+<span class="sd">            effect_size, power, alpha): The solver being used to calculate sample</span>
+<span class="sd">            size.</span>
+<span class="sd">        effect_size (float or ArrayLike, default .01): For test of differences in</span>
+<span class="sd">            proportions, the absolute difference; for tests of differences in mean,</span>
+<span class="sd">            the percent change.</span>
+<span class="sd">        alpha (float or ArrayLike, default .05): Significance level for the experiment.</span>
+<span class="sd">        power (float or ArrayLike, default .90): Probability of detecting an effect,</span>
+<span class="sd">            when a significant effect exists.</span>
+<span class="sd">        **solver_kwargs (dict): Arguments necessary for the provided solver.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary of pd.DataFrame objects. An item in the dictionary is</span>
+<span class="sd">        created for each metric in metric_list, containing a DataFrame of sample</span>
+<span class="sd">        size, population size, and population proportion at each value of the iterable</span>
+<span class="sd">        parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;effect_size&quot;</span><span class="p">:</span> <span class="n">effect_size</span><span class="p">,</span> <span class="s2">&quot;power&quot;</span><span class="p">:</span> <span class="n">power</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">}</span>
+    <span class="n">sim_var</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim_var</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Exactly one of effect_size, power, and alpha must be ArrayLike&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">sim_var</span> <span class="o">=</span> <span class="n">sim_var</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">test_vals</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">sim_var</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">params</span><span class="p">[</span><span class="n">sim_var</span><span class="p">]</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics_list</span><span class="p">:</span>
+        <span class="n">sample_sizes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">test_vals</span><span class="p">:</span>
+            <span class="n">sample_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="o">**</span><span class="p">{</span><span class="n">sim_var</span><span class="p">:</span> <span class="n">v</span><span class="p">},</span>
+                    <span class="o">**</span><span class="n">solver</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="p">[</span><span class="n">metric</span><span class="p">],</span> <span class="o">**</span><span class="p">{</span><span class="n">sim_var</span><span class="p">:</span> <span class="n">v</span><span class="p">},</span> <span class="o">**</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_kwargs</span><span class="p">)[</span>
+                        <span class="n">metric</span><span class="o">.</span><span class="n">name</span>
+                    <span class="p">],</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="n">results</span><span class="p">[</span><span class="n">metric</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="difference_of_proportions_sample_size_calc"><a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.difference_of_proportions_sample_size_calc">[docs]</a><span class="k">def</span> <span class="nf">difference_of_proportions_sample_size_calc</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">metrics_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
+    <span class="n">effect_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.90</span><span class="p">,</span>
+    <span class="n">outlier_percentile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">99.5</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform sample size calculation for an experiment to test for a</span>
+<span class="sd">    difference in proportions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df: A pandas DataFrame of queried historical data.</span>
+<span class="sd">        metrics_list (list of mozanalysis.metrics.Metric): List of metrics</span>
+<span class="sd">            used to construct the results df from HistoricalTarget. The names</span>
+<span class="sd">            of these metrics are used to return results for sample size</span>
+<span class="sd">            calculation for each</span>
+<span class="sd">        effect_size (float, default .01): Difference in proportion for the</span>
+<span class="sd">            minimum detectable effect --</span>
+<span class="sd">            effect_size = p(event under alt) - p(event under null)</span>
+<span class="sd">        alpha (float, default .05): Significance level for the experiment.</span>
+<span class="sd">        power (float, default .90): Probability of detecting an effect,</span>
+<span class="sd">            when a significant effect exists.</span>
+<span class="sd">        outlier_percentile(float, default .995): Percentile at which to trim</span>
+<span class="sd">            each columns.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary. Keys in the dictionary are the metrics column names from</span>
+<span class="sd">        the DataFrame; values are the required sample size to achieve the</span>
+<span class="sd">        desired power for that metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">q</span><span class="o">=</span><span class="p">[</span><span class="n">outlier_percentile</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="n">effect_size</span>
+
+        <span class="k">return</span> <span class="n">samplesize_proportions_2indep_onetail</span><span class="p">(</span>
+            <span class="n">diff</span><span class="o">=</span><span class="n">effect_size</span><span class="p">,</span> <span class="n">prop2</span><span class="o">=</span><span class="n">p2</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="n">power</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+
+    <span class="n">metric_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics_list</span><span class="p">]</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">metric_names</span><span class="p">:</span>
+        <span class="n">sample_size</span> <span class="o">=</span> <span class="n">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+        <span class="n">pop_percent</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">sample_size</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
+        <span class="n">results</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;sample_size&quot;</span><span class="p">:</span> <span class="n">sample_size</span><span class="p">,</span>
+            <span class="s2">&quot;population_size&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
+            <span class="s2">&quot;population_percent&quot;</span><span class="p">:</span> <span class="n">pop_percent</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="z_or_t_ind_sample_size_calc"><a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.z_or_t_ind_sample_size_calc">[docs]</a><span class="k">def</span> <span class="nf">z_or_t_ind_sample_size_calc</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">metrics_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
+    <span class="n">test</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span>
+    <span class="n">effect_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.90</span><span class="p">,</span>
+    <span class="n">outlier_percentile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">99.5</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform sample size calculation for an experiment based on independent</span>
+<span class="sd">    samples t or z tests.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df: A pandas DataFrame of queried historical data.</span>
+<span class="sd">        metrics_list (list of mozanalysis.metrics.Metric): List of metrics</span>
+<span class="sd">            used to construct the results df from HistoricalTarget. The names</span>
+<span class="sd">            of these metrics are used to return results for sample size</span>
+<span class="sd">            calculation for each</span>
+<span class="sd">        test (str, default `z`): `z` or `t` to indicate which solver to use</span>
+<span class="sd">        effect_size (float, default .01): Percent change in metrics</span>
+<span class="sd">            expected as a result of the experiment treatment</span>
+<span class="sd">        alpha (float, default .05): Significance level for the experiment.</span>
+<span class="sd">        power (float, default .90): Probability of detecting an effect,</span>
+<span class="sd">            when a significant effect exists.</span>
+<span class="sd">        outlier_percentile(float, default .995): Percentile at which to trim</span>
+<span class="sd">            each columns.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary. Keys in the dictionary are the metrics column names from</span>
+<span class="sd">        the DataFrame; values are the required sample size to achieve the</span>
+<span class="sd">        desired power for that metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tests</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">zt_ind_solve_power</span><span class="p">,</span>
+        <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">zt_ind_solve_power</span><span class="p">,</span>
+        <span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="n">tt_ind_solve_power</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">tests</span><span class="p">[</span><span class="n">test</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">q</span><span class="o">=</span><span class="p">[</span><span class="n">outlier_percentile</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">es</span> <span class="o">=</span> <span class="p">(</span><span class="n">effect_size</span> <span class="o">*</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">sd</span>
+
+        <span class="k">return</span> <span class="n">solver</span><span class="p">(</span><span class="n">effect_size</span><span class="o">=</span><span class="n">es</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="n">power</span><span class="p">,</span> <span class="n">nobs1</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">metric_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics_list</span><span class="p">]</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">metric_names</span><span class="p">:</span>
+        <span class="n">sample_size</span> <span class="o">=</span> <span class="n">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+        <span class="n">pop_percent</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">sample_size</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
+        <span class="n">results</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;sample_size&quot;</span><span class="p">:</span> <span class="n">sample_size</span><span class="p">,</span>
+            <span class="s2">&quot;population_size&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
+            <span class="s2">&quot;population_percent&quot;</span><span class="p">:</span> <span class="n">pop_percent</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="empirical_effect_size_sample_size_calc"><a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.empirical_effect_size_sample_size_calc">[docs]</a><span class="k">def</span> <span class="nf">empirical_effect_size_sample_size_calc</span><span class="p">(</span>
+    <span class="n">res</span><span class="p">:</span> <span class="n">TimeSeriesResult</span><span class="p">,</span>
+    <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">,</span>
+    <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">quantile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.90</span><span class="p">,</span>
+    <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.80</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">parent_distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform sample size calculation with empirical effect size and</span>
+<span class="sd">    asymptotic approximation of Wilcoxen-Mann-Whitney U Test. Empirical effect size</span>
+<span class="sd">    is estimated using a quantile of week-to-week changes over</span>
+<span class="sd">    the course of the study, and the variance in the test statistic is</span>
+<span class="sd">    estimated as a quantile of weekly variance in metrics. Sample</span>
+<span class="sd">    size calculation is based on the asymptotic relative efficiency (ARE) of</span>
+<span class="sd">    the U test to the T test (see Stapleton 2008, pg 266, or</span>
+<span class="sd">    https://www.psychologie.hhu.de/fileadmin/redaktion/Fakultaeten/</span>
+<span class="sd">    Mathematisch-Naturwissenschaftliche_Fakultaet/Psychologie/AAP/gpower/GPowerManual.pdf)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        res: A TimeSeriesResult, generated by</span>
+<span class="sd">            mozanalysis.sizing.HistoricalTarget.get_time_series_data.</span>
+<span class="sd">        bq_context: A mozanalysis.bq.BigQueryContext object that handles downloading</span>
+<span class="sd">            time series data from BigQuery.</span>
+<span class="sd">        metrics_list (list of mozanalysis.metrics.Metric): List of metrics</span>
+<span class="sd">            used to construct the results df from HistoricalTarget. The names</span>
+<span class="sd">            of these metrics are used to return results for sample size</span>
+<span class="sd">            calculation for each.</span>
+<span class="sd">        quantile (float, default .90): Quantile used to calculate the effect size</span>
+<span class="sd">            as the quantile of week-to-week metric changes and the variance of</span>
+<span class="sd">            the mean.</span>
+<span class="sd">        alpha (float, default .05): Significance level for the experiment.</span>
+<span class="sd">        power (float, default .90): Probability of detecting an effect,</span>
+<span class="sd">            when a significant effect exists.</span>
+<span class="sd">        parent_distribution (str, default &quot;normal&quot;): Distribution of the parent data;</span>
+<span class="sd">            must be normal, uniform, logistic, or laplace.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary. Keys in the dictionary are the metrics column names from</span>
+<span class="sd">        the DataFrame; values are the required sample size to achieve the</span>
+<span class="sd">        desired power for that metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_mann_whitney_solve_sample_size_approximation</span><span class="p">(</span>
+        <span class="n">effect_size</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">parent_distribution</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span>
+    <span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wilcoxen-Mann-Whitney rank sum test sample size calculation,</span>
+<span class="sd">        based on asymptotic efficiency relative to the t-test.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rel_effect_size</span> <span class="o">=</span> <span class="n">effect_size</span> <span class="o">/</span> <span class="n">std</span>
+        <span class="n">are</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;uniform&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">pi</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">,</span>
+            <span class="s2">&quot;logistic&quot;</span><span class="p">:</span> <span class="mf">9.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+            <span class="s2">&quot;laplace&quot;</span><span class="p">:</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">parent_distribution</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">are</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parent distribution must be in </span><span class="si">{</span><span class="n">are</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">t_sample_size</span> <span class="o">=</span> <span class="n">tt_ind_solve_power</span><span class="p">(</span>
+            <span class="n">effect_size</span><span class="o">=</span><span class="n">rel_effect_size</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="n">power</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">t_sample_size</span> <span class="o">*</span> <span class="n">are</span><span class="p">[</span><span class="n">parent_distribution</span><span class="p">]</span>
+
+    <span class="n">res_mean</span><span class="p">,</span> <span class="n">pop_size</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get_aggregated_data</span><span class="p">(</span>
+        <span class="n">bq_context</span><span class="o">=</span><span class="n">bq_context</span><span class="p">,</span> <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span> <span class="n">aggregate_function</span><span class="o">=</span><span class="s2">&quot;AVG&quot;</span>
+    <span class="p">)</span>
+    <span class="n">res_mean</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s2">&quot;analysis_window_start&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">res_std</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get_aggregated_data</span><span class="p">(</span>
+        <span class="n">bq_context</span><span class="o">=</span><span class="n">bq_context</span><span class="p">,</span> <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span> <span class="n">aggregate_function</span><span class="o">=</span><span class="s2">&quot;STDDEV&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">effect_size</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">:</span>
+        <span class="n">res_mean</span><span class="p">[</span><span class="s2">&quot;diff&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_mean</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+        <span class="n">m_quantile</span> <span class="o">=</span> <span class="n">res_mean</span><span class="p">[</span><span class="s2">&quot;diff&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="n">quantile</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+        <span class="n">m_std</span> <span class="o">=</span> <span class="n">res_std</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="n">quantile</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+
+        <span class="n">effect_size</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">m_quantile</span><span class="p">,</span>
+            <span class="s2">&quot;period_start_day&quot;</span><span class="p">:</span> <span class="n">res_mean</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+                <span class="n">res_mean</span><span class="p">[</span><span class="s2">&quot;diff&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">m_quantile</span><span class="p">,</span> <span class="s2">&quot;analysis_window_start&quot;</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="n">std</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">m_std</span><span class="p">,</span>
+            <span class="s2">&quot;period_start_day&quot;</span><span class="p">:</span> <span class="n">res_std</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+                <span class="n">res_std</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">==</span> <span class="n">m_std</span><span class="p">,</span> <span class="s2">&quot;analysis_window_start&quot;</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">}</span>
+
+    <span class="n">size_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;effect_size&quot;</span><span class="p">:</span> <span class="n">effect_size</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
+            <span class="s2">&quot;std_dev&quot;</span><span class="p">:</span> <span class="n">std</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
+            <span class="s2">&quot;sample_size&quot;</span><span class="p">:</span> <span class="n">_mann_whitney_solve_sample_size_approximation</span><span class="p">(</span>
+                <span class="n">effect_size</span><span class="o">=</span><span class="n">effect_size</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                <span class="n">std</span><span class="o">=</span><span class="n">std</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                <span class="n">power</span><span class="o">=</span><span class="n">power</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">parent_distribution</span><span class="o">=</span><span class="n">parent_distribution</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">size_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">size_dict</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;population_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pop_size</span>
+        <span class="n">size_dict</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;population_percent&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="n">size_dict</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;sample_size&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">pop_size</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">size_dict</span></div>
+
+
+<div class="viewcode-block" id="poisson_diff_solve_sample_size"><a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.poisson_diff_solve_sample_size">[docs]</a><span class="k">def</span> <span class="nf">poisson_diff_solve_sample_size</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">metrics_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
+    <span class="n">effect_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.90</span><span class="p">,</span>
+    <span class="n">outlier_percentile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">99.5</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sample size for test of difference of Poisson rates,</span>
+<span class="sd">    based on Poisson rate&#39;s asymptotic normality.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df: A pandas DataFrame of queried historical data.</span>
+<span class="sd">        metrics_list (list of mozanalysis.metrics.Metric): List of metrics</span>
+<span class="sd">            used to construct the results df from HistoricalTarget. The names</span>
+<span class="sd">            of these metrics are used to return results for sample size</span>
+<span class="sd">            calculation for each</span>
+<span class="sd">        test (str, default `z`): `z` or `t` to indicate which solver to use</span>
+<span class="sd">        effect_size (float, default .01): Percent change in metrics</span>
+<span class="sd">            expected as a result of the experiment treatment</span>
+<span class="sd">        alpha (float, default .05): Significance level for the experiment.</span>
+<span class="sd">        power (float, default .90): Probability of detecting an effect,</span>
+<span class="sd">            when a significant effect exists.</span>
+<span class="sd">        outlier_percentile(float, default .995): Percentile at which to trim</span>
+<span class="sd">            each columns.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary. Keys in the dictionary are the metrics column names from</span>
+<span class="sd">        the DataFrame; values are the required sample size to achieve the</span>
+<span class="sd">        desired power for that metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">q</span><span class="o">=</span><span class="p">[</span><span class="n">outlier_percentile</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">es</span> <span class="o">=</span> <span class="p">(</span><span class="n">effect_size</span> <span class="o">*</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">sd</span>
+
+        <span class="n">z_alpha</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">z_power</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">power</span><span class="p">)</span>
+
+        <span class="n">denom</span> <span class="o">=</span> <span class="p">(</span><span class="n">es</span> <span class="o">/</span> <span class="p">(</span><span class="n">z_alpha</span> <span class="o">+</span> <span class="n">z_power</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">sample_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">mean</span> <span class="o">+</span> <span class="n">es</span><span class="p">)</span> <span class="o">/</span> <span class="n">denom</span>
+        <span class="k">return</span> <span class="n">sample_size</span>
+
+    <span class="n">metric_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics_list</span><span class="p">]</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">metric_names</span><span class="p">:</span>
+        <span class="n">sample_size</span> <span class="o">=</span> <span class="n">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+        <span class="n">pop_percent</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">sample_size</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
+        <span class="n">results</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;sample_size&quot;</span><span class="p">:</span> <span class="n">sample_size</span><span class="p">,</span>
+            <span class="s2">&quot;population_size&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
+            <span class="s2">&quot;population_percent&quot;</span><span class="p">:</span> <span class="n">pop_percent</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, Mozilla.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

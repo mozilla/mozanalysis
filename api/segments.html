@@ -16,6 +16,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
@@ -52,12 +53,23 @@
 <li class="toctree-l2"><a class="reference internal" href="experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="exposure.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="frequentist_stats/sample_size.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics/fenix.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.fenix</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics/firefox_ios.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firefox_ios</span></code></a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.segments.SegmentDataSource"><code class="docutils literal notranslate"><span class="pre">SegmentDataSource</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mozanalysis.segments.SegmentDataSource.from_expr_for"><code class="docutils literal notranslate"><span class="pre">SegmentDataSource.from_expr_for()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mozanalysis.segments.SegmentDataSource.build_query"><code class="docutils literal notranslate"><span class="pre">SegmentDataSource.build_query()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mozanalysis.segments.SegmentDataSource.build_query_target"><code class="docutils literal notranslate"><span class="pre">SegmentDataSource.build_query_target()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.segments.Segment"><code class="docutils literal notranslate"><span class="pre">Segment</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="segments/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="sizing.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.sizing</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -144,6 +156,17 @@ into the from expression.</p>
 <p>The query takes a list of <code class="docutils literal notranslate"><span class="pre">client_id``s</span> <span class="pre">from</span>
 <span class="pre">``raw_enrollments</span></code>, and adds one non-NULL boolean column per
 segment: True if the client is in the segment, False otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mozanalysis.segments.SegmentDataSource.build_query_target">
+<span class="sig-name descname"><span class="pre">build_query_target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_limits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_expr_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/segments.html#SegmentDataSource.build_query_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.segments.SegmentDataSource.build_query_target" title="Permalink to this definition"></a></dt>
+<dd><p>Return a nearly-self contained SQL query, for use with
+mozanalysis.sizing.HistoricalTarget.</p>
+<p>This query returns all distinct client IDs that satisfy the criteria
+for inclusion in a historical analysis using this datasource.
+Separate sub-queries are constructed for each additional Segment
+in the analysis.</p>
 </dd></dl>
 
 </dd></dl>

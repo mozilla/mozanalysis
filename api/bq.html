@@ -16,6 +16,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
@@ -48,16 +49,25 @@
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/binary.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.bq.BigQueryContext"><code class="docutils literal notranslate"><span class="pre">BigQueryContext</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mozanalysis.bq.BigQueryContext.run_query"><code class="docutils literal notranslate"><span class="pre">BigQueryContext.run_query()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mozanalysis.bq.BigQueryContext.fully_qualify_table_name"><code class="docutils literal notranslate"><span class="pre">BigQueryContext.fully_qualify_table_name()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="exposure.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="frequentist_stats/sample_size.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics/fenix.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.fenix</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics/firefox_ios.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firefox_ios</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="segments.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="segments/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="sizing.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.sizing</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -104,7 +114,7 @@ Defaults to the DS team’s project.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mozanalysis.bq.BigQueryContext.run_query">
-<span class="sig-name descname"><span class="pre">run_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sql</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.run_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.run_query" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">run_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sql</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_tables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.run_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.run_query" title="Permalink to this definition"></a></dt>
 <dd><p>Run a query and return the result.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">results_table</span></code> is provided, then save the results
 into there (or just query from there if it already exists).
@@ -118,6 +128,8 @@ a project_id or dataset_id. The table name is used as a
 cache key (if the table already exists, we ignore <code class="docutils literal notranslate"><span class="pre">sql</span></code>
 and return the table’s contents), so it is wise for
 <code class="docutils literal notranslate"><span class="pre">results_table</span></code> to include a hash of <code class="docutils literal notranslate"><span class="pre">sql</span></code>.</p></li>
+<li><p><strong>replace_tables</strong> (<em>bool</em>) – Indicates if the results table should
+be replaced with new results, if that table is found.</p></li>
 </ul>
 </dd>
 </dl>

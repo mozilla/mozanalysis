@@ -15,6 +15,7 @@
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -109,7 +110,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span> <span class="o">=</span> <span class="n">project_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">bigquery</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="n">project_id</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BigQueryContext.run_query"><a class="viewcode-back" href="../../api/bq.html#mozanalysis.bq.BigQueryContext.run_query">[docs]</a>    <span class="k">def</span> <span class="nf">run_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">results_table</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="BigQueryContext.run_query"><a class="viewcode-back" href="../../api/bq.html#mozanalysis.bq.BigQueryContext.run_query">[docs]</a>    <span class="k">def</span> <span class="nf">run_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">results_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">replace_tables</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run a query and return the result.</span>
 
 <span class="sd">        If ``results_table`` is provided, then save the results</span>
@@ -123,9 +124,17 @@
 <span class="sd">                cache key (if the table already exists, we ignore ``sql``</span>
 <span class="sd">                and return the table&#39;s contents), so it is wise for</span>
 <span class="sd">                ``results_table`` to include a hash of ``sql``.</span>
+<span class="sd">            replace_tables (bool): Indicates if the results table should</span>
+<span class="sd">                be replaced with new results, if that table is found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">results_table</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">replace_tables</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">delete_table</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span><span class="n">results_table</span><span class="p">),</span>
+                <span class="n">not_found_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">full_res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>

@@ -16,11 +16,12 @@
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="mozanalysis.metrics" href="../metrics.html" />
+    <link rel="next" title="mozanalysis.frequentist_stats.sample_size" href="sample_size.html" />
     <link rel="prev" title="mozanalysis.exposure" href="../exposure.html" /> 
 </head>
 
@@ -51,13 +52,20 @@
 <li class="toctree-l2"><a class="reference internal" href="../bq.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../exposure.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.bootstrap.compare_branches"><code class="docutils literal notranslate"><span class="pre">compare_branches()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch"><code class="docutils literal notranslate"><span class="pre">bootstrap_one_branch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples"><code class="docutils literal notranslate"><span class="pre">get_bootstrap_samples()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sample_size.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../metrics/fenix.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.fenix</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../metrics/firefox_ios.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firefox_ios</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../segments.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../segments/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sizing.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.sizing</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -91,7 +99,7 @@
 <span id="mozanalysis-frequentist-stats-bootstrap"></span><h1><a class="reference internal" href="#module-mozanalysis.frequentist_stats.bootstrap" title="mozanalysis.frequentist_stats.bootstrap"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a><a class="headerlink" href="#module-mozanalysis.frequentist_stats.bootstrap" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="mozanalysis.frequentist_stats.bootstrap.compare_branches">
-<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.bootstrap.</span></span><span class="sig-name descname"><span class="pre">compare_branches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_branch_label='control'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat_fn=&lt;function</span> <span class="pre">mean&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples=10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">individual_summary_quantiles=(0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.995)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comparative_summary_quantiles=(0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.995)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sc=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#compare_branches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.compare_branches" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.bootstrap.</span></span><span class="sig-name descname"><span class="pre">compare_branches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_branch_label='control'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat_fn=&lt;function</span> <span class="pre">mean&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples=10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">individual_summary_quantiles=(0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.995)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comparative_summary_quantiles=(0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.995)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#compare_branches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.compare_branches" title="Permalink to this definition"></a></dt>
 <dd><p>Jointly sample bootstrapped statistics then compare them.</p>
 <p>Performs a percentile bootstrap, which, according to Efron,
 is not significantly more distasteful than a basic bootstrap,
@@ -134,7 +142,6 @@ determine the confidence bands on comparative branch
 statistics (i.e. the change relative to the reference
 branch, probably the control). Change these when making
 Bonferroni corrections.</p></li>
-<li><p><strong>sc</strong> (<em>optional</em>) – The Spark context, if available</p></li>
 </ul>
 </dd>
 </dl>
@@ -163,7 +170,7 @@ computed only this statistic.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch">
-<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.bootstrap.</span></span><span class="sig-name descname"><span class="pre">bootstrap_one_branch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat_fn=&lt;function</span> <span class="pre">mean&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples=10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_start=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary_quantiles=(0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.995)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sc=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#bootstrap_one_branch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.bootstrap.</span></span><span class="sig-name descname"><span class="pre">bootstrap_one_branch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat_fn=&lt;function</span> <span class="pre">mean&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples=10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_start=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary_quantiles=(0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.995)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#bootstrap_one_branch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch" title="Permalink to this definition"></a></dt>
 <dd><p>Run a bootstrap for one branch on its own.</p>
 <p>Resamples the data <code class="docutils literal notranslate"><span class="pre">num_samples</span></code> times, computes <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for
 each sample, then returns summary statistics for the distribution
@@ -186,7 +193,6 @@ quantile, above which to discard outliers. E.g. <code class="docutils literal no
 <li><p><strong>summary_quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – Quantiles to determine the
 confidence bands on the branch statistics. Change these
 when making Bonferroni corrections.</p></li>
-<li><p><strong>sc</strong> (<em>optional</em>) – The Spark context, if available</p></li>
 </ul>
 </dd>
 </dl>
@@ -194,7 +200,7 @@ when making Bonferroni corrections.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples">
-<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.bootstrap.</span></span><span class="sig-name descname"><span class="pre">get_bootstrap_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat_fn=&lt;function</span> <span class="pre">mean&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples=10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_start=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sc=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#get_bootstrap_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.bootstrap.</span></span><span class="sig-name descname"><span class="pre">get_bootstrap_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat_fn=&lt;function</span> <span class="pre">mean&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples=10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_start=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#get_bootstrap_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples" title="Permalink to this definition"></a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> evaluated on resampled and original data.</p>
 <p>Do the resampling in parallel over the cluster.</p>
 <dl class="field-list simple">
@@ -218,7 +224,6 @@ in this calculation. By default, use a random seed.</p>
 </p></li>
 <li><p><strong>threshold_quantile</strong> (<em>float</em><em>, </em><em>optional</em>) – An optional threshold
 quantile, above which to discard outliers. E.g. <code class="docutils literal notranslate"><span class="pre">0.9999</span></code>.</p></li>
-<li><p><strong>sc</strong> (<em>optional</em>) – The Spark context, if available</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -243,7 +248,7 @@ with columns set to the dict keys.</p></li>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../exposure.html" class="btn btn-neutral float-left" title="mozanalysis.exposure" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../metrics.html" class="btn btn-neutral float-right" title="mozanalysis.metrics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="sample_size.html" class="btn btn-neutral float-right" title="mozanalysis.frequentist_stats.sample_size" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

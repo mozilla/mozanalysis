@@ -16,6 +16,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
@@ -52,12 +53,14 @@
 <li class="toctree-l2"><a class="reference internal" href="api/experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/exposure.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/frequentist_stats/sample_size.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/metrics/fenix.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.fenix</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/metrics/firefox_ios.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firefox_ios</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/segments.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/segments/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sizing.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.sizing</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -90,20 +93,133 @@
 <h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api/bayesian_stats.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/bayesian_stats/binary.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/bq.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/exposure.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/bayesian_stats.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats.html#mozanalysis.bayesian_stats.compare_samples"><code class="docutils literal notranslate"><span class="pre">compare_samples()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats.html#mozanalysis.bayesian_stats.summarize_one_branch_samples"><code class="docutils literal notranslate"><span class="pre">summarize_one_branch_samples()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats.html#mozanalysis.bayesian_stats.summarize_joint_samples"><code class="docutils literal notranslate"><span class="pre">summarize_joint_samples()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.bb_mean"><code class="docutils literal notranslate"><span class="pre">bb_mean()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure"><code class="docutils literal notranslate"><span class="pre">make_bb_quantile_closure()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.compare_branches"><code class="docutils literal notranslate"><span class="pre">compare_branches()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.bootstrap_one_branch"><code class="docutils literal notranslate"><span class="pre">bootstrap_one_branch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples"><code class="docutils literal notranslate"><span class="pre">get_bootstrap_samples()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/bayesian_stats/binary.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.compare_branches"><code class="docutils literal notranslate"><span class="pre">compare_branches()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.aggregate_col"><code class="docutils literal notranslate"><span class="pre">aggregate_col()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.summarize_one_branch_from_agg"><code class="docutils literal notranslate"><span class="pre">summarize_one_branch_from_agg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.compare_branches_from_agg"><code class="docutils literal notranslate"><span class="pre">compare_branches_from_agg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.get_samples"><code class="docutils literal notranslate"><span class="pre">get_samples()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/survival_func.html#mozanalysis.bayesian_stats.survival_func.compare_branches"><code class="docutils literal notranslate"><span class="pre">compare_branches()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/bayesian_stats/survival_func.html#mozanalysis.bayesian_stats.survival_func.get_thresholds"><code class="docutils literal notranslate"><span class="pre">get_thresholds()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/bq.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/bq.html#mozanalysis.bq.BigQueryContext"><code class="docutils literal notranslate"><span class="pre">BigQueryContext</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/bq.html#mozanalysis.bq.BigQueryContext.run_query"><code class="docutils literal notranslate"><span class="pre">BigQueryContext.run_query()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/bq.html#mozanalysis.bq.BigQueryContext.fully_qualify_table_name"><code class="docutils literal notranslate"><span class="pre">BigQueryContext.fully_qualify_table_name()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment"><code class="docutils literal notranslate"><span class="pre">Experiment</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.experiment_slug"><code class="docutils literal notranslate"><span class="pre">Experiment.experiment_slug</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.start_date"><code class="docutils literal notranslate"><span class="pre">Experiment.start_date</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.num_dates_enrollment"><code class="docutils literal notranslate"><span class="pre">Experiment.num_dates_enrollment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_app_name"><code class="docutils literal notranslate"><span class="pre">Experiment.get_app_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_single_window_data"><code class="docutils literal notranslate"><span class="pre">Experiment.get_single_window_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data"><code class="docutils literal notranslate"><span class="pre">Experiment.get_time_series_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.build_enrollments_query"><code class="docutils literal notranslate"><span class="pre">Experiment.build_enrollments_query()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.build_metrics_query"><code class="docutils literal notranslate"><span class="pre">Experiment.build_metrics_query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.TimeLimits"><code class="docutils literal notranslate"><span class="pre">TimeLimits</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.TimeLimits.for_single_analysis_window"><code class="docutils literal notranslate"><span class="pre">TimeLimits.for_single_analysis_window()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.TimeLimits.for_ts"><code class="docutils literal notranslate"><span class="pre">TimeLimits.for_ts()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.AnalysisWindow"><code class="docutils literal notranslate"><span class="pre">AnalysisWindow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult"><code class="docutils literal notranslate"><span class="pre">TimeSeriesResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult.get"><code class="docutils literal notranslate"><span class="pre">TimeSeriesResult.get()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult.get_full_data"><code class="docutils literal notranslate"><span class="pre">TimeSeriesResult.get_full_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult.get_aggregated_data"><code class="docutils literal notranslate"><span class="pre">TimeSeriesResult.get_aggregated_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/exposure.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/exposure.html#mozanalysis.exposure.ExposureSignal"><code class="docutils literal notranslate"><span class="pre">ExposureSignal</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/exposure.html#mozanalysis.exposure.ExposureSignal.build_query"><code class="docutils literal notranslate"><span class="pre">ExposureSignal.build_query()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.compare_branches"><code class="docutils literal notranslate"><span class="pre">compare_branches()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch"><code class="docutils literal notranslate"><span class="pre">bootstrap_one_branch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples"><code class="docutils literal notranslate"><span class="pre">get_bootstrap_samples()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/frequentist_stats/sample_size.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.sample_size_curves"><code class="docutils literal notranslate"><span class="pre">sample_size_curves()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.difference_of_proportions_sample_size_calc"><code class="docutils literal notranslate"><span class="pre">difference_of_proportions_sample_size_calc()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.z_or_t_ind_sample_size_calc"><code class="docutils literal notranslate"><span class="pre">z_or_t_ind_sample_size_calc()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.empirical_effect_size_sample_size_calc"><code class="docutils literal notranslate"><span class="pre">empirical_effect_size_sample_size_calc()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.poisson_diff_solve_sample_size"><code class="docutils literal notranslate"><span class="pre">poisson_diff_solve_sample_size()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/metrics.html#mozanalysis.metrics.AnalysisBasis"><code class="docutils literal notranslate"><span class="pre">AnalysisBasis</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/metrics.html#mozanalysis.metrics.DataSource"><code class="docutils literal notranslate"><span class="pre">DataSource</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/metrics.html#mozanalysis.metrics.DataSource.from_expr_for"><code class="docutils literal notranslate"><span class="pre">DataSource.from_expr_for()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/metrics.html#mozanalysis.metrics.DataSource.build_query"><code class="docutils literal notranslate"><span class="pre">DataSource.build_query()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/metrics.html#mozanalysis.metrics.DataSource.build_query_targets"><code class="docutils literal notranslate"><span class="pre">DataSource.build_query_targets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/metrics.html#mozanalysis.metrics.Metric"><code class="docutils literal notranslate"><span class="pre">Metric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/metrics.html#mozanalysis.metrics.agg_sum"><code class="docutils literal notranslate"><span class="pre">agg_sum()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/metrics.html#mozanalysis.metrics.agg_any"><code class="docutils literal notranslate"><span class="pre">agg_any()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/metrics.html#mozanalysis.metrics.agg_histogram_mean"><code class="docutils literal notranslate"><span class="pre">agg_histogram_mean()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="api/metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/metrics/fenix.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.fenix</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/metrics/firefox_ios.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firefox_ios</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/segments.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/segments.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/segments.html#mozanalysis.segments.SegmentDataSource"><code class="docutils literal notranslate"><span class="pre">SegmentDataSource</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/segments.html#mozanalysis.segments.SegmentDataSource.from_expr_for"><code class="docutils literal notranslate"><span class="pre">SegmentDataSource.from_expr_for()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/segments.html#mozanalysis.segments.SegmentDataSource.build_query"><code class="docutils literal notranslate"><span class="pre">SegmentDataSource.build_query()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/segments.html#mozanalysis.segments.SegmentDataSource.build_query_target"><code class="docutils literal notranslate"><span class="pre">SegmentDataSource.build_query_target()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/segments.html#mozanalysis.segments.Segment"><code class="docutils literal notranslate"><span class="pre">Segment</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="api/segments/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments.desktop</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/sizing.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.sizing</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/sizing.html#mozanalysis.sizing.HistoricalTarget"><code class="docutils literal notranslate"><span class="pre">HistoricalTarget</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.experiment_name"><code class="docutils literal notranslate"><span class="pre">HistoricalTarget.experiment_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.start_date"><code class="docutils literal notranslate"><span class="pre">HistoricalTarget.start_date</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.num_dates_enrollment"><code class="docutils literal notranslate"><span class="pre">HistoricalTarget.num_dates_enrollment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.analysis_length"><code class="docutils literal notranslate"><span class="pre">HistoricalTarget.analysis_length</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.get_single_window_data"><code class="docutils literal notranslate"><span class="pre">HistoricalTarget.get_single_window_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.get_time_series_data"><code class="docutils literal notranslate"><span class="pre">HistoricalTarget.get_time_series_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.build_metrics_query"><code class="docutils literal notranslate"><span class="pre">HistoricalTarget.build_metrics_query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits"><code class="docutils literal notranslate"><span class="pre">ContinuousEnrollmentTimeLimits</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits.for_single_analysis_window"><code class="docutils literal notranslate"><span class="pre">ContinuousEnrollmentTimeLimits.for_single_analysis_window()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </section>

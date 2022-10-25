@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mozanalysis.frequentist_stats.sample_size &mdash; mozanalysis  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mozanalysis.metrics" href="../metrics.html" />
+    <link rel="prev" title="mozanalysis.frequentist_stats.bootstrap" href="bootstrap.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> mozanalysis
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide.html">Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../bayesian_stats.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bayesian_stats/bayesian_bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bayesian_stats/binary.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bayesian_stats/survival_func.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.survival_func</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bq.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../experiment.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../exposure.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.exposure</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.sample_size.sample_size_curves"><code class="docutils literal notranslate"><span class="pre">sample_size_curves()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.sample_size.difference_of_proportions_sample_size_calc"><code class="docutils literal notranslate"><span class="pre">difference_of_proportions_sample_size_calc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.sample_size.z_or_t_ind_sample_size_calc"><code class="docutils literal notranslate"><span class="pre">z_or_t_ind_sample_size_calc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.sample_size.empirical_effect_size_sample_size_calc"><code class="docutils literal notranslate"><span class="pre">empirical_effect_size_sample_size_calc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.sample_size.poisson_diff_solve_sample_size"><code class="docutils literal notranslate"><span class="pre">poisson_diff_solve_sample_size()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics/fenix.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.fenix</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metrics/firefox_ios.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firefox_ios</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../segments.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../segments/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments.desktop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sizing.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.sizing</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mozanalysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../api.html">API Documentation</a> &raquo;</li>
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/frequentist_stats/sample_size.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mozanalysis.frequentist_stats.sample_size">
+<span id="mozanalysis-frequentist-stats-sample-size"></span><h1><a class="reference internal" href="#module-mozanalysis.frequentist_stats.sample_size" title="mozanalysis.frequentist_stats.sample_size"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a><a class="headerlink" href="#module-mozanalysis.frequentist_stats.sample_size" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="mozanalysis.frequentist_stats.sample_size.sample_size_curves">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.sample_size.</span></span><span class="sig-name descname"><span class="pre">sample_size_curves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effect_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Series</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Series</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Series</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">solver_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/sample_size.html#sample_size_curves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.sample_size.sample_size_curves" title="Permalink to this definition"></a></dt>
+<dd><p>Loop over a list of different parameters to produce sample size estimates given
+those parameters. A single parameter in [effect_size, power, alpha] should
+be passed a list; the sample size curve will be calculated with this as
+the variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> – A pandas DataFrame of queried historical data.</p></li>
+<li><p><strong>metrics_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><em>mozanalysis.metrics.Metric</em></a>) – List of metrics
+used to construct the results df from HistoricalTarget. The names
+of these metrics are used to return results for sample size
+calculation for each.</p></li>
+<li><p><strong>of</strong> (<em>solver</em><em> (</em><em>any function that returns sample size as function</em>) – effect_size, power, alpha): The solver being used to calculate sample
+size.</p></li>
+<li><p><strong>effect_size</strong> (<em>float</em><em> or </em><em>ArrayLike</em><em>, </em><em>default .01</em>) – For test of differences in
+proportions, the absolute difference; for tests of differences in mean,
+the percent change.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em> or </em><em>ArrayLike</em><em>, </em><em>default .05</em>) – Significance level for the experiment.</p></li>
+<li><p><strong>power</strong> (<em>float</em><em> or </em><em>ArrayLike</em><em>, </em><em>default .90</em>) – Probability of detecting an effect,
+when a significant effect exists.</p></li>
+<li><p><strong>**solver_kwargs</strong> (<em>dict</em>) – Arguments necessary for the provided solver.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary of pd.DataFrame objects. An item in the dictionary is
+created for each metric in metric_list, containing a DataFrame of sample
+size, population size, and population proportion at each value of the iterable
+parameter.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mozanalysis.frequentist_stats.sample_size.difference_of_proportions_sample_size_calc">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.sample_size.</span></span><span class="sig-name descname"><span class="pre">difference_of_proportions_sample_size_calc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><span class="pre">Metric</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effect_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">99.5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/sample_size.html#difference_of_proportions_sample_size_calc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.sample_size.difference_of_proportions_sample_size_calc" title="Permalink to this definition"></a></dt>
+<dd><p>Perform sample size calculation for an experiment to test for a
+difference in proportions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> – A pandas DataFrame of queried historical data.</p></li>
+<li><p><strong>metrics_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><em>mozanalysis.metrics.Metric</em></a>) – List of metrics
+used to construct the results df from HistoricalTarget. The names
+of these metrics are used to return results for sample size
+calculation for each</p></li>
+<li><p><strong>effect_size</strong> (<em>float</em><em>, </em><em>default .01</em>) – Difference in proportion for the
+minimum detectable effect –
+effect_size = p(event under alt) - p(event under null)</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>default .05</em>) – Significance level for the experiment.</p></li>
+<li><p><strong>power</strong> (<em>float</em><em>, </em><em>default .90</em>) – Probability of detecting an effect,
+when a significant effect exists.</p></li>
+<li><p><strong>outlier_percentile</strong> (<em>float</em><em>, </em><em>default .995</em>) – Percentile at which to trim
+each columns.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary. Keys in the dictionary are the metrics column names from
+the DataFrame; values are the required sample size to achieve the
+desired power for that metric.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mozanalysis.frequentist_stats.sample_size.z_or_t_ind_sample_size_calc">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.sample_size.</span></span><span class="sig-name descname"><span class="pre">z_or_t_ind_sample_size_calc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><span class="pre">Metric</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'z'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effect_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">99.5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/sample_size.html#z_or_t_ind_sample_size_calc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.sample_size.z_or_t_ind_sample_size_calc" title="Permalink to this definition"></a></dt>
+<dd><p>Perform sample size calculation for an experiment based on independent
+samples t or z tests.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> – A pandas DataFrame of queried historical data.</p></li>
+<li><p><strong>metrics_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><em>mozanalysis.metrics.Metric</em></a>) – List of metrics
+used to construct the results df from HistoricalTarget. The names
+of these metrics are used to return results for sample size
+calculation for each</p></li>
+<li><p><strong>test</strong> (str, default <cite>z</cite>) – <cite>z</cite> or <cite>t</cite> to indicate which solver to use</p></li>
+<li><p><strong>effect_size</strong> (<em>float</em><em>, </em><em>default .01</em>) – Percent change in metrics
+expected as a result of the experiment treatment</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>default .05</em>) – Significance level for the experiment.</p></li>
+<li><p><strong>power</strong> (<em>float</em><em>, </em><em>default .90</em>) – Probability of detecting an effect,
+when a significant effect exists.</p></li>
+<li><p><strong>outlier_percentile</strong> (<em>float</em><em>, </em><em>default .995</em>) – Percentile at which to trim
+each columns.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary. Keys in the dictionary are the metrics column names from
+the DataFrame; values are the required sample size to achieve the
+desired power for that metric.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mozanalysis.frequentist_stats.sample_size.empirical_effect_size_sample_size_calc">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.sample_size.</span></span><span class="sig-name descname"><span class="pre">empirical_effect_size_sample_size_calc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../experiment.html#mozanalysis.experiment.TimeSeriesResult" title="mozanalysis.experiment.TimeSeriesResult"><span class="pre">TimeSeriesResult</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">bq_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><span class="pre">BigQueryContext</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_distribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'normal'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/sample_size.html#empirical_effect_size_sample_size_calc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.sample_size.empirical_effect_size_sample_size_calc" title="Permalink to this definition"></a></dt>
+<dd><p>Perform sample size calculation with empirical effect size and
+asymptotic approximation of Wilcoxen-Mann-Whitney U Test. Empirical effect size
+is estimated using a quantile of week-to-week changes over
+the course of the study, and the variance in the test statistic is
+estimated as a quantile of weekly variance in metrics. Sample
+size calculation is based on the asymptotic relative efficiency (ARE) of
+the U test to the T test (see Stapleton 2008, pg 266, or
+<a class="reference external" href="https://www.psychologie.hhu.de/fileadmin/redaktion/Fakultaeten/">https://www.psychologie.hhu.de/fileadmin/redaktion/Fakultaeten/</a>
+Mathematisch-Naturwissenschaftliche_Fakultaet/Psychologie/AAP/gpower/GPowerManual.pdf)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>res</strong> – A TimeSeriesResult, generated by
+mozanalysis.sizing.HistoricalTarget.get_time_series_data.</p></li>
+<li><p><strong>bq_context</strong> – A mozanalysis.bq.BigQueryContext object that handles downloading
+time series data from BigQuery.</p></li>
+<li><p><strong>metrics_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><em>mozanalysis.metrics.Metric</em></a>) – List of metrics
+used to construct the results df from HistoricalTarget. The names
+of these metrics are used to return results for sample size
+calculation for each.</p></li>
+<li><p><strong>quantile</strong> (<em>float</em><em>, </em><em>default .90</em>) – Quantile used to calculate the effect size
+as the quantile of week-to-week metric changes and the variance of
+the mean.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>default .05</em>) – Significance level for the experiment.</p></li>
+<li><p><strong>power</strong> (<em>float</em><em>, </em><em>default .90</em>) – Probability of detecting an effect,
+when a significant effect exists.</p></li>
+<li><p><strong>parent_distribution</strong> (<em>str</em><em>, </em><em>default &quot;normal&quot;</em>) – Distribution of the parent data;
+must be normal, uniform, logistic, or laplace.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary. Keys in the dictionary are the metrics column names from
+the DataFrame; values are the required sample size to achieve the
+desired power for that metric.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mozanalysis.frequentist_stats.sample_size.poisson_diff_solve_sample_size">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.sample_size.</span></span><span class="sig-name descname"><span class="pre">poisson_diff_solve_sample_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><span class="pre">Metric</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effect_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">99.5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/sample_size.html#poisson_diff_solve_sample_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.sample_size.poisson_diff_solve_sample_size" title="Permalink to this definition"></a></dt>
+<dd><p>Sample size for test of difference of Poisson rates,
+based on Poisson rate’s asymptotic normality.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> – A pandas DataFrame of queried historical data.</p></li>
+<li><p><strong>metrics_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><em>mozanalysis.metrics.Metric</em></a>) – List of metrics
+used to construct the results df from HistoricalTarget. The names
+of these metrics are used to return results for sample size
+calculation for each</p></li>
+<li><p><strong>test</strong> (str, default <cite>z</cite>) – <cite>z</cite> or <cite>t</cite> to indicate which solver to use</p></li>
+<li><p><strong>effect_size</strong> (<em>float</em><em>, </em><em>default .01</em>) – Percent change in metrics
+expected as a result of the experiment treatment</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>default .05</em>) – Significance level for the experiment.</p></li>
+<li><p><strong>power</strong> (<em>float</em><em>, </em><em>default .90</em>) – Probability of detecting an effect,
+when a significant effect exists.</p></li>
+<li><p><strong>outlier_percentile</strong> (<em>float</em><em>, </em><em>default .995</em>) – Percentile at which to trim
+each columns.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary. Keys in the dictionary are the metrics column names from
+the DataFrame; values are the required sample size to achieve the
+desired power for that metric.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="bootstrap.html" class="btn btn-neutral float-left" title="mozanalysis.frequentist_stats.bootstrap" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../metrics.html" class="btn btn-neutral float-right" title="mozanalysis.metrics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, Mozilla.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

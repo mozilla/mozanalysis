@@ -15,6 +15,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="#" />
@@ -77,11 +78,14 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
+ | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
+ | <a href="#Z"><strong>Z</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -97,7 +101,9 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.aggregate_col">aggregate_col() (in module mozanalysis.bayesian_stats.binary)</a>
 </li>
-      <li><a href="api/experiment.html#mozanalysis.experiment.AnalysisBasis">AnalysisBasis (class in mozanalysis.experiment)</a>
+      <li><a href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.analysis_length">analysis_length (mozanalysis.sizing.HistoricalTarget attribute)</a>
+</li>
+      <li><a href="api/metrics.html#mozanalysis.metrics.AnalysisBasis">AnalysisBasis (class in mozanalysis.metrics)</a>
 </li>
       <li><a href="api/experiment.html#mozanalysis.experiment.AnalysisWindow">AnalysisWindow (class in mozanalysis.experiment)</a>
 </li>
@@ -117,12 +123,16 @@
         <li><a href="api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch">(in module mozanalysis.frequentist_stats.bootstrap)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.build_enrollments_query">build_enrollments_query() (mozanalysis.experiment.Experiment method)</a>
 </li>
       <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.build_metrics_query">build_metrics_query() (mozanalysis.experiment.Experiment method)</a>
+
+      <ul>
+        <li><a href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.build_metrics_query">(mozanalysis.sizing.HistoricalTarget method)</a>
 </li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/exposure.html#mozanalysis.exposure.ExposureSignal.build_query">build_query() (mozanalysis.exposure.ExposureSignal method)</a>
 
       <ul>
@@ -131,6 +141,10 @@
         <li><a href="api/segments.html#mozanalysis.segments.SegmentDataSource.build_query">(mozanalysis.segments.SegmentDataSource method)</a>
 </li>
       </ul></li>
+      <li><a href="api/segments.html#mozanalysis.segments.SegmentDataSource.build_query_target">build_query_target() (mozanalysis.segments.SegmentDataSource method)</a>
+</li>
+      <li><a href="api/metrics.html#mozanalysis.metrics.DataSource.build_query_targets">build_query_targets() (mozanalysis.metrics.DataSource method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -153,6 +167,8 @@
 </li>
       <li><a href="api/bayesian_stats.html#mozanalysis.bayesian_stats.compare_samples">compare_samples() (in module mozanalysis.bayesian_stats)</a>
 </li>
+      <li><a href="api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits">ContinuousEnrollmentTimeLimits (class in mozanalysis.sizing)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -162,15 +178,23 @@
       <li><a href="api/metrics.html#mozanalysis.metrics.DataSource">DataSource (class in mozanalysis.metrics)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.difference_of_proportions_sample_size_calc">difference_of_proportions_sample_size_calc() (in module mozanalysis.frequentist_stats.sample_size)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.empirical_effect_size_sample_size_calc">empirical_effect_size_sample_size_calc() (in module mozanalysis.frequentist_stats.sample_size)</a>
+</li>
       <li><a href="api/experiment.html#mozanalysis.experiment.Experiment">Experiment (class in mozanalysis.experiment)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.experiment_name">experiment_name (mozanalysis.sizing.HistoricalTarget attribute)</a>
+</li>
       <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.experiment_slug">experiment_slug (mozanalysis.experiment.Experiment attribute)</a>
 </li>
       <li><a href="api/exposure.html#mozanalysis.exposure.ExposureSignal">ExposureSignal (class in mozanalysis.exposure)</a>
@@ -182,7 +206,11 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/experiment.html#mozanalysis.experiment.TimeLimits.for_single_analysis_window">for_single_analysis_window() (mozanalysis.experiment.TimeLimits class method)</a>
+
+      <ul>
+        <li><a href="api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits.for_single_analysis_window">(mozanalysis.sizing.ContinuousEnrollmentTimeLimits class method)</a>
 </li>
+      </ul></li>
       <li><a href="api/experiment.html#mozanalysis.experiment.TimeLimits.for_ts">for_ts() (mozanalysis.experiment.TimeLimits class method)</a>
 </li>
   </ul></td>
@@ -203,6 +231,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult.get">get() (mozanalysis.experiment.TimeSeriesResult method)</a>
 </li>
+      <li><a href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult.get_aggregated_data">get_aggregated_data() (mozanalysis.experiment.TimeSeriesResult method)</a>
+</li>
       <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.get_app_name">get_app_name() (mozanalysis.experiment.Experiment method)</a>
 </li>
       <li><a href="api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples">get_bootstrap_samples() (in module mozanalysis.bayesian_stats.bayesian_bootstrap)</a>
@@ -211,15 +241,33 @@
         <li><a href="api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples">(in module mozanalysis.frequentist_stats.bootstrap)</a>
 </li>
       </ul></li>
+      <li><a href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult.get_full_data">get_full_data() (mozanalysis.experiment.TimeSeriesResult method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.get_samples">get_samples() (in module mozanalysis.bayesian_stats.binary)</a>
 </li>
       <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.get_single_window_data">get_single_window_data() (mozanalysis.experiment.Experiment method)</a>
+
+      <ul>
+        <li><a href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.get_single_window_data">(mozanalysis.sizing.HistoricalTarget method)</a>
 </li>
+      </ul></li>
       <li><a href="api/bayesian_stats/survival_func.html#mozanalysis.bayesian_stats.survival_func.get_thresholds">get_thresholds() (in module mozanalysis.bayesian_stats.survival_func)</a>
 </li>
       <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data">get_time_series_data() (mozanalysis.experiment.Experiment method)</a>
+
+      <ul>
+        <li><a href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.get_time_series_data">(mozanalysis.sizing.HistoricalTarget method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/sizing.html#mozanalysis.sizing.HistoricalTarget">HistoricalTarget (class in mozanalysis.sizing)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -251,6 +299,8 @@
 </li>
         <li><a href="api/frequentist_stats/bootstrap.html#module-mozanalysis.frequentist_stats.bootstrap">mozanalysis.frequentist_stats.bootstrap</a>
 </li>
+        <li><a href="api/frequentist_stats/sample_size.html#module-mozanalysis.frequentist_stats.sample_size">mozanalysis.frequentist_stats.sample_size</a>
+</li>
         <li><a href="api/metrics.html#module-mozanalysis.metrics">mozanalysis.metrics</a>
 </li>
         <li><a href="api/metrics/desktop.html#module-mozanalysis.metrics.desktop">mozanalysis.metrics.desktop</a>
@@ -262,6 +312,8 @@
         <li><a href="api/segments.html#module-mozanalysis.segments">mozanalysis.segments</a>
 </li>
         <li><a href="api/segments/desktop.html#module-mozanalysis.segments.desktop">mozanalysis.segments.desktop</a>
+</li>
+        <li><a href="api/sizing.html#module-mozanalysis.sizing">mozanalysis.sizing</a>
 </li>
       </ul></li>
       <li>
@@ -323,6 +375,13 @@
 </li>
       </ul></li>
       <li>
+    mozanalysis.frequentist_stats.sample_size
+
+      <ul>
+        <li><a href="api/frequentist_stats/sample_size.html#module-mozanalysis.frequentist_stats.sample_size">module</a>
+</li>
+      </ul></li>
+      <li>
     mozanalysis.metrics
 
       <ul>
@@ -364,6 +423,13 @@
         <li><a href="api/segments/desktop.html#module-mozanalysis.segments.desktop">module</a>
 </li>
       </ul></li>
+      <li>
+    mozanalysis.sizing
+
+      <ul>
+        <li><a href="api/sizing.html#module-mozanalysis.sizing">module</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -371,6 +437,18 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.num_dates_enrollment">num_dates_enrollment (mozanalysis.experiment.Experiment attribute)</a>
+
+      <ul>
+        <li><a href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.num_dates_enrollment">(mozanalysis.sizing.HistoricalTarget attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.poisson_diff_solve_sample_size">poisson_diff_solve_sample_size() (in module mozanalysis.frequentist_stats.sample_size)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -386,12 +464,18 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.sample_size_curves">sample_size_curves() (in module mozanalysis.frequentist_stats.sample_size)</a>
+</li>
       <li><a href="api/segments.html#mozanalysis.segments.Segment">Segment (class in mozanalysis.segments)</a>
 </li>
       <li><a href="api/segments.html#mozanalysis.segments.SegmentDataSource">SegmentDataSource (class in mozanalysis.segments)</a>
 </li>
       <li><a href="api/experiment.html#mozanalysis.experiment.Experiment.start_date">start_date (mozanalysis.experiment.Experiment attribute)</a>
+
+      <ul>
+        <li><a href="api/sizing.html#mozanalysis.sizing.HistoricalTarget.start_date">(mozanalysis.sizing.HistoricalTarget attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/bayesian_stats.html#mozanalysis.bayesian_stats.summarize_joint_samples">summarize_joint_samples() (in module mozanalysis.bayesian_stats)</a>
@@ -411,6 +495,14 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult">TimeSeriesResult (class in mozanalysis.experiment)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Z">Z</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.z_or_t_ind_sample_size_calc">z_or_t_ind_sample_size_calc() (in module mozanalysis.frequentist_stats.sample_size)</a>
 </li>
   </ul></td>
 </tr></table>

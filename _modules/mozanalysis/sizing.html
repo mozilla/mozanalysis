@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mozanalysis.sizing &mdash; mozanalysis  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> mozanalysis
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Mozanalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide.html">Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mozanalysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>mozanalysis.sizing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mozanalysis.sizing</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
+<span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
+<span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+
+<span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">,</span> <span class="n">BigQueryContext</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="kn">import</span> <span class="n">hash_ish</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AnalysisWindow</span><span class="p">,</span>
+    <span class="n">TimeLimits</span><span class="p">,</span>
+    <span class="n">add_days</span><span class="p">,</span>
+    <span class="n">TimeSeriesResult</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">DataSource</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.segments</span> <span class="kn">import</span> <span class="n">Segment</span><span class="p">,</span> <span class="n">SegmentDataSource</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span>
+
+
+<div class="viewcode-block" id="HistoricalTarget"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">HistoricalTarget</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Query historical data.</span>
+
+<span class="sd">    The methods here query data in a way compatible with the following</span>
+<span class="sd">    principles, which are important for experiment analysis:</span>
+
+<span class="sd">    Example usage (in a colab notebook)::</span>
+
+<span class="sd">        from google.colab import auth</span>
+<span class="sd">        auth.authenticate_user()</span>
+<span class="sd">        print(&#39;Authenticated&#39;)</span>
+
+<span class="sd">        from mozanalysis.metrics.desktop import active_hours, uri_count</span>
+<span class="sd">        from mozanalysis.segments.desktop import allweek_regular_v1, \</span>
+<span class="sd">            new_or_resurrected_v3</span>
+
+<span class="sd">        bq_context = BigQueryContext(</span>
+<span class="sd">            dataset_id=&#39;mbowerman&#39;,  # e.g. mine&#39;s mbowerman</span>
+<span class="sd">            project_id=&#39;moz-fx-data-bq-data-science&#39;  # this is the default anyway</span>
+<span class="sd">        )</span>
+
+<span class="sd">        ht = HistoricalTarget(</span>
+<span class="sd">            experiment_name=&#39;my_test_name&#39;,</span>
+<span class="sd">            start_date=&#39;2021-01-01&#39;,</span>
+<span class="sd">            num_dates_enrollment=2,</span>
+<span class="sd">            analysis_length=4</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Run the query and get the results as a DataFrame</span>
+<span class="sd">        res = ht.get_single_window_data(</span>
+<span class="sd">            bq_context,</span>
+<span class="sd">            metric_list = [</span>
+<span class="sd">                active_hours,</span>
+<span class="sd">                uri_count</span>
+<span class="sd">            ],</span>
+<span class="sd">            target_list = [</span>
+<span class="sd">                allweek_regular_v1,</span>
+<span class="sd">                new_or_resurrected_v3</span>
+<span class="sd">            ]</span>
+<span class="sd">        )</span>
+
+<span class="sd">        targets_sql = ht.get_targets_sql()</span>
+
+<span class="sd">        metrics_sql = ht.get_metrics_sql()</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        experiment_name (str): A simple name of this analysis, which is used</span>
+<span class="sd">            to create table names when saving results in BigQuery.</span>
+<span class="sd">        start_date (str): e.g. &#39;2019-01-01&#39;. First date for historical data to be</span>
+<span class="sd">            retrieved.</span>
+<span class="sd">        analysis_length (int): Number of days to include for analysis</span>
+<span class="sd">        num_dates_enrollment (int, default 7): Number of days to consider to</span>
+<span class="sd">            enroll clients in the analysis.</span>
+<span class="sd">        continuous_enrollment (bool): Indicates if the analysis dates</span>
+<span class="sd">            and enrollment should be overlap; clients that satisfy the</span>
+<span class="sd">            target conditions at any point in the analysis will be</span>
+<span class="sd">            included for the entire window when calculating metrics.</span>
+<span class="sd">        app_id (str, optional): For a Glean app, the name of the BigQuery</span>
+<span class="sd">            dataset derived from its app ID, like `org_mozilla_firefox`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        experiment_name (str): Name of the study, used in naming tables</span>
+<span class="sd">            related to this analysis.</span>
+<span class="sd">        start_date (str): e.g. &#39;2019-01-01&#39;. First date on which enrollment</span>
+<span class="sd">            events were received.</span>
+<span class="sd">        num_dates_enrollment (int): Number of days to consider to enroll clients</span>
+<span class="sd">            in the analysis.</span>
+<span class="sd">        analysis_length (int, optional): Number of days to include for analysis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">experiment_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">start_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">analysis_length</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">num_dates_enrollment</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">continuous_enrollment</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">app_id</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">_metrics_sql</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_targets_sql</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="HistoricalTarget.get_single_window_data"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget.get_single_window_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_window_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">,</span>
+        <span class="n">metric_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
+        <span class="n">target_list</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Segment</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_targets_query</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">replace_tables</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return a DataFrame containing per-client metric values.</span>
+
+<span class="sd">        Also store them in a permanent table in BigQuery. The name of</span>
+<span class="sd">        this table will be printed. Subsequent calls to this function</span>
+<span class="sd">        will simply read the results from this table.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            bq_context (BigQueryContext): BigQuery configuration and client.</span>
+<span class="sd">            metric_list (list of mozanalysis.metric.Metric): The metrics</span>
+<span class="sd">                to analyze.</span>
+<span class="sd">            target_list (list of mozanalysis.segments.Segment): The targets</span>
+<span class="sd">                that define clients to be included in the analysis, based on</span>
+<span class="sd">                inclusion in a defined user segment. For each Segment included</span>
+<span class="sd">                in the list, client IDs are identified in the</span>
+<span class="sd">                SegmentDataSource that based on the select_for statement in</span>
+<span class="sd">                the Segment. Client IDs that satisfy the select_for</span>
+<span class="sd">                statement in every Segment in the target_list will be</span>
+<span class="sd">                returned by the query.</span>
+<span class="sd">            custom_targets_query (str): A full SQL query to be used</span>
+<span class="sd">                in the main query; must include a client_id column</span>
+<span class="sd">                to join to metrics tables and an enrollment_date:</span>
+
+<span class="sd">                N.B. this query&#39;s results must be uniquely keyed by</span>
+<span class="sd">                (client_id, enrollment_date), or else your results will be</span>
+<span class="sd">                subtly wrong.</span>
+<span class="sd">            replace_tables (bool): If True, delete tables that exist in</span>
+<span class="sd">                BigQuery with the same name; used to rerun analyses under</span>
+<span class="sd">                the same experiment name with different settings</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A pandas DataFrame of experiment data. One row per ``client_id``.</span>
+<span class="sd">            Some metadata columns, then one column per metric in</span>
+<span class="sd">            ``metric_list``, and one column per sanity-check metric.</span>
+<span class="sd">            Columns (not necessarily in order):</span>
+
+<span class="sd">                * client_id (str): Not necessary for &quot;happy path&quot; analyses.</span>
+<span class="sd">                * Analysis window (int): Start and end of analysis window, in</span>
+<span class="sd">                  days of entire analysis included in the window</span>
+<span class="sd">                * [metric 1]: The client&#39;s value for the first metric in</span>
+<span class="sd">                  ``metric_list``.</span>
+<span class="sd">                * ...</span>
+<span class="sd">                * [metric n]: The client&#39;s value for the nth (final)</span>
+<span class="sd">                  metric in ``metric_list``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">custom_targets_query</span> <span class="ow">or</span> <span class="n">target_list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Either custom_target_query or target_list must be provided&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">last_date_full_data</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="p">)</span>
+
+        <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">last_date_full_data</span> <span class="o">&gt;=</span> <span class="n">today</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Based on the start date, </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;, with </span><span class="si">{}</span><span class="s2"> days of enrollment &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;and analysis of length </span><span class="si">{}</span><span class="s2"> days, &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;the last day of analysis is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">last_date_full_data</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;, which is in the future.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">continuous_enrollment</span><span class="p">:</span>
+            <span class="n">time_limits</span> <span class="o">=</span> <span class="n">ContinuousEnrollmentTimeLimits</span><span class="o">.</span><span class="n">for_single_analysis_window</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_single_analysis_window</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span>
+                <span class="n">last_date_full_data</span><span class="p">,</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_targets_query</span><span class="p">(</span>
+            <span class="n">time_limits</span><span class="o">=</span><span class="n">time_limits</span><span class="p">,</span>
+            <span class="n">target_list</span><span class="o">=</span><span class="n">target_list</span><span class="p">,</span>
+            <span class="n">custom_targets_query</span><span class="o">=</span><span class="n">custom_targets_query</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">targets_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
+            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="p">,</span>
+                    <span class="s2">&quot;targets&quot;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">experiment_name</span><span class="p">,</span>
+                    <span class="n">hash_ish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span><span class="p">),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span><span class="p">,</span> <span class="n">targets_table_name</span><span class="p">,</span> <span class="n">replace_tables</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_metrics_query</span><span class="p">(</span>
+            <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span>
+            <span class="n">time_limits</span><span class="o">=</span><span class="n">time_limits</span><span class="p">,</span>
+            <span class="n">targets_table</span><span class="o">=</span><span class="n">bq_context</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span><span class="n">targets_table_name</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
+            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">experiment_name</span><span class="p">,</span>
+                    <span class="n">hash_ish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span><span class="p">),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span><span class="p">,</span> <span class="n">full_res_table_name</span><span class="p">,</span> <span class="n">replace_tables</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="HistoricalTarget.get_time_series_data"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget.get_time_series_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">,</span>
+        <span class="n">metric_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
+        <span class="n">time_series_period</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;weekly&quot;</span><span class="p">,</span>
+        <span class="n">custom_targets_query</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target_list</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">HistoricalTarget</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">replace_tables</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeSeriesResult</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return a TimeSeriesResult with per-client metric values.</span>
+
+<span class="sd">        Roughly equivalent to looping over :meth:`.get_single_window_data`</span>
+<span class="sd">        with different analysis windows, and reorganising the results.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            bq_context (BigQueryContext): BigQuery configuration and client.</span>
+<span class="sd">            metric_list (list of mozanalysis.metric.Metric): The metrics</span>
+<span class="sd">                to analyze.</span>
+<span class="sd">            time_series_period (str): Period of the time series for which to</span>
+<span class="sd">                retrieve data. Options are daily, weekly, and 28_days.</span>
+<span class="sd">            target_list (list of mozanalysis.segments.Segment): The targets</span>
+<span class="sd">                that define clients to be included in the analysis, based on</span>
+<span class="sd">                inclusion in a defined user segment. For each Segment included</span>
+<span class="sd">                in the list, client IDs are identified in the</span>
+<span class="sd">                SegmentDataSource that based on the select_for statement in</span>
+<span class="sd">                the Segment. Client IDs that satisfy the select_for</span>
+<span class="sd">                statement in every Segment in the target_list will be</span>
+<span class="sd">                returned by the query.</span>
+<span class="sd">            custom_targets_query (str): A full SQL query to be used</span>
+<span class="sd">                in the main query; must include a client_id column</span>
+<span class="sd">                to join to metrics tables and an enrollment_date:</span>
+
+<span class="sd">                N.B. this query&#39;s results must be uniquely keyed by</span>
+<span class="sd">                (client_id, enrollment_date), or else your results will be</span>
+<span class="sd">                subtly wrong.</span>
+<span class="sd">            replace_tables (bool): If True, delete tables that exist in</span>
+<span class="sd">                BigQuery with the same name; used to rerun analyses under</span>
+<span class="sd">                the same experiment name with different settings</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A :class:`mozanalysis.experiment.TimeSeriesResult` object,</span>
+<span class="sd">            which may be used to obtain a</span>
+<span class="sd">            pandas DataFrame of per-client metric data, for each</span>
+<span class="sd">            analysis window. Each DataFrame is a pandas DataFrame in</span>
+<span class="sd">            &quot;the standard format&quot;: one row per client, some metadata</span>
+<span class="sd">            columns, plus one column per metric and sanity-check metric.</span>
+<span class="sd">            Its columns (not necessarily in order):</span>
+
+<span class="sd">                * enrollment date and client_id</span>
+<span class="sd">                * [metric 1]: The client&#39;s value for the first metric in</span>
+<span class="sd">                  ``metric_list``.</span>
+<span class="sd">                * ...</span>
+<span class="sd">                * [metric n]: The client&#39;s value for the nth (final)</span>
+<span class="sd">                  metric in ``metric_list``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">last_date_full_data</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="p">)</span>
+
+        <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">last_date_full_data</span> <span class="o">&gt;=</span> <span class="n">today</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Based on the start date, </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;, with </span><span class="si">{}</span><span class="s2"> days of enrollment &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;and analysis of length </span><span class="si">{}</span><span class="s2"> days, &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;the last day of analysis is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">last_date_full_data</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;, which is in the future.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_ts</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span>
+            <span class="n">last_date_full_data</span><span class="p">,</span>
+            <span class="n">time_series_period</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_targets_query</span><span class="p">(</span>
+            <span class="n">time_limits</span><span class="o">=</span><span class="n">time_limits</span><span class="p">,</span>
+            <span class="n">target_list</span><span class="o">=</span><span class="n">target_list</span><span class="p">,</span>
+            <span class="n">custom_targets_query</span><span class="o">=</span><span class="n">custom_targets_query</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">targets_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
+            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="p">,</span>
+                    <span class="s2">&quot;targets&quot;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">experiment_name</span><span class="p">,</span>
+                    <span class="n">hash_ish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span><span class="p">),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span><span class="p">,</span> <span class="n">targets_table_name</span><span class="p">,</span> <span class="n">replace_tables</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_metrics_query</span><span class="p">(</span>
+            <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span>
+            <span class="n">time_limits</span><span class="o">=</span><span class="n">time_limits</span><span class="p">,</span>
+            <span class="n">targets_table</span><span class="o">=</span><span class="n">bq_context</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span><span class="n">targets_table_name</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
+            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">experiment_name</span><span class="p">,</span>
+                    <span class="n">hash_ish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span><span class="p">),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">bq_context</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span><span class="p">,</span> <span class="n">full_res_table_name</span><span class="p">,</span> <span class="n">replace_tables</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">TimeSeriesResult</span><span class="p">(</span>
+            <span class="n">fully_qualified_table_name</span><span class="o">=</span><span class="n">bq_context</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span>
+                <span class="n">full_res_table_name</span>
+            <span class="p">),</span>
+            <span class="n">analysis_windows</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">build_targets_query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
+        <span class="n">target_list</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Segment</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_targets_query</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        </span><span class="si">{targets_query}</span><span class="s2"></span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">targets_query</span><span class="o">=</span><span class="n">custom_targets_query</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_targets_query</span><span class="p">(</span><span class="n">target_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="HistoricalTarget.build_metrics_query"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget.build_metrics_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_metrics_query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">metric_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
+        <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
+        <span class="n">targets_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return a SQL query for querying metric data.</span>
+
+<span class="sd">        For interactive use, prefer :meth:`.get_single_window_data`</span>
+<span class="sd">        or TODO :meth:`.get_time_series_data`, according to your use case,</span>
+<span class="sd">        which will run the query for you and return a materialized</span>
+<span class="sd">        dataframe.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metric_list (list of mozanalysis.metric.Metric):</span>
+<span class="sd">                The metrics to analyze.</span>
+<span class="sd">            time_limits (TimeLimits): An object describing the</span>
+<span class="sd">                interval(s) to query</span>
+<span class="sd">            targets_table (str): The name of the targets BigQuery table</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A string containing a BigQuery SQL expression.</span>
+
+<span class="sd">        Building this query is the main goal of this module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">analysis_windows_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_analysis_windows_query</span><span class="p">(</span>
+            <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
+        <span class="p">)</span>
+
+        <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_metrics_query_bits</span><span class="p">(</span>
+            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        WITH analysis_windows AS (</span>
+<span class="s2">            </span><span class="si">{analysis_windows_query}</span><span class="s2"></span>
+<span class="s2">        ),</span>
+<span class="s2">        targets AS (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                t.*,</span>
+<span class="s2">                aw.*</span>
+<span class="s2">            FROM `</span><span class="si">{targets_table}</span><span class="s2">` t</span>
+<span class="s2">            CROSS JOIN analysis_windows aw</span>
+<span class="s2">        )</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            targets.*,</span>
+<span class="s2">            </span><span class="si">{metrics_columns}</span><span class="s2"></span>
+<span class="s2">        FROM targets</span>
+<span class="s2">        </span><span class="si">{metrics_joins}</span><span class="s2"></span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">analysis_windows_query</span><span class="o">=</span><span class="n">analysis_windows_query</span><span class="p">,</span>
+            <span class="n">metrics_columns</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_columns</span><span class="p">),</span>
+            <span class="n">metrics_joins</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">),</span>
+            <span class="n">targets_table</span><span class="o">=</span><span class="n">targets_table</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_build_analysis_windows_query</span><span class="p">(</span><span class="n">analysis_windows</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">AnalysisWindow</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return SQL to construct a table of analysis windows.</span>
+
+<span class="sd">        To query a time series, we construct a table of analysis windows</span>
+<span class="sd">        and cross join it with the targets table to get one row per</span>
+<span class="sd">        pair of client and analysis window.</span>
+
+<span class="sd">        This method writes the SQL to define the analysis window table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        UNION ALL</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sd">&quot;&quot;&quot;(SELECT {aws} AS analysis_window_start,</span>
+<span class="sd">                {awe} AS analysis_window_end)&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">aws</span><span class="o">=</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">awe</span><span class="o">=</span><span class="n">aw</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="n">analysis_windows</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_partition_by_data_source</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">DataSource</span><span class="p">,</span> <span class="n">SegmentDataSource</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Metric</span><span class="p">,</span> <span class="n">Segment</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;Return a dict mapping data sources to target/metric lists.&quot;&quot;&quot;</span>
+        <span class="n">data_sources</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">data_source</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">ds</span><span class="p">:</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">data_source</span> <span class="o">==</span> <span class="n">ds</span><span class="p">]</span> <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="n">data_sources</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_build_targets_query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">target_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Segment</span><span class="p">],</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+
+        <span class="n">target_queries</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">target_columns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dates_columns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">target_joins</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">target_list</span><span class="p">):</span>
+            <span class="n">query_for_target</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">build_query_target</span><span class="p">(</span>
+                <span class="n">t</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">from_expr_dataset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span>
+            <span class="p">)</span>
+
+            <span class="n">target_queries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        ds_{i} AS (</span>
+<span class="sd">                {query}</span>
+<span class="sd">            ),&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query_for_target</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">target_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                    ,ds_{i}.{name}</span>
+<span class="sd">                    ,ds_{i}.target_first_date as {name}_first_date</span>
+<span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">name</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">target_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                    LEFT JOIN ds_{i}</span>
+<span class="sd">                        ON ds_{i}.client_id = ds_0.client_id</span>
+<span class="sd">                        AND ds_{i}.target_first_date &lt;= ds_0.target_last_date</span>
+<span class="sd">                        AND ds_{i}.target_last_date &gt;= ds_0.target_first_date</span>
+<span class="sd">                        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">i</span><span class="o">=</span><span class="n">i</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">dates_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">_first_date&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="n">target_def</span> <span class="o">=</span> <span class="s2">&quot;WITH&quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">target_queries</span><span class="p">)</span>
+
+        <span class="n">joined_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        joined AS (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                ds_0.client_id</span>
+<span class="s2">                </span><span class="si">{target_columns}</span><span class="s2"></span>
+<span class="s2">            FROM</span>
+<span class="s2">                ds_0</span>
+<span class="s2">                </span><span class="si">{target_joins}</span><span class="s2"></span>
+<span class="s2">            ),&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">target_columns</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">target_columns</span><span class="p">),</span>
+            <span class="n">target_joins</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">target_joins</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">unpivot_join</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">         unpivoted AS (</span>
+<span class="s2">                SELECT * FROM joined</span>
+<span class="s2">                UNPIVOT(min_dates for target_date in (</span><span class="si">{target_first_dates}</span><span class="s2">))</span>
+<span class="s2">            )</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">target_first_dates</span><span class="o">=</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dates_columns</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        </span><span class="si">{query_for_targets}</span><span class="s2"></span>
+<span class="s2">        </span><span class="si">{joined_query}</span><span class="s2"></span>
+<span class="s2">        </span><span class="si">{final_table}</span><span class="s2"></span>
+<span class="s2">        SELECT</span>
+<span class="s2">            client_id,</span>
+<span class="s2">            max(min_dates) as enrollment_date</span>
+<span class="s2">        FROM unpivoted</span>
+<span class="s2">        GROUP BY client_id</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">query_for_targets</span><span class="o">=</span><span class="n">target_def</span><span class="p">,</span>
+            <span class="n">joined_query</span><span class="o">=</span><span class="n">joined_query</span><span class="p">,</span>
+            <span class="n">final_table</span><span class="o">=</span><span class="n">unpivot_join</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_metrics_query_bits</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to metrics.&quot;&quot;&quot;</span>
+        <span class="n">ds_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_by_data_source</span><span class="p">(</span><span class="n">metric_list</span><span class="p">)</span>
+        <span class="n">ds_metrics</span> <span class="o">=</span> <span class="p">{</span><span class="n">ds</span><span class="p">:</span> <span class="n">metrics</span> <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="n">metrics</span> <span class="ow">in</span> <span class="n">ds_metrics</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="n">metrics_columns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">metrics_joins</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ds_metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">query_for_metrics</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">build_query_targets</span><span class="p">(</span>
+                <span class="n">ds_metrics</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                <span class="n">time_limits</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">experiment_name</span><span class="p">,</span>
+                <span class="n">analysis_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span><span class="p">,</span>
+                <span class="n">continuous_enrollment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">continuous_enrollment</span><span class="p">,</span>
+                <span class="n">from_expr_dataset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">metrics_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;    LEFT JOIN (</span>
+<span class="sd">        {query}</span>
+<span class="sd">        ) ds_{i} USING (client_id, analysis_window_start, analysis_window_end)</span>
+<span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">query</span><span class="o">=</span><span class="n">query_for_metrics</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ds_metrics</span><span class="p">[</span><span class="n">ds</span><span class="p">]:</span>
+                <span class="n">metrics_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="s2">&quot;ds_</span><span class="si">{i}</span><span class="s2">.</span><span class="si">{metric_name}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span>
+
+    <span class="k">def</span> <span class="nf">get_targets_sql</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Target SQL not available; call `get_single_window_data` first&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span>
+
+    <span class="k">def</span> <span class="nf">get_metrics_sql</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Metric SQL not available; call `get_single_window_data` first&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span></div>
+
+
+<div class="viewcode-block" id="ContinuousEnrollmentTimeLimits"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ContinuousEnrollmentTimeLimits</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Expresses time limits for different kinds of analysis windows.</span>
+
+<span class="sd">    Instantiated and used by the :class:`Experiment` class; end users</span>
+<span class="sd">    should not need to interact with it.</span>
+
+<span class="sd">    Do not directly instantiate: use the constructors provided.</span>
+
+<span class="sd">    There are several time constraints needed to specify a valid query</span>
+<span class="sd">    for experiment data:</span>
+
+<span class="sd">        * When did enrollments start?</span>
+<span class="sd">        * When did enrollments stop?</span>
+<span class="sd">        * How long after enrollment does the analysis window start?</span>
+<span class="sd">        * How long is the analysis window?</span>
+
+<span class="sd">    Even if these four quantities are specified directly, it is</span>
+<span class="sd">    important to check that they are consistent with the available</span>
+<span class="sd">    data - i.e. that we have data for the entire analysis window for</span>
+<span class="sd">    every enrollment.</span>
+
+<span class="sd">    Furthermore, there are some extra quantities that are useful for</span>
+<span class="sd">    writing efficient queries:</span>
+
+<span class="sd">        * What is the first date for which we need data from our data</span>
+<span class="sd">          source?</span>
+<span class="sd">        * What is the last date for which we need data from our data</span>
+<span class="sd">          source?</span>
+
+<span class="sd">    Instances of this class store all these quantities and do validation</span>
+<span class="sd">    to make sure that they&#39;re consistent. The &quot;store lots of overlapping</span>
+<span class="sd">    state and validate&quot; strategy was chosen over &quot;store minimal state</span>
+<span class="sd">    and compute on the fly&quot; because different state is supplied in</span>
+<span class="sd">    different contexts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">first_enrollment_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="n">first_date_data_required</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">last_date_data_required</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="n">analysis_windows</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">Tuple</span><span class="p">[</span><span class="n">AnalysisWindow</span><span class="p">])</span>
+
+<div class="viewcode-block" id="ContinuousEnrollmentTimeLimits.for_single_analysis_window"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits.for_single_analysis_window">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">for_single_analysis_window</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">first_date_full_data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">analysis_length_dates</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ContinuousEnrollmentTimeLimits</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return a ``ContinuousEnrollmentTimeLimits`` instance with the following</span>
+<span class="sd">        parameters:</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            first_enrollment_date (str): First date on which enrollment</span>
+<span class="sd">                events were received; the start date of the experiment.</span>
+<span class="sd">            last_date_full_data (str): The most recent date for which we</span>
+<span class="sd">                have complete data, e.g. &#39;2019-03-22&#39;. If you want to ignore</span>
+<span class="sd">                all data collected after a certain date (e.g. when the</span>
+<span class="sd">                experiment recipe was deactivated), then do that here.</span>
+<span class="sd">            analysis_start_days (int): the start of the analysis window,</span>
+<span class="sd">                measured in &#39;days since the client enrolled&#39;. We ignore data</span>
+<span class="sd">                collected outside this analysis window.</span>
+<span class="sd">            analysis_length_days (int): the length of the analysis window,</span>
+<span class="sd">                measured in days.</span>
+<span class="sd">            num_dates_enrollment (int, optional): Only include this many days</span>
+<span class="sd">                of enrollments. If ``None`` then use the maximum number of days</span>
+<span class="sd">                as determined by the metric&#39;s analysis window and</span>
+<span class="sd">                ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The</span>
+<span class="sd">                factor ``7`` removes weekly seasonality, and the ``+1``</span>
+<span class="sd">                accounts for the fact that enrollment typically starts a few</span>
+<span class="sd">                hours before UTC midnight.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">analysis_window</span> <span class="o">=</span> <span class="n">AnalysisWindow</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">analysis_length_dates</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">last_date_data_required</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span><span class="n">first_date_full_data</span><span class="p">,</span> <span class="n">analysis_length_dates</span><span class="p">)</span>
+
+        <span class="n">tl</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">first_enrollment_date</span><span class="o">=</span><span class="n">first_date_full_data</span><span class="p">,</span>
+            <span class="n">last_enrollment_date</span><span class="o">=</span><span class="n">last_date_data_required</span><span class="p">,</span>
+            <span class="n">first_date_data_required</span><span class="o">=</span><span class="n">first_date_full_data</span><span class="p">,</span>
+            <span class="n">last_date_data_required</span><span class="o">=</span><span class="n">last_date_data_required</span><span class="p">,</span>
+            <span class="n">analysis_windows</span><span class="o">=</span><span class="p">(</span><span class="n">analysis_window</span><span class="p">,),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">tl</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, Mozilla.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
