@@ -57,9 +57,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>mozanalysis.experiment</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mozanalysis.experiment</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -809,7 +809,7 @@
 <span class="s2">                `moz-fx-data-shared-prod.telemetry.events`</span>
 <span class="s2">            WHERE</span>
 <span class="s2">                event_category = &#39;normandy&#39;</span>
-<span class="s2">                AND (event_method = &#39;exposure&#39; AND event_method = &#39;expose&#39;)</span>
+<span class="s2">                AND (event_method = &#39;exposure&#39; OR event_method = &#39;expose&#39;)</span>
 <span class="s2">                AND submission_date</span>
 <span class="s2">                    BETWEEN &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39; AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
 <span class="s2">                AND event_string_value = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
