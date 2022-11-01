@@ -738,7 +738,7 @@ class Experiment:
                 `moz-fx-data-shared-prod.telemetry.events`
             WHERE
                 event_category = 'normandy'
-                AND (event_method = 'exposure' AND event_method = 'expose')
+                AND (event_method = 'exposure' OR event_method = 'expose')
                 AND submission_date
                     BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
                 AND event_string_value = '{experiment_slug}'
