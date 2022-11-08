@@ -4,7 +4,7 @@
 
 # These segment definitions are deprecated.
 # Instead use the segment slug to reference segments defined
-# in https://github.com/mozilla/jetstream-config
+# in https://github.com/mozilla/metric-hub
 
 from mozanalysis.config import ConfigLoader
 
