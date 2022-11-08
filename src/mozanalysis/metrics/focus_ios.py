@@ -4,7 +4,7 @@
 
 # These metric definitions are deprecated.
 # Instead use the metric slug to reference metrics defined
-# in https://github.com/mozilla/jetstream-config
+# in https://github.com/mozilla/metric-hub
 
 from mozanalysis.config import ConfigLoader
 

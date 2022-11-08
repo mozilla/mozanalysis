@@ -4,7 +4,7 @@
 
 from typing import Optional
 
-from jetstream_config_parser.config import ConfigCollection
+from metric_config_parser.config import ConfigCollection
 
 
 class _ConfigLoader:

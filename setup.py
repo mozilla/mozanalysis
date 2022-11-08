@@ -27,7 +27,7 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "attrs",
-        "mozilla-jetstream-config-parser",
+        "mozilla-metric-config-parser",
         "numpy",
         "pandas",
         "pyarrow",
