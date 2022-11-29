@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from mozanalysis.metrics import Metric
 from typing import List, Union, Dict
+import matplotlib.pyplot as plt
 
 
 def sample_size_curves(
@@ -210,6 +211,7 @@ def empirical_effect_size_sample_size_calc(
     power: float = 0.80,
     alpha: float = 0.05,
     parent_distribution: str = "normal",
+    plot_effect_sizes = False,
 ) -> dict:
 
     """
@@ -240,6 +242,8 @@ def empirical_effect_size_sample_size_calc(
             when a significant effect exists.
         parent_distribution (str, default "normal"): Distribution of the parent data;
             must be normal, uniform, logistic, or laplace.
+        plot_effect_sizes (bool, default False): Whether or not to plot the 
+            distribution of effect sizes observed in historical data.
 
     Returns:
         A dictionary. Keys in the dictionary are the metrics column names from
@@ -286,6 +290,13 @@ def empirical_effect_size_sample_size_calc(
 
     for m in metric_list:
         res_mean["diff"] = res_mean[m.name].diff().abs()
+        if plot_effect_sizes:
+            print(f"{m.name}: plotting effect sizes observed in historical data")
+            print("Summary statistics")
+            print(res_mean["diff"].describe())
+            print("Histogram of effect sizes")
+            plt.hist(res_mean["diff"], bins=20)
+            plt.show()
         m_quantile = res_mean["diff"].quantile(q=quantile, interpolation="nearest")
         m_std = res_std[m.name].quantile(q=quantile, interpolation="nearest")
 
