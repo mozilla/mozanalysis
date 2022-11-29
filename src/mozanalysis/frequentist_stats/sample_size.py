@@ -211,7 +211,7 @@ def empirical_effect_size_sample_size_calc(
     power: float = 0.80,
     alpha: float = 0.05,
     parent_distribution: str = "normal",
-    plot_effect_sizes = False,
+    plot_effect_sizes: bool = False,
 ) -> dict:
 
     """
@@ -242,7 +242,7 @@ def empirical_effect_size_sample_size_calc(
             when a significant effect exists.
         parent_distribution (str, default "normal"): Distribution of the parent data;
             must be normal, uniform, logistic, or laplace.
-        plot_effect_sizes (bool, default False): Whether or not to plot the 
+        plot_effect_sizes (bool, default False): Whether or not to plot the
             distribution of effect sizes observed in historical data.
 
     Returns:
