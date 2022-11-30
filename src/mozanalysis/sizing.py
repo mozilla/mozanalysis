@@ -440,7 +440,7 @@ class HistoricalTarget:
         self, metric_list: List[Metric]
     ) -> Dict[Union[DataSource, SegmentDataSource], List[Union[Metric, Segment]]]:
         """Return a dict mapping data sources to target/metric lists."""
-        data_sources = {m.data_source for m in metric_list}
+        data_sources = [m.data_source for m in metric_list]
 
         return {
             ds: [m for m in metric_list if m.data_source == ds] for ds in data_sources
