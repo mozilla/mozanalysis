@@ -35,6 +35,7 @@ setup(
         "google-cloud-bigquery",
         "google-cloud-bigquery-storage",
         "statsmodels",
+        "matplotlib",
     ],
     setup_requires=["pytest-runner", "setuptools_scm"],
     extras_require={
