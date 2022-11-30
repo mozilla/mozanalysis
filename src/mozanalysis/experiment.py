@@ -845,7 +845,7 @@ class Experiment:
         self, metric_or_segment_list: Union[List[Metric], List[Segment]]
     ) -> Dict[Union[DataSource, SegmentDataSource], List[Union[Metric, Segment]]]:
         """Return a dict mapping data sources to metric/segment lists."""
-        data_sources = {m.data_source for m in metric_or_segment_list}
+        data_sources = [m.data_source for m in metric_or_segment_list]
 
         return {
             ds: [m for m in metric_or_segment_list if m.data_source == ds]
