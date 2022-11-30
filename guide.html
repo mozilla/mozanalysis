@@ -121,22 +121,27 @@
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">start_date</span></code> is the <code class="docutils literal notranslate"><span class="pre">submission_date</span></code> of the first enrollment (<code class="docutils literal notranslate"><span class="pre">submission_date</span></code> is in UTC). If you intended to study one week’s worth of enrollments, then set <code class="docutils literal notranslate"><span class="pre">num_dates_enrollment=8</span></code>: Normandy experiments typically go live in the evening UTC-time, so 8 days of data is a better approximation than 7.</p>
-<p>We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you’re interested will already be in a metrics library, a submodule of <a class="reference internal" href="api/metrics.html#module-mozanalysis.metrics" title="mozanalysis.metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a>. If not, then you can define your own - see <a class="reference internal" href="api/metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.metrics.Metric()</span></code></a> for examples - and ideally submit a PR to add them to the library for the next experiment. In this example, we’ll compute four metrics:</p>
+<p>We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you’re interested will already be in a metrics library, [Metric Hub](<a class="reference external" href="https://github.com/mozilla/metric-hub">https://github.com/mozilla/metric-hub</a>). If not, then you can define your own - see <a class="reference internal" href="api/metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.metrics.Metric()</span></code></a> for examples - and ideally submit a PR to add them to Metric Hub for the next experiment. To load a Metric from Metric Hub, for example:</p>
+<blockquote>
+<div><p>from mozanalysis.config import ConfigLoader
+active_hours = ConfigLoader.get_metric(slug=”active_hours”, app_name=”firefox_desktop”)</p>
+</div></blockquote>
+<p>In this example, we’ll compute four metrics from Metric Hub:</p>
 <ul class="simple">
-<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop.active_hours</span></code></p></li>
+<li><p>active hours</p></li>
 <li><p>uri count</p></li>
 <li><p>ad clicks</p></li>
 <li><p>search count</p></li>
 </ul>
-<p>As it happens, the first three metrics all come from the <code class="docutils literal notranslate"><span class="pre">clients_daily</span></code> dataset, whereas “search count” comes from <code class="docutils literal notranslate"><span class="pre">search_clients_daily</span></code>. These details are taken care of in the <a class="reference internal" href="api/metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">mozanalysis.metrics.Metric</span></code></a> definitions so that we don’t have to think about them here.</p>
+<p>As it happens, the first three metrics all come from the <code class="docutils literal notranslate"><span class="pre">clients_daily</span></code> dataset, whereas “search count” comes from <code class="docutils literal notranslate"><span class="pre">search_clients_daily</span></code>. These details are taken care of in the [Metric Hub definitions](<a class="reference external" href="https://github.com/mozilla/metric-hub/tree/main/definitions">https://github.com/mozilla/metric-hub/tree/main/definitions</a>) so that we don’t have to think about them here.</p>
 <p>A metric must be computed over some <cite>analysis window</cite>, a period of time defined with respect to the enrollment date. We could use <a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.experiment.Experiment.get_single_window_data()</span></code></a> to compute our metrics over a specific analysis window. But here, let’s create time series data: let’s have an analysis window for each of the first three weeks of the experiment, and measure the data for each of these analysis windows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ts_res</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get_time_series_data</span><span class="p">(</span>
     <span class="n">bq_context</span><span class="o">=</span><span class="n">bq_context</span><span class="p">,</span>
     <span class="n">metric_list</span><span class="o">=</span><span class="p">[</span>
-        <span class="s2">&quot;active_hours&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;uri_count&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;ad_clicks&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;search_count&quot;</span><span class="p">,</span>
+        <span class="n">active_hours</span><span class="p">,</span>
+        <span class="n">uri_count</span><span class="p">,</span>
+        <span class="n">ad_clicks</span><span class="p">,</span>
+        <span class="n">search_count</span><span class="p">,</span>
     <span class="p">],</span>
     <span class="n">last_date_full_data</span><span class="o">=</span><span class="s1">&#39;2019-11-28&#39;</span><span class="p">,</span>
     <span class="n">time_series_period</span><span class="o">=</span><span class="s1">&#39;weekly&#39;</span>
@@ -280,16 +285,22 @@ print(&#39;Authenticated&#39;)
 import mozanalysis.bayesian_stats.binary as mabsbin
 from mozanalysis.experiment import Experiment
 from mozanalysis.bq import BigQueryContext
+from mozanalysis.config import ConfigLoader
 
 bq_context = BigQueryContext(dataset_id=&#39;your_dataset_id&#39;)
+
+active_hours = ConfigLoader.get_metric(slug=&quot;active_hours&quot;, app_name=&quot;firefox_desktop&quot;)
+uri_count = ConfigLoader.get_metric(slug=&quot;uri_count&quot;, app_name=&quot;firefox_desktop&quot;)
+ad_clicks = ConfigLoader.get_metric(slug=&quot;ad_clicks&quot;, app_name=&quot;firefox_desktop&quot;)
+search_count = ConfigLoader.get_metric(slug=&quot;search_count&quot;, app_name=&quot;firefox_desktop&quot;)
 
 ts_res = exp.get_time_series_data(
     bq_context=bq_context,
     metric_list=[
-        &quot;active_hours&quot;,
-        &quot;uri_count&quot;,
-        &quot;ad_clicks&quot;,
-        &quot;search_count&quot;,
+        active_hours,
+        uri_count,
+        ad_clicks,
+        search_count,
     ],
     last_date_full_data=&#39;2019-11-28&#39;,
     time_series_period=&#39;weekly&#39;
@@ -311,13 +322,16 @@ print(&#39;Authenticated&#39;)
 import mozanalysis.bayesian_stats.binary as mabsbin
 from mozanalysis.experiment import Experiment
 from mozanalysis.bq import BigQueryContext
+from mozanalysis.config import ConfigLoader
 
 bq_context = BigQueryContext(dataset_id=&#39;your_dataset_id&#39;)
+
+active_hours = ConfigLoader.get_metric(slug=&quot;active_hours&quot;, app_name=&quot;firefox_desktop&quot;)
 
 res = exp.get_single_window_data(
     bq_context=bq_context,
     metric_list=[
-        &quot;active_hours&quot;,
+        active_hours,
     ],
     last_date_full_data=&#39;2019-01-07&#39;,
     analysis_start_days=7,
