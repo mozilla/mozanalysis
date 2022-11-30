@@ -51,24 +51,29 @@ We start by instantiating our :class:`mozanalysis.experiment.Experiment` object:
 ``start_date`` is the ``submission_date`` of the first enrollment (``submission_date`` is in UTC). If you intended to study one week's worth of enrollments, then set ``num_dates_enrollment=8``: Normandy experiments typically go live in the evening UTC-time, so 8 days of data is a better approximation than 7.
 
 
-We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you're interested will already be in a metrics library, a submodule of :mod:`mozanalysis.metrics`. If not, then you can define your own - see :meth:`mozanalysis.metrics.Metric` for examples - and ideally submit a PR to add them to the library for the next experiment. In this example, we'll compute four metrics:
+We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you're interested will already be in a metrics library, [Metric Hub](https://github.com/mozilla/metric-hub). If not, then you can define your own - see :meth:`mozanalysis.metrics.Metric` for examples - and ideally submit a PR to add them to Metric Hub for the next experiment. To load a Metric from Metric Hub, for example:
 
-* :const:`mozanalysis.metrics.desktop.active_hours`
+    from mozanalysis.config import ConfigLoader
+    active_hours = ConfigLoader.get_metric(slug="active_hours", app_name="firefox_desktop")
+
+In this example, we'll compute four metrics from Metric Hub:
+
+* active hours
 * uri count
 * ad clicks
 * search count
 
-As it happens, the first three metrics all come from the ``clients_daily`` dataset, whereas "search count" comes from ``search_clients_daily``. These details are taken care of in the :class:`mozanalysis.metrics.Metric` definitions so that we don't have to think about them here.
+As it happens, the first three metrics all come from the ``clients_daily`` dataset, whereas "search count" comes from ``search_clients_daily``. These details are taken care of in the [Metric Hub definitions](https://github.com/mozilla/metric-hub/tree/main/definitions) so that we don't have to think about them here.
 
 A metric must be computed over some `analysis window`, a period of time defined with respect to the enrollment date. We could use :meth:`mozanalysis.experiment.Experiment.get_single_window_data()` to compute our metrics over a specific analysis window. But here, let's create time series data: let's have an analysis window for each of the first three weeks of the experiment, and measure the data for each of these analysis windows::
 
     ts_res = exp.get_time_series_data(
         bq_context=bq_context,
         metric_list=[
-            "active_hours",
-            "uri_count",
-            "ad_clicks",
-            "search_count",
+            active_hours,
+            uri_count,
+            ad_clicks,
+            search_count,
         ],
         last_date_full_data='2019-11-28',
         time_series_period='weekly'
@@ -223,16 +228,22 @@ Condensing the above example for simpler copying and pasting::
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
     from mozanalysis.bq import BigQueryContext
+    from mozanalysis.config import ConfigLoader
 
     bq_context = BigQueryContext(dataset_id='your_dataset_id')
 
+    active_hours = ConfigLoader.get_metric(slug="active_hours", app_name="firefox_desktop")
+    uri_count = ConfigLoader.get_metric(slug="uri_count", app_name="firefox_desktop")
+    ad_clicks = ConfigLoader.get_metric(slug="ad_clicks", app_name="firefox_desktop")
+    search_count = ConfigLoader.get_metric(slug="search_count", app_name="firefox_desktop")
+    
     ts_res = exp.get_time_series_data(
         bq_context=bq_context,
         metric_list=[
-            "active_hours",
-            "uri_count",
-            "ad_clicks",
-            "search_count",
+            active_hours,
+            uri_count,
+            ad_clicks,
+            search_count,
         ],
         last_date_full_data='2019-11-28',
         time_series_period='weekly'
@@ -255,13 +266,16 @@ If we're only interested in users' (say) second week in the experiment, then we 
     import mozanalysis.bayesian_stats.binary as mabsbin
     from mozanalysis.experiment import Experiment
     from mozanalysis.bq import BigQueryContext
+    from mozanalysis.config import ConfigLoader
 
     bq_context = BigQueryContext(dataset_id='your_dataset_id')
+    
+    active_hours = ConfigLoader.get_metric(slug="active_hours", app_name="firefox_desktop")
 
     res = exp.get_single_window_data(
         bq_context=bq_context,
         metric_list=[
-            "active_hours",
+            active_hours,
         ],
         last_date_full_data='2019-01-07',
         analysis_start_days=7,
