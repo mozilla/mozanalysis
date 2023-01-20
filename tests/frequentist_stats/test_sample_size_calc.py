@@ -20,5 +20,5 @@ def test_sample_size_calc_desktop():
 
     assert all([c in res.keys() for c in df.columns])
 
-    assert res[search_clients_daily.name]["sample_size"] > 1000000
-    assert res[uri_count.name]["sample_size"] > 1000000
+    assert res[search_clients_daily.name]["sample_size_per_branch"] > 1000000
+    assert res[uri_count.name]["sample_size_per_branch"] > 1000000
