@@ -50,8 +50,8 @@ def sample_size_curves(
     Returns:
         A dictionary of pd.DataFrame objects. An item in the dictionary is
         created for each metric in metric_list, containing a DataFrame of sample
-        size, population size, and population proportion at each value of the iterable
-        parameter.
+        size per branch, number of clients that satisfied targeting, and population
+        proportion per branch at each value of the iterable parameter.
     """
 
     params = {"effect_size": effect_size, "power": power, "alpha": alpha}
@@ -113,8 +113,8 @@ def difference_of_proportions_sample_size_calc(
 
     Returns:
         A dictionary. Keys in the dictionary are the metrics column names from
-        the DataFrame; values are the required sample size to achieve the
-        desired power for that metric.
+        the DataFrame; values are the required sample size per branch to achieve
+        the desired power for that metric.
     """
 
     def _get_sample_size_col(col):
@@ -133,9 +133,9 @@ def difference_of_proportions_sample_size_calc(
         sample_size = _get_sample_size_col(col)
         pop_percent = 100.0 * (sample_size / len(df))
         results[col] = {
-            "sample_size": sample_size,
-            "population_size": len(df),
-            "population_percent": pop_percent,
+            "sample_size_per_branch": sample_size,
+            "number_of_clients_targeted": len(df),
+            "population_percent_per_branch": pop_percent,
         }
     return results
 
@@ -171,8 +171,8 @@ def z_or_t_ind_sample_size_calc(
 
     Returns:
         A dictionary. Keys in the dictionary are the metrics column names from
-        the DataFrame; values are the required sample size to achieve the
-        desired power for that metric.
+        the DataFrame; values are the required sample size per branch to achieve
+        the desired power for that metric.
     """
     tests = {
         "normal": zt_ind_solve_power,
@@ -196,9 +196,9 @@ def z_or_t_ind_sample_size_calc(
         sample_size = _get_sample_size_col(col)
         pop_percent = 100.0 * (sample_size / len(df))
         results[col] = {
-            "sample_size": sample_size,
-            "population_size": len(df),
-            "population_percent": pop_percent,
+            "sample_size_per_branch": sample_size,
+            "number_of_clients_targeted": len(df),
+            "population_percent_per_branch": pop_percent,
         }
     return results
 
@@ -247,8 +247,8 @@ def empirical_effect_size_sample_size_calc(
 
     Returns:
         A dictionary. Keys in the dictionary are the metrics column names from
-        the DataFrame; values are the required sample size to achieve the
-        desired power for that metric.
+        the DataFrame; values are the required sample size per branch to achieve
+        the desired power for that metric.
     """
 
     def _mann_whitney_solve_sample_size_approximation(
@@ -317,7 +317,7 @@ def empirical_effect_size_sample_size_calc(
         m.name: {
             "effect_size": effect_size[m.name],
             "std_dev": std[m.name],
-            "sample_size": _mann_whitney_solve_sample_size_approximation(
+            "sample_size_per_branch": _mann_whitney_solve_sample_size_approximation(
                 effect_size=effect_size[m.name]["value"],
                 std=std[m.name]["value"],
                 power=power,
@@ -329,9 +329,9 @@ def empirical_effect_size_sample_size_calc(
     }
 
     for k in size_dict.keys():
-        size_dict[k]["population_size"] = pop_size
-        size_dict[k]["population_percent"] = 100.0 * (
-            size_dict[k]["sample_size"] / pop_size
+        size_dict[k]["number_of_clients_targeted"] = pop_size
+        size_dict[k]["population_percent_per_branch"] = 100.0 * (
+            size_dict[k]["sample_size_per_branch"] / pop_size
         )
 
     return size_dict
@@ -366,8 +366,8 @@ def poisson_diff_solve_sample_size(
 
     Returns:
         A dictionary. Keys in the dictionary are the metrics column names from
-        the DataFrame; values are the required sample size to achieve the
-        desired power for that metric.
+        the DataFrame; values are the required sample size per branch to achieve
+        the desired power for that metric.
     """
 
     def _get_sample_size_col(col):
@@ -390,8 +390,8 @@ def poisson_diff_solve_sample_size(
         sample_size = _get_sample_size_col(col)
         pop_percent = 100.0 * (sample_size / len(df))
         results[col] = {
-            "sample_size": sample_size,
-            "population_size": len(df),
-            "population_percent": pop_percent,
+            "sample_size_per_branch": sample_size,
+            "number_of_clients_targeted": len(df),
+            "population_percent_per_branch": pop_percent,
         }
     return results
