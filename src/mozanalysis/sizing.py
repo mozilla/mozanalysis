@@ -481,7 +481,7 @@ class HistoricalTarget:
             if i != 0:
                 target_joins.append(
                     """
-                    LEFT JOIN ds_{i}
+                    INNER JOIN ds_{i}
                         ON ds_{i}.client_id = ds_0.client_id
                         AND ds_{i}.target_first_date <= ds_0.target_last_date
                         AND ds_{i}.target_last_date >= ds_0.target_first_date
