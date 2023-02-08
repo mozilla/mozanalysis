@@ -142,7 +142,7 @@ def difference_of_proportions_sample_size_calc(
         results[col] = {
             "sample_size_per_branch": sample_size,
             "population_percent_per_branch": pop_percent,
-            "population_size": len(df),
+            "number_of_clients_targeted": len(df),
         }
     return results
 
@@ -205,7 +205,7 @@ def z_or_t_ind_sample_size_calc(
         results[col] = {
             "sample_size_per_branch": sample_size,
             "population_percent_per_branch": pop_percent,
-            "population_size": len(df),
+            "number_of_clients_targeted": len(df),
         }
     return results
 
@@ -336,7 +336,7 @@ def empirical_effect_size_sample_size_calc(
     }
 
     for k in size_dict.keys():
-        size_dict[k]["population_size"] = pop_size
+        size_dict[k]["number_of_clients_targeted"] = pop_size
         size_dict[k]["population_percent_per_branch"] = 100.0 * (
             size_dict[k]["sample_size_per_branch"] / pop_size
         )
@@ -399,7 +399,7 @@ def poisson_diff_solve_sample_size(
         results[col] = {
             "sample_size_per_branch": sample_size,
             "population_percent_per_branch": pop_percent,
-            "population_size": len(df),
+            "number_of_clients_targeted": len(df),
         }
     return results
 
