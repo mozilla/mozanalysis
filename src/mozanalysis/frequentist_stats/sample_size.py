@@ -11,7 +11,7 @@ from mozanalysis.experiment import TimeSeriesResult
 from mozanalysis.metrics import Metric
 from mozanalysis.segments import Segment
 from mozanalysis.sizing import HistoricalTarget
-from mozanalysis.utils import add_days
+from mozanalysis.utils import add_days, get_time_intervals
 
 from scipy.stats import norm
 from math import pi
@@ -412,11 +412,50 @@ def variable_enrollment_length_sample_size_calc(
     metric_list: List[Metric],
     target_list: List[Segment],
     variable_window_length: int = 7,
-    experiment_name: str = "",
+    experiment_name: Optional[str] = "",
     app_id: Optional[str] = "",
     to_pandas: bool = True,
     **sizing_kwargs,
-):
+) -> Dict[str, Union[Dict[str, int], pd.DataFrame]]:
+    """
+    Sample size calculation over a variable enrollment window. This function
+    will fetch a DataFrame with metrics defined in metric_list for a target
+    population defined in the target_list over an enrollment window of length
+    max_enrollment_days. Sample size calculation is performed
+    using clients enrolled in the first variable_window_length dates in
+    that max enrollment window; that window is incrementally widened by
+    the variable window length and sample size calculation performed again,
+    until the last enrollment date is reached.
+
+    Args:
+        bq_context: A mozanalysis.bq.BigQueryContext object that handles downloading
+            data from BigQuery.
+        start_date (str or datetime in %Y-%m-%d format): First date of enrollment for
+            sizing job.
+        max_enrollment_days (int): Maximum number of dates to consider for the
+            enrollment period for the experiment in question.
+        analysis_length (int): Number of days to record metrics for each client
+            in the experiment in question.
+        metric_list (list of mozanalysis.metrics.Metric): List of metrics
+            used to construct the results df from HistoricalTarget. The names
+            of these metrics are used to return results for sample size
+            calculation for each.
+        target_list (list of mozanalysis.segments.Segment): List of segments
+            used to identify clients to include in the study.
+        variable_window_length (int): Length of the intervals used to extend
+            the enrollment period incrementally. Sample sizes are recalculated over
+            each variable enrollment period.
+        experiment_name (str): Optional name used to name the target and metric
+            tables in BigQuery.
+        app_id (str): Application that experiment will be run on.
+        **sizing_kwargs: Arguments to pass to z_or_t_ind_sample_size_calc
+
+    Returns:
+        A dictionary. Keys in the dictionary are the metrics column names from
+        the DataFrame; values are the required sample size per branch to achieve
+        the desired power for that metric.
+    """
+
     if variable_window_length > max_enrollment_days:
         raise ValueError(
             "Enrollment window length is larger than the max enrollment length."
@@ -434,34 +473,22 @@ def variable_enrollment_length_sample_size_calc(
         bq_context=bq_context, metric_list=metric_list, target_list=target_list
     )
 
-    def _get_time_intervals(start_date: Union[str, datetime], interval: int):
-
-        if isinstance(start_date, str):
-            start_date = datetime.strptime(start_date, "%Y-%m-%d")
-
-        date = start_date + timedelta(interval - 1)
-        date_map = {0: date.date()}
-        i = 1
-        while date < start_date + timedelta(days=(max_enrollment_days - 1)):
-            date = date + timedelta(interval)
-            date_map[i] = date.date()
-            i += 1
-
-        date_map[i - 1] = df["enrollment_date"].max()
-        return date_map
-
-    date_intervals = _get_time_intervals(start_date, variable_window_length)
+    interval_end_dates = get_time_intervals(
+        start_date,
+        variable_window_length,
+        max_enrollment_days,
+    )
 
     def _for_interval_sample_size_calculation(i):
 
-        df_interval = df.loc[df["enrollment_date"] < date_intervals[i]]
+        df_interval = df.loc[df["enrollment_date"] < interval_end_dates[i]]
         res = z_or_t_ind_sample_size_calc(
             df=df_interval, metrics_list=metric_list, test="t", **sizing_kwargs
         )
         final_res = {}
         for key in res.keys():
             final_res[key] = {
-                "enrollment_end_date": date_intervals[i],
+                "enrollment_end_date": interval_end_dates[i],
                 **res[key],
             }
 
@@ -471,13 +498,12 @@ def variable_enrollment_length_sample_size_calc(
     for m in metric_list:
         results_dict[m.name] = []
 
-    for i in range(len(date_intervals)):
+    for i in range(len(interval_end_dates)):
         res = _for_interval_sample_size_calculation(i)
         for m in metric_list:
             results_dict[m.name].append(res[m.name])
 
-    if to_pandas:
-        for m in results_dict.keys():
-            results_dict[m] = pd.DataFrame(results_dict[m])
+    for m in results_dict.keys():
+        results_dict[m] = pd.DataFrame(results_dict[m])
 
     return results_dict
