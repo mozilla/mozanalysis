@@ -10,10 +10,8 @@
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
         <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -27,11 +25,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -57,7 +59,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
           <li class="breadcrumb-item"><a href="../bayesian_stats.html">mozanalysis.bayesian_stats</a></li>
       <li class="breadcrumb-item active">mozanalysis.bayesian_stats.binary</li>
@@ -88,7 +90,7 @@
     <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
     <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Jointly sample conversion rates for branches then compare them.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Jointly sample conversion rates for branches then compare them.</span>
 
 <span class="sd">    See `compare_branches_from_agg` for more details.</span>
 
@@ -133,7 +135,7 @@
 
 
 <div class="viewcode-block" id="aggregate_col"><a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.aggregate_col">[docs]</a><span class="k">def</span> <span class="nf">aggregate_col</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the number of enrollments and conversions per branch.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the number of enrollments and conversions per branch.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        df (pd.DataFrame): Queried experiment data in the standard</span>
@@ -167,7 +169,7 @@
     <span class="n">num_conversions_label</span><span class="o">=</span><span class="s2">&quot;num_conversions&quot;</span><span class="p">,</span>
     <span class="n">quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return stats about a branch&#39;s conversion rate.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return stats about a branch&#39;s conversion rate.</span>
 
 <span class="sd">    Calculate and return a Series of summary stats for the posterior</span>
 <span class="sd">    distribution over the branch&#39;s conversion rate.</span>
@@ -210,7 +212,7 @@
     <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
     <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Jointly sample conversion rates for two branches then compare them.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Jointly sample conversion rates for two branches then compare them.</span>
 
 <span class="sd">    Calculates various quantiles on the uplift of the non-control</span>
 <span class="sd">    branch&#39;s sampled conversion rates with respect to the control</span>
@@ -271,7 +273,7 @@
 
 
 <div class="viewcode-block" id="get_samples"><a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.get_samples">[docs]</a><span class="k">def</span> <span class="nf">get_samples</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">num_enrollments_label</span><span class="p">,</span> <span class="n">num_conversions_label</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return samples from Beta distributions.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return samples from Beta distributions.</span>
 
 <span class="sd">    Assumes a Beta(1, 1) prior.</span>
 

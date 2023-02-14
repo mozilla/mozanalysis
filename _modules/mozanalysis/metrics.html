@@ -10,10 +10,8 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -27,11 +25,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -57,7 +59,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
       <li class="breadcrumb-item active">mozanalysis.metrics</li>
       <li class="wy-breadcrumbs-aside">
@@ -86,7 +88,7 @@
 
 
 <div class="viewcode-block" id="AnalysisBasis"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.AnalysisBasis">[docs]</a><span class="k">class</span> <span class="nc">AnalysisBasis</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Determines what the population used for the analysis will be based on.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines what the population used for the analysis will be based on.&quot;&quot;&quot;</span>
 
     <span class="n">ENROLLMENTS</span> <span class="o">=</span> <span class="s2">&quot;enrollments&quot;</span>
     <span class="n">EXPOSURES</span> <span class="o">=</span> <span class="s2">&quot;exposures&quot;</span></div>
@@ -94,7 +96,7 @@
 
 <div class="viewcode-block" id="DataSource"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">DataSource</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Represents a table or view, from which Metrics may be defined.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a table or view, from which Metrics may be defined.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name (str): Name for the Data Source. Used in sanity metric</span>
@@ -151,7 +153,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">from_expr_for</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DataSource.from_expr_for"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.from_expr_for">[docs]</a>    <span class="k">def</span> <span class="nf">from_expr_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Expands the ``from_expr`` template for the given dataset.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Expands the ``from_expr`` template for the given dataset.</span>
 <span class="sd">        If ``from_expr`` is not a template, returns ``from_expr``.</span>
 
 <span class="sd">        Args:</span>
@@ -209,7 +211,7 @@
         <span class="n">analysis_basis</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">,</span>
         <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return a nearly-self contained SQL query.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a nearly-self contained SQL query.</span>
 
 <span class="sd">        This query does not define ``enrollments`` but otherwise could</span>
 <span class="sd">        be executed to query all metrics from this data source.</span>
@@ -222,7 +224,7 @@
 <span class="s2">            e.analysis_window_end,</span>
 <span class="s2">            e.num_exposure_events,</span>
 <span class="s2">            e.exposure_date,</span>
-<span class="s2">            </span><span class="si">{metrics}</span><span class="s2"></span>
+<span class="s2">            </span><span class="si">{metrics}</span>
 <span class="s2">        FROM enrollments e</span>
 <span class="s2">            LEFT JOIN </span><span class="si">{from_expr}</span><span class="s2"> ds</span>
 <span class="s2">                ON ds.</span><span class="si">{client_id}</span><span class="s2"> = e.client_id</span>
@@ -230,7 +232,7 @@
 <span class="s2">                AND ds.</span><span class="si">{submission_date}</span><span class="s2"> BETWEEN</span>
 <span class="s2">                    DATE_ADD(e.</span><span class="si">{date}</span><span class="s2">, interval e.analysis_window_start day)</span>
 <span class="s2">                    AND DATE_ADD(e.</span><span class="si">{date}</span><span class="s2">, interval e.analysis_window_end day)</span>
-<span class="s2">                </span><span class="si">{ignore_pre_enroll_first_day}</span><span class="s2"></span>
+<span class="s2">                </span><span class="si">{ignore_pre_enroll_first_day}</span>
 <span class="s2">        GROUP BY</span>
 <span class="s2">            e.client_id,</span>
 <span class="s2">            e.branch,</span>
@@ -267,7 +269,7 @@
         <span class="n">from_expr_dataset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">continuous_enrollment</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return a nearly-self contained SQL query that constructs</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a nearly-self contained SQL query that constructs</span>
 <span class="sd">        the metrics query for targeting historical data without</span>
 <span class="sd">        an associated experiment slug.</span>
 
@@ -280,11 +282,11 @@
 <span class="s2">            t.enrollment_date,</span>
 <span class="s2">            t.analysis_window_start,</span>
 <span class="s2">            t.analysis_window_end,</span>
-<span class="s2">            </span><span class="si">{metrics}</span><span class="s2"></span>
+<span class="s2">            </span><span class="si">{metrics}</span>
 <span class="s2">        FROM targets t</span>
 <span class="s2">            LEFT JOIN </span><span class="si">{from_expr}</span><span class="s2"> ds</span>
 <span class="s2">                ON ds.</span><span class="si">{client_id}</span><span class="s2"> = t.client_id</span>
-<span class="s2">                </span><span class="si">{date_clause}</span><span class="s2"></span>
+<span class="s2">                </span><span class="si">{date_clause}</span>
 <span class="s2">        GROUP BY</span>
 <span class="s2">            t.client_id,</span>
 <span class="s2">            t.enrollment_date,</span>
@@ -327,7 +329,7 @@
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_has_contradictory_branch&quot;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
-                        <span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
+<span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="sd">                ds.experiments, &#39;{experiment_slug}&#39;</span>
 <span class="sd">            ) != e.branch&quot;&quot;&quot;</span>
                     <span class="p">),</span>
@@ -336,7 +338,7 @@
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_has_non_enrolled_data&quot;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
-                        <span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
+<span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="sd">                ds.experiments, &#39;{experiment_slug}&#39;</span>
 <span class="sd">            ) IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                             <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span>
@@ -351,7 +353,7 @@
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_has_contradictory_branch&quot;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
-                        <span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
+<span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="sd">                ds.experiments, &#39;{experiment_slug}&#39;</span>
 <span class="sd">            ).branch != e.branch&quot;&quot;&quot;</span>
                     <span class="p">),</span>
@@ -360,7 +362,7 @@
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_has_non_enrolled_data&quot;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
-                        <span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
+<span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="sd">                ds.experiments, &#39;{experiment_slug}&#39;</span>
 <span class="sd">            ).branch IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                             <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span>
@@ -375,7 +377,7 @@
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_has_contradictory_branch&quot;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
-                        <span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
+<span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="sd">                ds.ping_info.experiments, &#39;{experiment_slug}&#39;</span>
 <span class="sd">            ).branch != e.branch&quot;&quot;&quot;</span>
                     <span class="p">),</span>
@@ -384,7 +386,7 @@
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_has_non_enrolled_data&quot;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
-                        <span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
+<span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="sd">                ds.ping_info.experiments, &#39;{experiment_slug}&#39;</span>
 <span class="sd">            ).branch IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                             <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span>
@@ -399,7 +401,7 @@
 
 <div class="viewcode-block" id="Metric"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.Metric">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Metric</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Represents an experiment metric.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents an experiment metric.</span>
 
 <span class="sd">    Needs to be combined with an analysis window to be measurable!</span>
 
@@ -424,17 +426,17 @@
 
 
 <div class="viewcode-block" id="agg_sum"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.agg_sum">[docs]</a><span class="k">def</span> <span class="nf">agg_sum</span><span class="p">(</span><span class="n">select_expr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Return a SQL fragment for the sum over the data, with 0-filled nulls.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a SQL fragment for the sum over the data, with 0-filled nulls.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="s2">&quot;COALESCE(SUM(</span><span class="si">{}</span><span class="s2">), 0)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">select_expr</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="agg_any"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.agg_any">[docs]</a><span class="k">def</span> <span class="nf">agg_any</span><span class="p">(</span><span class="n">select_expr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Return the logical OR, with FALSE-filled nulls.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the logical OR, with FALSE-filled nulls.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="s2">&quot;COALESCE(LOGICAL_OR(</span><span class="si">{}</span><span class="s2">), FALSE)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">select_expr</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="agg_histogram_mean"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.agg_histogram_mean">[docs]</a><span class="k">def</span> <span class="nf">agg_histogram_mean</span><span class="p">(</span><span class="n">select_expr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Produces an expression for the mean of an unparsed histogram.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Produces an expression for the mean of an unparsed histogram.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;SAFE_DIVIDE(</span>
 <span class="s2">                SUM(CAST(JSON_EXTRACT_SCALAR(</span><span class="si">{</span><span class="n">select_expr</span><span class="si">}</span><span class="s2">, &quot;$.sum&quot;) AS int64)),</span>
 <span class="s2">                SUM((SELECT SUM(value) FROM UNNEST(mozfun.hist.extract(</span><span class="si">{</span><span class="n">select_expr</span><span class="si">}</span><span class="s2">).values)))</span>

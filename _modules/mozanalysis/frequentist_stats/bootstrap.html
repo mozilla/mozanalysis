@@ -10,10 +10,8 @@
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
         <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -27,11 +25,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -57,7 +59,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
       <li class="breadcrumb-item active">mozanalysis.frequentist_stats.bootstrap</li>
       <li class="wy-breadcrumbs-aside">
@@ -89,7 +91,7 @@
     <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
     <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Jointly sample bootstrapped statistics then compare them.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Jointly sample bootstrapped statistics then compare them.</span>
 
 <span class="sd">    Performs a percentile bootstrap, which, according to Efron,</span>
 <span class="sd">    is not significantly more distasteful than a basic bootstrap,</span>
@@ -179,7 +181,7 @@
     <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Run a bootstrap for one branch on its own.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a bootstrap for one branch on its own.</span>
 
 <span class="sd">    Resamples the data ``num_samples`` times, computes ``stat_fn`` for</span>
 <span class="sd">    each sample, then returns summary statistics for the distribution</span>
@@ -216,7 +218,7 @@
     <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return ``stat_fn`` evaluated on resampled and original data.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``stat_fn`` evaluated on resampled and original data.</span>
 
 <span class="sd">    Do the resampling in parallel over the cluster.</span>
 

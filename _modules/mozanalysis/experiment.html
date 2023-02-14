@@ -10,10 +10,8 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -27,11 +25,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -57,7 +59,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
       <li class="breadcrumb-item active">mozanalysis.experiment</li>
       <li class="wy-breadcrumbs-aside">
@@ -90,7 +92,7 @@
 
 <div class="viewcode-block" id="Experiment"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Experiment</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Query experiment data; store experiment metadata.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Query experiment data; store experiment metadata.</span>
 
 <span class="sd">    The methods here query data in a way compatible with the following</span>
 <span class="sd">    principles, which are important for experiment analysis:</span>
@@ -191,7 +193,7 @@
     <span class="n">app_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Experiment.get_app_name"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.Experiment.get_app_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_app_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determine the correct app name.</span>
 
 <span class="sd">        If no explicit app name has been passed into Experiment, lookup app name from</span>
@@ -220,7 +222,7 @@
         <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return a DataFrame containing per-client metric values.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a DataFrame containing per-client metric values.</span>
 
 <span class="sd">        Also store them in a permanent table in BigQuery. The name of</span>
 <span class="sd">        this table will be printed. Subsequent calls to this function</span>
@@ -352,7 +354,7 @@
         <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeSeriesResult</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return a TimeSeriesResult with per-client metric values.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a TimeSeriesResult with per-client metric values.</span>
 
 <span class="sd">        Roughly equivalent to looping over :meth:`.get_single_window_data`</span>
 <span class="sd">        with different analysis windows, and reorganising the results.</span>
@@ -481,7 +483,7 @@
         <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return a SQL query for querying enrollment and exposure data.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a SQL query for querying enrollment and exposure data.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            time_limits (TimeLimits): An object describing the</span>
@@ -549,7 +551,7 @@
         <span class="n">analysis_basis</span><span class="o">=</span><span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">,</span>
         <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return a SQL query for querying metric data.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a SQL query for querying metric data.</span>
 
 <span class="sd">        For interactive use, prefer :meth:`.get_time_series_data` or</span>
 <span class="sd">        :meth:`.get_single_window_data`, according to your use case,</span>
@@ -589,7 +591,7 @@
         <span class="k">if</span> <span class="n">exposure_signal</span> <span class="ow">and</span> <span class="n">analysis_basis</span> <span class="o">!=</span> <span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">:</span>
             <span class="n">exposure_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT * FROM (</span>
-<span class="s2">                </span><span class="si">{</span><span class="n">exposure_signal</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">                </span><span class="si">{</span><span class="n">exposure_signal</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span><span class="si">}</span>
 <span class="s2">            )</span>
 <span class="s2">            WHERE num_exposure_events &gt; 0</span>
 <span class="s2">            &quot;&quot;&quot;</span>
@@ -602,7 +604,7 @@
 
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        WITH analysis_windows AS (</span>
-<span class="s2">            </span><span class="si">{analysis_windows_query}</span><span class="s2"></span>
+<span class="s2">            </span><span class="si">{analysis_windows_query}</span>
 <span class="s2">        ),</span>
 <span class="s2">        raw_enrollments AS (</span>
 <span class="s2">            -- needed by &quot;exposures&quot; sub query</span>
@@ -613,7 +615,7 @@
 <span class="s2">            CROSS JOIN analysis_windows aw</span>
 <span class="s2">        ),</span>
 <span class="s2">        exposures AS (</span>
-<span class="s2">            </span><span class="si">{exposure_query}</span><span class="s2"></span>
+<span class="s2">            </span><span class="si">{exposure_query}</span>
 <span class="s2">        ),</span>
 <span class="s2">        enrollments AS (</span>
 <span class="s2">            SELECT</span>
@@ -626,9 +628,9 @@
 <span class="s2">        )</span>
 <span class="s2">        SELECT</span>
 <span class="s2">            enrollments.*,</span>
-<span class="s2">            </span><span class="si">{metrics_columns}</span><span class="s2"></span>
+<span class="s2">            </span><span class="si">{metrics_columns}</span>
 <span class="s2">        FROM enrollments</span>
-<span class="s2">        </span><span class="si">{metrics_joins}</span><span class="s2"></span>
+<span class="s2">        </span><span class="si">{metrics_joins}</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">analysis_windows_query</span><span class="o">=</span><span class="n">analysis_windows_query</span><span class="p">,</span>
             <span class="n">exposure_query</span><span class="o">=</span><span class="n">exposure_query</span><span class="p">,</span>
@@ -639,7 +641,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_build_analysis_windows_query</span><span class="p">(</span><span class="n">analysis_windows</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return SQL to construct a table of analysis windows.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to construct a table of analysis windows.</span>
 
 <span class="sd">        To query a time series, we construct a table of analysis windows</span>
 <span class="sd">        and cross join it with the enrollments table to get one row per</span>
@@ -658,7 +660,7 @@
     <span class="k">def</span> <span class="nf">_build_enrollments_query</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return SQL to query a list of enrollments and their branches&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query a list of enrollments and their branches&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s2">&quot;normandy&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_normandy</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="s2">&quot;glean-event&quot;</span><span class="p">:</span>
@@ -675,7 +677,7 @@
     <span class="k">def</span> <span class="nf">_build_exposure_query</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span> <span class="n">exposure_query_type</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return SQL to query a list of exposures and their branches&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query a list of exposures and their branches&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="s2">&quot;normandy&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_normandy</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="s2">&quot;glean-event&quot;</span><span class="p">:</span>
@@ -692,7 +694,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span>
 
     <span class="k">def</span> <span class="nf">_build_enrollments_query_normandy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a normandy experiment&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a normandy experiment&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        SELECT</span>
 <span class="s2">            e.client_id,</span>
@@ -716,7 +718,7 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_build_enrollments_query_fenix_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a Fenix no-event experiment</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a Fenix no-event experiment</span>
 <span class="sd">        If enrollment events are available for this experiment, then you</span>
 <span class="sd">        can take a better approach than this method. But in the absence</span>
 <span class="sd">        of enrollment events (e.g. in a Mako-based experiment, which</span>
@@ -757,7 +759,7 @@
     <span class="k">def</span> <span class="nf">_build_enrollments_query_glean_event</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a Glean no-event experiment</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a Glean no-event experiment</span>
 
 <span class="sd">        If enrollment events are available for this experiment, then you</span>
 <span class="sd">        can take a better approach than this method. But in the absence</span>
@@ -792,7 +794,7 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_build_exposure_query_normandy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return SQL to query exposures for a normandy experiment&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query exposures for a normandy experiment&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        SELECT</span>
 <span class="s2">            e.client_id,</span>
@@ -827,7 +829,7 @@
     <span class="k">def</span> <span class="nf">_build_exposure_query_glean_event</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return SQL to query exposures for a Glean no-event experiment&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query exposures for a Glean no-event experiment&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT</span>
 <span class="s2">                exposures.client_id,</span>
@@ -870,7 +872,7 @@
         <span class="n">analysis_basis</span><span class="o">=</span><span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">,</span>
         <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to metrics.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to metrics.&quot;&quot;&quot;</span>
         <span class="n">metrics</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -897,7 +899,7 @@
                 <span class="n">exposure_signal</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">metrics_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sd">&quot;&quot;&quot;    LEFT JOIN (</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;    LEFT JOIN (</span>
 <span class="sd">        {query}</span>
 <span class="sd">        ) ds_{i} USING (client_id, branch, analysis_window_start, analysis_window_end)</span>
 <span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -915,7 +917,7 @@
     <span class="k">def</span> <span class="nf">_partition_by_data_source</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">metric_or_segment_list</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Segment</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">DataSource</span><span class="p">,</span> <span class="n">SegmentDataSource</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Metric</span><span class="p">,</span> <span class="n">Segment</span><span class="p">]]]:</span>
-        <span class="sd">&quot;&quot;&quot;Return a dict mapping data sources to metric/segment lists.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a dict mapping data sources to metric/segment lists.&quot;&quot;&quot;</span>
         <span class="n">data_sources</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">data_source</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_or_segment_list</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="p">{</span>
@@ -926,7 +928,7 @@
     <span class="k">def</span> <span class="nf">_build_segments_query</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">segment_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Segment</span><span class="p">],</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Build a query adding segment columns to the enrollments view.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a query adding segment columns to the enrollments view.</span>
 
 <span class="sd">        The query takes a ``raw_enrollments`` view, and defines a new</span>
 <span class="sd">        view by adding one non-NULL boolean column per segment. It does</span>
@@ -945,9 +947,9 @@
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        SELECT</span>
 <span class="s2">            raw_enrollments.*,</span>
-<span class="s2">            </span><span class="si">{segments_columns}</span><span class="s2"></span>
+<span class="s2">            </span><span class="si">{segments_columns}</span>
 <span class="s2">        FROM raw_enrollments</span>
-<span class="s2">        </span><span class="si">{segments_joins}</span><span class="s2"></span>
+<span class="s2">        </span><span class="si">{segments_joins}</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">segments_columns</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">segments_columns</span><span class="p">),</span>
             <span class="n">segments_joins</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">segments_joins</span><span class="p">),</span>
@@ -956,7 +958,7 @@
     <span class="k">def</span> <span class="nf">_build_segments_query_bits</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">segment_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Segment</span><span class="p">],</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to segments.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to segments.&quot;&quot;&quot;</span>
 
         <span class="c1"># resolve segment slugs</span>
         <span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
@@ -976,7 +978,7 @@
                 <span class="n">ds_segments</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span>
             <span class="p">)</span>
             <span class="n">segments_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sd">&quot;&quot;&quot;    LEFT JOIN (</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;    LEFT JOIN (</span>
 <span class="sd">        {query}</span>
 <span class="sd">        ) ds_{i} USING (client_id, branch)</span>
 <span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -994,7 +996,7 @@
 
 <div class="viewcode-block" id="TimeLimits"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeLimits">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TimeLimits</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Expresses time limits for different kinds of analysis windows.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Expresses time limits for different kinds of analysis windows.</span>
 
 <span class="sd">    Instantiated and used by the :class:`Experiment` class; end users</span>
 <span class="sd">    should not need to interact with it.</span>
@@ -1046,7 +1048,7 @@
         <span class="n">analysis_length_dates</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">num_dates_enrollment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeLimits</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return a ``TimeLimits`` instance with the following parameters</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a ``TimeLimits`` instance with the following parameters</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            first_enrollment_date (str): First date on which enrollment</span>
@@ -1114,7 +1116,7 @@
         <span class="n">time_series_period</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">num_dates_enrollment</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeLimits</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return a ``TimeLimits`` instance for a time series.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a ``TimeLimits`` instance for a time series.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            first_enrollment_date (str): First date on which enrollment</span>
@@ -1198,7 +1200,7 @@
 
 <div class="viewcode-block" id="AnalysisWindow"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.AnalysisWindow">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">AnalysisWindow</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Represents the range of days in which to measure a metric.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents the range of days in which to measure a metric.</span>
 
 <span class="sd">    The range is measured in &quot;days after enrollment&quot;, and is inclusive.</span>
 
@@ -1225,7 +1227,7 @@
 
 <div class="viewcode-block" id="TimeSeriesResult"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeSeriesResult">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TimeSeriesResult</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Result from a time series query.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result from a time series query.</span>
 
 <span class="sd">    For each analysis window, this object lets us get a dataframe in</span>
 <span class="sd">    &quot;the standard format&quot; (one row per client).</span>
@@ -1249,7 +1251,7 @@
     <span class="n">analysis_windows</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TimeSeriesResult.get"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeSeriesResult.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">,</span> <span class="n">analysis_window</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Get the DataFrame for a specific analysis window.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the DataFrame for a specific analysis window.</span>
 
 <span class="sd">        N.B. this makes a BigQuery query each time it is run; caching</span>
 <span class="sd">        results is your responsibility.</span>
@@ -1274,7 +1276,7 @@
         <span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="TimeSeriesResult.get_full_data"><a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.TimeSeriesResult.get_full_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_full_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Get the full DataFrame from TimeSeriesResult.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the full DataFrame from TimeSeriesResult.</span>
 
 <span class="sd">        This DataFrame has a row for each client for each period of the time</span>
 <span class="sd">        series and may be very large. A warning will print the size of data</span>
@@ -1300,7 +1302,7 @@
         <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
         <span class="n">aggregate_function</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;AVG&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Results from a time series query, aggregated over analysis windows</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Results from a time series query, aggregated over analysis windows</span>
 <span class="sd">        by a SQL aggregate function.</span>
 
 <span class="sd">        This DataFrame has a row for each analysis window, with a column</span>
@@ -1329,7 +1331,7 @@
             <span class="k">yield</span> <span class="p">(</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">bq_context</span><span class="p">,</span> <span class="n">aw</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_get_table_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get table size in memory for table being requested by `get_full_data`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -1353,7 +1355,7 @@
     <span class="k">def</span> <span class="nf">_build_analysis_window_subset_query</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">analysis_window</span><span class="p">:</span> <span class="n">AnalysisWindow</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return SQL for partitioning time series results.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL for partitioning time series results.</span>
 
 <span class="sd">        When we query data for a time series, we query it for all</span>
 <span class="sd">        points of the time series, and we store this in a table.</span>
@@ -1363,9 +1365,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT * EXCEPT (client_id, analysis_window_start, analysis_window_end)</span>
-<span class="s2">            FROM </span><span class="si">{full_table_name}</span><span class="s2"></span>
-<span class="s2">            WHERE analysis_window_start = </span><span class="si">{aws}</span><span class="s2"></span>
-<span class="s2">            AND analysis_window_end = </span><span class="si">{awe}</span><span class="s2"></span>
+<span class="s2">            FROM </span><span class="si">{full_table_name}</span>
+<span class="s2">            WHERE analysis_window_start = </span><span class="si">{aws}</span>
+<span class="s2">            AND analysis_window_end = </span><span class="si">{awe}</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">full_table_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fully_qualified_table_name</span><span class="p">,</span>
             <span class="n">aws</span><span class="o">=</span><span class="n">analysis_window</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
@@ -1380,9 +1382,9 @@
 <span class="s2">        SELECT</span>
 <span class="s2">            analysis_window_start,</span>
 <span class="s2">            analysis_window_end,</span>
-<span class="s2">            </span><span class="si">{agg_metrics}</span><span class="s2"></span>
+<span class="s2">            </span><span class="si">{agg_metrics}</span>
 <span class="s2">        FROM</span>
-<span class="s2">            </span><span class="si">{full_table_name}</span><span class="s2"></span>
+<span class="s2">            </span><span class="si">{full_table_name}</span>
 <span class="s2">        GROUP BY</span>
 <span class="s2">            analysis_window_start, analysis_window_end</span>
 <span class="s2">        ORDER BY</span>
@@ -1401,7 +1403,7 @@
 <span class="s2">            COUNT(*) as population_size</span>
 <span class="s2">        FROM</span>
 <span class="s2">            (SELECT DISTINCT</span>
-<span class="s2">                </span><span class="si">{client_column}</span><span class="s2"></span>
+<span class="s2">                </span><span class="si">{client_column}</span>
 <span class="s2">            FROM</span>
 <span class="s2">                </span><span class="si">{full_table_name}</span><span class="s2">)</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>

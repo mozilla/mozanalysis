@@ -10,10 +10,8 @@
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
         <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -27,11 +25,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -57,7 +59,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
           <li class="breadcrumb-item"><a href="../bayesian_stats.html">mozanalysis.bayesian_stats</a></li>
       <li class="breadcrumb-item active">mozanalysis.bayesian_stats.survival_func</li>
@@ -80,7 +82,7 @@
 
 
 <div class="viewcode-block" id="compare_branches"><a class="viewcode-back" href="../../../api/bayesian_stats/survival_func.html#mozanalysis.bayesian_stats.survival_func.compare_branches">[docs]</a><span class="k">def</span> <span class="nf">compare_branches</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span> <span class="n">thresholds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the survival functions and relative uplifts thereupon.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the survival functions and relative uplifts thereupon.</span>
 
 <span class="sd">    This function generates data for a metric&#39;s survival function</span>
 <span class="sd">    (1 - cumulative distribution function) for each branch, and</span>
@@ -158,7 +160,7 @@
 
 
 <div class="viewcode-block" id="get_thresholds"><a class="viewcode-back" href="../../../api/bayesian_stats/survival_func.html#mozanalysis.bayesian_stats.survival_func.get_thresholds">[docs]</a><span class="k">def</span> <span class="nf">get_thresholds</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">max_num_thresholds</span><span class="o">=</span><span class="mi">101</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a set of interesting thresholds for the dataset ``col``</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a set of interesting thresholds for the dataset ``col``</span>
 
 <span class="sd">    Assumes that the values are non-negative, with zero as a special case.</span>
 
@@ -193,7 +195,7 @@
 
 
 <span class="k">def</span> <span class="nf">_one_thresh</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Run stats on the fraction of clients above ``threshold``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run stats on the fraction of clients above ``threshold``.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;df&#39; contains null values for &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col_label</span><span class="p">))</span>
 

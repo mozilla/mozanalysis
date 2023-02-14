@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mozanalysis.bayesian_stats &mdash; mozanalysis  documentation</title>
@@ -11,10 +11,8 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -30,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -83,7 +85,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
       <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></li>
       <li class="wy-breadcrumbs-aside">
@@ -107,7 +109,7 @@ individual branch. Also return comparative summary statistics for
 the uplift of this quantity for each branch with respect to the
 reference branch.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>samples</strong> (<em>dict</em><em> of </em><em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Each key
 is the label for a branch. Each value is the corresponding
@@ -156,7 +158,7 @@ for stats when bootstrapping, or credible intervals around Bayesian
 model parameters; in both cases <code class="docutils literal notranslate"><span class="pre">samples</span></code> are from a posterior
 concerning one branch of an experiment.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>samples</strong> (<em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Samples over which
 to compute the mean and quantiles.</p></li>
@@ -165,7 +167,7 @@ reason to override the defaults would be when Bonferroni
 corrections are required.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>If <code class="docutils literal notranslate"><span class="pre">samples</span></code> is a Series, then returns a pandas Series;
 the index contains the stringified <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus
 <code class="docutils literal notranslate"><span class="pre">'mean'</span></code>.</p>
@@ -205,7 +207,7 @@ when analyzing the branches independently.</p>
 <p>Can be used to analyse a single metric (supply Series as arguments)
 or in batch mode (supply DataFrames as arguments).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>focus</strong> (<em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Bootstrapped samples
 or samples of a model parameter for a branch of an
@@ -219,7 +221,7 @@ reason to override the defaults would be when Bonferroni
 corrections are required.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A pandas Series or DataFrame containing a MultiIndex with the
 following labels on the higher level and stringified floats
 on the inner level</p>

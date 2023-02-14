@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mozanalysis.frequentist_stats.sample_size &mdash; mozanalysis  documentation</title>
@@ -11,10 +11,8 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -30,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -85,7 +87,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../api.html">API Documentation</a></li>
       <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></li>
       <li class="wy-breadcrumbs-aside">
@@ -101,13 +103,13 @@
 <span id="mozanalysis-frequentist-stats-sample-size"></span><h1><a class="reference internal" href="#module-mozanalysis.frequentist_stats.sample_size" title="mozanalysis.frequentist_stats.sample_size"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a><a class="headerlink" href="#module-mozanalysis.frequentist_stats.sample_size" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="mozanalysis.frequentist_stats.sample_size.sample_size_curves">
-<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.sample_size.</span></span><span class="sig-name descname"><span class="pre">sample_size_curves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effect_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Series</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Series</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Series</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">solver_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/sample_size.html#sample_size_curves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.sample_size.sample_size_curves" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.sample_size.</span></span><span class="sig-name descname"><span class="pre">sample_size_curves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effect_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Series</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">solver_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/sample_size.html#sample_size_curves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.sample_size.sample_size_curves" title="Permalink to this definition"></a></dt>
 <dd><p>Loop over a list of different parameters to produce sample size estimates given
 those parameters. A single parameter in [effect_size, power, alpha] should
 be passed a list; the sample size curve will be calculated with this as
 the variable.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> – A pandas DataFrame of queried historical data.</p></li>
 <li><p><strong>metrics_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><em>mozanalysis.metrics.Metric</em></a>) – List of metrics
@@ -125,11 +127,11 @@ when a significant effect exists.</p></li>
 <li><p><strong>**solver_kwargs</strong> (<em>dict</em>) – Arguments necessary for the provided solver.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary of pd.DataFrame objects. An item in the dictionary is
 created for each metric in metric_list, containing a DataFrame of sample
-size, population size, and population proportion at each value of the iterable
-parameter.</p>
+size per branch, number of clients that satisfied targeting, and population
+proportion per branch at each value of the iterable parameter.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -140,7 +142,7 @@ parameter.</p>
 <dd><p>Perform sample size calculation for an experiment to test for a
 difference in proportions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> – A pandas DataFrame of queried historical data.</p></li>
 <li><p><strong>metrics_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><em>mozanalysis.metrics.Metric</em></a>) – List of metrics
@@ -157,10 +159,10 @@ when a significant effect exists.</p></li>
 each columns.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary. Keys in the dictionary are the metrics column names from
-the DataFrame; values are the required sample size to achieve the
-desired power for that metric.</p>
+the DataFrame; values are the required sample size per branch to achieve
+the desired power for that metric.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -171,7 +173,7 @@ desired power for that metric.</p>
 <dd><p>Perform sample size calculation for an experiment based on independent
 samples t or z tests.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> – A pandas DataFrame of queried historical data.</p></li>
 <li><p><strong>metrics_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><em>mozanalysis.metrics.Metric</em></a>) – List of metrics
@@ -188,10 +190,10 @@ when a significant effect exists.</p></li>
 each columns.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary. Keys in the dictionary are the metrics column names from
-the DataFrame; values are the required sample size to achieve the
-desired power for that metric.</p>
+the DataFrame; values are the required sample size per branch to achieve
+the desired power for that metric.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -209,7 +211,7 @@ the U test to the T test (see Stapleton 2008, pg 266, or
 <a class="reference external" href="https://www.psychologie.hhu.de/fileadmin/redaktion/Fakultaeten/">https://www.psychologie.hhu.de/fileadmin/redaktion/Fakultaeten/</a>
 Mathematisch-Naturwissenschaftliche_Fakultaet/Psychologie/AAP/gpower/GPowerManual.pdf)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>res</strong> – A TimeSeriesResult, generated by
 mozanalysis.sizing.HistoricalTarget.get_time_series_data.</p></li>
@@ -231,10 +233,10 @@ must be normal, uniform, logistic, or laplace.</p></li>
 distribution of effect sizes observed in historical data.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary. Keys in the dictionary are the metrics column names from
-the DataFrame; values are the required sample size to achieve the
-desired power for that metric.</p>
+the DataFrame; values are the required sample size per branch to achieve
+the desired power for that metric.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -245,7 +247,7 @@ desired power for that metric.</p>
 <dd><p>Sample size for test of difference of Poisson rates,
 based on Poisson rate’s asymptotic normality.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> – A pandas DataFrame of queried historical data.</p></li>
 <li><p><strong>metrics_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="../metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><em>mozanalysis.metrics.Metric</em></a>) – List of metrics
@@ -262,10 +264,10 @@ when a significant effect exists.</p></li>
 each columns.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary. Keys in the dictionary are the metrics column names from
-the DataFrame; values are the required sample size to achieve the
-desired power for that metric.</p>
+the DataFrame; values are the required sample size per branch to achieve
+the desired power for that metric.</p>
 </dd>
 </dl>
 </dd></dl>

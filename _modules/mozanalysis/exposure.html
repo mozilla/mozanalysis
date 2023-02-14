@@ -10,10 +10,8 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -27,11 +25,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -57,7 +59,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
       <li class="breadcrumb-item active">mozanalysis.exposure</li>
       <li class="wy-breadcrumbs-aside">
@@ -82,7 +84,7 @@
 
 <div class="viewcode-block" id="ExposureSignal"><a class="viewcode-back" href="../../api/exposure.html#mozanalysis.exposure.ExposureSignal">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ExposureSignal</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Represents a signal that determines an exposure has happened.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a signal that determines an exposure has happened.</span>
 
 <span class="sd">    The optional ``window_start`` and ``window_end`` parameters define</span>
 <span class="sd">    the window of data used to determine whether each client has been exposed.</span>
@@ -118,7 +120,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time_limits</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a nearly self-contained query for determining exposures.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a nearly self-contained query for determining exposures.</span>
 
 <span class="sd">        This query does not define ``enrollments`` but otherwise could</span>
 <span class="sd">        be executed to query all exposures based on the exposure metric</span>
@@ -134,11 +136,11 @@
 <span class="s2">                SELECT</span>
 <span class="s2">                    </span><span class="si">{client_id}</span><span class="s2"> AS client_id,</span>
 <span class="s2">                    </span><span class="si">{submission_date}</span><span class="s2"> AS submission_date</span>
-<span class="s2">                FROM </span><span class="si">{from_expr}</span><span class="s2"></span>
-<span class="s2">                WHERE </span><span class="si">{submission_date}</span><span class="s2"></span>
+<span class="s2">                FROM </span><span class="si">{from_expr}</span>
+<span class="s2">                WHERE </span><span class="si">{submission_date}</span>
 <span class="s2">                    BETWEEN DATE_ADD(&#39;</span><span class="si">{date_start}</span><span class="s2">&#39;, INTERVAL </span><span class="si">{window_start}</span><span class="s2"> DAY)</span>
 <span class="s2">                    AND DATE_ADD(&#39;</span><span class="si">{date_end}</span><span class="s2">&#39;, INTERVAL </span><span class="si">{window_end}</span><span class="s2"> DAY)</span>
-<span class="s2">                    AND </span><span class="si">{exposure_signal}</span><span class="s2"></span>
+<span class="s2">                    AND </span><span class="si">{exposure_signal}</span>
 <span class="s2">            ) AS ds</span>
 <span class="s2">            ON ds.client_id = e.client_id AND</span>
 <span class="s2">                ds.submission_date &gt;= e.enrollment_date</span>

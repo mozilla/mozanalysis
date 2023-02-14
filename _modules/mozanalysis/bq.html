@@ -10,10 +10,8 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -27,11 +25,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -57,7 +59,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
       <li class="breadcrumb-item active">mozanalysis.bq</li>
       <li class="wy-breadcrumbs-aside">
@@ -95,7 +97,7 @@
 
 
 <div class="viewcode-block" id="BigQueryContext"><a class="viewcode-back" href="../../api/bq.html#mozanalysis.bq.BigQueryContext">[docs]</a><span class="k">class</span> <span class="nc">BigQueryContext</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Holds a BigQuery client, and some configuration.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Holds a BigQuery client, and some configuration.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        dataset_id (str): Your `BigQuery dataset id`_.</span>
@@ -111,7 +113,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">bigquery</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="n">project_id</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BigQueryContext.run_query"><a class="viewcode-back" href="../../api/bq.html#mozanalysis.bq.BigQueryContext.run_query">[docs]</a>    <span class="k">def</span> <span class="nf">run_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">results_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">replace_tables</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Run a query and return the result.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a query and return the result.</span>
 
 <span class="sd">        If ``results_table`` is provided, then save the results</span>
 <span class="sd">        into there (or just query from there if it already exists).</span>
@@ -153,7 +155,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">list_rows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fully_qualify_table_name</span><span class="p">(</span><span class="n">results_table</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="BigQueryContext.fully_qualify_table_name"><a class="viewcode-back" href="../../api/bq.html#mozanalysis.bq.BigQueryContext.fully_qualify_table_name">[docs]</a>    <span class="k">def</span> <span class="nf">fully_qualify_table_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Given a table name, return it fully qualified.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Given a table name, return it fully qualified.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{project_id}</span><span class="s2">.</span><span class="si">{dataset_id}</span><span class="s2">.</span><span class="si">{full_table_name}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">project_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
             <span class="n">dataset_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_id</span><span class="p">,</span>

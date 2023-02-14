@@ -10,10 +10,8 @@
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
         <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -27,11 +25,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -57,7 +59,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
           <li class="breadcrumb-item"><a href="../bayesian_stats.html">mozanalysis.bayesian_stats</a></li>
       <li class="breadcrumb-item active">mozanalysis.bayesian_stats.bayesian_bootstrap</li>
@@ -81,7 +83,7 @@
 
 
 <div class="viewcode-block" id="bb_mean"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.bb_mean">[docs]</a><span class="k">def</span> <span class="nf">bb_mean</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">prob_weights</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Calculate the mean of a bootstrap replicate.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the mean of a bootstrap replicate.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        values (pd.Series, ndarray): One dimensional array</span>
@@ -97,7 +99,7 @@
 
 
 <div class="viewcode-block" id="make_bb_quantile_closure"><a class="viewcode-back" href="../../../api/bayesian_stats/bayesian_bootstrap.html#mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure">[docs]</a><span class="k">def</span> <span class="nf">make_bb_quantile_closure</span><span class="p">(</span><span class="n">quantiles</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a function to calculate quantiles for a bootstrap replicate.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a function to calculate quantiles for a bootstrap replicate.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        quantiles (float, list of floats): Quantiles to compute</span>
@@ -123,7 +125,7 @@
     <span class="c1"># we can just use that instead.</span>
 
     <span class="k">def</span> <span class="nf">get_value_at_quantile</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">cdf</span><span class="p">,</span> <span class="n">quantile</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the value at a quantile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the value at a quantile.</span>
 
 <span class="sd">        Does no interpolation because our Bayesian bootstrap</span>
 <span class="sd">        implementation calls `np.unique` to tally the values:</span>
@@ -139,7 +141,7 @@
         <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">bb_quantile</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">prob_weights</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate quantiles for a bootstrap replicate.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate quantiles for a bootstrap replicate.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            values (pd.Series, ndarray): One dimensional array</span>
@@ -175,7 +177,7 @@
     <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
     <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Jointly sample bootstrapped statistics then compare them.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Jointly sample bootstrapped statistics then compare them.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        df: a pandas DataFrame of queried experiment data in the</span>
@@ -266,7 +268,7 @@
     <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Bootstrap ``stat_fn`` for one branch on its own.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bootstrap ``stat_fn`` for one branch on its own.</span>
 
 <span class="sd">    Computes ``stat_fn`` for ``num_samples`` resamples of ``data``,</span>
 <span class="sd">    then returns summary statistics for the results.</span>
@@ -310,7 +312,7 @@
     <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return ``stat_fn`` evaluated on resampled data.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``stat_fn`` evaluated on resampled data.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        data: The data as a list, 1D numpy array, or pandas series</span>

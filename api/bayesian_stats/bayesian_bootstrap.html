@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mozanalysis.bayesian_stats.bayesian_bootstrap &mdash; mozanalysis  documentation</title>
@@ -11,10 +11,8 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -30,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -85,7 +87,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../api.html">API Documentation</a></li>
       <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap</span></code></li>
       <li class="wy-breadcrumbs-aside">
@@ -104,7 +106,7 @@
 <span class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap.</span></span><span class="sig-name descname"><span class="pre">bb_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob_weights</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#bb_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.bb_mean" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the mean of a bootstrap replicate.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>values</strong> (<em>pd.Series</em><em>, </em><em>ndarray</em>) – One dimensional array
 of observed values</p></li>
@@ -113,7 +115,7 @@ array of the probability weight associated with
 each value.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The mean as a np.float.</p>
 </dd>
 </dl>
@@ -124,7 +126,7 @@ each value.</p></li>
 <span class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap.</span></span><span class="sig-name descname"><span class="pre">make_bb_quantile_closure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantiles</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#make_bb_quantile_closure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.make_bb_quantile_closure" title="Permalink to this definition"></a></dt>
 <dd><p>Return a function to calculate quantiles for a bootstrap replicate.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>quantiles</strong> (<em>float</em><em>, </em><em>list</em><em> of </em><em>floats</em>) – Quantiles to compute</p>
 </dd>
 </dl>
@@ -155,7 +157,7 @@ each value.</p>
 <span class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap.</span></span><span class="sig-name descname"><span class="pre">compare_branches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_branch_label='control'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat_fn=&lt;function</span> <span class="pre">bb_mean&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples=10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">individual_summary_quantiles=(0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.995)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comparative_summary_quantiles=(0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.995)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#compare_branches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.compare_branches" title="Permalink to this definition"></a></dt>
 <dd><p>Jointly sample bootstrapped statistics then compare them.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> – a pandas DataFrame of queried experiment data in the
 standard format (see <cite>mozanalysis.experiment</cite>).</p></li>
@@ -193,7 +195,7 @@ branch, probably the control). Change these when making
 Bonferroni corrections.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>If <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> returns a scalar (this is the default), then
 this function returns a dictionary has the following keys and
 values:</p>
@@ -224,7 +226,7 @@ of <code class="docutils literal notranslate"><span class="pre">stat_fn</span></
 <p>Computes <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> for <code class="docutils literal notranslate"><span class="pre">num_samples</span></code> resamples of <code class="docutils literal notranslate"><span class="pre">data</span></code>,
 then returns summary statistics for the results.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas Series</p></li>
 <li><p><strong>stat_fn</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A function that either:</p>
@@ -260,7 +262,7 @@ when making Bonferroni corrections.</p></li>
 <span class="sig-prename descclassname"><span class="pre">mozanalysis.bayesian_stats.bayesian_bootstrap.</span></span><span class="sig-name descname"><span class="pre">get_bootstrap_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat_fn=&lt;function</span> <span class="pre">bb_mean&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples=10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_start=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/bayesian_stats/bayesian_bootstrap.html#get_bootstrap_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bayesian_stats.bayesian_bootstrap.get_bootstrap_samples" title="Permalink to this definition"></a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code> evaluated on resampled data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas series</p></li>
 <li><p><strong>stat_fn</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A function that either:</p>
@@ -291,7 +293,7 @@ in this calculation. By default, use a random seed.</p>
 quantile, above which to discard outliers. E.g. <code class="docutils literal notranslate"><span class="pre">0.9999</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A Series or DataFrame with one row per sample and one column
 per output of <code class="docutils literal notranslate"><span class="pre">stat_fn</span></code>.</p>
 </dd>

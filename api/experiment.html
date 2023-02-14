@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mozanalysis.experiment &mdash; mozanalysis  documentation</title>
@@ -11,10 +11,8 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -30,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> mozanalysis
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            mozanalysis
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -103,7 +105,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
       <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code></li>
       <li class="wy-breadcrumbs-aside">
@@ -183,7 +185,7 @@ if we have data covering their entire analysis window.</p></li>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>experiment_slug</strong> (<em>str</em>) – Name of the study, used to identify
 the enrollment events specific to this study.</p></li>
@@ -208,7 +210,7 @@ dataset derived from its app ID, like <cite>org_mozilla_firefox</cite>.</p></li>
 <dd><p>Name of the study, used to identify
 the enrollment events specific to this study.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -220,7 +222,7 @@ the enrollment events specific to this study.</p>
 <dd><p>e.g. ‘2019-01-01’. First date on which enrollment
 events were received.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -237,7 +239,7 @@ factor ‘7’ removes weekly seasonality, and the <code class="docutils literal
 for the fact that enrollment typically starts a few hours
 before UTC midnight.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int, optional</p>
 </dd>
 </dl>
@@ -253,13 +255,13 @@ a pre-defined list. (this is deprecated)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.get_single_window_data">
-<span class="sig-name descname"><span class="pre">get_single_window_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><span class="pre">BigQueryContext</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_start_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_length_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_exposure_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_single_window_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_single_window_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><span class="pre">BigQueryContext</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_start_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_length_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_exposure_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_single_window_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="Permalink to this definition"></a></dt>
 <dd><p>Return a DataFrame containing per-client metric values.</p>
 <p>Also store them in a permanent table in BigQuery. The name of
 this table will be printed. Subsequent calls to this function
 will simply read the results from this table.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bq_context</strong> (<a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><em>BigQueryContext</em></a>) – BigQuery configuration and client.</p></li>
 <li><p><strong>metric_list</strong> (<em>list</em><em> of </em><em>mozanalysis.metric.Metric</em><em> or </em><em>str</em>) – The metrics
@@ -303,7 +305,7 @@ for desktop and Nimbus exposure events for Fenix and iOS.</p></li>
 segments to study.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A pandas DataFrame of experiment data. One row per <code class="docutils literal notranslate"><span class="pre">client_id</span></code>.
 Some metadata columns, then one column per metric in
 <code class="docutils literal notranslate"><span class="pre">metric_list</span></code>, and one column per sanity-check metric.
@@ -338,12 +340,12 @@ standard format for queried experimental data.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.get_time_series_data">
-<span class="sig-name descname"><span class="pre">get_time_series_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><span class="pre">BigQueryContext</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_series_period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'weekly'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_exposure_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mozanalysis.experiment.TimeSeriesResult" title="mozanalysis.experiment.TimeSeriesResult"><span class="pre">TimeSeriesResult</span></a></span></span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_time_series_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bq_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><span class="pre">BigQueryContext</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_series_period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'weekly'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_exposure_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mozanalysis.experiment.TimeSeriesResult" title="mozanalysis.experiment.TimeSeriesResult"><span class="pre">TimeSeriesResult</span></a></span></span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.get_time_series_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.get_time_series_data" title="Permalink to this definition"></a></dt>
 <dd><p>Return a TimeSeriesResult with per-client metric values.</p>
 <p>Roughly equivalent to looping over <a class="reference internal" href="#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_single_window_data()</span></code></a>
 with different analysis windows, and reorganising the results.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bq_context</strong> (<a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><em>BigQueryContext</em></a>) – BigQuery configuration and client.</p></li>
 <li><p><strong>metric_list</strong> (<em>list</em><em> of </em><em>mozanalysis.metric.Metric</em>) – The metrics to analyze.</p></li>
@@ -383,7 +385,7 @@ for desktop and Nimbus exposure events for Fenix and iOS.</p></li>
 segments to study.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A <a class="reference internal" href="#mozanalysis.experiment.TimeSeriesResult" title="mozanalysis.experiment.TimeSeriesResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">mozanalysis.experiment.TimeSeriesResult</span></code></a> object,
 which may be used to obtain a
 pandas DataFrame of per-client metric data, for each
@@ -416,10 +418,10 @@ supports sanity checks.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mozanalysis.experiment.Experiment.build_enrollments_query">
-<span class="sig-name descname"><span class="pre">build_enrollments_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><span class="pre">TimeLimits</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_exposure_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_enrollments_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_enrollments_query" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">build_enrollments_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><span class="pre">TimeLimits</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">enrollments_query_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'normandy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_enrollments_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_exposure_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#Experiment.build_enrollments_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.Experiment.build_enrollments_query" title="Permalink to this definition"></a></dt>
 <dd><p>Return a SQL query for querying enrollment and exposure data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>time_limits</strong> (<a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><em>TimeLimits</em></a>) – An object describing the
 interval(s) to query</p></li>
@@ -445,7 +447,7 @@ client has been exposed to the experiment</p></li>
 segments to study.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A string containing a BigQuery SQL expression.</p>
 </dd>
 </dl>
@@ -464,7 +466,7 @@ clients have received the exposure signal during enrollment or
 after. When using the exposures analysis basis, metrics will
 be computed for these clients.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>metric_list</strong> (<em>list</em><em> of </em><em>mozanalysis.metric.Metric</em><em> or </em><em>str</em>) – The metrics to analyze.</p></li>
 <li><p><strong>time_limits</strong> (<a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><em>TimeLimits</em></a>) – An object describing the
@@ -477,7 +479,7 @@ signal parameter that will be used for computing metrics
 for certain analysis bases (such as exposures).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A string containing a BigQuery SQL expression.</p>
 </dd>
 </dl>
@@ -524,10 +526,10 @@ and compute on the fly” because different state is supplied in
 different contexts.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mozanalysis.experiment.TimeLimits.for_single_analysis_window">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">for_single_analysis_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_enrollment_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_start_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_length_dates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><span class="pre">TimeLimits</span></a></span></span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.for_single_analysis_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.for_single_analysis_window" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">for_single_analysis_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_enrollment_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_start_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_length_dates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><span class="pre">TimeLimits</span></a></span></span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.for_single_analysis_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.for_single_analysis_window" title="Permalink to this definition"></a></dt>
 <dd><p>Return a <code class="docutils literal notranslate"><span class="pre">TimeLimits</span></code> instance with the following parameters</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>first_enrollment_date</strong> (<em>str</em>) – First date on which enrollment
 events were received; the start date of the experiment.</p></li>
@@ -557,7 +559,7 @@ hours before UTC midnight.</p></li>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">for_ts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_enrollment_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_date_full_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_series_period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_dates_enrollment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mozanalysis.experiment.TimeLimits" title="mozanalysis.experiment.TimeLimits"><span class="pre">TimeLimits</span></a></span></span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#TimeLimits.for_ts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.TimeLimits.for_ts" title="Permalink to this definition"></a></dt>
 <dd><p>Return a <code class="docutils literal notranslate"><span class="pre">TimeLimits</span></code> instance for a time series.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>first_enrollment_date</strong> (<em>str</em>) – First date on which enrollment
 events were received; the start date of the experiment.</p></li>
@@ -583,7 +585,7 @@ determines the number of points in the time series.</p></li>
 <p>The range is measured in “days after enrollment”, and is inclusive.</p>
 <p>For example, <code class="docutils literal notranslate"><span class="pre">AnalysisWindow(0,</span> <span class="pre">6)</span></code> is the first week after enrollment.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>start</strong> (<em>int</em>) – First day of the analysis window, in days since
 enrollment.</p></li>
@@ -620,7 +622,7 @@ their analysis windows.</p>
 <p>N.B. this makes a BigQuery query each time it is run; caching
 results is your responsibility.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bq_context</strong> (<a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><em>BigQueryContext</em></a>) – </p></li>
 <li><p><strong>analysis_window</strong> (<a class="reference internal" href="#mozanalysis.experiment.AnalysisWindow" title="mozanalysis.experiment.AnalysisWindow"><em>AnalysisWindow</em></a><em> or </em><em>int</em>) – The analysis
@@ -638,7 +640,7 @@ window, or its start day as an int.</p></li>
 series and may be very large. A warning will print the size of data
 to be downloaded.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>bq_context</strong> (<a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><em>BigQueryContext</em></a>) – </p>
 </dd>
 </dl>
@@ -652,7 +654,7 @@ by a SQL aggregate function.</p>
 <p>This DataFrame has a row for each analysis window, with a column
 for each metric in the supplied metric_list.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bq_context</strong> (<a class="reference internal" href="bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><em>BigQueryContext</em></a>) – </p></li>
 <li><p><strong>metric_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><em>mozanalysis.metrics.Metric</em></a>) – </p></li>
