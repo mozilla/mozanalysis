@@ -105,8 +105,7 @@ jobs:
       # Needed for write access to the GitHub repository;
       # see https://circleci.com/docs/2.0/gh-bb-integration/#deployment-keys-and-user-keys
       - add_ssh_keys:
-          fingerprints:
-            - "49:07:b0:d7:d6:8d:f0:85:5a:46:2c:02:a4:38:b4:ff"
+          fingerprints: "49:07:b0:d7:d6:8d:f0:85:5a:46:2c:02:a4:38:b4:ff"
       # The gh-pages npm package looks to be the most widely used utility for
       # pushing a directory to a git branch;
       # see https://www.npmjs.com/package/gh-pages
