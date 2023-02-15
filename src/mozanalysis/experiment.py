@@ -625,7 +625,7 @@ class Experiment:
         return """
         SELECT
             e.client_id,
-            `mozfun.map.get_key`(e.event_map_values, 'branchSlug')
+            `mozfun.map.get_key`(e.event_map_values, 'branch')
                 AS branch,
             MIN(e.submission_date) AS enrollment_date,
             COUNT(e.submission_date) AS num_enrollment_events
@@ -732,7 +732,7 @@ class Experiment:
         LEFT JOIN (
             SELECT
                 client_id,
-                `mozfun.map.get_key`(event_map_values, 'branch') AS branch,
+                `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
                 submission_date
             FROM
                 `moz-fx-data-shared-prod.telemetry.events`
