@@ -6,6 +6,7 @@ import hashlib
 from functools import reduce
 
 import numpy as np
+from typing import Union, List
 
 
 def all_(l):
@@ -86,3 +87,39 @@ def filter_outliers(branch_data, threshold_quantile):
 def hash_ish(string, hex_chars=12):
     """Return a crude hash of a string."""
     return hashlib.sha256(string.encode("utf-8")).hexdigest()[:hex_chars]
+
+
+def get_time_intervals(
+    start_date: Union[str, datetime.datetime],
+    interval: int,
+    max_num_dates_enrollment: int,
+) -> List[datetime.datetime]:
+    """Use a start date and create end dates for enrollment intervals.
+    Used to generate intervals of enrollment to calculate metrics over
+    variable enrollment lengths.
+
+    Args:
+        start_date: First date of enrollment for sizing job.
+        interval: Number of days to increment the enrollment end date by.
+        max_num_dates_enrollment: Ceiling for the length of the enrollment
+            period.
+
+    Returns:
+        date_list: List of dates where variable enrollment windows will
+            end.
+    """
+
+    if isinstance(start_date, str):
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+
+    date = start_date + datetime.timedelta(interval - 1)
+    date_list = [date.date()]
+    last_enrollment_date = start_date + datetime.timedelta(
+        days=(max_num_dates_enrollment - 1)
+    )
+    while date < last_enrollment_date:
+        date = date + datetime.timedelta(interval)
+        date_list.append(date.date())
+
+    date_list[len(date_list) - 1] = last_enrollment_date.date()
+    return date_list
