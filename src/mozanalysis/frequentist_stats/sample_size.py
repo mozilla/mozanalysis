@@ -2,16 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import attr
-from typing import List, Union, Dict, Callable, Optional
-from datetime import datetime, timedelta
+from typing import List, Union, Dict, Optional
+from datetime import datetime
 
 from mozanalysis.bq import BigQueryContext
 from mozanalysis.experiment import TimeSeriesResult
 from mozanalysis.metrics import Metric
 from mozanalysis.segments import Segment
 from mozanalysis.sizing import HistoricalTarget
-from mozanalysis.utils import add_days, get_time_intervals
+from mozanalysis.utils import get_time_intervals
 
 from scipy.stats import norm
 from math import pi
