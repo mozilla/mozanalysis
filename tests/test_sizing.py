@@ -31,7 +31,6 @@ def test_multiple_datasource():
 
 
 def test_query_not_detectably_malformed():
-
     test_target = HistoricalTarget("test_targ", "2022-01-01", 7, 3)
 
     tl = TimeLimits.for_single_analysis_window(
@@ -55,7 +54,6 @@ def test_query_not_detectably_malformed():
 
 
 def test_megaquery_not_detectably_malformed():
-
     test_target = HistoricalTarget("test_targ", "2022-01-01", 7, 3)
 
     tl = TimeLimits.for_single_analysis_window(
