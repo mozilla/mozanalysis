@@ -554,7 +554,7 @@
             <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">target_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
 <span class="w">                    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">                    LEFT JOIN ds_{i}</span>
+<span class="sd">                    INNER JOIN ds_{i}</span>
 <span class="sd">                        ON ds_{i}.client_id = ds_0.client_id</span>
 <span class="sd">                        AND ds_{i}.target_first_date &lt;= ds_0.target_last_date</span>
 <span class="sd">                        AND ds_{i}.target_last_date &gt;= ds_0.target_first_date</span>

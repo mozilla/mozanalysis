@@ -75,16 +75,22 @@
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
 
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">BigQueryContext</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">TimeSeriesResult</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.segments</span> <span class="kn">import</span> <span class="n">Segment</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.sizing</span> <span class="kn">import</span> <span class="n">HistoricalTarget</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="kn">import</span> <span class="n">get_time_intervals</span>
+
 <span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">norm</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
 <span class="kn">from</span> <span class="nn">statsmodels.stats.power</span> <span class="kn">import</span> <span class="n">tt_ind_solve_power</span><span class="p">,</span> <span class="n">zt_ind_solve_power</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">BigQueryContext</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">TimeSeriesResult</span>
 <span class="kn">from</span> <span class="nn">statsmodels.stats.proportion</span> <span class="kn">import</span> <span class="n">samplesize_proportions_2indep_onetail</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
 
@@ -207,8 +213,8 @@
         <span class="n">pop_percent</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">sample_size</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
         <span class="n">results</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;sample_size_per_branch&quot;</span><span class="p">:</span> <span class="n">sample_size</span><span class="p">,</span>
-            <span class="s2">&quot;number_of_clients_targeted&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
             <span class="s2">&quot;population_percent_per_branch&quot;</span><span class="p">:</span> <span class="n">pop_percent</span><span class="p">,</span>
+            <span class="s2">&quot;number_of_clients_targeted&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
         <span class="p">}</span>
     <span class="k">return</span> <span class="n">results</span></div>
 
@@ -270,8 +276,8 @@
         <span class="n">pop_percent</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">sample_size</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
         <span class="n">results</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;sample_size_per_branch&quot;</span><span class="p">:</span> <span class="n">sample_size</span><span class="p">,</span>
-            <span class="s2">&quot;number_of_clients_targeted&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
             <span class="s2">&quot;population_percent_per_branch&quot;</span><span class="p">:</span> <span class="n">pop_percent</span><span class="p">,</span>
+            <span class="s2">&quot;number_of_clients_targeted&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
         <span class="p">}</span>
     <span class="k">return</span> <span class="n">results</span></div>
 
@@ -407,7 +413,7 @@
             <span class="n">size_dict</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;sample_size_per_branch&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">pop_size</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">size_dict</span></div>
+    <span class="k">return</span> <span class="n">size_dict</span>  <span class="c1"># TODO: add option to return a DataFrame</span></div>
 
 
 <div class="viewcode-block" id="poisson_diff_solve_sample_size"><a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.poisson_diff_solve_sample_size">[docs]</a><span class="k">def</span> <span class="nf">poisson_diff_solve_sample_size</span><span class="p">(</span>
@@ -464,10 +470,115 @@
         <span class="n">pop_percent</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">sample_size</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
         <span class="n">results</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;sample_size_per_branch&quot;</span><span class="p">:</span> <span class="n">sample_size</span><span class="p">,</span>
-            <span class="s2">&quot;number_of_clients_targeted&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
             <span class="s2">&quot;population_percent_per_branch&quot;</span><span class="p">:</span> <span class="n">pop_percent</span><span class="p">,</span>
+            <span class="s2">&quot;number_of_clients_targeted&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
         <span class="p">}</span>
     <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="variable_enrollment_length_sample_size_calc"><a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.variable_enrollment_length_sample_size_calc">[docs]</a><span class="k">def</span> <span class="nf">variable_enrollment_length_sample_size_calc</span><span class="p">(</span>
+    <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">datetime</span><span class="p">],</span>
+    <span class="n">max_enrollment_days</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">analysis_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">metric_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
+    <span class="n">target_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Segment</span><span class="p">],</span>
+    <span class="n">variable_window_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+    <span class="n">experiment_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">app_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">to_pandas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">sizing_kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sample size calculation over a variable enrollment window. This function</span>
+<span class="sd">    will fetch a DataFrame with metrics defined in metric_list for a target</span>
+<span class="sd">    population defined in the target_list over an enrollment window of length</span>
+<span class="sd">    max_enrollment_days. Sample size calculation is performed</span>
+<span class="sd">    using clients enrolled in the first variable_window_length dates in</span>
+<span class="sd">    that max enrollment window; that window is incrementally widened by</span>
+<span class="sd">    the variable window length and sample size calculation performed again,</span>
+<span class="sd">    until the last enrollment date is reached.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        bq_context: A mozanalysis.bq.BigQueryContext object that handles downloading</span>
+<span class="sd">            data from BigQuery.</span>
+<span class="sd">        start_date (str or datetime in %Y-%m-%d format): First date of enrollment for</span>
+<span class="sd">            sizing job.</span>
+<span class="sd">        max_enrollment_days (int): Maximum number of dates to consider for the</span>
+<span class="sd">            enrollment period for the experiment in question.</span>
+<span class="sd">        analysis_length (int): Number of days to record metrics for each client</span>
+<span class="sd">            in the experiment in question.</span>
+<span class="sd">        metric_list (list of mozanalysis.metrics.Metric): List of metrics</span>
+<span class="sd">            used to construct the results df from HistoricalTarget. The names</span>
+<span class="sd">            of these metrics are used to return results for sample size</span>
+<span class="sd">            calculation for each.</span>
+<span class="sd">        target_list (list of mozanalysis.segments.Segment): List of segments</span>
+<span class="sd">            used to identify clients to include in the study.</span>
+<span class="sd">        variable_window_length (int): Length of the intervals used to extend</span>
+<span class="sd">            the enrollment period incrementally. Sample sizes are recalculated over</span>
+<span class="sd">            each variable enrollment period.</span>
+<span class="sd">        experiment_name (str): Optional name used to name the target and metric</span>
+<span class="sd">            tables in BigQuery.</span>
+<span class="sd">        app_id (str): Application that experiment will be run on.</span>
+<span class="sd">        **sizing_kwargs: Arguments to pass to z_or_t_ind_sample_size_calc</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary. Keys in the dictionary are the metrics column names from</span>
+<span class="sd">        the DataFrame; values are the required sample size per branch to achieve</span>
+<span class="sd">        the desired power for that metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">variable_window_length</span> <span class="o">&gt;</span> <span class="n">max_enrollment_days</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Enrollment window length is larger than the max enrollment length.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">HistoricalTarget</span><span class="p">(</span>
+        <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
+        <span class="n">analysis_length</span><span class="o">=</span><span class="n">analysis_length</span><span class="p">,</span>
+        <span class="n">num_dates_enrollment</span><span class="o">=</span><span class="n">max_enrollment_days</span><span class="p">,</span>
+        <span class="n">experiment_name</span><span class="o">=</span><span class="n">experiment_name</span><span class="p">,</span>
+        <span class="n">app_id</span><span class="o">=</span><span class="n">app_id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">ht</span><span class="o">.</span><span class="n">get_single_window_data</span><span class="p">(</span>
+        <span class="n">bq_context</span><span class="o">=</span><span class="n">bq_context</span><span class="p">,</span> <span class="n">metric_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span> <span class="n">target_list</span><span class="o">=</span><span class="n">target_list</span>
+    <span class="p">)</span>
+
+    <span class="n">interval_end_dates</span> <span class="o">=</span> <span class="n">get_time_intervals</span><span class="p">(</span>
+        <span class="n">start_date</span><span class="p">,</span>
+        <span class="n">variable_window_length</span><span class="p">,</span>
+        <span class="n">max_enrollment_days</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_for_interval_sample_size_calculation</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+
+        <span class="n">df_interval</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;enrollment_date&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">interval_end_dates</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">z_or_t_ind_sample_size_calc</span><span class="p">(</span>
+            <span class="n">df</span><span class="o">=</span><span class="n">df_interval</span><span class="p">,</span> <span class="n">metrics_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">sizing_kwargs</span>
+        <span class="p">)</span>
+        <span class="n">final_res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">final_res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;enrollment_end_date&quot;</span><span class="p">:</span> <span class="n">interval_end_dates</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="o">**</span><span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+            <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">final_res</span>
+
+    <span class="n">results_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">:</span>
+        <span class="n">results_dict</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">interval_end_dates</span><span class="p">)):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">_for_interval_sample_size_calculation</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">:</span>
+            <span class="n">results_dict</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">results_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">results_dict</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results_dict</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">results_dict</span></div>
 </pre></div>
 
            </div>
