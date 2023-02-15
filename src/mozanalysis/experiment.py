@@ -732,7 +732,7 @@ class Experiment:
         LEFT JOIN (
             SELECT
                 client_id,
-                `mozfun.map.get_key`(event_map_values, 'branch') AS branch,
+                `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
                 submission_date
             FROM
                 `moz-fx-data-shared-prod.telemetry.events`
