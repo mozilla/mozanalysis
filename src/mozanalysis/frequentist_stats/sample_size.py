@@ -2,16 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from typing import List, Union, Dict, Optional
+from datetime import datetime
+
+from mozanalysis.bq import BigQueryContext
+from mozanalysis.experiment import TimeSeriesResult
+from mozanalysis.metrics import Metric
+from mozanalysis.segments import Segment
+from mozanalysis.sizing import HistoricalTarget
+from mozanalysis.utils import get_time_intervals
+
 from scipy.stats import norm
 from math import pi
 from statsmodels.stats.power import tt_ind_solve_power, zt_ind_solve_power
-from mozanalysis.bq import BigQueryContext
-from mozanalysis.experiment import TimeSeriesResult
 from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
 import numpy as np
 import pandas as pd
-from mozanalysis.metrics import Metric
-from typing import List, Union, Dict
 import matplotlib.pyplot as plt
 
 
@@ -134,8 +140,8 @@ def difference_of_proportions_sample_size_calc(
         pop_percent = 100.0 * (sample_size / len(df))
         results[col] = {
             "sample_size_per_branch": sample_size,
-            "number_of_clients_targeted": len(df),
             "population_percent_per_branch": pop_percent,
+            "number_of_clients_targeted": len(df),
         }
     return results
 
@@ -197,8 +203,8 @@ def z_or_t_ind_sample_size_calc(
         pop_percent = 100.0 * (sample_size / len(df))
         results[col] = {
             "sample_size_per_branch": sample_size,
-            "number_of_clients_targeted": len(df),
             "population_percent_per_branch": pop_percent,
+            "number_of_clients_targeted": len(df),
         }
     return results
 
@@ -334,7 +340,7 @@ def empirical_effect_size_sample_size_calc(
             size_dict[k]["sample_size_per_branch"] / pop_size
         )
 
-    return size_dict
+    return size_dict  # TODO: add option to return a DataFrame
 
 
 def poisson_diff_solve_sample_size(
@@ -391,7 +397,112 @@ def poisson_diff_solve_sample_size(
         pop_percent = 100.0 * (sample_size / len(df))
         results[col] = {
             "sample_size_per_branch": sample_size,
-            "number_of_clients_targeted": len(df),
             "population_percent_per_branch": pop_percent,
+            "number_of_clients_targeted": len(df),
         }
     return results
+
+
+def variable_enrollment_length_sample_size_calc(
+    bq_context: BigQueryContext,
+    start_date: Union[str, datetime],
+    max_enrollment_days: int,
+    analysis_length: int,
+    metric_list: List[Metric],
+    target_list: List[Segment],
+    variable_window_length: int = 7,
+    experiment_name: Optional[str] = "",
+    app_id: Optional[str] = "",
+    to_pandas: bool = True,
+    **sizing_kwargs,
+) -> Dict[str, Union[Dict[str, int], pd.DataFrame]]:
+    """
+    Sample size calculation over a variable enrollment window. This function
+    will fetch a DataFrame with metrics defined in metric_list for a target
+    population defined in the target_list over an enrollment window of length
+    max_enrollment_days. Sample size calculation is performed
+    using clients enrolled in the first variable_window_length dates in
+    that max enrollment window; that window is incrementally widened by
+    the variable window length and sample size calculation performed again,
+    until the last enrollment date is reached.
+
+    Args:
+        bq_context: A mozanalysis.bq.BigQueryContext object that handles downloading
+            data from BigQuery.
+        start_date (str or datetime in %Y-%m-%d format): First date of enrollment for
+            sizing job.
+        max_enrollment_days (int): Maximum number of dates to consider for the
+            enrollment period for the experiment in question.
+        analysis_length (int): Number of days to record metrics for each client
+            in the experiment in question.
+        metric_list (list of mozanalysis.metrics.Metric): List of metrics
+            used to construct the results df from HistoricalTarget. The names
+            of these metrics are used to return results for sample size
+            calculation for each.
+        target_list (list of mozanalysis.segments.Segment): List of segments
+            used to identify clients to include in the study.
+        variable_window_length (int): Length of the intervals used to extend
+            the enrollment period incrementally. Sample sizes are recalculated over
+            each variable enrollment period.
+        experiment_name (str): Optional name used to name the target and metric
+            tables in BigQuery.
+        app_id (str): Application that experiment will be run on.
+        **sizing_kwargs: Arguments to pass to z_or_t_ind_sample_size_calc
+
+    Returns:
+        A dictionary. Keys in the dictionary are the metrics column names from
+        the DataFrame; values are the required sample size per branch to achieve
+        the desired power for that metric.
+    """
+
+    if variable_window_length > max_enrollment_days:
+        raise ValueError(
+            "Enrollment window length is larger than the max enrollment length."
+        )
+
+    ht = HistoricalTarget(
+        start_date=start_date,
+        analysis_length=analysis_length,
+        num_dates_enrollment=max_enrollment_days,
+        experiment_name=experiment_name,
+        app_id=app_id,
+    )
+
+    df = ht.get_single_window_data(
+        bq_context=bq_context, metric_list=metric_list, target_list=target_list
+    )
+
+    interval_end_dates = get_time_intervals(
+        start_date,
+        variable_window_length,
+        max_enrollment_days,
+    )
+
+    def _for_interval_sample_size_calculation(i):
+
+        df_interval = df.loc[df["enrollment_date"] < interval_end_dates[i]]
+        res = z_or_t_ind_sample_size_calc(
+            df=df_interval, metrics_list=metric_list, test="t", **sizing_kwargs
+        )
+        final_res = {}
+        for key in res.keys():
+            final_res[key] = {
+                "enrollment_end_date": interval_end_dates[i],
+                **res[key],
+            }
+
+        return final_res
+
+    results_dict = {}
+    for m in metric_list:
+        results_dict[m.name] = []
+
+    for i in range(len(interval_end_dates)):
+        res = _for_interval_sample_size_calculation(i)
+        for m in metric_list:
+            results_dict[m.name].append(res[m.name])
+
+    for m in results_dict.keys():
+        results_dict[m] = pd.DataFrame(results_dict[m])
+
+    return results_dict
