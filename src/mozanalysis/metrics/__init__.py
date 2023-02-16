@@ -95,7 +95,37 @@ class DataSource:
                 raise ValueError(
                     f"{self.name}: from_expr contains a dataset template but no value was provided."  # noqa:E501
                 ) from e
-        return self._from_expr.format(dataset=effective_dataset)
+        from_expr = self._from_expr.format(dataset=effective_dataset)
+
+        if self.experiments_column_type is None:
+            return from_expr
+
+        elif self.experiments_column_type == "simple":
+            return """(
+                SELECT *
+                FROM ({%s}) base
+                WHERE `mozfun.map.get_key`(base.experiments, '{experiment_slug}') IS NOT NULL
+            )""".format(
+                from_expr
+            )
+
+        elif self.experiments_column_type == "native":
+            return """(
+                SELECT *
+                FROM ({%s}) base
+                WHERE `mozfun.map.get_key`(base.experiments, '{experiment_slug}').branch IS NOT NULL
+            )""".format(
+                from_expr
+            )
+
+        elif self.experiments_column_type == "glean":
+            return """(
+                SELECT *
+                FROM ({%s}) base
+                WHERE `mozfun.map.get_key`(base.ping_info.experiments, '{experiment_slug}').branch IS NOT NULL
+            )""".format(
+                from_expr
+            )
 
     @property
     def experiments_column_expr(self) -> str:
