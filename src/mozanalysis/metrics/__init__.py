@@ -79,7 +79,9 @@ class DataSource:
     def _check_default_dataset_provided_if_needed(self, attribute, value):
         self.from_expr_for(None)
 
-    def from_expr_for(self, dataset: Optional[str]) -> str:
+    def from_expr_for(
+        self, dataset: Optional[str], experiment_slug: Optional[str] = None
+    ) -> str:
         """Expands the ``from_expr`` template for the given dataset.
         If ``from_expr`` is not a template, returns ``from_expr``.
 
@@ -100,64 +102,78 @@ class DataSource:
         if self.experiments_column_type is None:
             return from_expr
 
-        elif self.experiments_column_type == "simple":
-            return f"""(
+        else:
+            return """(
                 SELECT *
                 FROM ({from_expr}) base
-                WHERE `mozfun.map.get_key`(
-                    base.experiments, '{{experiment_slug}}'
-                ) IS NOT NULL
-            )"""
-
-        elif self.experiments_column_type == "native":
-            return f"""(
-                SELECT *
-                FROM ({from_expr}) base
-                WHERE `mozfun.map.get_key`(
-                    base.experiments, '{{experiment_slug}}'
-                ).branch IS NOT NULL
-            )"""
-
-        elif self.experiments_column_type == "glean":
-            return f"""(
-                SELECT *
-                FROM ({from_expr}) base
-                WHERE `mozfun.map.get_key`(
-                    base.ping_info.experiments, '{{experiment_slug}}'
-                ).branch IS NOT NULL
-            )"""
+                WHERE ({slug_expr})
+            )""".format(
+                from_expr=from_expr,
+                slug_expr=self.experiments_column_expr_base.format(
+                    experiment_slug=experiment_slug
+                ),
+            )
 
     @property
-    def experiments_column_expr(self) -> str:
+    def experiments_column_expr_base(self) -> str:
         if self.experiments_column_type is None:
             return ""
 
         elif self.experiments_column_type == "simple":
-            return """AND (
-                    ds.{submission_date} != e.enrollment_date
-                    OR `mozfun.map.get_key`(
+            return """(
+                    `mozfun.map.get_key`(
                         ds.experiments, '{experiment_slug}'
                     ) IS NOT NULL
                 )"""
 
         elif self.experiments_column_type == "native":
-            return """AND (
-                    ds.{submission_date} != e.enrollment_date
-                    OR `mozfun.map.get_key`(
+            return """(
+                    `mozfun.map.get_key`(
                         ds.experiments, '{experiment_slug}'
                     ).branch IS NOT NULL
-            )"""
+                )"""
 
         elif self.experiments_column_type == "glean":
-            return """AND (
-                    ds.{submission_date} != e.enrollment_date
-                    OR `mozfun.map.get_key`(
+            return """(
+                    `mozfun.map.get_key`(
                         ds.ping_info.experiments, '{experiment_slug}'
                     ).branch IS NOT NULL
                 )"""
 
         else:
             raise ValueError
+
+    @property
+    def experiments_column_expr(self) -> str:
+        if self.experiments_column_type is None:
+            return ""
+        else:
+            if self.experiments_column_type == "simple":
+                return """AND (
+                        ds.{{submission_date}} != e.enrollment_date
+                        OR {slug_expr}
+                    )""".format(
+                    slug_expr=self.experiments_column_expr_base
+                )
+
+            elif self.experiments_column_type == "native":
+                return """AND (
+                        ds.{{submission_date}} != e.enrollment_date
+                        OR {slug_expr}
+                )""".format(
+                    slug_expr=self.experiments_column_expr_base
+                )
+
+            elif self.experiments_column_type == "glean":
+                return """AND (
+                        ds.{{submission_date}} != e.enrollment_date
+                        OR {slug_expr}
+                    )""".format(
+                    slug_expr=self.experiments_column_expr_base
+                )
+
+            else:
+                raise ValueError
 
     def build_query(
         self,
@@ -199,7 +215,9 @@ class DataSource:
             e.analysis_window_end""".format(
             client_id=self.client_id_column or "client_id",
             submission_date=self.submission_date_column or "submission_date",
-            from_expr=self.from_expr_for(from_expr_dataset),
+            from_expr=self.from_expr_for(
+                from_expr_dataset, experiment_slug=experiment_slug
+            ),
             fddr=time_limits.first_date_data_required,
             lddr=time_limits.last_date_data_required,
             metrics=",\n            ".join(
