@@ -101,31 +101,31 @@ class DataSource:
             return from_expr
 
         elif self.experiments_column_type == "simple":
-            return """(
+            return f"""(
                 SELECT *
-                FROM ({%s}) base
-                WHERE `mozfun.map.get_key`(base.experiments, '{experiment_slug}') IS NOT NULL
-            )""".format(
-                from_expr
-            )
+                FROM ({from_expr}) base
+                WHERE `mozfun.map.get_key`(
+                    base.experiments, '{{experiment_slug}}'
+                ) IS NOT NULL
+            )"""
 
         elif self.experiments_column_type == "native":
-            return """(
+            return f"""(
                 SELECT *
-                FROM ({%s}) base
-                WHERE `mozfun.map.get_key`(base.experiments, '{experiment_slug}').branch IS NOT NULL
-            )""".format(
-                from_expr
-            )
+                FROM ({from_expr}) base
+                WHERE `mozfun.map.get_key`(
+                    base.experiments, '{{experiment_slug}}'
+                ).branch IS NOT NULL
+            )"""
 
         elif self.experiments_column_type == "glean":
-            return """(
+            return f"""(
                 SELECT *
-                FROM ({%s}) base
-                WHERE `mozfun.map.get_key`(base.ping_info.experiments, '{experiment_slug}').branch IS NOT NULL
-            )""".format(
-                from_expr
-            )
+                FROM ({from_expr}) base
+                WHERE `mozfun.map.get_key`(
+                    base.ping_info.experiments, '{{experiment_slug}}'
+                ).branch IS NOT NULL
+            )"""
 
     @property
     def experiments_column_expr(self) -> str:
