@@ -88,3 +88,10 @@ class BigQueryContext:
             dataset_id=self.dataset_id,
             full_table_name=table_name,
         )
+
+    def get_data_scanned(self, sql: str) -> float:
+        """Returns the data scanned (in GB) by BigQuery for the supplied query"""
+        job_config = bigquery.QueryJobConfig(dry_run=True, use_query_cache=False)
+        query_job = self.client.query(sql, job_config)
+        gb_scanned = query_job.total_bytes_processed / 1e9
+        return gb_scanned

@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import attr
+import logging
 
 from typing import List, Optional, Tuple, Dict, Union
+from google.cloud.bigquery import QueryJob
 from pandas import DataFrame
 
 from mozanalysis.bq import sanitize_table_name_for_bq, BigQueryContext
@@ -19,6 +21,8 @@ from mozanalysis.experiment import (
 from mozanalysis.metrics import Metric, DataSource
 from mozanalysis.segments import Segment, SegmentDataSource
 from datetime import date
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(frozen=False, slots=True)
@@ -109,7 +113,8 @@ class HistoricalTarget:
         target_list: Optional[List[Segment]] = None,
         custom_targets_query: Optional[str] = None,
         replace_tables: bool = False,
-    ) -> DataFrame:
+        data_download_cap: Optional[Union[int, float]] = None,
+    ) -> Union[DataFrame, LargeQuerySizingResult]:
         """Return a DataFrame containing per-client metric values.
 
         Also store them in a permanent table in BigQuery. The name of
@@ -138,6 +143,10 @@ class HistoricalTarget:
             replace_tables (bool): If True, delete tables that exist in
                 BigQuery with the same name; used to rerun analyses under
                 the same experiment name with different settings
+            data_download_cap (int or float): Max size (in GB) of data to
+                download. In cases where this cap is surpassed by a metrics
+                table, the user is notified and a LargeQuerySizingResult is
+                returned instead of a DataFrame
 
         Returns:
             A pandas DataFrame of experiment data. One row per ``client_id``.
@@ -222,6 +231,22 @@ class HistoricalTarget:
                 ]
             )
         )
+
+        if data_download_cap:
+            metrics_table_size = bq_context.get_data_scanned(self._metrics_sql)
+            if metrics_table_size > data_download_cap:
+                logger.info(
+                    f"""Metrics table size ({metrics_table_size} GB) exceeds download
+                    cap. Returning a LargeQuerySizingResult."""
+                )
+                result = bq_context.run_query(
+                    self._metrics_sql, full_res_table_name, replace_tables
+                )
+                return LargeQuerySizingResult(
+                    result,
+                    bq_context.fully_qualify_table_name(full_res_table_name),
+                    metric_list,
+                )
 
         return bq_context.run_query(
             self._metrics_sql, full_res_table_name, replace_tables
@@ -353,7 +378,6 @@ class HistoricalTarget:
         target_list: Optional[Segment] = None,
         custom_targets_query: Optional[str] = None,
     ) -> str:
-
         return """
         {targets_query}
         """.format(
@@ -449,7 +473,6 @@ class HistoricalTarget:
     def _build_targets_query(
         self, target_list: List[Segment], time_limits: TimeLimits
     ) -> str:
-
         target_queries = []
         target_columns = []
         dates_columns = []
@@ -667,3 +690,67 @@ class ContinuousEnrollmentTimeLimits:
             analysis_windows=(analysis_window,),
         )
         return tl
+
+
+@attr.s(frozen=True, auto_attribs=True)
+class LargeQuerySizingResult:
+    """
+    Holds details for the metrics table from HistoricalTarget.get_single_window_data.
+    Initiated by that method if the metrics table exceeds the data download cap, which
+    defaults to 50 GB.
+
+    Provides methods for calculating summary statistics in BigQuery and downloading
+    results to a DataFrame.
+
+    Args:
+        query_job (QueryJob): QueryJob that resulted from invoking
+            mozanalysis.bq.BigQueryContext.run_query to construct the metrics table.
+        fully_qualified_table_name (str): Name of metrics table in BigQuery, in the
+            format {project_id}.{dataset_id}.{table_name}.
+        analysis_length (int): Number of days to include for analysis.
+        metrics_list (list of mozanalysis.metrics.Metric): List of metrics contained
+            in the metrics table.
+    """
+
+    query_job: QueryJob
+    fully_qualified_table_name: str
+    metric_list: List[Metric]
+
+    def aggregate_and_download_metrics(
+        self,
+        bq_context: BigQueryContext,
+        aggregator: Union[str, List[str]] = ["AVG", "STDDEV"],
+    ) -> DataFrame:
+        """
+        Calculate an aggregate measure the metrics in a metrics table.
+
+        Args:
+            bq_context (mozanalysis.bq.BigQueryContext): BigQuery
+                configuration and client.
+            aggregator (str or list of str): BigQuery aggregating functions
+                to apply to metrics columns.
+
+        Returns:
+            DataFrame containing aggregated metrics.
+        """
+
+        if isinstance(aggregator, str):
+            aggregator = [aggregator]
+
+        aggregating_metrics_list = []
+        for m in self.metric_list:
+            for agg in aggregator:
+                aggregating_metrics_list.append(f"{agg}({m.name}) AS {m.name}_{agg}")
+
+        query = """
+        SELECT
+            count(*) as number_of_clients_targeted,
+            {agg_metrics}
+        FROM
+            {table_name}
+        """.format(
+            agg_metrics=",\n    ".join(aggregating_metrics_list),
+            table_name=self.fully_qualified_table_name,
+        )
+
+        return bq_context.run_query(query).to_dataframe()

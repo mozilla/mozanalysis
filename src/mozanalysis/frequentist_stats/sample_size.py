@@ -9,7 +9,7 @@ from mozanalysis.bq import BigQueryContext
 from mozanalysis.experiment import TimeSeriesResult
 from mozanalysis.metrics import Metric
 from mozanalysis.segments import Segment
-from mozanalysis.sizing import HistoricalTarget
+from mozanalysis.sizing import HistoricalTarget, LargeQuerySizingResult
 from mozanalysis.utils import get_time_intervals
 
 from scipy.stats import norm
@@ -506,3 +506,59 @@ def variable_enrollment_length_sample_size_calc(
         results_dict[m] = pd.DataFrame(results_dict[m])
 
     return results_dict
+
+
+def from_agg_sample_size_calc(
+    res: LargeQuerySizingResult,
+    bq_context: BigQueryContext,
+    effect_size: float = 0.01,
+    alpha: float = 0.05,
+    power: float = 0.90,
+) -> dict:
+
+    """
+    Perform sample size calculation for an experiment based on independent
+    samples t or z tests.
+
+    Args:
+        df: A pandas DataFrame of queried historical data.
+        metrics_list (list of mozanalysis.metrics.Metric): List of metrics
+            used to construct the results df from HistoricalTarget. The names
+            of these metrics are used to return results for sample size
+            calculation for each
+        test (str, default `z`): `z` or `t` to indicate which solver to use
+        effect_size (float, default .01): Percent change in metrics
+            expected as a result of the experiment treatment
+        alpha (float, default .05): Significance level for the experiment.
+        power (float, default .90): Probability of detecting an effect,
+            when a significant effect exists.
+        outlier_percentile(float, default .995): Percentile at which to trim
+            each columns.
+
+    Returns:
+        A dictionary. Keys in the dictionary are the metrics column names from
+        the DataFrame; values are the required sample size per branch to achieve
+        the desired power for that metric.
+    """
+
+    df = res.aggregate_and_download_metrics(bq_context=bq_context)
+
+    def _get_sample_size_col(col):
+        sd = df[f"{col}_STDEV"].values[0]
+        mean = df[f"{col}_MEAN"].values[0]
+        es = (effect_size * mean) / sd
+
+        return zt_ind_solve_power(effect_size=es, alpha=alpha, power=power, nobs1=None)
+
+    metric_names = [m.name for m in res.metric_list]
+    results = {}
+    pop_size = df["number_of_clients_targeted"].values[0]
+    for col in metric_names:
+        sample_size = _get_sample_size_col(col)
+        pop_percent = 100.0 * (sample_size / pop_size)
+        results[col] = {
+            "sample_size_per_branch": sample_size,
+            "population_percent_per_branch": pop_percent,
+            "number_of_clients_targeted": pop_size,
+        }
+    return results
