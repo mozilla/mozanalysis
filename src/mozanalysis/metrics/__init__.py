@@ -148,32 +148,12 @@ class DataSource:
         if self.experiments_column_type is None:
             return ""
         else:
-            if self.experiments_column_type == "simple":
-                return """AND (
+            return """AND (
                         ds.{{submission_date}} != e.enrollment_date
                         OR {slug_expr}
                     )""".format(
-                    slug_expr=self.experiments_column_expr_base
-                )
-
-            elif self.experiments_column_type == "native":
-                return """AND (
-                        ds.{{submission_date}} != e.enrollment_date
-                        OR {slug_expr}
-                )""".format(
-                    slug_expr=self.experiments_column_expr_base
-                )
-
-            elif self.experiments_column_type == "glean":
-                return """AND (
-                        ds.{{submission_date}} != e.enrollment_date
-                        OR {slug_expr}
-                    )""".format(
-                    slug_expr=self.experiments_column_expr_base
-                )
-
-            else:
-                raise ValueError
+                slug_expr=self.experiments_column_expr_base
+            )
 
     def build_query(
         self,
