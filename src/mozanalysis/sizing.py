@@ -246,7 +246,7 @@ class HistoricalTarget:
             metric_list (list of mozanalysis.metric.Metric): The metrics
                 to analyze.
             time_series_period (str): Period of the time series for which to
-                retrieve data. Options are daily, weekly, and 28_days.
+                retrieve data. Options are daily, weekly, and 28_day.
             target_list (list of mozanalysis.segments.Segment): The targets
                 that define clients to be included in the analysis, based on
                 inclusion in a defined user segment. For each Segment included
