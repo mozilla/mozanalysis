@@ -183,7 +183,7 @@ class HistoricalTarget:
             time_limits = TimeLimits.for_single_analysis_window(
                 self.start_date,
                 last_date_full_data,
-                0,
+                1,
                 self.analysis_length,
                 self.num_dates_enrollment,
             )
