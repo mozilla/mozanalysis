@@ -550,7 +550,7 @@ class Experiment:
                 x.exposure_date,
                 x.num_exposure_events
             FROM exposures x
-                LEFT JOIN raw_enrollments e
+                RIGHT JOIN raw_enrollments e
                 USING (client_id, branch)
         )
         SELECT
