@@ -622,7 +622,7 @@
 <span class="s2">                x.exposure_date,</span>
 <span class="s2">                x.num_exposure_events</span>
 <span class="s2">            FROM exposures x</span>
-<span class="s2">                LEFT JOIN raw_enrollments e</span>
+<span class="s2">                RIGHT JOIN raw_enrollments e</span>
 <span class="s2">                USING (client_id, branch)</span>
 <span class="s2">        )</span>
 <span class="s2">        SELECT</span>
