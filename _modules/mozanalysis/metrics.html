@@ -177,8 +177,8 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;&quot;(</span>
 <span class="s2">                SELECT *</span>
-<span class="s2">                FROM (</span><span class="si">{from_expr}</span><span class="s2">) base</span>
-<span class="s2">                WHERE (</span><span class="si">{slug_expr}</span><span class="s2">)</span>
+<span class="s2">                FROM </span><span class="si">{from_expr}</span><span class="s2"> base</span>
+<span class="s2">                WHERE </span><span class="si">{slug_expr}</span>
 <span class="s2">            )&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">from_expr</span><span class="o">=</span><span class="n">from_expr</span><span class="p">,</span>
                 <span class="n">slug_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_expr_base</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
