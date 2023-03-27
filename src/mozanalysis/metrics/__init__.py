@@ -105,8 +105,8 @@ class DataSource:
         else:
             return """(
                 SELECT *
-                FROM ({from_expr}) base
-                WHERE ({slug_expr})
+                FROM {from_expr} base
+                WHERE {slug_expr}
             )""".format(
                 from_expr=from_expr,
                 slug_expr=self.experiments_column_expr_base.format(
