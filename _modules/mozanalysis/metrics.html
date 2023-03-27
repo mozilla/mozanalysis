@@ -151,7 +151,9 @@
     <span class="k">def</span> <span class="nf">_check_default_dataset_provided_if_needed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">from_expr_for</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DataSource.from_expr_for"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.from_expr_for">[docs]</a>    <span class="k">def</span> <span class="nf">from_expr_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="DataSource.from_expr_for"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.from_expr_for">[docs]</a>    <span class="k">def</span> <span class="nf">from_expr_for</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">experiment_slug</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Expands the ``from_expr`` template for the given dataset.</span>
 <span class="sd">        If ``from_expr`` is not a template, returns ``from_expr``.</span>
 
@@ -167,39 +169,63 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: from_expr contains a dataset template but no value was provided.&quot;</span>  <span class="c1"># noqa:E501</span>
                 <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_expr</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">effective_dataset</span><span class="p">)</span></div>
+        <span class="n">from_expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_expr</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">effective_dataset</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">from_expr</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;(</span>
+<span class="s2">                SELECT *</span>
+<span class="s2">                FROM (</span><span class="si">{from_expr}</span><span class="s2">) base</span>
+<span class="s2">                WHERE (</span><span class="si">{slug_expr}</span><span class="s2">)</span>
+<span class="s2">            )&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">from_expr</span><span class="o">=</span><span class="n">from_expr</span><span class="p">,</span>
+                <span class="n">slug_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_expr_base</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span>
+                <span class="p">),</span>
+            <span class="p">)</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">experiments_column_expr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">experiments_column_expr_base</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s2">&quot;simple&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;AND (</span>
-<span class="s2">                    ds.</span><span class="si">{submission_date}</span><span class="s2"> != e.enrollment_date</span>
-<span class="s2">                    OR `mozfun.map.get_key`(</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;(</span>
+<span class="s2">                    `mozfun.map.get_key`(</span>
 <span class="s2">                        ds.experiments, &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">                    ) IS NOT NULL</span>
 <span class="s2">                )&quot;&quot;&quot;</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s2">&quot;native&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;AND (</span>
-<span class="s2">                    ds.</span><span class="si">{submission_date}</span><span class="s2"> != e.enrollment_date</span>
-<span class="s2">                    OR `mozfun.map.get_key`(</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;(</span>
+<span class="s2">                    `mozfun.map.get_key`(</span>
 <span class="s2">                        ds.experiments, &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">                    ).branch IS NOT NULL</span>
-<span class="s2">            )&quot;&quot;&quot;</span>
+<span class="s2">                )&quot;&quot;&quot;</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s2">&quot;glean&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;AND (</span>
-<span class="s2">                    ds.</span><span class="si">{submission_date}</span><span class="s2"> != e.enrollment_date</span>
-<span class="s2">                    OR `mozfun.map.get_key`(</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;(</span>
+<span class="s2">                    `mozfun.map.get_key`(</span>
 <span class="s2">                        ds.ping_info.experiments, &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">                    ).branch IS NOT NULL</span>
 <span class="s2">                )&quot;&quot;&quot;</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">experiments_column_expr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;AND (</span>
+<span class="s2">                        ds.{{submission_date}} != e.enrollment_date</span>
+<span class="s2">                        OR </span><span class="si">{slug_expr}</span>
+<span class="s2">                    )&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">slug_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_expr_base</span>
+            <span class="p">)</span>
 
 <div class="viewcode-block" id="DataSource.build_query"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.build_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_query</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -241,7 +267,9 @@
 <span class="s2">            e.analysis_window_end&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">client_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client_id_column</span> <span class="ow">or</span> <span class="s2">&quot;client_id&quot;</span><span class="p">,</span>
             <span class="n">submission_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_date_column</span> <span class="ow">or</span> <span class="s2">&quot;submission_date&quot;</span><span class="p">,</span>
-            <span class="n">from_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">from_expr_for</span><span class="p">(</span><span class="n">from_expr_dataset</span><span class="p">),</span>
+            <span class="n">from_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">from_expr_for</span><span class="p">(</span>
+                <span class="n">from_expr_dataset</span><span class="p">,</span> <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span>
+            <span class="p">),</span>
             <span class="n">fddr</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_date_data_required</span><span class="p">,</span>
             <span class="n">lddr</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="p">,</span>
             <span class="n">metrics</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">            &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
