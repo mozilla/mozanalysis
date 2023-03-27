@@ -105,7 +105,7 @@ class DataSource:
         else:
             return """(
                 SELECT *
-                FROM {from_expr} base
+                FROM {from_expr} ds
                 WHERE {slug_expr}
             )""".format(
                 from_expr=from_expr,
