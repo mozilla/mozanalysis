@@ -27,8 +27,8 @@ def compare_branches(
     Args:
         df: a pandas DataFrame of queried experiment data in the
             standard format (see ``mozanalysis.experiment``).
-        col_label (str): Label for the df column contaning the metric
-            to be analyzed.
+        col_label (str or list): Label for the df column contaning the metric
+            to be analyzed. If a list, labels for the multiple metrics to be analyzed.
         ref_branch_label (str, optional): String in ``df['branch']`` that
             identifies the branch with respect to which we want to
             calculate uplifts - usually the control branch.
@@ -115,7 +115,7 @@ def bootstrap_one_branch(
     of the outputs of ``stat_fn``.
 
     Args:
-        data: The data as a list, 1D numpy array, or pandas Series
+        data: The data as a 1D numpy array, pandas series, or pandas dataframe.
         stat_fn: Either a function that aggregates each resampled
             population to a scalar (e.g. the default value ``np.mean``
             lets you bootstrap means), or a function that aggregates
@@ -150,7 +150,7 @@ def get_bootstrap_samples(
     Do the resampling in parallel over the cluster.
 
     Args:
-        data: The data as a list, 1D numpy array, or pandas series
+        data: The data as a 1D numpy array, pandas series, or pandas dataframe.
         stat_fn: Either a function that aggregates each resampled
             population to a scalar (e.g. the default value ``np.mean``
             lets you bootstrap means), or a function that aggregates

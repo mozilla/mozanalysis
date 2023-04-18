@@ -79,9 +79,9 @@ def filter_outliers(branch_data, threshold_quantile):
     if threshold_quantile > 1 or threshold_quantile < 0.5:
         raise ValueError("'threshold_quantile' should be close to, and <= 1")
 
-    threshold_val = np.quantile(branch_data, threshold_quantile)
-
-    return branch_data[branch_data <= threshold_val]
+    branch_data = np.sort(branch_data)
+    threshold_index = int(branch_data.shape[-1] * threshold_quantile)
+    return branch_data[..., :threshold_index]
 
 
 def hash_ish(string, hex_chars=12):
