@@ -198,3 +198,33 @@ def test_compare_branches_multistat():
 
     assert res["comparative"]["same"].loc["max", ("rel_uplift", "exp")] == 0
     assert res["comparative"]["bigger"].loc["max", ("rel_uplift", "exp")] == 0
+
+
+def test_compare_branches_multiple_metrics():
+    n = 10**3
+    df = pd.DataFrame(
+        {
+            "branch": ["control"] * n + ["treatment"] * n,
+            "ad_click": [x for x in range(n, 0, -1)] * 2,
+            "sap": [10 * x for x in range(n, 0, -1)] * 2,
+        }
+    )
+
+    def custom_stat_fn(data):
+        return np.sum(data[0, :]) / np.sum(data[1, :])
+
+    res = mafsb.compare_branches(
+        df,
+        ["ad_click", "sap"],
+        stat_fn=custom_stat_fn,
+        num_samples=10**4,
+        threshold_quantile=0.9,
+    )
+    assert res["individual"]["control"].loc["mean"] == pytest.approx(0.1, rel=1e-1)
+    assert res["individual"]["treatment"].loc["mean"] == pytest.approx(0.1, rel=1e-1)
+    assert res["comparative"]["treatment"][("rel_uplift", "exp")] == pytest.approx(
+        0, rel=1e-1
+    )
+    assert res["comparative"]["treatment"][("abs_uplift", "exp")] == pytest.approx(
+        0, rel=1e-1
+    )
