@@ -211,20 +211,20 @@ def test_compare_branches_multiple_metrics():
     )
 
     def custom_stat_fn(data):
-        return np.sum(data[0, :]) / np.sum(data[1, :])
+        return np.sum(data[:, 0]) / np.sum(data[:, 1])
 
     res = mafsb.compare_branches(
         df,
         ["ad_click", "sap"],
         stat_fn=custom_stat_fn,
-        num_samples=10**4,
+        num_samples=50,
         threshold_quantile=0.9,
     )
-    assert res["individual"]["control"].loc["mean"] == pytest.approx(0.1, rel=1e-1)
-    assert res["individual"]["treatment"].loc["mean"] == pytest.approx(0.1, rel=1e-1)
+    assert res["individual"]["control"].loc["mean"] == pytest.approx(0.1, rel=1e-5)
+    assert res["individual"]["treatment"].loc["mean"] == pytest.approx(0.1, rel=1e-5)
     assert res["comparative"]["treatment"][("rel_uplift", "exp")] == pytest.approx(
-        0, rel=1e-1
+        0, rel=1e-5
     )
     assert res["comparative"]["treatment"][("abs_uplift", "exp")] == pytest.approx(
-        0, rel=1e-1
+        0, rel=1e-5
     )
