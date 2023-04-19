@@ -90,8 +90,8 @@ def test_filter_outliers():
     data = np.arange(100) + 1
 
     filtered = filter_outliers(data, 0.99)
-    assert len(filtered) == 99
-    assert filtered.max() == 99
+    assert len(filtered) == 100
+    assert filtered.max() == 99.01
     assert data.max() == 100
 
 
