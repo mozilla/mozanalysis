@@ -201,8 +201,9 @@ def test_compare_branches_multistat():
 
 
 def test_compare_branches_multiple_metrics():
-    # Dummy data: Create 2 branches with the same data. Expect no stat sig difference.
-    # The denominator values are 10x the numerator values. Expect the statistic to be ~0.1.
+    # Dummy data: Create 2 branches with the same data. Expect no stat sig
+    # difference. The denominator values are 10x the numerator values.
+    # Expect the statistic to be ~0.1.
     n = 10**3
     df = pd.DataFrame(
         {
