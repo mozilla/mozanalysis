@@ -64,9 +64,6 @@ def filter_outliers(branch_data, threshold_quantile):
     the entire experiment population in whole, then you may bias the
     results.
 
-    TODO: here we remove outliers - should we have an option or
-    default to cap them instead?
-
     Args:
         branch_data: Data for one branch as a 1D ndarray or similar.
         threshold_quantile (float): Discard outliers above this
@@ -79,9 +76,10 @@ def filter_outliers(branch_data, threshold_quantile):
     if threshold_quantile > 1 or threshold_quantile < 0.5:
         raise ValueError("'threshold_quantile' should be close to, and <= 1")
 
-    branch_data = np.sort(branch_data)
-    threshold_index = int(branch_data.shape[-1] * threshold_quantile)
-    return branch_data[..., :threshold_index]
+    min_threshold = np.min(branch_data, axis=0)
+    max_threshold = np.quantile(branch_data, threshold_quantile, axis=0)
+
+    return np.clip(branch_data, min_threshold, max_threshold)
 
 
 def hash_ish(string, hex_chars=12):
