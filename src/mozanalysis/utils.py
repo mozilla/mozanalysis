@@ -58,7 +58,7 @@ def date_sub(date_string_l, date_string_r):
 
 
 def filter_outliers(branch_data, threshold_quantile):
-    """Return branch_data with outliers removed.
+    """Return branch_data with outliers capped.
 
     N.B. `branch_data` is for an individual branch: if you do it for
     the entire experiment population in whole, then you may bias the
@@ -66,11 +66,11 @@ def filter_outliers(branch_data, threshold_quantile):
 
     Args:
         branch_data: Data for one branch as a 1D ndarray or similar.
-        threshold_quantile (float): Discard outliers above this
-            quantile.
+        threshold_quantile (float): Sets outliers above this
+            quantile equal to the value of this quantile.
 
     Returns:
-        The subset of branch_data that was at or below the threshold
+        branch_data with values capped at or below the threshold
         quantile.
     """
     if threshold_quantile > 1 or threshold_quantile < 0.5:
