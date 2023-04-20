@@ -99,7 +99,7 @@ class DataSource:
                 ) from e
         from_expr = self._from_expr.format(dataset=effective_dataset)
 
-        if self.experiments_column_type is None:
+        if (self.experiments_column_type is None) or (experiment_slug is None):
             return from_expr
 
         else:
