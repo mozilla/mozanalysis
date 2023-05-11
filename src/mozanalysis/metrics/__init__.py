@@ -109,7 +109,7 @@ class DataSource:
                 WHERE {slug_expr}
             )""".format(
                 from_expr=from_expr,
-                slug_expr=self.experiments_column_expr_base.format(
+                slug_expr=self.experiments_column_expr.format(
                     experiment_slug=experiment_slug
                 ),
             )
