@@ -149,10 +149,11 @@ class DataSource:
             return ""
         else:
             return """AND (
-                        ds.{{submission_date}} != e.enrollment_date
+                        ds.{submission_date} != e.enrollment_date
                         OR {slug_expr}
                     )""".format(
-                slug_expr=self.experiments_column_expr_base
+                slug_expr=self.experiments_column_expr_base,
+                submission_date=self.submission_date_column or "submission_date"
             )
 
     def build_query(
