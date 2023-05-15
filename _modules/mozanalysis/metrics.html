@@ -181,7 +181,7 @@
 <span class="s2">                WHERE </span><span class="si">{slug_expr}</span>
 <span class="s2">            )&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">from_expr</span><span class="o">=</span><span class="n">from_expr</span><span class="p">,</span>
-                <span class="n">slug_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_expr_base</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">slug_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_expr</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span>
                 <span class="p">),</span>
             <span class="p">)</span></div>
@@ -221,10 +221,11 @@
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;&quot;AND (</span>
-<span class="s2">                        ds.{{submission_date}} != e.enrollment_date</span>
+<span class="s2">                        ds.</span><span class="si">{submission_date}</span><span class="s2"> != e.enrollment_date</span>
 <span class="s2">                        OR </span><span class="si">{slug_expr}</span>
 <span class="s2">                    )&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">slug_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_expr_base</span>
+                <span class="n">slug_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments_column_expr_base</span><span class="p">,</span>
+                <span class="n">submission_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_date_column</span> <span class="ow">or</span> <span class="s2">&quot;submission_date&quot;</span>
             <span class="p">)</span>
 
 <div class="viewcode-block" id="DataSource.build_query"><a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.build_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_query</span><span class="p">(</span>
