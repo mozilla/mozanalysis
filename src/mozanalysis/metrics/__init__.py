@@ -111,7 +111,7 @@ class DataSource:
                 from_expr=from_expr,
                 slug_expr=self.experiments_column_expr.format(
                     experiment_slug=experiment_slug
-                ),
+                ).replace("AND", ""),
             )
 
     @property
