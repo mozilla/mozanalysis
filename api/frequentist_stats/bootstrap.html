@@ -110,8 +110,8 @@ regardless of what you may read on Stack Overflow.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> – a pandas DataFrame of queried experiment data in the
 standard format (see <code class="docutils literal notranslate"><span class="pre">mozanalysis.experiment</span></code>).</p></li>
-<li><p><strong>col_label</strong> (<em>str</em>) – Label for the df column contaning the metric
-to be analyzed.</p></li>
+<li><p><strong>col_label</strong> (<em>str</em><em> or </em><em>list</em>) – Label for the df column contaning the metric
+to be analyzed. If a list, labels for the multiple metrics to be analyzed.</p></li>
 <li><p><strong>ref_branch_label</strong> (<em>str</em><em>, </em><em>optional</em>) – String in <code class="docutils literal notranslate"><span class="pre">df['branch']</span></code> that
 identifies the branch with respect to which we want to
 calculate uplifts - usually the control branch.</p></li>
@@ -179,7 +179,7 @@ of the outputs of <code class="docutils literal notranslate"><span class="pre">s
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas Series</p></li>
+<li><p><strong>data</strong> – The data as a 1D numpy array, pandas series, or pandas dataframe.</p></li>
 <li><p><strong>stat_fn</strong> – Either a function that aggregates each resampled
 population to a scalar (e.g. the default value <code class="docutils literal notranslate"><span class="pre">np.mean</span></code>
 lets you bootstrap means), or a function that aggregates
@@ -207,7 +207,7 @@ when making Bonferroni corrections.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – The data as a list, 1D numpy array, or pandas series</p></li>
+<li><p><strong>data</strong> – The data as a 1D numpy array, pandas series, or pandas dataframe.</p></li>
 <li><p><strong>stat_fn</strong> – Either a function that aggregates each resampled
 population to a scalar (e.g. the default value <code class="docutils literal notranslate"><span class="pre">np.mean</span></code>
 lets you bootstrap means), or a function that aggregates

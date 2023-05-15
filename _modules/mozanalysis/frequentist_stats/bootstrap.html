@@ -99,8 +99,8 @@
 <span class="sd">    Args:</span>
 <span class="sd">        df: a pandas DataFrame of queried experiment data in the</span>
 <span class="sd">            standard format (see ``mozanalysis.experiment``).</span>
-<span class="sd">        col_label (str): Label for the df column contaning the metric</span>
-<span class="sd">            to be analyzed.</span>
+<span class="sd">        col_label (str or list): Label for the df column contaning the metric</span>
+<span class="sd">            to be analyzed. If a list, labels for the multiple metrics to be analyzed.</span>
 <span class="sd">        ref_branch_label (str, optional): String in ``df[&#39;branch&#39;]`` that</span>
 <span class="sd">            identifies the branch with respect to which we want to</span>
 <span class="sd">            calculate uplifts - usually the control branch.</span>
@@ -187,7 +187,7 @@
 <span class="sd">    of the outputs of ``stat_fn``.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        data: The data as a list, 1D numpy array, or pandas Series</span>
+<span class="sd">        data: The data as a 1D numpy array, pandas series, or pandas dataframe.</span>
 <span class="sd">        stat_fn: Either a function that aggregates each resampled</span>
 <span class="sd">            population to a scalar (e.g. the default value ``np.mean``</span>
 <span class="sd">            lets you bootstrap means), or a function that aggregates</span>
@@ -222,7 +222,7 @@
 <span class="sd">    Do the resampling in parallel over the cluster.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        data: The data as a list, 1D numpy array, or pandas series</span>
+<span class="sd">        data: The data as a 1D numpy array, pandas series, or pandas dataframe.</span>
 <span class="sd">        stat_fn: Either a function that aggregates each resampled</span>
 <span class="sd">            population to a scalar (e.g. the default value ``np.mean``</span>
 <span class="sd">            lets you bootstrap means), or a function that aggregates</span>
