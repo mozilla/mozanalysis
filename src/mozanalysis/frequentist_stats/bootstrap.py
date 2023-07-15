@@ -3,9 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import numpy as np
 import pandas as pd
+import multiprocessing as mp
+import logging
 
 import mozanalysis.bayesian_stats as mabs
 from mozanalysis.utils import filter_outliers
+
+logger = logging.getLogger(__name__)
+mp.set_start_method("fork")
 
 
 def compare_branches(
@@ -17,6 +22,7 @@ def compare_branches(
     threshold_quantile=None,
     individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
     comparative_summary_quantiles=mabs.DEFAULT_QUANTILES,
+    processes=1,
 ):
     """Jointly sample bootstrapped statistics then compare them.
 
@@ -53,6 +59,9 @@ def compare_branches(
             statistics (i.e. the change relative to the reference
             branch, probably the control). Change these when making
             Bonferroni corrections.
+        processes (int, optional): Speed up bootstrapping by specifying
+            more than one process. Set processes=None to use the maximum
+            number of processes available.
 
     Returns a dictionary:
         If ``stat_fn`` returns a scalar (this is the default), then
@@ -88,6 +97,7 @@ def compare_branches(
             stat_fn,
             num_samples,
             threshold_quantile=threshold_quantile,
+            processes=processes,
         )
         for b in branch_list
     }
@@ -144,6 +154,7 @@ def get_bootstrap_samples(
     num_samples=10000,
     seed_start=None,
     threshold_quantile=None,
+    processes=1,
 ):
     """Return ``stat_fn`` evaluated on resampled and original data.
 
@@ -167,6 +178,9 @@ def get_bootstrap_samples(
             in this calculation. By default, use a random seed.
         threshold_quantile (float, optional): An optional threshold
             quantile, above which to discard outliers. E.g. ``0.9999``.
+        processes (int, optional): Speed up bootstrapping by specifying
+            more than one process. Set processes=None to use the maximum
+            number of processes available.
 
     Returns:
         ``stat_fn`` evaluated over ``num_samples`` samples.
@@ -192,9 +206,23 @@ def get_bootstrap_samples(
     # Need to ensure every call has a unique, deterministic seed.
     seed_range = range(seed_start, seed_start + num_samples)
 
-    summary_stat_samples = [
-        _resample_and_agg_once(data, stat_fn, unique_seed) for unique_seed in seed_range
-    ]
+    if processes == 1:
+        summary_stat_samples = [
+            _resample_and_agg_once(data, stat_fn, unique_seed)
+            for unique_seed in seed_range
+        ]
+    else:
+        global __resample_and_agg_once
+
+        def __resample_and_agg_once(unique_seed):
+            return _resample_and_agg_once(data, stat_fn, unique_seed)
+
+        with mp.Pool(processes=processes) as pool:
+            logger.info(
+                f"""Started a multiprocessing.pool with {pool._processes} processes to run
+                 bootstrapping."""
+            )
+            summary_stat_samples = pool.map(__resample_and_agg_once, seed_range)
 
     summary_df = pd.DataFrame(summary_stat_samples)
     if len(summary_df.columns) == 1:

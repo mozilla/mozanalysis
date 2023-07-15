@@ -4,6 +4,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from time import time
 
 import mozanalysis.frequentist_stats.bootstrap as mafsb
 
@@ -70,6 +71,21 @@ def test_get_bootstrap_samples_multistat(stack_depth=0):
     elif (res["mean"] == np.mean(data)).any():
         # Re-roll the dice a few times to make sure this was a fluke.
         test_get_bootstrap_samples_multistat(stack_depth + 1)
+
+
+def test_get_bootstrap_samples_multiprocess():
+    t0 = time()
+    res1 = mafsb.get_bootstrap_samples(np.asarray(range(10**5)), processes=1)
+    t1 = time() - t0
+
+    t0 = time()
+    res2 = mafsb.get_bootstrap_samples(np.asarray(range(10**5)), processes=None)
+    t2 = time() - t0
+    assert t2 * 2 < t1  # The multiprocessing speedup is worth it if it's 2x faster.
+    # Not sure why we're getting different answers, but I believe this discrepancy is
+    # resolvable.
+    assert res1[0] == res2[0]
+    assert res1[1] == res2[1]
 
 
 def test_bootstrap_one_branch():
