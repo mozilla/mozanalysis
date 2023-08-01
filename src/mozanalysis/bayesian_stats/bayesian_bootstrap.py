@@ -294,13 +294,10 @@ def get_bootstrap_samples(
     if seed_start is None:
         seed_start = np.random.randint(np.iinfo(np.uint32).max)
 
-    # Deterministic "randomness" requires careful state handling :(
-    # Need to ensure every call has a unique, deterministic seed.
-    seed_range = range(seed_start, seed_start + num_samples)
-
+    random_state = np.random.RandomState(seed_start)
     summary_stat_samples = [
-        _resample_and_agg_once(data_values, data_counts, stat_fn, unique_seed)
-        for unique_seed in seed_range
+        _resample_and_agg_once(data_values, data_counts, stat_fn, random_state)
+        for _ in range(0, num_samples)
     ]
 
     summary_df = pd.DataFrame(summary_stat_samples)
@@ -312,9 +309,9 @@ def get_bootstrap_samples(
     return summary_df
 
 
-def _resample_and_agg_once(data_values, data_counts, stat_fn, unique_seed=None):
-    random_state = np.random.RandomState(unique_seed)
-
+def _resample_and_agg_once(
+    data_values, data_counts, stat_fn, random_state=np.random.RandomState(None)
+):
     prob_weights = random_state.dirichlet(data_counts)
 
     return stat_fn(data_values, prob_weights)
