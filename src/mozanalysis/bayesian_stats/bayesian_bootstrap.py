@@ -276,7 +276,7 @@ def get_bootstrap_samples(
         Rubin, Donald B. The Bayesian Bootstrap. Ann. Statist. 9 (1981),
             no. 1, 130--134. https://dx.doi.org/10.1214/aos/1176345338
     """
-    if not type(data) == np.ndarray:
+    if type(data) is not np.ndarray:
         data = np.array(data.to_numpy(dtype="float", na_value=np.nan))
 
     if np.isnan(data).any():
