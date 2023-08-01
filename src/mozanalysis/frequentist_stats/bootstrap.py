@@ -176,7 +176,7 @@ def get_bootstrap_samples(
             * if ``stat_fn`` returns a dict, a pandas DataFrame
               with columns set to the dict keys.
     """
-    if not type(data) == np.ndarray:
+    if type(data) is not np.ndarray:
         data = np.array(data.to_numpy(dtype="float", na_value=np.nan))
 
     if np.isnan(data).any():
