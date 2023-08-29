@@ -389,7 +389,7 @@ def test_query_not_detectably_malformed_fenix_fallback():
     )
 
     enrollments_sql = exp.build_enrollments_query(
-        time_limits=tl, enrollments_query_type="fenix-fallback"
+        time_limits=tl, enrollments_query_type="fenix-fallback", sample_size=10
     )
 
     sql_lint(enrollments_sql)
