@@ -592,7 +592,7 @@ class Experiment:
         self,
         time_limits: TimeLimits,
         enrollments_query_type: str,
-        sample_size: int = None,
+        sample_size: int = 100,
     ) -> str:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == "normandy":
@@ -632,7 +632,7 @@ class Experiment:
             raise ValueError
 
     def _build_enrollments_query_normandy(
-        self, time_limits: TimeLimits, sample_size: int = None
+        self, time_limits: TimeLimits, sample_size: int = 100
     ) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
         return """
@@ -656,11 +656,11 @@ class Experiment:
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
-            sample_size=sample_size or 100,
+            sample_size=sample_size,
         )
 
     def _build_enrollments_query_fenix_baseline(
-        self, time_limits: TimeLimits, sample_size: int = None
+        self, time_limits: TimeLimits, sample_size: int = 100
     ) -> str:
         """Return SQL to query enrollments for a Fenix no-event experiment
         If enrollment events are available for this experiment, then you
@@ -699,11 +699,11 @@ class Experiment:
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
             dataset=self.app_id or "org_mozilla_firefox",
-            sample_size=sample_size or 100,
+            sample_size=sample_size,
         )
 
     def _build_enrollments_query_glean_event(
-        self, time_limits: TimeLimits, dataset: str, sample_size: int = None
+        self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
     ) -> str:
         """Return SQL to query enrollments for a Glean no-event experiment
 
@@ -738,7 +738,7 @@ class Experiment:
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
             dataset=self.app_id or dataset,
-            sample_size=sample_size or 100,
+            sample_size=sample_size,
         )
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
