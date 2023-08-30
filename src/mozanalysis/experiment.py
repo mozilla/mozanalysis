@@ -409,6 +409,7 @@ class Experiment:
         custom_exposure_query: Optional[str] = None,
         exposure_signal=None,
         segment_list=None,
+        sample_size: int = None,
     ) -> str:
         """Return a SQL query for querying enrollment and exposure data.
 
@@ -435,11 +436,14 @@ class Experiment:
             segment_list (list of mozanalysis.segment.Segment or str): The user
                 segments to study.
 
+            sample_size (int): Optional integer percentage of clients, used for
+                downsampling enrollments.
+
         Returns:
             A string containing a BigQuery SQL expression.
         """
         enrollments_query = custom_enrollments_query or self._build_enrollments_query(
-            time_limits, enrollments_query_type
+            time_limits, enrollments_query_type, sample_size
         )
 
         if exposure_signal:
@@ -585,19 +589,26 @@ class Experiment:
         )
 
     def _build_enrollments_query(
-        self, time_limits: TimeLimits, enrollments_query_type: str
+        self,
+        time_limits: TimeLimits,
+        enrollments_query_type: str,
+        sample_size: int = 100,
     ) -> str:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == "normandy":
-            return self._build_enrollments_query_normandy(time_limits)
+            return self._build_enrollments_query_normandy(time_limits, sample_size)
         elif enrollments_query_type == "glean-event":
             if not self.app_id:
                 raise ValueError(
                     "App ID must be defined for building Glean enrollments query"
                 )
-            return self._build_enrollments_query_glean_event(time_limits, self.app_id)
+            return self._build_enrollments_query_glean_event(
+                time_limits, self.app_id, sample_size
+            )
         elif enrollments_query_type == "fenix-fallback":
-            return self._build_enrollments_query_fenix_baseline(time_limits)
+            return self._build_enrollments_query_fenix_baseline(
+                time_limits, sample_size
+            )
         else:
             raise ValueError
 
@@ -620,7 +631,9 @@ class Experiment:
         else:
             raise ValueError
 
-    def _build_enrollments_query_normandy(self, time_limits: TimeLimits) -> str:
+    def _build_enrollments_query_normandy(
+        self, time_limits: TimeLimits, sample_size: int = 100
+    ) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
         return """
         SELECT
@@ -637,14 +650,18 @@ class Experiment:
             AND e.submission_date
                 BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
             AND e.event_string_value = '{experiment_slug}'
+            AND e.sample_id <= {sample_size}
         GROUP BY e.client_id, branch
             """.format(
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
+            sample_size=sample_size,
         )
 
-    def _build_enrollments_query_fenix_baseline(self, time_limits: TimeLimits) -> str:
+    def _build_enrollments_query_fenix_baseline(
+        self, time_limits: TimeLimits, sample_size: int = 100
+    ) -> str:
         """Return SQL to query enrollments for a Fenix no-event experiment
         If enrollment events are available for this experiment, then you
         can take a better approach than this method. But in the absence
@@ -674,6 +691,7 @@ class Experiment:
                 b.ping_info.experiments,
                 '{experiment_slug}'
             ).branch IS NOT NULL
+            AND e.sample_id <= {sample_size}
         GROUP BY client_id, branch
         HAVING enrollment_date >= '{first_enrollment_date}'
             """.format(
@@ -681,10 +699,11 @@ class Experiment:
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
             dataset=self.app_id or "org_mozilla_firefox",
+            sample_size=sample_size,
         )
 
     def _build_enrollments_query_glean_event(
-        self, time_limits: TimeLimits, dataset: str
+        self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
     ) -> str:
         """Return SQL to query enrollments for a Glean no-event experiment
 
@@ -712,12 +731,14 @@ class Experiment:
                 AND e.category = "nimbus_events"
                 AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
                 AND e.name = 'enrollment'
+                AND e.sample_id <= {sample_size}
             GROUP BY client_id, branch
             """.format(
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
             dataset=self.app_id or dataset,
+            sample_size=sample_size,
         )
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
