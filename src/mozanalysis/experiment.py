@@ -693,7 +693,7 @@ class Experiment:
                 b.ping_info.experiments,
                 '{experiment_slug}'
             ).branch IS NOT NULL
-            AND e.sample_id < {sample_size}
+            AND b.sample_id < {sample_size}
         GROUP BY client_id, branch
         HAVING enrollment_date >= '{first_enrollment_date}'
             """.format(
