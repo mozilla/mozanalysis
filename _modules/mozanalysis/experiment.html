@@ -483,7 +483,7 @@
         <span class="n">custom_exposure_query</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">exposure_signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a SQL query for querying enrollment and exposure data.</span>
 
@@ -511,11 +511,13 @@
 <span class="sd">                segments to study.</span>
 
 <span class="sd">            sample_size (int): Optional integer percentage of clients, used for</span>
-<span class="sd">                downsampling enrollments.</span>
+<span class="sd">                downsampling enrollments. Default 100.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A string containing a BigQuery SQL expression.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sample_size</span> <span class="o">=</span> <span class="n">sample_size</span> <span class="ow">or</span> <span class="mi">100</span>
+
         <span class="n">enrollments_query</span> <span class="o">=</span> <span class="n">custom_enrollments_query</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query</span><span class="p">(</span>
             <span class="n">time_limits</span><span class="p">,</span> <span class="n">enrollments_query_type</span><span class="p">,</span> <span class="n">sample_size</span>
         <span class="p">)</span>
@@ -724,7 +726,7 @@
 <span class="s2">            AND e.submission_date</span>
 <span class="s2">                BETWEEN &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39; AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
 <span class="s2">            AND e.event_string_value = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
-<span class="s2">            AND e.sample_id &lt;= </span><span class="si">{sample_size}</span>
+<span class="s2">            AND e.sample_id &lt; </span><span class="si">{sample_size}</span>
 <span class="s2">        GROUP BY e.client_id, branch</span>
 <span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
@@ -765,7 +767,7 @@
 <span class="s2">                b.ping_info.experiments,</span>
 <span class="s2">                &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">            ).branch IS NOT NULL</span>
-<span class="s2">            AND e.sample_id &lt;= </span><span class="si">{sample_size}</span>
+<span class="s2">            AND e.sample_id &lt; </span><span class="si">{sample_size}</span>
 <span class="s2">        GROUP BY client_id, branch</span>
 <span class="s2">        HAVING enrollment_date &gt;= &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39;</span>
 <span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -805,7 +807,7 @@
 <span class="s2">                AND e.category = &quot;nimbus_events&quot;</span>
 <span class="s2">                AND mozfun.map.get_key(e.extra, &quot;experiment&quot;) = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">                AND e.name = &#39;enrollment&#39;</span>
-<span class="s2">                AND e.sample_id &lt;= </span><span class="si">{sample_size}</span>
+<span class="s2">                AND e.sample_id &lt; </span><span class="si">{sample_size}</span>
 <span class="s2">            GROUP BY client_id, branch</span>
 <span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
