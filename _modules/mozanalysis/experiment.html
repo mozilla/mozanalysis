@@ -767,7 +767,7 @@
 <span class="s2">                b.ping_info.experiments,</span>
 <span class="s2">                &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">            ).branch IS NOT NULL</span>
-<span class="s2">            AND e.sample_id &lt; </span><span class="si">{sample_size}</span>
+<span class="s2">            AND b.sample_id &lt; </span><span class="si">{sample_size}</span>
 <span class="s2">        GROUP BY client_id, branch</span>
 <span class="s2">        HAVING enrollment_date &gt;= &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39;</span>
 <span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
