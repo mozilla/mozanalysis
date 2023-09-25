@@ -409,7 +409,7 @@ class Experiment:
         custom_exposure_query: Optional[str] = None,
         exposure_signal=None,
         segment_list=None,
-        sample_size: int = None,
+        sample_size: int = 100,
     ) -> str:
         """Return a SQL query for querying enrollment and exposure data.
 
@@ -437,11 +437,13 @@ class Experiment:
                 segments to study.
 
             sample_size (int): Optional integer percentage of clients, used for
-                downsampling enrollments.
+                downsampling enrollments. Default 100.
 
         Returns:
             A string containing a BigQuery SQL expression.
         """
+        sample_size = sample_size or 100
+
         enrollments_query = custom_enrollments_query or self._build_enrollments_query(
             time_limits, enrollments_query_type, sample_size
         )
@@ -650,7 +652,7 @@ class Experiment:
             AND e.submission_date
                 BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
             AND e.event_string_value = '{experiment_slug}'
-            AND e.sample_id <= {sample_size}
+            AND e.sample_id < {sample_size}
         GROUP BY e.client_id, branch
             """.format(
             experiment_slug=self.experiment_slug,
@@ -691,7 +693,7 @@ class Experiment:
                 b.ping_info.experiments,
                 '{experiment_slug}'
             ).branch IS NOT NULL
-            AND e.sample_id <= {sample_size}
+            AND e.sample_id < {sample_size}
         GROUP BY client_id, branch
         HAVING enrollment_date >= '{first_enrollment_date}'
             """.format(
@@ -731,7 +733,7 @@ class Experiment:
                 AND e.category = "nimbus_events"
                 AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
                 AND e.name = 'enrollment'
-                AND e.sample_id <= {sample_size}
+                AND e.sample_id < {sample_size}
             GROUP BY client_id, branch
             """.format(
             experiment_slug=self.experiment_slug,

@@ -266,10 +266,11 @@ def test_query_not_detectably_malformed():
     )
 
     enrollments_sql = exp.build_enrollments_query(
-        time_limits=tl, enrollments_query_type="normandy"
+        time_limits=tl, enrollments_query_type="normandy", sample_size=None
     )
 
     sql_lint(enrollments_sql)
+    assert "sample_id < None" not in enrollments_sql
 
     metrics_sql = exp.build_metrics_query(
         metric_list=[],
