@@ -733,7 +733,7 @@ class Experiment:
                 AND e.category = "nimbus_events"
                 AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
                 AND e.name = 'enrollment'
-                AND e.sample_id < {sample_size}
+                AND sample_id < {sample_size}
             GROUP BY client_id, branch
             """.format(
             experiment_slug=self.experiment_slug,
