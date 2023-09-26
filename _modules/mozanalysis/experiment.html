@@ -807,7 +807,7 @@
 <span class="s2">                AND e.category = &quot;nimbus_events&quot;</span>
 <span class="s2">                AND mozfun.map.get_key(e.extra, &quot;experiment&quot;) = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">                AND e.name = &#39;enrollment&#39;</span>
-<span class="s2">                AND e.sample_id &lt; </span><span class="si">{sample_size}</span>
+<span class="s2">                AND sample_id &lt; </span><span class="si">{sample_size}</span>
 <span class="s2">            GROUP BY client_id, branch</span>
 <span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
