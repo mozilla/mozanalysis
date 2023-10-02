@@ -6,6 +6,7 @@ import attr
 import logging
 from pandas import DataFrame
 from typing import Dict, Tuple, Optional, List, Union
+from enum import Enum
 
 from mozanalysis import APPS
 from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
@@ -15,6 +16,13 @@ from mozanalysis.segments import Segment, SegmentDataSource
 from mozanalysis.utils import add_days, date_sub, hash_ish
 
 logger = logging.getLogger(__name__)
+
+
+class EnrollmentsQueryType(str, Enum):
+    CIRRUS = "cirrus"
+    FENIX_FALLBACK = "fenix-fallback"
+    NORMANDY = "normandy"
+    GLEAN_EVENTS = "glean-events"
 
 
 @attr.s(frozen=True, slots=True)
@@ -143,7 +151,7 @@ class Experiment:
         last_date_full_data: str,
         analysis_start_days: int,
         analysis_length_days: int,
-        enrollments_query_type: str = "normandy",
+        enrollments_query_type: EnrollmentsQueryType = EnrollmentsQueryType.NORMANDY,
         custom_enrollments_query: Optional[str] = None,
         custom_exposure_query: Optional[str] = None,
         exposure_signal=None,
@@ -275,7 +283,7 @@ class Experiment:
         metric_list: list,
         last_date_full_data: str,
         time_series_period: str = "weekly",
-        enrollments_query_type: str = "normandy",
+        enrollments_query_type: EnrollmentsQueryType = EnrollmentsQueryType.NORMANDY,
         custom_enrollments_query: Optional[str] = None,
         custom_exposure_query: Optional[str] = None,
         exposure_signal=None,
@@ -404,7 +412,7 @@ class Experiment:
     def build_enrollments_query(
         self,
         time_limits: TimeLimits,
-        enrollments_query_type: str = "normandy",
+        enrollments_query_type: EnrollmentsQueryType = EnrollmentsQueryType.NORMANDY,
         custom_enrollments_query: Optional[str] = None,
         custom_exposure_query: Optional[str] = None,
         exposure_signal=None,
@@ -416,7 +424,8 @@ class Experiment:
         Args:
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
-            enrollments_query_type ('normandy', 'glean-event' or 'fenix-fallback'):
+            enrollments_query_type (EnrollmentsQueryType):
+                ('normandy', 'glean-event', 'cirrus', or 'fenix-fallback')
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
@@ -593,13 +602,13 @@ class Experiment:
     def _build_enrollments_query(
         self,
         time_limits: TimeLimits,
-        enrollments_query_type: str,
+        enrollments_query_type: EnrollmentsQueryType,
         sample_size: int = 100,
     ) -> str:
         """Return SQL to query a list of enrollments and their branches"""
-        if enrollments_query_type == "normandy":
+        if enrollments_query_type == EnrollmentsQueryType.NORMANDY:
             return self._build_enrollments_query_normandy(time_limits, sample_size)
-        elif enrollments_query_type == "glean-event":
+        elif enrollments_query_type == EnrollmentsQueryType.GLEAN_EVENTS:
             if not self.app_id:
                 raise ValueError(
                     "App ID must be defined for building Glean enrollments query"
@@ -607,28 +616,47 @@ class Experiment:
             return self._build_enrollments_query_glean_event(
                 time_limits, self.app_id, sample_size
             )
-        elif enrollments_query_type == "fenix-fallback":
+        elif enrollments_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
             return self._build_enrollments_query_fenix_baseline(
                 time_limits, sample_size
+            )
+        elif enrollments_query_type == EnrollmentsQueryType.CIRRUS:
+            if not self.app_id:
+                raise ValueError(
+                    "App ID must be defined for building Cirrus enrollments query"
+                )
+            return self._build_enrollments_query_cirrus(
+                time_limits, self.app_id
             )
         else:
             raise ValueError
 
     def _build_exposure_query(
-        self, time_limits: TimeLimits, exposure_query_type: str
+        self, time_limits: TimeLimits, exposure_query_type: EnrollmentsQueryType
     ) -> str:
         """Return SQL to query a list of exposures and their branches"""
-        if exposure_query_type == "normandy":
+        if exposure_query_type == EnrollmentsQueryType.NORMANDY:
             return self._build_exposure_query_normandy(time_limits)
-        elif exposure_query_type == "glean-event":
+        elif exposure_query_type == EnrollmentsQueryType.GLEAN_EVENTS:
             if not self.app_id:
                 raise ValueError(
-                    "App ID must be defined for building Glean enrollments query"
+                    "App ID must be defined for building Glean exposures query"
                 )
             return self._build_exposure_query_glean_event(time_limits, self.app_id)
-        elif exposure_query_type == "fenix-fallback":
+        elif exposure_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
             return self._build_exposure_query_glean_event(
                 time_limits, "org_mozilla_firefox"
+            )
+        elif exposure_query_type == EnrollmentsQueryType.CIRRUS:
+            if not self.app_id:
+                raise ValueError(
+                    "App ID must be defined for building Cirrus exposures query"
+                )
+            return self._build_exposure_query_glean_event(
+                time_limits,
+                self.app_id,
+                client_id_field='mozfun.map.get_key(event.extra, "user_id")',
+                event_category="cirrus_events",
             )
         else:
             raise ValueError
@@ -743,6 +771,45 @@ class Experiment:
             sample_size=sample_size,
         )
 
+    def _build_enrollments_query_cirrus(
+        self, time_limits: TimeLimits, dataset: str
+    ) -> str:
+        """Return SQL to query enrollments for a Cirrus experiment (uses Glean)
+
+        If enrollment events are available for this experiment, then you
+        can take a better approach than this method. But in the absence
+        of enrollment events (e.g. in a Mako-based experiment, which
+        does not send enrollment events), you need to fall back to using
+        ``ping_info.experiments`` to get a list of who is in what branch
+        and when they enrolled.
+        """
+        return """
+            SELECT
+                mozfun.map.get_key(e.extra, "user_id") AS client_id,
+                mozfun.map.get_key(
+                    e.extra,
+                    'branch'
+                ) AS branch,
+                DATE(MIN(events.submission_timestamp)) AS enrollment_date,
+                COUNT(events.submission_timestamp) AS num_enrollment_events
+            FROM `moz-fx-data-shared-prod.{dataset}.enrollment` events,
+            UNNEST(events.events) AS e
+            WHERE
+                mozfun.map.get_key(e.extra, "user_id") IS NOT NULL AND
+                DATE(events.submission_timestamp)
+                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+                AND e.category = "cirrus_events"
+                AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
+                AND e.name = 'enrollment'
+                AND client_info.app_channel = 'production'
+            GROUP BY client_id, branch
+            """.format(
+            experiment_slug=self.experiment_slug,
+            first_enrollment_date=time_limits.first_enrollment_date,
+            last_enrollment_date=time_limits.last_enrollment_date,
+            dataset=self.app_id or dataset,
+        )
+
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query exposures for a normandy experiment"""
         return """
@@ -777,7 +844,11 @@ class Experiment:
         )
 
     def _build_exposure_query_glean_event(
-        self, time_limits: TimeLimits, dataset: str
+        self,
+        time_limits: TimeLimits,
+        dataset: str,
+        client_id_field: str = "client_info.client_id",
+        event_category: str = "nimbus_events",
     ) -> str:
         """Return SQL to query exposures for a Glean no-event experiment"""
         return """
@@ -789,8 +860,8 @@ class Experiment:
             FROM raw_enrollments re
             LEFT JOIN (
                 SELECT
-                    client_info.client_id,
-                    `mozfun.map.get_key`(event.extra, 'branch') AS branch,
+                    {client_id_field} AS client_id,
+                    mozfun.map.get_key(event.extra, 'branch') AS branch,
                     DATE(events.submission_timestamp) AS submission_date
                 FROM
                     `moz-fx-data-shared-prod.{dataset}.events` events,
@@ -798,7 +869,7 @@ class Experiment:
                 WHERE
                     DATE(events.submission_timestamp)
                     BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
-                    AND event.category = "nimbus_events"
+                    AND event.category = {event_category}
                     AND mozfun.map.get_key(
                         event.extra,
                         "experiment") = '{experiment_slug}'
@@ -809,10 +880,12 @@ class Experiment:
                 exposures.submission_date >= re.enrollment_date
             GROUP BY client_id, branch
             """.format(
+            client_id_field=client_id_field,
             experiment_slug=self.experiment_slug,
             first_enrollment_date=time_limits.first_enrollment_date,
             last_enrollment_date=time_limits.last_enrollment_date,
             dataset=self.app_id or dataset,
+            event_category=event_category,
         )
 
     def _build_metrics_query_bits(
