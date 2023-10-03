@@ -22,7 +22,7 @@ class EnrollmentsQueryType(str, Enum):
     CIRRUS = "cirrus"
     FENIX_FALLBACK = "fenix-fallback"
     NORMANDY = "normandy"
-    GLEAN_EVENTS = "glean-events"
+    GLEAN_EVENT = "glean-event"
 
 
 @attr.s(frozen=True, slots=True)
@@ -176,7 +176,8 @@ class Experiment:
                 collected outside this analysis window.
             analysis_length_days (int): the length of the analysis window,
                 measured in days.
-            enrollments_query_type ('normandy', 'glean-event' or 'fenix-fallback'):
+            enrollments_query_type (EnrollmentsQueryType):
+                ('normandy', 'glean-event', 'cirrus', or 'fenix-fallback')
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
@@ -304,7 +305,8 @@ class Experiment:
                 experiment recipe was deactivated), then do that here.
             time_series_period ('daily' or 'weekly'): How long each
                 analysis window should be.
-            enrollments_query_type ('normandy', 'glean-event' or 'fenix-fallback'):
+            enrollments_query_type (EnrollmentsQueryType):
+                ('normandy', 'glean-event', 'cirrus', or 'fenix-fallback')
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
