@@ -610,7 +610,7 @@ class Experiment:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == EnrollmentsQueryType.NORMANDY:
             return self._build_enrollments_query_normandy(time_limits, sample_size)
-        elif enrollments_query_type == EnrollmentsQueryType.GLEAN_EVENTS:
+        elif enrollments_query_type == EnrollmentsQueryType.GLEAN_EVENT:
             if not self.app_id:
                 raise ValueError(
                     "App ID must be defined for building Glean enrollments query"
@@ -639,7 +639,7 @@ class Experiment:
         """Return SQL to query a list of exposures and their branches"""
         if exposure_query_type == EnrollmentsQueryType.NORMANDY:
             return self._build_exposure_query_normandy(time_limits)
-        elif exposure_query_type == EnrollmentsQueryType.GLEAN_EVENTS:
+        elif exposure_query_type == EnrollmentsQueryType.GLEAN_EVENT:
             if not self.app_id:
                 raise ValueError(
                     "App ID must be defined for building Glean exposures query"

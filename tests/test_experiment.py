@@ -440,7 +440,7 @@ def test_firefox_ios_app_id_propagation():
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
         segment_list=[segment],
-        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENTS,
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
     )
 
     sql_lint(enrollments_sql)
@@ -488,7 +488,7 @@ def test_firefox_klar_app_id_propagation():
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
         segment_list=[segment],
-        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENTS,
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
     )
 
     sql_lint(enrollments_sql)
@@ -536,7 +536,7 @@ def test_firefox_ios_klar_app_id_propagation():
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
         segment_list=[segment],
-        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENTS,
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
     )
 
     sql_lint(enrollments_sql)
@@ -594,7 +594,7 @@ def test_exposure_query():
 
     enrollment_sql = exp.build_enrollments_query(
         time_limits=tl,
-        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENTS,
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
     )
 
     sql_lint(enrollment_sql)
@@ -614,7 +614,7 @@ def test_exposure_signal_query():
 
     enrollment_sql = exp.build_enrollments_query(
         time_limits=tl,
-        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENTS,
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
         exposure_signal=ExposureSignal(
             name="exposures",
             data_source=mozanalysis.metrics.fenix.baseline,
@@ -642,7 +642,7 @@ def test_exposure_signal_query_custom_windows():
 
     enrollment_sql = exp.build_enrollments_query(
         time_limits=tl,
-        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENTS,
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
         exposure_signal=ExposureSignal(
             name="exposures",
             data_source=mozanalysis.metrics.fenix.baseline,
