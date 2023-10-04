@@ -7,7 +7,12 @@ import mozanalysis.metrics.firefox_ios
 import mozanalysis.metrics.klar_ios
 import mozanalysis.metrics.klar_android
 import mozanalysis.segments.desktop as msd
-from mozanalysis.experiment import AnalysisWindow, Experiment, TimeLimits
+from mozanalysis.experiment import (
+    AnalysisWindow,
+    EnrollmentsQueryType,
+    Experiment,
+    TimeLimits,
+)
 from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import Metric, AnalysisBasis, DataSource
 from mozanalysis.segments import Segment, SegmentDataSource
@@ -266,7 +271,9 @@ def test_query_not_detectably_malformed():
     )
 
     enrollments_sql = exp.build_enrollments_query(
-        time_limits=tl, enrollments_query_type="normandy", sample_size=None
+        time_limits=tl,
+        enrollments_query_type=EnrollmentsQueryType.NORMANDY,
+        sample_size=None,
     )
 
     sql_lint(enrollments_sql)
@@ -292,7 +299,7 @@ def test_megaquery_not_detectably_malformed():
     )
 
     enrollments_sql = exp.build_enrollments_query(
-        time_limits=tl, enrollments_query_type="normandy"
+        time_limits=tl, enrollments_query_type=EnrollmentsQueryType.NORMANDY
     )
 
     sql_lint(enrollments_sql)
@@ -319,7 +326,7 @@ def test_segments_megaquery_not_detectably_malformed():
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
         segment_list=[s for s in msd.__dict__.values() if isinstance(s, Segment)],
-        enrollments_query_type="normandy",
+        enrollments_query_type=EnrollmentsQueryType.NORMANDY,
     )
 
     sql_lint(enrollments_sql)
@@ -356,7 +363,9 @@ def test_app_id_propagates():
     )
 
     enrollments_sql = exp.build_enrollments_query(
-        time_limits=tl, segment_list=[segment], enrollments_query_type="fenix-fallback"
+        time_limits=tl,
+        segment_list=[segment],
+        enrollments_query_type=EnrollmentsQueryType.FENIX_FALLBACK,
     )
 
     sql_lint(enrollments_sql)
@@ -390,7 +399,9 @@ def test_query_not_detectably_malformed_fenix_fallback():
     )
 
     enrollments_sql = exp.build_enrollments_query(
-        time_limits=tl, enrollments_query_type="fenix-fallback", sample_size=10
+        time_limits=tl,
+        enrollments_query_type=EnrollmentsQueryType.FENIX_FALLBACK,
+        sample_size=10,
     )
 
     sql_lint(enrollments_sql)
@@ -429,7 +440,7 @@ def test_firefox_ios_app_id_propagation():
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
         segment_list=[segment],
-        enrollments_query_type="glean-event",
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
     )
 
     sql_lint(enrollments_sql)
@@ -477,7 +488,7 @@ def test_firefox_klar_app_id_propagation():
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
         segment_list=[segment],
-        enrollments_query_type="glean-event",
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
     )
 
     sql_lint(enrollments_sql)
@@ -525,7 +536,7 @@ def test_firefox_ios_klar_app_id_propagation():
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
         segment_list=[segment],
-        enrollments_query_type="glean-event",
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
     )
 
     sql_lint(enrollments_sql)
@@ -548,6 +559,29 @@ def test_firefox_ios_klar_app_id_propagation():
     sql_lint(metrics_sql)
 
 
+def test_enrollments_query_cirrus():
+    exp = Experiment("slug", "2019-01-01", 8, app_id="monitor_cirrus")
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollment_sql = exp.build_enrollments_query(
+        time_limits=tl,
+        enrollments_query_type=EnrollmentsQueryType.CIRRUS,
+    )
+
+    sql_lint(enrollment_sql)
+
+    assert "exposures" in enrollment_sql
+    assert 'mozfun.map.get_key(e.extra, "user_id")' in enrollment_sql
+    assert "cirrus_events" in enrollment_sql
+    assert 'mozfun.map.get_key(event.extra, "user_id")' in enrollment_sql
+
+
 def test_exposure_query():
     exp = Experiment("slug", "2019-01-01", 8, app_id="my_cool_app")
 
@@ -560,7 +594,7 @@ def test_exposure_query():
 
     enrollment_sql = exp.build_enrollments_query(
         time_limits=tl,
-        enrollments_query_type="glean-event",
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
     )
 
     sql_lint(enrollment_sql)
@@ -580,7 +614,7 @@ def test_exposure_signal_query():
 
     enrollment_sql = exp.build_enrollments_query(
         time_limits=tl,
-        enrollments_query_type="glean-event",
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
         exposure_signal=ExposureSignal(
             name="exposures",
             data_source=mozanalysis.metrics.fenix.baseline,
@@ -608,7 +642,7 @@ def test_exposure_signal_query_custom_windows():
 
     enrollment_sql = exp.build_enrollments_query(
         time_limits=tl,
-        enrollments_query_type="glean-event",
+        enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
         exposure_signal=ExposureSignal(
             name="exposures",
             data_source=mozanalysis.metrics.fenix.baseline,
@@ -639,7 +673,7 @@ def test_metrics_query_based_on_exposure():
     )
 
     enrollments_sql = exp.build_enrollments_query(
-        time_limits=tl, enrollments_query_type="fenix-fallback"
+        time_limits=tl, enrollments_query_type=EnrollmentsQueryType.FENIX_FALLBACK
     )
 
     sql_lint(enrollments_sql)
@@ -671,7 +705,7 @@ def test_metrics_query_with_exposure_signal_custom_windows():
     )
 
     enrollments_sql = exp.build_enrollments_query(
-        time_limits=tl, enrollments_query_type="fenix-fallback"
+        time_limits=tl, enrollments_query_type=EnrollmentsQueryType.FENIX_FALLBACK
     )
 
     sql_lint(enrollments_sql)
@@ -713,7 +747,7 @@ def test_metrics_query_with_exposure_signal():
     )
 
     enrollments_sql = exp.build_enrollments_query(
-        time_limits=tl, enrollments_query_type="fenix-fallback"
+        time_limits=tl, enrollments_query_type=EnrollmentsQueryType.FENIX_FALLBACK
     )
 
     sql_lint(enrollments_sql)
