@@ -945,7 +945,7 @@
 <span class="s2">                WHERE</span>
 <span class="s2">                    DATE(events.submission_timestamp)</span>
 <span class="s2">                    BETWEEN &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39; AND &#39;</span><span class="si">{last_enrollment_date}</span><span class="s2">&#39;</span>
-<span class="s2">                    AND event.category = </span><span class="si">{event_category}</span>
+<span class="s2">                    AND event.category = &#39;</span><span class="si">{event_category}</span><span class="s2">&#39;</span>
 <span class="s2">                    AND mozfun.map.get_key(</span>
 <span class="s2">                        event.extra,</span>
 <span class="s2">                        &quot;experiment&quot;) = &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
