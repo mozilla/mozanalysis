@@ -871,7 +871,7 @@ class Experiment:
                 WHERE
                     DATE(events.submission_timestamp)
                     BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
-                    AND event.category = {event_category}
+                    AND event.category = '{event_category}'
                     AND mozfun.map.get_key(
                         event.extra,
                         "experiment") = '{experiment_slug}'
