@@ -214,4 +214,6 @@ def _resample_and_agg_once(data, stat_fn, unique_seed=None):
     randints = random_state.randint(0, n, n)
     resampled_data = data[randints]
 
-    return stat_fn(resampled_data)
+    output = stat_fn(resampled_data)
+    del resampled_data, randints
+    return output
