@@ -279,9 +279,13 @@ def get_quantile_bootstrap_samples(
     if threshold_quantile:
         data = filter_outliers(data, threshold_quantile)
 
+    data = np.sort(data)
+
     sample_size = data.shape[0]
     samples = {
-        f"{quantile:.1}": np.random.binomial(sample_size + 1, quantile, num_samples)
+        f"{quantile:.1}": data[
+            np.random.binomial(sample_size + 1, quantile, num_samples)
+        ]
         for quantile in quantiles_of_interest
     }
     df = pd.DataFrame.from_dict(samples)
