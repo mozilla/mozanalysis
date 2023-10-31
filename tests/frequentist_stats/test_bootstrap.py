@@ -268,7 +268,7 @@ def test_compare_branches_quantiles():
         data, "metric_a", quantiles_of_interest=np.arange(1, 10) * 0.1
     )
 
-    results_old = mafsb.compare_branches(df, "days_of_use", stat_fn=_decilize)
+    results_old = mafsb.compare_branches(data, "days_of_use", stat_fn=_decilize)
 
     for branch in ["control", "treatment"]:
         assert np.isclose(
