@@ -231,3 +231,64 @@ def test_compare_branches_multiple_metrics():
     assert res["comparative"]["treatment"][("abs_uplift", "exp")] == pytest.approx(
         0, rel=1e-5
     )
+
+
+def test_compare_branches_quantiles():
+    def _decilize(arr):
+        deciles = np.arange(1, 10) * 0.1
+        arr_quantiles = np.quantile(arr, deciles)
+
+        arr_dict = {
+            f"{label:.1}": arr_quantile
+            for label, arr_quantile in zip(deciles, arr_quantiles)
+        }
+        return arr_dict
+
+    N_OBS_PER_BRANCH = 10_000
+
+    data = pd.DataFrame(
+        {
+            "branch": ["control"] * N_OBS_PER_BRANCH + ["treatment"] * N_OBS_PER_BRANCH,
+            "metric_a": np.concatenate(
+                [
+                    np.random.exponential(scale=1.0, size=N_OBS_PER_BRANCH),
+                    np.random.exponential(scale=1.1, size=N_OBS_PER_BRANCH),
+                ]
+            ),
+            "metric_b": np.concatenate(
+                [
+                    np.random.binomial(n=7, p=0.1, size=N_OBS_PER_BRANCH),
+                    np.random.binomial(n=7, p=0.15, size=N_OBS_PER_BRANCH),
+                ]
+            ),
+        }
+    )
+
+    results_new = mafsb.compare_branches_quantiles(
+        data, "metric_a", quantiles_of_interest=np.arange(1, 10) * 0.1
+    )
+
+    results_old = mafsb.compare_branches(df, "days_of_use", stat_fn=_decilize)
+
+    for branch in ["control", "treatment"]:
+        assert np.isclose(
+            results_old["individual"][branch],
+            results_new["individual"][branch],
+            atol=0.1,
+        ).all(), f"branch {branch} individual results differs"
+
+    arr_eq = np.isclose(
+        results_old["comparative"]["treatment"]["rel_uplift"],
+        results_new["comparative"]["treatment"]["rel_uplift"],
+        atol=0.1,
+        equal_nan=True,
+    )
+    assert arr_eq.all(), f"branch {branch} relative differences differ"
+
+    arr_eq = np.isclose(
+        results_old["comparative"]["treatment"]["abs_uplift"],
+        results_new["comparative"]["treatment"]["abs_uplift"],
+        atol=0.1,
+        equal_nan=True,
+    )
+    assert arr_eq.all(), f"branch {branch} absolute differences differ"
