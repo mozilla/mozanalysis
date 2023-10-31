@@ -255,12 +255,6 @@ def test_compare_branches_quantiles():
                     np.random.exponential(scale=1.1, size=N_OBS_PER_BRANCH),
                 ]
             ),
-            "metric_b": np.concatenate(
-                [
-                    np.random.binomial(n=7, p=0.1, size=N_OBS_PER_BRANCH),
-                    np.random.binomial(n=7, p=0.15, size=N_OBS_PER_BRANCH),
-                ]
-            ),
         }
     )
 
@@ -268,7 +262,7 @@ def test_compare_branches_quantiles():
         data, "metric_a", quantiles_of_interest=np.arange(1, 10) * 0.1
     )
 
-    results_old = mafsb.compare_branches(data, "days_of_use", stat_fn=_decilize)
+    results_old = mafsb.compare_branches(data, "metric_a", stat_fn=_decilize)
 
     for branch in ["control", "treatment"]:
         assert np.isclose(
