@@ -215,3 +215,79 @@ def _resample_and_agg_once(data, stat_fn, unique_seed=None):
     resampled_data = data[randints]
 
     return stat_fn(resampled_data)
+
+
+def compare_branches_quantiles(
+    df,
+    col_label,
+    ref_branch_label="control",
+    quantiles_of_interest=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+    num_samples=10000,
+    threshold_quantile=None,
+    individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
+    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES,
+):
+    """
+    Performs inferences on the metric quantiles inspired by Spotify's
+    "Resampling-free bootstrap inference for quantiles" approach
+    https://arxiv.org/pdf/2202.10992.pdf.
+
+    Parameters are similar to `compare_branches` except for:
+
+    Args:
+        quantiles (List[float]): a list of quantiles upon which inferences are desired.
+        Ex: 0.2 is the 20th percentile, 0.5 is the median, etc.
+    """
+
+    branch_list = df.branch.unique()
+
+    if ref_branch_label not in branch_list:
+        raise ValueError(
+            "Branch label '{b}' not in branch list '{bl}".format(
+                b=ref_branch_label, bl=branch_list
+            )
+        )
+
+    samples = {
+        b: get_quantile_bootstrap_samples(
+            df[col_label][df.branch == b],
+            quantiles_of_interest,
+            num_samples,
+            threshold_quantile=threshold_quantile,
+        )
+        for b in branch_list
+    }
+
+    return mabs.compare_samples(
+        samples,
+        ref_branch_label,
+        individual_summary_quantiles,
+        comparative_summary_quantiles,
+    )
+
+
+def get_quantile_bootstrap_samples(
+    data, quantiles_of_interest, num_samples=10000, threshold_quantile=None
+):
+    """Params are similar to `get_bootstrap_samples`"""
+    if type(data) is not np.ndarray:
+        data = np.array(data.to_numpy(dtype="float", na_value=np.nan))
+
+    if np.isnan(data).any():
+        raise ValueError("'data' contains null values")
+
+    if threshold_quantile:
+        data = filter_outliers(data, threshold_quantile)
+
+    data = np.sort(data)
+
+    sample_size = data.shape[0]
+    samples = {
+        f"{quantile:.1}": data[
+            np.random.binomial(sample_size + 1, quantile, num_samples)
+        ]
+        for quantile in quantiles_of_interest
+    }
+    df = pd.DataFrame.from_dict(samples)
+
+    return df
