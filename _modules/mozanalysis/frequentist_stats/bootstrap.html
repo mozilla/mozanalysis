@@ -289,6 +289,82 @@
     <span class="n">resampled_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">randints</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="n">stat_fn</span><span class="p">(</span><span class="n">resampled_data</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="compare_branches_quantiles"><a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.compare_branches_quantiles">[docs]</a><span class="k">def</span> <span class="nf">compare_branches_quantiles</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">,</span>
+    <span class="n">col_label</span><span class="p">,</span>
+    <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span>
+    <span class="n">quantiles_of_interest</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+    <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs inferences on the metric quantiles inspired by Spotify&#39;s</span>
+<span class="sd">    &quot;Resampling-free bootstrap inference for quantiles&quot; approach</span>
+<span class="sd">    https://arxiv.org/pdf/2202.10992.pdf.</span>
+
+<span class="sd">    Parameters are similar to `compare_branches` except for:</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantiles (List[float]): a list of quantiles upon which inferences are desired.</span>
+<span class="sd">        Ex: 0.2 is the 20th percentile, 0.5 is the median, etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">branch_list</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">ref_branch_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">branch_list</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Branch label &#39;</span><span class="si">{b}</span><span class="s2">&#39; not in branch list &#39;</span><span class="si">{bl}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">b</span><span class="o">=</span><span class="n">ref_branch_label</span><span class="p">,</span> <span class="n">bl</span><span class="o">=</span><span class="n">branch_list</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">b</span><span class="p">:</span> <span class="n">get_quantile_bootstrap_samples</span><span class="p">(</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">][</span><span class="n">df</span><span class="o">.</span><span class="n">branch</span> <span class="o">==</span> <span class="n">b</span><span class="p">],</span>
+            <span class="n">quantiles_of_interest</span><span class="p">,</span>
+            <span class="n">num_samples</span><span class="p">,</span>
+            <span class="n">threshold_quantile</span><span class="o">=</span><span class="n">threshold_quantile</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">branch_list</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">mabs</span><span class="o">.</span><span class="n">compare_samples</span><span class="p">(</span>
+        <span class="n">samples</span><span class="p">,</span>
+        <span class="n">ref_branch_label</span><span class="p">,</span>
+        <span class="n">individual_summary_quantiles</span><span class="p">,</span>
+        <span class="n">comparative_summary_quantiles</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_quantile_bootstrap_samples"><a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.get_quantile_bootstrap_samples">[docs]</a><span class="k">def</span> <span class="nf">get_quantile_bootstrap_samples</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">quantiles_of_interest</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Params are similar to `get_bootstrap_samples`&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="n">na_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; contains null values&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">threshold_quantile</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">filter_outliers</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">sample_size</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">quantile</span><span class="si">:</span><span class="s2">.1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">sample_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">quantile</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">quantile</span> <span class="ow">in</span> <span class="n">quantiles_of_interest</span>
+    <span class="p">}</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">df</span></div>
 </pre></div>
 
            </div>

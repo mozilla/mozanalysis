@@ -59,6 +59,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.bootstrap.compare_branches"><code class="docutils literal notranslate"><span class="pre">compare_branches()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch"><code class="docutils literal notranslate"><span class="pre">bootstrap_one_branch()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples"><code class="docutils literal notranslate"><span class="pre">get_bootstrap_samples()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.bootstrap.compare_branches_quantiles"><code class="docutils literal notranslate"><span class="pre">compare_branches_quantiles()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mozanalysis.frequentist_stats.bootstrap.get_quantile_bootstrap_samples"><code class="docutils literal notranslate"><span class="pre">get_quantile_bootstrap_samples()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="sample_size.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a></li>
@@ -242,6 +244,29 @@ with columns set to the dict keys.</p></li>
 </p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mozanalysis.frequentist_stats.bootstrap.compare_branches_quantiles">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.bootstrap.</span></span><span class="sig-name descname"><span class="pre">compare_branches_quantiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_branch_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'control'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantiles_of_interest</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.1,</span> <span class="pre">0.2,</span> <span class="pre">0.3,</span> <span class="pre">0.4,</span> <span class="pre">0.5,</span> <span class="pre">0.6,</span> <span class="pre">0.7,</span> <span class="pre">0.8,</span> <span class="pre">0.9]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">individual_summary_quantiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.005,</span> <span class="pre">0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975,</span> <span class="pre">0.995)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comparative_summary_quantiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.005,</span> <span class="pre">0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975,</span> <span class="pre">0.995)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#compare_branches_quantiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.compare_branches_quantiles" title="Permalink to this definition"></a></dt>
+<dd><p>Performs inferences on the metric quantiles inspired by Spotify’s
+“Resampling-free bootstrap inference for quantiles” approach
+<a class="reference external" href="https://arxiv.org/pdf/2202.10992.pdf">https://arxiv.org/pdf/2202.10992.pdf</a>.</p>
+<p>Parameters are similar to <cite>compare_branches</cite> except for:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>quantiles</strong> (<em>List</em><em>[</em><em>float</em><em>]</em>) – a list of quantiles upon which inferences are desired.</p></li>
+<li><p><strong>Ex</strong> – 0.2 is the 20th percentile, 0.5 is the median, etc.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mozanalysis.frequentist_stats.bootstrap.get_quantile_bootstrap_samples">
+<span class="sig-prename descclassname"><span class="pre">mozanalysis.frequentist_stats.bootstrap.</span></span><span class="sig-name descname"><span class="pre">get_quantile_bootstrap_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantiles_of_interest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mozanalysis/frequentist_stats/bootstrap.html#get_quantile_bootstrap_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.frequentist_stats.bootstrap.get_quantile_bootstrap_samples" title="Permalink to this definition"></a></dt>
+<dd><p>Params are similar to <cite>get_bootstrap_samples</cite></p>
 </dd></dl>
 
 </section>
