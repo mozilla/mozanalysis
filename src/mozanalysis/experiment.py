@@ -1197,12 +1197,6 @@ class TimeLimits:
     @first_enrollment_date.validator
     def _validate_first_enrollment_date(self, attribute, value):
         assert self.first_enrollment_date <= self.last_enrollment_date
-        # assert self.first_enrollment_date <= self.first_date_data_required
-        # assert self.first_enrollment_date <= self.last_date_data_required
-
-    # @last_enrollment_date.validator
-    # def _validate_last_enrollment_date(self, attribute, value):
-    #     assert self.last_enrollment_date <= self.last_date_data_required
 
     @first_date_data_required.validator
     def _validate_first_date_data_required(self, attribute, value):
@@ -1242,13 +1236,13 @@ class AnalysisWindow:
     start = attr.ib(type=int)
     end = attr.ib(type=int)
 
-#     @start.validator
-#     def _validate_start(self, attribute, value):
-#         assert value >= 0
+    @start.validator
+    def _validate_start(self, attribute, value):
+        assert (value >= 0) or (value < 0 and self.end < 0)
 
-#     @end.validator
-#     def _validate_end(self, attribute, value):
-#         assert value >= self.start
+    @end.validator
+    def _validate_end(self, attribute, value):
+        assert value >= self.start
 
 
 @attr.s(frozen=True, slots=True)
