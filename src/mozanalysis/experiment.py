@@ -1197,9 +1197,8 @@ class TimeLimits:
     @first_enrollment_date.validator
     def _validate_first_enrollment_date(self, attribute, value):
         assert self.first_enrollment_date <= self.last_enrollment_date
-        
-        #assert self.first_enrollment_date <= self.first_date_data_required
-        #assert self.first_enrollment_date <= self.last_date_data_required
+        # assert self.first_enrollment_date <= self.first_date_data_required
+        # assert self.first_enrollment_date <= self.last_date_data_required
 
     # @last_enrollment_date.validator
     # def _validate_last_enrollment_date(self, attribute, value):
@@ -1234,10 +1233,10 @@ class AnalysisWindow:
     Args:
         start (int): First day of the analysis window, in days relative
             enrollment. 0 indicates the date of enrollment. Positive numbers
-            are after enrollment, negative are before. 
+            are after enrollment, negative are before.
         end (int): Final day of the analysis window, in days since
             enrollment. 0 indicates the date of enrollment. Positive numbers
-            are after enrollment, negative are before. 
+            are after enrollment, negative are before.
     """
 
     start = attr.ib(type=int)
