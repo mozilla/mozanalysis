@@ -247,6 +247,8 @@ def _bootstrap_p_value(samples):
         if high == 0:
             return alphas[1]
         mid = (low + high) // 2
+        if mid > len(alphas):
+            return alphas[-1]
         candidate_alpha = alphas[mid]
 
         cmp = _bootstrap_p_value_check_candidate_alpha(
