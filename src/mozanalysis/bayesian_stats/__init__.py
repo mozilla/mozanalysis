@@ -242,7 +242,7 @@ def _bootstrap_p_value(samples):
     if min(samples) > 0 or max(samples) < 0:
         return alphas[1]
 
-    low, high = 0, len(alphas)
+    low, high = 0, len(alphas)-1
     while low <= high:
         if high == 0:
             return alphas[1]
