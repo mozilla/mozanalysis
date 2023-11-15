@@ -264,7 +264,7 @@ def _bootstrap_p_value(samples):
 
 def _bootstrap_p_value_check_candidate_alpha(samples, alpha: float, precision: float):
     """
-    Checks a candidate alpha to determine if this alpha is the transition 
+    Checks a candidate alpha to determine if this alpha is the transition
     point. That is, if CIs from smaller alphas contain zero whereas CIs from
     this alpha (or larger) do not contain zero.
     """
