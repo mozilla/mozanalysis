@@ -49,7 +49,7 @@ class _ConfigLoader:
     def get_metric(self, metric_slug: str, app_name: str):
         """Load a metric definition for the given app.
 
-        Returns a mozanalysis `Metric` instance.
+        Returns a :class:`mozanalysis.metrics.Metric` instance.
         """
         from mozanalysis.metrics import Metric
 
@@ -73,7 +73,7 @@ class _ConfigLoader:
     def get_data_source(self, data_source_slug: str, app_name: str):
         """Load a data source definition for the given app.
 
-        Returns a mozanalysis `DataSource` instance.
+        Returns a :class:`mozanalysis.metrics.DataSource` instance.
         """
         from mozanalysis.metrics import DataSource
 
@@ -99,7 +99,7 @@ class _ConfigLoader:
     def get_segment(self, segment_slug: str, app_name: str):
         """Load a segment definition for the given app.
 
-        Returns a mozanalysis `Segment` instance.
+        Returns a :class:`mozanalysis.segments.Segment` instance.
         """
         from mozanalysis.segments import Segment
 
@@ -122,7 +122,7 @@ class _ConfigLoader:
     def get_segment_data_source(self, data_source_slug: str, app_name: str):
         """Load a segment data source definition for the given app.
 
-        Returns a mozanalysis `SegmentDataSource` instance.
+        Returns a :class:`mozanalysis.segments.SegmentDataSource` instance.
         """
         from mozanalysis.segments import SegmentDataSource
 
@@ -149,7 +149,7 @@ class _ConfigLoader:
 
         Parametrized metrics are not supported, since they may not be defined outside of an experiment.
 
-        Returns a mozanalysis `Metric` instance.
+        Returns a :class:`mozanalysis.metrics.Metric` instance.
         """
         from mozanalysis.metrics import Metric
 
@@ -214,7 +214,7 @@ class _ConfigLoader:
     ):
         """Load a data source definition from an outcome defined for the given app.
 
-        Returns a mozanalysis `DataSource` instance.
+        Returns a :class:`mozanalysis.metrics.DataSource` instance.
         """
         from mozanalysis.metrics import DataSource
 
