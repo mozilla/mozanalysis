@@ -194,8 +194,8 @@ def _summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILE
     str_quantiles = [str(q) for q in quantiles]
 
     index = pd.MultiIndex.from_tuples(
-        [("rel_uplift", q) for q in str_quantiles + ["exp"]]
-        + [("abs_uplift", q) for q in str_quantiles + ["exp"]]
+        [("rel_uplift", q) for q in str_quantiles + ["exp", "p_value"]]
+        + [("abs_uplift", q) for q in str_quantiles + ["exp", "p_value"]]
         + [("max_abs_diff", "0.95"), ("prob_win",)]
     )
 
@@ -207,6 +207,7 @@ def _summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILE
     )
 
     res.loc[("rel_uplift", "exp")] = np.mean(rel_uplift_samples)
+    res.loc[("rel_uplift", "p_value")] = _bootstrap_p_value(rel_uplift_samples)
 
     abs_uplift_samples = focus - reference
     res.loc[[("abs_uplift", q) for q in str_quantiles]] = np.quantile(
@@ -214,12 +215,77 @@ def _summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILE
     )
 
     res.loc[("abs_uplift", "exp")] = np.mean(abs_uplift_samples)
+    res.loc[("abs_uplift", "p_value")] = _bootstrap_p_value(abs_uplift_samples)
 
     res.loc[("max_abs_diff", "0.95")] = np.quantile(np.abs(abs_uplift_samples), 0.95)
 
     res.loc["prob_win"] = np.mean(focus > reference)
 
     return res
+
+
+def _bootstrap_p_value(samples):
+    """
+    Computes a 2-tailed p-value for test of:
+        * H_0: theta = 0 vs
+        * H_a: theta != 0
+    Leverages the duality between confidence intervals and p-values to "invert" the
+    the confidence interval and extra a p-value. Follows the implementation here:
+    https://www.modernstatisticswithr.com/modchapter.html#intervalinversion except
+    uses a binary search to improve performance
+    """
+    precision = 1 / len(samples)
+    alphas = np.arange(0, 1, precision)
+
+    # check for degenerate case where all bootstrap samples fall on one side of zero
+    # if that's the case, return the smallest p_value we have precision to detect
+    if min(samples) > 0 or max(samples) < 0:
+        return alphas[1]
+
+    low, high = 0, len(alphas)
+    while low <= high:
+        if high == 0:
+            return alphas[1]
+        mid = (low + high) // 2
+        candidate_alpha = alphas[mid]
+
+        cmp = _bootstrap_p_value_check_candidate_alpha(
+            samples, candidate_alpha, precision
+        )
+        if cmp == 0:
+            return candidate_alpha
+        elif cmp < 0:
+            low = mid + 1
+        elif cmp > 0:
+            high = mid - 1
+
+    raise ValueError("p_value not found")
+
+
+def _bootstrap_p_value_check_candidate_alpha(samples, alpha: float, precision: float):
+    """
+    Checks a candidate alpha to determine if this alpha is the transition 
+    point. That is, if CIs from smaller alphas contain zero whereas CIs from
+    this alpha (or larger) do not contain zero.
+    """
+    this_interval = np.quantile(samples, [alpha / 2, 1 - (alpha / 2)])
+    prev_interval = np.quantile(
+        samples, [(alpha - precision) / 2, 1 - ((alpha - precision) / 2)]
+    )
+    this_interval_does_not_contain_zero = this_interval[0] > 0 or this_interval[1] < 0
+    prev_interval_does_not_contain_zero = prev_interval[0] > 0 or prev_interval[1] < 0
+    if this_interval_does_not_contain_zero and prev_interval_does_not_contain_zero:
+        return 1  # too high
+    elif (not this_interval_does_not_contain_zero) and (
+        not prev_interval_does_not_contain_zero
+    ):
+        return -1  # too low
+    elif this_interval_does_not_contain_zero and (
+        not prev_interval_does_not_contain_zero
+    ):
+        return 0
+    else:
+        raise ValueError()
 
 
 def _summarize_joint_samples_batch(focus, reference, quantiles=DEFAULT_QUANTILES):
