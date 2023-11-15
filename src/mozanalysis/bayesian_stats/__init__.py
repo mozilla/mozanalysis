@@ -242,18 +242,22 @@ def _bootstrap_p_value(samples):
     if min(samples) > 0 or max(samples) < 0:
         return alphas[1]
 
-    low, high = 0, len(alphas)-1
+    low, high = 0, len(alphas) - 1
     while low <= high:
         if high == 0:
             return alphas[1]
         mid = (low + high) // 2
-        if mid > len(alphas):
+
+        if mid >= len(alphas) - 1:
             return alphas[-1]
         candidate_alpha = alphas[mid]
 
-        cmp = _bootstrap_p_value_check_candidate_alpha(
-            samples, candidate_alpha, precision
-        )
+        try:
+            cmp = _bootstrap_p_value_check_candidate_alpha(
+                samples, candidate_alpha, precision
+            )
+        except ValueError:
+            return None
         if cmp == 0:
             return candidate_alpha
         elif cmp < 0:
@@ -270,6 +274,8 @@ def _bootstrap_p_value_check_candidate_alpha(samples, alpha: float, precision: f
     point. That is, if CIs from smaller alphas contain zero whereas CIs from
     this alpha (or larger) do not contain zero.
     """
+    if (alpha - precision) < 0:
+        raise ValueError("Candidate alpha must be >= precision")
     this_interval = np.quantile(samples, [alpha / 2, 1 - (alpha / 2)])
     prev_interval = np.quantile(
         samples, [(alpha - precision) / 2, 1 - ((alpha - precision) / 2)]
@@ -287,7 +293,7 @@ def _bootstrap_p_value_check_candidate_alpha(samples, alpha: float, precision: f
     ):
         return 0
     else:
-        raise ValueError()
+        raise Exception("Invalid data in p_value check")
 
 
 def _summarize_joint_samples_batch(focus, reference, quantiles=DEFAULT_QUANTILES):
