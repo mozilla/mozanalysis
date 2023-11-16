@@ -1240,11 +1240,11 @@ class AnalysisWindow:
 
     @start.validator
     def _validate_start(self, attribute, value):
-        assert (value >= 0) or (value < 0 and self.end < 0)
+        assert (value >= 0 and self.end >= 0) or (value < 0 and self.end < 0)
 
     @end.validator
     def _validate_end(self, attribute, value):
-        assert value >= self.start
+        assert (value >= self.start) and ((value >= 0 and self.start >= 0) or (value < 0 and self.start < 0))
 
 
 @attr.s(frozen=True, slots=True)
