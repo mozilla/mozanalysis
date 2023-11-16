@@ -51,19 +51,19 @@ We start by instantiating our :class:`mozanalysis.experiment.Experiment` object:
 ``start_date`` is the ``submission_date`` of the first enrollment (``submission_date`` is in UTC). If you intended to study one week's worth of enrollments, then set ``num_dates_enrollment=8``: Normandy experiments typically go live in the evening UTC-time, so 8 days of data is a better approximation than 7.
 
 
-We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you're interested will already be in a metrics library, [Metric Hub](https://github.com/mozilla/metric-hub). If not, then you can define your own - see :meth:`mozanalysis.metrics.Metric` for examples - and ideally submit a PR to add them to Metric Hub for the next experiment. To load a Metric from Metric Hub, for example:
+We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you're interested will already be in a metrics library, `metric-hub <https://github.com/mozilla/metric-hub>`_. If not, then you can define your own---see :class:`mozanalysis.metrics.Metric` for examples---and ideally submit a PR to add them to metric-hub for the next experiment. To load a Metric from metric-hub, for example::
 
     from mozanalysis.config import ConfigLoader
     active_hours = ConfigLoader.get_metric(slug="active_hours", app_name="firefox_desktop")
 
-In this example, we'll compute four metrics from Metric Hub:
+In this example, we'll compute four metrics from metric-hub:
 
 * active hours
 * uri count
 * ad clicks
 * search count
 
-As it happens, the first three metrics all come from the ``clients_daily`` dataset, whereas "search count" comes from ``search_clients_daily``. These details are taken care of in the [Metric Hub definitions](https://github.com/mozilla/metric-hub/tree/main/definitions) so that we don't have to think about them here.
+As it happens, the first three metrics all come from the ``clients_daily`` dataset, whereas "search count" comes from ``search_clients_daily``. These details are taken care of in the `metric-hub definitions <https://github.com/mozilla/metric-hub/tree/main/definitions>`_ so that we don't have to think about them here.
 
 A metric must be computed over some `analysis window`, a period of time defined with respect to the enrollment date. We could use :meth:`mozanalysis.experiment.Experiment.get_single_window_data()` to compute our metrics over a specific analysis window. But here, let's create time series data: let's have an analysis window for each of the first three weeks of the experiment, and measure the data for each of these analysis windows::
 
@@ -81,7 +81,7 @@ A metric must be computed over some `analysis window`, a period of time defined 
 
 The first two arguments to :meth:`mozanalysis.experiment.Experiment.get_time_series_data()` should be clear by this point. ``last_date_full_data`` is the last date for which we want to use data. For a currently-running experiment, it would typically be yesterday's date (we have incomplete data for incomplete days!).
 
-Metrics are pulled in from [metric-hub](https://github.com/mozilla/metric-hub) based on the provided metric slugs.
+Metrics are pulled in from `metric-hub <https://github.com/mozilla/metric-hub>`_ based on the provided metric slugs.
 
 ``time_series_period`` can be ``'daily'``, ``'weekly'`` or ``'28_day'``. A ``'weekly'`` time series neatly sidesteps/masks weekly seasonality issues: most of the experiment subjects will enroll within a day of the experiment launching - typically a Tuesday, leading to ``'daily'`` time series reflecting a non-uniform convolution of the metrics' weekly seasonalities with the uneven enrollment numbers across the week.
 
