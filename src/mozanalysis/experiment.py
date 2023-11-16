@@ -1226,11 +1226,13 @@ class AnalysisWindow:
 
     Args:
         start (int): First day of the analysis window, in days relative
-            enrollment. 0 indicates the date of enrollment. Positive numbers
-            are after enrollment, negative are before.
-        end (int): Final day of the analysis window, in days since
-            enrollment. 0 indicates the date of enrollment. Positive numbers
-            are after enrollment, negative are before.
+            to enrollment start. 0 indicates the date of enrollment.
+            Positive numbers are after enrollment, negative are before.
+            Must be the same sign as `end` (zero counts as positive)
+        end (int): Final day of the analysis window, in days relative
+            to enrollment start. 0 indicates the date of enrollment.
+            Positive numbers are after enrollment, negative are before.
+            Must be the same sign as `start` (zero counts as positive).
     """
 
     start = attr.ib(type=int)
