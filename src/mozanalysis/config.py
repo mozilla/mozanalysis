@@ -147,7 +147,8 @@ class _ConfigLoader:
     def get_outcome_metric(self, metric_slug: str, outcome_slug: str, app_name: str):
         """Load a metric definition from an outcome defined for the given app.
 
-        Parametrized metrics are not supported, since they may not be defined outside of an experiment.
+        Parametrized metrics are not supported, since they may not be defined outside
+        of an experiment.
 
         Returns a :class:`mozanalysis.metrics.Metric` instance.
         """
@@ -169,11 +170,13 @@ class _ConfigLoader:
         metric_definition = _get_metric_definition(outcome_spec, metric_slug)
         if metric_definition is None:
             raise Exception(
-                f"Could not find definition for metric {metric_slug} in outcome {outcome_slug}"
+                f"Could not find definition for metric {metric_slug}"
+                + f" in outcome {outcome_slug}"
             )
 
-        # Data source associated with the metric can either be defined in the outcome or in the
-        # general definition file for the app. Outcome definitions take precedence.
+        # Data source associated with the metric can either be defined in the outcome
+        # or in the general definition file for the app.
+        # Outcome definitions take precedence.
         try:
             data_source = self.get_outcome_data_source(
                 metric_definition.data_source.name, outcome_slug, app_name
@@ -183,7 +186,8 @@ class _ConfigLoader:
                 metric_definition.data_source.name, app_name
             )
 
-        # Functions used in templated metric definitions are defined both under `jetstream/` and at the top level.
+        # Functions used in templated metric definitions are defined both under
+        # `jetstream/` and at the top level.
         # Merge these with functions under `jetstream/` taking precedence.
         jinja_env = self.configs.get_env()
         jinja_env.globals.update(self.jetstream_configs.get_env().globals)
@@ -236,7 +240,8 @@ class _ConfigLoader:
         )
         if data_source_definition is None:
             raise Exception(
-                f"Could not find definition for data source {data_source_slug} in outcome {outcome_slug}"
+                f"Could not find definition for data source {data_source_slug}"
+                + f" in outcome {outcome_slug}"
             )
 
         return DataSource(
