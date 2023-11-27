@@ -286,3 +286,13 @@ def test_compare_branches_quantiles():
         equal_nan=True,
     )
     assert arr_eq.all(), f"branch {branch} absolute differences differ"
+
+
+def test_get_quantile_bootstrap_samples():
+    res = mafsb.get_quantile_bootstrap_samples(
+        np.array([3.0, 3.0, 3.0]), quantiles_of_interest=[0.5], num_samples=10
+    )
+    assert res.shape == (10, 1)
+
+    assert res["0.5"][0] == 3.0
+    assert res["0.5"][1] == 3.0
