@@ -234,30 +234,34 @@ def _bootstrap_p_value(samples: List[float]) -> float:
     Leverages the duality between confidence intervals and p-values to "invert" the
     the confidence interval and extract p-value. Follows the implementation here:
     https://www.modernstatisticswithr.com/modchapter.html#intervalinversion except
-    uses a binary search to improve performance. 
-    
-    Returns a p_value (float) if one can be found or np.nan if the p_value is undefined. Throws a `ValueError` if the search procedure does not terminate (this should not happen). 
-    
-    Inputs: 
-        * samples (List[float]): a list of bootstrapped differences (either relative or absolute). 
+    uses a binary search to improve performance.
+
+    Returns a p_value (float) if one can be found or np.nan if the p_value is
+    undefined. Throws a `ValueError` if the search procedure does not terminate
+    (this should not happen).
+
+    Inputs:
+        * samples (List[float]): a list of bootstrapped differences (either relative
+        or absolute).
     """
     precision = 1 / len(samples)
     alphas = np.arange(0, 1, precision)
-    
-    if np.isclose(samples,0).all():
+
+    if np.isclose(samples, 0).all():
         # all bootstrapped differences between branches are zero
         # to align with e.g., statsmodels, we treat this case as undefined
         return np.nan
 
     # Check for degenerate case where all bootstrap samples fall on one side of zero
-    # if that's the case, the real p-value lies somewhere between 0 and `precision`. 
-    # To align with other libraries (e.g., statsmodels), we return 0 here. 
-    if min(samples) > 0 or max(samples) < 0:
+    # if that's the case, the real p-value lies somewhere between 0 and `precision`.
+    # To align with other libraries (e.g., statsmodels), we return 0 here.
+    smin, smax = min(samples), max(samples)
+    if smin > 0 or smax < 0 or np.isclose([smin, smax], 0, rtol=1e-4).any():
         return 0
 
-    low, high = 0, len(alphas) - 1
+    low, high = 1, len(alphas) - 1
     while low <= high:
-        if high == 0:
+        if high == 1:
             return alphas[1]
         mid = (low + high) // 2
 
@@ -269,8 +273,9 @@ def _bootstrap_p_value(samples: List[float]) -> float:
             cmp = _bootstrap_p_value_check_candidate_alpha(
                 samples, candidate_alpha, precision
             )
+
         except ValueError:
-            return None
+            raise
         if cmp == 0:
             return candidate_alpha
         elif cmp < 0:
@@ -281,7 +286,9 @@ def _bootstrap_p_value(samples: List[float]) -> float:
     raise ValueError("p_value not found")
 
 
-def _bootstrap_p_value_check_candidate_alpha(samples: List[float], alpha: float, precision: float):
+def _bootstrap_p_value_check_candidate_alpha(
+    samples: List[float], alpha: float, precision: float
+):
     """
     Checks a candidate alpha to determine if this alpha is the transition
     point. That is, if CIs from smaller alphas contain zero whereas CIs from
@@ -293,19 +300,36 @@ def _bootstrap_p_value_check_candidate_alpha(samples: List[float], alpha: float,
     prev_interval = np.quantile(
         samples, [(alpha - precision) / 2, 1 - ((alpha - precision) / 2)]
     )
-    this_interval_does_not_contain_zero = this_interval[0] > 0 or this_interval[1] < 0
-    prev_interval_does_not_contain_zero = prev_interval[0] > 0 or prev_interval[1] < 0
+    this_interval_does_not_contain_zero = (
+        this_interval[0] > 0
+        or this_interval[1] < 0
+        or np.isclose(this_interval, 0, rtol=1e-4).any()
+    )
+    prev_interval_does_not_contain_zero = (
+        prev_interval[0] > 0
+        or prev_interval[1] < 0
+        or np.isclose(prev_interval, 0, rtol=1e-4).any()
+    )
     if this_interval_does_not_contain_zero and prev_interval_does_not_contain_zero:
-        return 1  # too high
+        # neither this interval, nor the one larger contain zero
+        # so candidate alpha is too large
+        return 1
     elif (not this_interval_does_not_contain_zero) and (
         not prev_interval_does_not_contain_zero
     ):
+        # both this interval and the one smaller contain zero
+        # so candidate alpha is too small
         return -1  # too low
     elif this_interval_does_not_contain_zero and (
         not prev_interval_does_not_contain_zero
     ):
+        # this interval does not contains zero, but the one larger does
+        # so we've found the smallest p-value such that the corresponding
+        # CI does not contain zero
         return 0
     else:
+        # this interval contains zero but the one smaller does not
+        # how can this be?
         raise Exception("Invalid data in p_value check")
 
 

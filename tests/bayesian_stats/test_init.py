@@ -39,6 +39,7 @@ def test_summarize_one_branch_samples_batch():
     assert res.loc["b", "0.95"] == pytest.approx(1.95)
     assert res.loc["b", "mean"] == pytest.approx(1.5)
 
+
 def test_summarize_joint_samples_trivial():
     quantiles = (0.05, 0.31, 0.95)
     x1, x2 = [6, 6, 6], [3, 3, 3]
@@ -60,11 +61,13 @@ def test_summarize_joint_samples_trivial():
     assert res[("abs_uplift", "0.95")] == 3.0
 
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', r'divide by zero encountered in scalar divide')
-        _, sm_p_value, _ = ttest_ind(x1,x2)
-    
-    assert np.isclose(res[('abs_uplift', 'p_value')], sm_p_value)
-    assert np.isclose(res[('rel_uplift', 'p_value')], sm_p_value)
+        warnings.filterwarnings(
+            "ignore", r"divide by zero encountered in scalar divide"
+        )
+        _, sm_p_value, _ = ttest_ind(x1, x2)
+
+    assert np.isclose(res[("abs_uplift", "p_value")], sm_p_value)
+    assert np.isclose(res[("rel_uplift", "p_value")], sm_p_value)
 
 
 def test_summarize_joint_samples_batch_trivial():
@@ -103,12 +106,34 @@ def test_summarize_joint_samples_batch_trivial():
     assert res.loc["b", ("abs_uplift", "0.95")] == 0.0
 
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', r'divide by zero encountered in scalar divide')
-        _, sm_p_value_a, _ = ttest_ind(a1,a2)
-        
+        warnings.filterwarnings(
+            "ignore", r"divide by zero encountered in scalar divide"
+        )
+        _, sm_p_value_a, _ = ttest_ind(a1, a2)
+
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', r'invalid value encountered in scalar divide')
-        _, sm_p_value_b, _ = ttest_ind(b,b)
-    
+        warnings.filterwarnings("ignore", r"invalid value encountered in scalar divide")
+        _, sm_p_value_b, _ = ttest_ind(b, b)
+
     assert np.isclose(res.loc["a", ("abs_uplift", "p_value")], sm_p_value_a)
     assert np.isnan([res.loc["b", ("abs_uplift", "p_value")], sm_p_value_b]).all()
+
+
+def test_bootstrap_p_value():
+    assert mabs._bootstrap_p_value([-2, -1, 0, 1, 2, 3, 4, 5, 6, 7]) == 0.5
+    assert np.isnan(mabs._bootstrap_p_value([0, 0, 0, 1e-16]))
+    assert mabs._bootstrap_p_value([0, 1, 2, 3]) == 0
+    assert mabs._bootstrap_p_value([-3, -2, -1, 0]) == 0
+    assert mabs._bootstrap_p_value([1e-8, 1, 2, 3]) == 0
+
+
+def test_bootstrap_p_value_check_candidate_alpha():
+    samples = [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7]
+
+    with pytest.raises(ValueError):
+        mabs._bootstrap_p_value_check_candidate_alpha([], 0, 0.01)
+        mabs._bootstrap_p_value_check_candidate_alpha(samples, 0, 0.25)
+
+    assert mabs._bootstrap_p_value_check_candidate_alpha(samples, 0.6, 0.1) == 1
+    assert mabs._bootstrap_p_value_check_candidate_alpha(samples, 0.5, 0.1) == 0
+    assert mabs._bootstrap_p_value_check_candidate_alpha(samples, 0.4, 0.1) == -1
