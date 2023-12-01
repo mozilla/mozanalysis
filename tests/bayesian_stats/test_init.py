@@ -7,6 +7,10 @@ import pytest
 
 import mozanalysis.bayesian_stats as mabs
 
+from statsmodels.stats.weightstats import ttest_ind
+
+import warnings
+
 
 def test_summarize_one_branch_samples():
     s = pd.Series(np.linspace(0, 1, 1001))
@@ -35,12 +39,13 @@ def test_summarize_one_branch_samples_batch():
     assert res.loc["b", "0.95"] == pytest.approx(1.95)
     assert res.loc["b", "mean"] == pytest.approx(1.5)
 
-
 def test_summarize_joint_samples_trivial():
     quantiles = (0.05, 0.31, 0.95)
+    x1, x2 = [6, 6, 6], [3, 3, 3]
     res = mabs.summarize_joint_samples(
-        pd.Series([6, 6, 6]), pd.Series([3, 3, 3]), quantiles=quantiles
+        pd.Series(x1), pd.Series(x2), quantiles=quantiles
     )
+
     assert res[("rel_uplift", "exp")] == 1.0
     assert res[("abs_uplift", "exp")] == 3.0
     assert res[("prob_win", None)] == 1
@@ -54,14 +59,24 @@ def test_summarize_joint_samples_trivial():
     assert res[("abs_uplift", "0.31")] == 3.0
     assert res[("abs_uplift", "0.95")] == 3.0
 
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', r'divide by zero encountered in scalar divide')
+        _, sm_p_value, _ = ttest_ind(x1,x2)
+    
+    assert np.isclose(res[('abs_uplift', 'p_value')], sm_p_value)
+    assert np.isclose(res[('rel_uplift', 'p_value')], sm_p_value)
+
 
 def test_summarize_joint_samples_batch_trivial():
     quantiles = (0.05, 0.31, 0.95)
+    a1, a2 = [6, 6, 6], [3, 3, 3]
+    b = [1, 1, 1]
     res = mabs.summarize_joint_samples(
-        pd.DataFrame({"a": [6, 6, 6], "b": [1, 1, 1]}, columns=["a", "b"]),
-        pd.DataFrame({"a": [3, 3, 3], "b": [1, 1, 1]}, columns=["b", "a"]),
+        pd.DataFrame({"a": a1, "b": b}, columns=["a", "b"]),
+        pd.DataFrame({"a": a2, "b": b}, columns=["b", "a"]),
         quantiles=quantiles,
     )
+
     assert res.loc["a", ("rel_uplift", "exp")] == 1.0
     assert res.loc["a", ("abs_uplift", "exp")] == 3.0
     assert res.loc["a", ("prob_win", None)] == 1
@@ -86,3 +101,14 @@ def test_summarize_joint_samples_batch_trivial():
     assert res.loc["b", ("abs_uplift", "0.05")] == 0.0
     assert res.loc["b", ("abs_uplift", "0.31")] == 0.0
     assert res.loc["b", ("abs_uplift", "0.95")] == 0.0
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', r'divide by zero encountered in scalar divide')
+        _, sm_p_value_a, _ = ttest_ind(a1,a2)
+        
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', r'invalid value encountered in scalar divide')
+        _, sm_p_value_b, _ = ttest_ind(b,b)
+    
+    assert np.isclose(res.loc["a", ("abs_uplift", "p_value")], sm_p_value_a)
+    assert np.isnan([res.loc["b", ("abs_uplift", "p_value")], sm_p_value_b]).all()

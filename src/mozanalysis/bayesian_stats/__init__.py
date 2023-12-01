@@ -4,6 +4,8 @@
 import numpy as np
 import pandas as pd
 
+from typing import List
+
 DEFAULT_QUANTILES = (0.005, 0.025, 0.5, 0.975, 0.995)
 
 
@@ -224,23 +226,34 @@ def _summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILE
     return res
 
 
-def _bootstrap_p_value(samples):
+def _bootstrap_p_value(samples: List[float]) -> float:
     """
     Computes a 2-tailed p-value for test of:
         * H_0: theta = 0 vs
         * H_a: theta != 0
     Leverages the duality between confidence intervals and p-values to "invert" the
-    the confidence interval and extra a p-value. Follows the implementation here:
+    the confidence interval and extract p-value. Follows the implementation here:
     https://www.modernstatisticswithr.com/modchapter.html#intervalinversion except
-    uses a binary search to improve performance
+    uses a binary search to improve performance. 
+    
+    Returns a p_value (float) if one can be found or np.nan if the p_value is undefined. Throws a `ValueError` if the search procedure does not terminate (this should not happen). 
+    
+    Inputs: 
+        * samples (List[float]): a list of bootstrapped differences (either relative or absolute). 
     """
     precision = 1 / len(samples)
     alphas = np.arange(0, 1, precision)
+    
+    if np.isclose(samples,0).all():
+        # all bootstrapped differences between branches are zero
+        # to align with e.g., statsmodels, we treat this case as undefined
+        return np.nan
 
-    # check for degenerate case where all bootstrap samples fall on one side of zero
-    # if that's the case, return the smallest p_value we have precision to detect
+    # Check for degenerate case where all bootstrap samples fall on one side of zero
+    # if that's the case, the real p-value lies somewhere between 0 and `precision`. 
+    # To align with other libraries (e.g., statsmodels), we return 0 here. 
     if min(samples) > 0 or max(samples) < 0:
-        return alphas[1]
+        return 0
 
     low, high = 0, len(alphas) - 1
     while low <= high:
@@ -268,7 +281,7 @@ def _bootstrap_p_value(samples):
     raise ValueError("p_value not found")
 
 
-def _bootstrap_p_value_check_candidate_alpha(samples, alpha: float, precision: float):
+def _bootstrap_p_value_check_candidate_alpha(samples: List[float], alpha: float, precision: float):
     """
     Checks a candidate alpha to determine if this alpha is the transition
     point. That is, if CIs from smaller alphas contain zero whereas CIs from
