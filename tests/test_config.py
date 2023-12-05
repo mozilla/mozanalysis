@@ -71,9 +71,9 @@ def test_unknown_segment_data_source_fails():
 
 
 def test_get_outcome_metric_outcome_data_source():
-    m = ConfigLoader.get_outcome_metric(
-        "cert_error_page_loaded", "networking", "firefox_desktop"
-    )
+    m = ConfigLoader.with_configs_from(
+        ["https://github.com/mozilla/metric-hub/tree/main/jetstream"]
+    ).get_outcome_metric("cert_error_page_loaded", "networking", "firefox_desktop")
     assert isinstance(m, Metric)
     assert m.name == "cert_error_page_loaded"
     assert m.friendly_name
@@ -83,9 +83,9 @@ def test_get_outcome_metric_outcome_data_source():
 
 
 def test_get_outcome_metric_general_data_source():
-    m = ConfigLoader.get_outcome_metric(
-        "urlbar_search_count", "firefox_suggest", "firefox_desktop"
-    )
+    m = ConfigLoader.with_configs_from(
+        ["https://github.com/mozilla/metric-hub/tree/main/jetstream"]
+    ).get_outcome_metric("urlbar_search_count", "firefox_suggest", "firefox_desktop")
     assert isinstance(m, Metric)
     assert m.name == "urlbar_search_count"
     assert m.friendly_name
@@ -96,27 +96,31 @@ def test_get_outcome_metric_general_data_source():
 
 def test_get_parametrized_outcome_metric_fails():
     with pytest.raises(NotImplementedError):
-        ConfigLoader.get_outcome_metric(
+        ConfigLoader.with_configs_from(
+            ["https://github.com/mozilla/metric-hub/tree/main/jetstream"]
+        ).get_outcome_metric(
             "spotlight_impressions", "spotlight_engagement", "firefox_desktop"
         )
 
 
 def test_outcome_unknown_metric_fails():
     with pytest.raises(Exception):
-        ConfigLoader.get_outcome_metric("fake_metric", "networking", "firefox_desktop")
+        ConfigLoader.with_configs_from(
+            ["https://github.com/mozilla/metric-hub/tree/main/jetstream"]
+        ).get_outcome_metric("fake_metric", "networking", "firefox_desktop")
 
 
 def test_unknown_outcome_metric_fails():
     with pytest.raises(Exception):
-        ConfigLoader.get_outcome_metric(
-            "fake_metric", "fake_outcome", "firefox_desktop"
-        )
+        ConfigLoader.with_configs_from(
+            ["https://github.com/mozilla/metric-hub/tree/main/jetstream"]
+        ).get_outcome_metric("fake_metric", "fake_outcome", "firefox_desktop")
 
 
 def test_get_outcome_data_source():
-    d = ConfigLoader.get_outcome_data_source(
-        "events_certerror", "networking", "firefox_desktop"
-    )
+    d = ConfigLoader.with_configs_from(
+        ["https://github.com/mozilla/metric-hub/tree/main/jetstream"]
+    ).get_outcome_data_source("events_certerror", "networking", "firefox_desktop")
     assert isinstance(d, DataSource)
     assert d.name == "events_certerror"
     assert d.submission_date_column == "submission_date"
@@ -125,13 +129,13 @@ def test_get_outcome_data_source():
 
 def test_outcome_unknown_data_source():
     with pytest.raises(Exception):
-        ConfigLoader.get_outcome_data_source(
-            "fake_data_source", "networking", "firefox_desktop"
-        )
+        ConfigLoader.with_configs_from(
+            ["https://github.com/mozilla/metric-hub/tree/main/jetstream"]
+        ).get_outcome_data_source("fake_data_source", "networking", "firefox_desktop")
 
 
 def test_unknown_outcome_data_source():
     with pytest.raises(Exception):
-        ConfigLoader.get_outcome_data_source(
-            "fake_data_source", "fake_outcome", "firefox_desktop"
-        )
+        ConfigLoader.with_configs_from(
+            ["https://github.com/mozilla/metric-hub/tree/main/jetstream"]
+        ).get_outcome_data_source("fake_data_source", "fake_outcome", "firefox_desktop")
