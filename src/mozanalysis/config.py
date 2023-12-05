@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from typing import Optional
+from typing import List, Optional
 
 from jinja2 import UndefinedError
 
@@ -20,7 +20,6 @@ class _ConfigLoader:
     """
 
     config_collection: Optional[ConfigCollection] = None
-    jetstream_config_collection: Optional[ConfigCollection] = None
 
     @property
     def configs(self) -> ConfigCollection:
@@ -33,18 +32,18 @@ class _ConfigLoader:
         self._configs = self.config_collection
         return self._configs
 
-    @property
-    def jetstream_configs(self) -> ConfigCollection:
-        configs = getattr(self, "_jetstream_configs", None)
-        if configs:
-            return configs
+    def with_configs_from(
+        self, repo_urls: Optional[List[str]], is_private: bool = False
+    ) -> "_ConfigLoader":
+        """Load configs from another repository and merge with default configs."""
+        if not repo_urls:
+            return self
 
-        if self.jetstream_config_collection is None:
-            self.jetstream_config_collection = ConfigCollection.from_github_repo(
-                path="jetstream"
-            )
-        self._jetstream_configs = self.jetstream_config_collection
-        return self._jetstream_configs
+        config_collection = ConfigCollection.from_github_repos(
+            repo_urls=repo_urls, is_private=is_private
+        )
+        self.configs.merge(config_collection)
+        return self
 
     def get_metric(self, metric_slug: str, app_name: str):
         """Load a metric definition for the given app.
@@ -162,7 +161,7 @@ class _ConfigLoader:
                     return metric
             return None
 
-        outcome_spec = self.jetstream_configs.spec_for_outcome(
+        outcome_spec = self.configs.spec_for_outcome(
             slug=outcome_slug, platform=app_name
         )
         if not outcome_spec:
@@ -187,10 +186,10 @@ class _ConfigLoader:
             )
 
         # Functions used in templated metric definitions are defined both under
-        # `jetstream/` and at the top level.
-        # Merge these with functions under `jetstream/` taking precedence.
+        # a specific subfolder and at the top level.
+        # Merge these with functions under subfolders taking precedence.
         jinja_env = self.configs.get_env()
-        jinja_env.globals.update(self.jetstream_configs.get_env().globals)
+        jinja_env.globals.update(self.configs.get_env().globals)
 
         try:
             select_expr = jinja_env.from_string(
@@ -230,7 +229,7 @@ class _ConfigLoader:
                     return data_source
             return None
 
-        outcome_spec = self.jetstream_configs.spec_for_outcome(
+        outcome_spec = self.configs.spec_for_outcome(
             slug=outcome_slug, platform=app_name
         )
         if not outcome_spec:
