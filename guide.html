@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Guide &mdash; mozanalysis  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -124,19 +126,19 @@
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">start_date</span></code> is the <code class="docutils literal notranslate"><span class="pre">submission_date</span></code> of the first enrollment (<code class="docutils literal notranslate"><span class="pre">submission_date</span></code> is in UTC). If you intended to study one week’s worth of enrollments, then set <code class="docutils literal notranslate"><span class="pre">num_dates_enrollment=8</span></code>: Normandy experiments typically go live in the evening UTC-time, so 8 days of data is a better approximation than 7.</p>
-<p>We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you’re interested will already be in a metrics library, [Metric Hub](<a class="reference external" href="https://github.com/mozilla/metric-hub">https://github.com/mozilla/metric-hub</a>). If not, then you can define your own - see <a class="reference internal" href="api/metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.metrics.Metric()</span></code></a> for examples - and ideally submit a PR to add them to Metric Hub for the next experiment. To load a Metric from Metric Hub, for example:</p>
-<blockquote>
-<div><p>from mozanalysis.config import ConfigLoader
-active_hours = ConfigLoader.get_metric(slug=”active_hours”, app_name=”firefox_desktop”)</p>
-</div></blockquote>
-<p>In this example, we’ll compute four metrics from Metric Hub:</p>
+<p>We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you’re interested will already be in a metrics library, <a class="reference external" href="https://github.com/mozilla/metric-hub">metric-hub</a>. If not, then you can define your own—see <a class="reference internal" href="api/metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">mozanalysis.metrics.Metric</span></code></a> for examples—and ideally submit a PR to add them to metric-hub for the next experiment. To load a Metric from metric-hub, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mozanalysis.config</span> <span class="kn">import</span> <span class="n">ConfigLoader</span>
+<span class="n">active_hours</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="n">slug</span><span class="o">=</span><span class="s2">&quot;active_hours&quot;</span><span class="p">,</span> <span class="n">app_name</span><span class="o">=</span><span class="s2">&quot;firefox_desktop&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, we’ll compute four metrics from metric-hub:</p>
 <ul class="simple">
 <li><p>active hours</p></li>
 <li><p>uri count</p></li>
 <li><p>ad clicks</p></li>
 <li><p>search count</p></li>
 </ul>
-<p>As it happens, the first three metrics all come from the <code class="docutils literal notranslate"><span class="pre">clients_daily</span></code> dataset, whereas “search count” comes from <code class="docutils literal notranslate"><span class="pre">search_clients_daily</span></code>. These details are taken care of in the [Metric Hub definitions](<a class="reference external" href="https://github.com/mozilla/metric-hub/tree/main/definitions">https://github.com/mozilla/metric-hub/tree/main/definitions</a>) so that we don’t have to think about them here.</p>
+<p>As it happens, the first three metrics all come from the <code class="docutils literal notranslate"><span class="pre">clients_daily</span></code> dataset, whereas “search count” comes from <code class="docutils literal notranslate"><span class="pre">search_clients_daily</span></code>. These details are taken care of in the <a class="reference external" href="https://github.com/mozilla/metric-hub/tree/main/definitions">metric-hub definitions</a> so that we don’t have to think about them here.</p>
 <p>A metric must be computed over some <cite>analysis window</cite>, a period of time defined with respect to the enrollment date. We could use <a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_single_window_data" title="mozanalysis.experiment.Experiment.get_single_window_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.experiment.Experiment.get_single_window_data()</span></code></a> to compute our metrics over a specific analysis window. But here, let’s create time series data: let’s have an analysis window for each of the first three weeks of the experiment, and measure the data for each of these analysis windows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ts_res</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get_time_series_data</span><span class="p">(</span>
     <span class="n">bq_context</span><span class="o">=</span><span class="n">bq_context</span><span class="p">,</span>
@@ -152,7 +154,7 @@ active_hours = ConfigLoader.get_metric(slug=”active_hours”, app_name=”fire
 </pre></div>
 </div>
 <p>The first two arguments to <a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data" title="mozanalysis.experiment.Experiment.get_time_series_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.experiment.Experiment.get_time_series_data()</span></code></a> should be clear by this point. <code class="docutils literal notranslate"><span class="pre">last_date_full_data</span></code> is the last date for which we want to use data. For a currently-running experiment, it would typically be yesterday’s date (we have incomplete data for incomplete days!).</p>
-<p>Metrics are pulled in from [metric-hub](<a class="reference external" href="https://github.com/mozilla/metric-hub">https://github.com/mozilla/metric-hub</a>) based on the provided metric slugs.</p>
+<p>Metrics are pulled in from <a class="reference external" href="https://github.com/mozilla/metric-hub">metric-hub</a> based on the provided metric slugs.</p>
 <p><code class="docutils literal notranslate"><span class="pre">time_series_period</span></code> can be <code class="docutils literal notranslate"><span class="pre">'daily'</span></code>, <code class="docutils literal notranslate"><span class="pre">'weekly'</span></code> or <code class="docutils literal notranslate"><span class="pre">'28_day'</span></code>. A <code class="docutils literal notranslate"><span class="pre">'weekly'</span></code> time series neatly sidesteps/masks weekly seasonality issues: most of the experiment subjects will enroll within a day of the experiment launching - typically a Tuesday, leading to <code class="docutils literal notranslate"><span class="pre">'daily'</span></code> time series reflecting a non-uniform convolution of the metrics’ weekly seasonalities with the uneven enrollment numbers across the week.</p>
 <p><a class="reference internal" href="api/experiment.html#mozanalysis.experiment.Experiment.get_time_series_data" title="mozanalysis.experiment.Experiment.get_time_series_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mozanalysis.experiment.Experiment.get_time_series_data()</span></code></a> returns a <a class="reference internal" href="api/experiment.html#mozanalysis.experiment.TimeSeriesResult" title="mozanalysis.experiment.TimeSeriesResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">mozanalysis.experiment.TimeSeriesResult</span></code></a> object, which can return DataFrames keyed by the start of their analysis windows (measured in days after enrollment):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ts_res</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
