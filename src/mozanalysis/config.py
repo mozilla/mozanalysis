@@ -65,7 +65,7 @@ class _ConfigLoader:
             .from_string(metric_definition.select_expression)
             .render(),
             friendly_name=metric_definition.friendly_name,
-            description=metric_definition.friendly_name,
+            description=metric_definition.description,
             data_source=self.get_data_source(
                 metric_definition.data_source.name, app_name
             ),
