@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from typing import List, Optional
+from dataclasses import dataclass
 
 from jinja2 import UndefinedError
 
@@ -10,6 +11,8 @@ from metric_config_parser.config import ConfigCollection
 from metric_config_parser.outcome import OutcomeSpec
 from metric_config_parser.data_source import DataSourceDefinition
 from metric_config_parser.metric import MetricDefinition
+
+METRIC_HUB_JETSTREAM_REPO = "https://github.com/mozilla/metric-hub/tree/main/jetstream"
 
 
 class _ConfigLoader:
@@ -153,63 +156,37 @@ class _ConfigLoader:
         """
         from mozanalysis.metrics import Metric
 
-        def _get_metric_definition(
-            spec: OutcomeSpec, slug: str
-        ) -> Optional[MetricDefinition]:
-            for m_slug, metric in spec.metrics.items():
-                if m_slug == slug:
-                    return metric
-            return None
+        if not self.configs.outcomes:
+            self.with_configs_from([METRIC_HUB_JETSTREAM_REPO])
 
         outcome_spec = self.configs.spec_for_outcome(
             slug=outcome_slug, platform=app_name
         )
         if not outcome_spec:
             raise Exception(f"Could not find definition for outcome {outcome_slug}")
-        metric_definition = _get_metric_definition(outcome_spec, metric_slug)
+
+        metric_definition = outcome_spec.metrics.get(metric_slug)
         if metric_definition is None:
             raise Exception(
                 f"Could not find definition for metric {metric_slug}"
                 + f" in outcome {outcome_slug}"
             )
 
-        # Data source associated with the metric can either be defined in the outcome
-        # or in the general definition file for the app.
-        # Outcome definitions take precedence.
-        try:
-            data_source = self.get_outcome_data_source(
-                metric_definition.data_source.name, outcome_slug, app_name
-            )
-        except Exception:
-            data_source = self.get_data_source(
-                metric_definition.data_source.name, app_name
-            )
+        @dataclass
+        class MinimalConfiguration:
+            app_name: str
 
-        # Functions used in templated metric definitions are defined both under
-        # a specific subfolder and at the top level.
-        # Merge these with functions under subfolders taking precedence.
-        jinja_env = self.configs.get_env()
-        jinja_env.globals.update(self.configs.get_env().globals)
-
-        try:
-            select_expr = jinja_env.from_string(
-                metric_definition.select_expression
-            ).render()
-        except UndefinedError as e:
-            if "parameters" in str(e):
-                raise NotImplementedError(
-                    "Parametrized outcome metrics are not supported"
-                )
-            else:
-                raise
+        conf = MinimalConfiguration(app_name)
+        summaries = metric_definition.resolve(outcome_spec, conf, self.configs)
+        metric = summaries[0].metric
 
         return Metric(
-            name=metric_definition.name,
-            select_expr=select_expr,
-            friendly_name=metric_definition.friendly_name,
-            description=metric_definition.friendly_name,
-            data_source=data_source,
-            bigger_is_better=metric_definition.bigger_is_better,
+            name=metric.name,
+            select_expr=metric.select_expression,
+            friendly_name=metric.friendly_name,
+            description=metric.description,
+            data_source=metric.data_source,
+            bigger_is_better=metric.bigger_is_better,
         )
 
     def get_outcome_data_source(
@@ -221,21 +198,17 @@ class _ConfigLoader:
         """
         from mozanalysis.metrics import DataSource
 
-        def _get_data_source_definition(
-            spec: OutcomeSpec, slug: str
-        ) -> Optional[DataSourceDefinition]:
-            for ds_slug, data_source in spec.data_sources.definitions.items():
-                if ds_slug == slug:
-                    return data_source
-            return None
+        if not self.configs.outcomes:
+            self.with_configs_from([METRIC_HUB_JETSTREAM_REPO])
 
         outcome_spec = self.configs.spec_for_outcome(
             slug=outcome_slug, platform=app_name
         )
         if not outcome_spec:
             raise Exception(f"Could not find definition for outcome {outcome_slug}")
-        data_source_definition = _get_data_source_definition(
-            outcome_spec, data_source_slug
+
+        data_source_definition = outcome_spec.data_sources.definitions.get(
+            data_source_slug
         )
         if data_source_definition is None:
             raise Exception(
