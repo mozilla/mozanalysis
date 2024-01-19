@@ -5,12 +5,7 @@
 from typing import List, Optional
 from dataclasses import dataclass
 
-from jinja2 import UndefinedError
-
 from metric_config_parser.config import ConfigCollection
-from metric_config_parser.outcome import OutcomeSpec
-from metric_config_parser.data_source import DataSourceDefinition
-from metric_config_parser.metric import MetricDefinition
 
 METRIC_HUB_JETSTREAM_REPO = "https://github.com/mozilla/metric-hub/tree/main/jetstream"
 
