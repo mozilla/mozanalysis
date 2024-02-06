@@ -26,7 +26,7 @@ def mock_today(monkeypatch):
         def today(cls):
             return datetime.date(2023, 12, 31)
 
-    monkeypatch.setattr(datetime, "date", MockDate)
+    monkeypatch.setattr(sample_size, "date", MockDate)
 
 
 @pytest.fixture
@@ -171,13 +171,104 @@ def test_sample_sizing_init(mock_today, mock_firefox_release_dates, capsys):
     )
 
 
-def test_sample_sizing_no_end_date(mock_today, mock_firefox_release_dates):
-    pass
+def test_sample_sizing_no_end_date(mock_today, mock_firefox_release_dates, capsys):
+    # "today" is 2023-12-31
+    s = SampleSizing(
+        experiment_name="test",
+        bq_context="bqcontext",
+        metrics=[uri_count],
+        targets=[regular_users_v3],
+        n_days_observation_max=7,
+        n_days_enrollment=3,
+        n_days_launch_after_version_release=5,
+        end_date=None,
+        alpha=0.02,
+        power=0.8,
+        outlier_percentile=0.99,
+        sample_rate=0.05,
+    )
+
+    assert s.end_date == None
+    assert s.total_historical_period_days == 15
+    assert s.min_major_version == 101
+    assert s.min_major_version_date == "2023-12-07"
+    assert s.enrollment_start_date == "2023-12-12"
+
+    # Check text printed to stdout
+    captured = capsys.readouterr()
+    printed = captured.out.split("\n\n")
+
+    assert "version 101 released on 2023-12-07" in printed[0]
+    assert "start on 2023-12-12" in printed[0]
 
 
-def test_sample_sizing_late_end_date(mock_today, mock_firefox_release_dates):
-    pass
+def test_sample_sizing_late_end_date(mock_today, mock_firefox_release_dates, capsys):
+    # "today" is 2023-12-31
+    s = SampleSizing(
+        experiment_name="test",
+        bq_context="bqcontext",
+        metrics=[uri_count],
+        targets=[regular_users_v3],
+        n_days_observation_max=7,
+        n_days_enrollment=3,
+        n_days_launch_after_version_release=5,
+        end_date="2024-01-05",
+        alpha=0.02,
+        power=0.8,
+        outlier_percentile=0.99,
+        sample_rate=0.05,
+    )
+
+    assert s.end_date == "2024-01-05"
+    assert s.min_major_version == 101
+    assert s.min_major_version_date == "2023-12-07"
+    assert s.enrollment_start_date == "2023-12-12"
+
+    # Check text printed to stdout
+    captured = capsys.readouterr()
+    assert not captured.err
+    printed = captured.out.split("\n\n")
+
+    assert "end date 2024-01-05" in printed[0]
+    assert "latest feasible date 2023-12-29" in printed[0]
+    assert "Using 2023-12-29" in printed[0]
+
+    assert "version 101 released on 2023-12-07" in printed[1]
+    assert "start on 2023-12-12" in printed[1]
 
 
-def test_sample_sizing_no_sampling(mock_today, mock_firefox_release_dates):
-    pass
+def test_sample_sizing_no_sampling(mock_today, mock_firefox_release_dates, capsys):
+    # "today" is 2023-12-31
+    s = SampleSizing(
+        experiment_name="test",
+        bq_context="bqcontext",
+        metrics=[uri_count],
+        targets=[regular_users_v3],
+        n_days_observation_max=7,
+        n_days_enrollment=3,
+        n_days_launch_after_version_release=5,
+        end_date="2023-12-15",
+        alpha=0.02,
+        power=0.8,
+        outlier_percentile=0.99,
+        sample_rate=0,
+    )
+
+    assert s.sample_rate == 0
+
+    assert len(s.targets) == 2
+    assert s.targets[0] == regular_users_v3
+    t = s.targets[1]
+    assert "browser_version_info.major_version >= 100" in t.select_expr
+    assert "sample_id" not in t.select_expr
+
+    # Check text printed to stdout
+    captured = capsys.readouterr()
+    assert not captured.err
+    printed = captured.out.split("\n\n")
+
+    assert "sampled at a rate" not in printed[0]
+
+    target_str = printed[1].split("\n")
+    assert "(browser_version_info.major_version >= 100)" in target_str[2]
+    assert "sample_id" not in target_str[2]

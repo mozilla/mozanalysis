@@ -640,8 +640,8 @@ class SampleSizing:
         if end_date > latest_feasible_date:
             print(
                 f"\nRequested end date {end_date.isoformat()} is later than",
-                f" the latest feasible date {latest_feasible_date.isoformat()}.",
-                f" Using {latest_feasible_date.isoformat()} as the end date.",
+                f"the latest feasible date {latest_feasible_date.isoformat()}.",
+                f"Using {latest_feasible_date.isoformat()} as the end date.",
             )
             end_date = latest_feasible_date
         start_date_str = (
