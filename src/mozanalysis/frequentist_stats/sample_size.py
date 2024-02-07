@@ -525,8 +525,8 @@ def get_firefox_release_dates() -> Dict[int, str]:
 ### - input list of durations
 ### - adapt for Android (cf cross-platform experiment)
 ### - defaults for display highlighting?
-### - update empirical sizing to work with new version
 ### - tests
+### - test coverage for get_historical_..._data
 
 
 class SampleSizing:
@@ -604,6 +604,8 @@ class SampleSizing:
             + n_days_enrollment
             + n_days_observation_max
         )
+        # Will be set after pulling data
+        self._population_size = None
 
         # Sets self.min_major_version, self.min_major_version_date
         self._find_latest_feasible_historical_version()
@@ -675,6 +677,80 @@ class SampleSizing:
         print("\nTargeting population matching all of:")
         for t in self.targets:
             print(t.select_expr)
+
+    @property
+    def population_size(self) -> int:
+        """Get the size of the full eligible population defined by the targeting (ignoring sampling)
+
+        This is unset until a sample size calculation is run which results in
+        the data getting pulled.
+        """
+        if not self._population_size:
+            print("Population size will be set on running a sample size calculation")
+        return self._population_size
+
+    def _set_population_size(self, pop_size: int) -> None:
+        """Set the full population size based on the output of a sample size
+        calculation.
+
+        Makes adjustment for sampling.
+
+        Prints a message displaying the population size.
+        """
+        sampling_str = ""
+        if self.sample_rate:
+            pop_size = int(pop_size / self.sample_rate)
+            sampling_str = f", sampled at a rate of {self.sample_rate:.0%}"
+        self._population_size = pop_size
+
+        print(f"Eligible population size: {pop_size:,}{sampling_str}")
+
+    def get_historical_single_window_data(
+        self, n_days_observation: int
+    ) -> pd.DataFrame:
+        """Get single window data for the historical period and population
+        represented by the date and segment constraints.
+
+        n_days_observation: number of days the analysis period should cover.
+
+        Returns a DataFrame with 1 row per client.
+        """
+        ht = HistoricalTarget(
+            experiment_name=self.experiment_name,
+            start_date=self.enrollment_start_date,
+            num_dates_enrollment=self.n_days_enrollment,
+            analysis_length=n_days_observation,
+        )
+
+        return ht.get_single_window_data(
+            bq_context=self.bq_context,
+            metric_list=self.metrics,
+            target_list=self.targets,
+        )
+
+    def get_historical_time_series_data(
+        self, n_days_observation: int
+    ) -> TimeSeriesResult:
+        """Get time series data for the historical period and population
+        represented by the date and segment constraints.
+
+        n_days_observation: number of days the analysis period should cover.
+
+        Returns a TimeSeriesResult.
+        """
+        ht = HistoricalTarget(
+            experiment_name=self.experiment_name,
+            start_date=self.enrollment_start_date,
+            num_dates_enrollment=self.n_days_enrollment,
+            analysis_length=n_days_observation,
+        )
+
+        return ht.get_time_series_data(
+            bq_context=self.bq_context,
+            metric_list=self.metrics,
+            time_series_period="weekly",
+            target_list=self.targets,
+        )
 
     def sample_sizes_for_duration(
         self, rel_effect_sizes: List[float], n_days_observation: int = None
@@ -849,42 +925,12 @@ class SampleSizing:
         - eligible_population_size: number of clients included by targeting
         - sample_rate: sampling rate applied to target population
         """
-        ht = HistoricalTarget(
-            experiment_name=self.experiment_name,
-            start_date=self.enrollment_start_date,
-            num_dates_enrollment=self.n_days_enrollment,
-            analysis_length=self.n_days_observation_max,
-        )
-
-        tsdata = ht.get_time_series_data(
-            bq_context=self.bq_context,
-            metric_list=self.metrics,
-            target_list=self.targets,
-            time_series_period="weekly",
-        )
-
-        weekly_means, pop_size = tsdata.get_aggregated_data(
-            bq_context=self.bq_context,
-            metric_list=self.metrics,
-            aggregate_function="AVG",
-        )
-
-        weekly_sd, _ = tsdata.get_aggregated_data(
-            bq_context=self.bq_context,
-            metric_list=self.metrics,
-            aggregate_function="STDDEV",
-        )
-
-        sampling_str = ""
-        if self.sample_rate:
-            pop_size = int(pop_size / self.sample_rate)
-            sampling_str = f"  (sampled at a rate of {self.sample_rate:.0%})"
-
         print(
             f"\nRunning empirical sizing for {self.n_days_enrollment} days enrollment",
             f"and {self.n_days_observation_max} days observation.",
-            f"\nEligible population size: {pop_size:,}{sampling_str}",
         )
+
+        tsdata = self.get_historical_time_series_data(self.n_days_observation_max)
 
         sizing_results = empirical_effect_size_sample_size_calc(
             res=tsdata,
@@ -895,24 +941,13 @@ class SampleSizing:
             alpha=self.alpha,
         )
 
-        sizing_df = self.format_empirical_sizing_results(sizing_results, weekly_means)
+        self._set_population_size(
+            list(sizing_results.values())[0]["number_of_clients_targeted"]
+        )
 
-        return {
-            "sizing": sizing_df,
-            "means": weekly_means,
-            "stdevs": weekly_sd,
-            "eligible_population_size": pop_size,
-            "sample_rate": self.sample_rate,
-        }
-
-    def format_empirical_sizing_results(self, er, wm):
-        """Convert the dict returned by `empirical_effect_size_sample_size_calc` to a DF.
-
-        Computes relative empirical effect sizes by normalizing effect size (selected as
-        one of the week-to-week differences) by the corresponding base week.
-        """
+        # Flatten nested dict output and convert to DF
         formatted_results = {}
-        for m, r in er.items():
+        for m, r in sizing_results.items():
             metric_result = {}
             for k, v in r.items():
                 if isinstance(v, dict):
@@ -924,37 +959,22 @@ class SampleSizing:
                     metric_result[k] = v
             formatted_results[m] = metric_result
 
-        df = pd.DataFrame.from_dict(formatted_results, orient="index")
-        df["effect_size_base_period"] = df["effect_size_period"] - 7
-        df = (
-            df.set_index("effect_size_base_period", append=True)
-            .merge(
-                (
-                    wm.rename(
-                        columns={"analysis_window_start": "effect_size_base_period"}
-                    )
-                    .set_index("effect_size_base_period")
-                    .stack()
-                    .to_frame(name="metric_value")
-                    .reorder_levels([1, 0])
-                ),
-                left_index=True,
-                right_index=True,
+        sizing_df = pd.DataFrame.from_dict(formatted_results, orient="index")
+        if self.sample_rate:
+            sizing_df["population_percent_per_branch"] = (
+                sizing_df["population_percent_per_branch"] * self.sample_rate
             )
-            .droplevel(-1)
-        )
 
-        df["rel_effect_size"] = df["effect_size_value"] / df["metric_value"]
-        df["population_percent_per_branch"] = (
-            df["population_percent_per_branch"] * self.sample_rate
-        )
-        return df[
+        return sizing_df[
             [
-                "rel_effect_size",
+                "relative_effect_size",
                 "effect_size_value",
-                "metric_value",
+                "mean_value",
                 "std_dev_value",
                 "sample_size_per_branch",
                 "population_percent_per_branch",
+                "effect_size_period",
+                "mean_period",
+                "std_dev_period",
             ]
         ]
