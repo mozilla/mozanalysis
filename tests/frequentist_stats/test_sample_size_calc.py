@@ -6,6 +6,7 @@ import datetime
 
 import numpy as np
 import pandas as pd
+from pandas.io.formats.style import Styler
 import pytest
 
 from mozanalysis.frequentist_stats import sample_size
@@ -123,6 +124,24 @@ class TestSampleSizing:
 
         monkeypatch.setattr(
             sample_size, "get_firefox_release_dates", _mock_release_dates
+        )
+
+    @pytest.fixture
+    def sample_sizer(self, mock_historical_target):
+        # Default instance to use for testing sample size calculations
+        return SampleSizing(
+            experiment_name="test",
+            bq_context="bqcontext",
+            metrics=[uri_count, active_hours],
+            targets=[regular_users_v3],
+            n_days_observation_max=7,
+            n_days_enrollment=3,
+            n_days_launch_after_version_release=5,
+            end_date="2023-12-15",
+            alpha=0.02,
+            power=0.8,
+            outlier_percentile=0.99,
+            sample_rate=0.05,
         )
 
     def test_init(self, capsys):
@@ -288,28 +307,10 @@ class TestSampleSizing:
         assert "(browser_version_info.major_version >= 100)" in target_str[2]
         assert "sample_id" not in target_str[2]
 
-    def test_empirical_sizing(
-        self, mock_today, mock_firefox_release_dates, mock_historical_target, capsys
-    ):
-        s = SampleSizing(
-            experiment_name="test",
-            bq_context="bqcontext",
-            metrics=[uri_count, active_hours],
-            targets=[regular_users_v3],
-            n_days_observation_max=7,
-            n_days_enrollment=3,
-            n_days_launch_after_version_release=5,
-            end_date="2023-12-15",
-            alpha=0.02,
-            power=0.8,
-            outlier_percentile=0.99,
-            sample_rate=0.05,
-        )
+    def test_empirical_sizing(self, sample_sizer, capsys):
+        df = sample_sizer.empirical_sizing()
 
-        # Clear buffer
-        capsys.readouterr()
-
-        df = s.empirical_sizing()
+        assert isinstance(df, pd.DataFrame)
         assert df.index.to_list() == ["uri_count", "active_hours"]
         expected = {
             "relative_effect_size": 0.6,
@@ -335,6 +336,25 @@ class TestSampleSizing:
         assert "population size: 20,000" in printed[1]
         assert "rate of 5%" in printed[1]
 
-        assert s.population_size == 20000
+        assert sample_sizer.population_size == 20000
         # Retrieving population size shouldn't generate any printed message
         assert not capsys.readouterr().out
+
+    def test_empirical_sizing_with_styler(self, sample_sizer):
+        sdf = sample_sizer.empirical_sizing(style=True)
+        assert isinstance(sdf, Styler)
+
+    def test_style_empirical_sizing(self, sample_sizer, capsys):
+        df = sample_sizer.empirical_sizing()
+        # Clear buffer
+        capsys.readouterr()
+
+        styled = sample_sizer.style_empirical_sizing_result(df)
+        assert isinstance(styled, Styler)
+
+        assert styled.data.index.to_list() == ["uri_count", "active_hours"]
+        assert styled.data.shape[1] == 6
+
+        printed = capsys.readouterr().out
+        assert "population size: 20,000" in printed
+        assert "rate of 5%" in printed

@@ -20,6 +20,7 @@ from statsmodels.stats.power import tt_ind_solve_power, zt_ind_solve_power
 from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
 import numpy as np
 import pandas as pd
+from pandas.io.formats.style import Styler
 import matplotlib.pyplot as plt
 import requests
 
@@ -679,36 +680,37 @@ class SampleSizing:
 
     @property
     def population_size(self) -> int:
-        """Get the size of the full eligible population defined by the targeting (ignoring sampling)
+        """Get the size of the full eligible population defined by the targeting (ignoring sampling).
 
-        This is unset until a sample size calculation is run which results in
-        the data getting pulled.
+        This is unset until a sample size calculation is run which results in the data
+            getting pulled.
         """
         if not self._population_size:
             print("Population size will be set on running a sample size calculation")
         return self._population_size
 
+    def _print_population_size(self) -> None:
+        """Prints a message displaying population size."""
+        msg = f"Eligible population size: {self._population_size:,}"
+        if self.sample_rate:
+            msg += f", sampled at a rate of {self.sample_rate:.0%}"
+
+        print(msg)
+
     def _set_population_size(self, pop_size: int) -> None:
-        """Set the full population size based on the output of a sample size
-        calculation.
+        """Set the full population size based on the output of a sample size calculation.
 
         Makes adjustment for sampling.
-
-        Prints a message displaying the population size.
         """
-        sampling_str = ""
         if self.sample_rate:
             pop_size = int(pop_size / self.sample_rate)
-            sampling_str = f", sampled at a rate of {self.sample_rate:.0%}"
         self._population_size = pop_size
-
-        print(f"Eligible population size: {pop_size:,}{sampling_str}")
 
     def get_historical_single_window_data(
         self, n_days_observation: int
     ) -> pd.DataFrame:
-        """Get single window data for the historical period and population
-        represented by the date and segment constraints.
+        """Get single window data for the historical period and population represented by
+            the date and segment constraints.
 
         n_days_observation: number of days the analysis period should cover.
 
@@ -730,8 +732,8 @@ class SampleSizing:
     def get_historical_time_series_data(
         self, n_days_observation: int
     ) -> TimeSeriesResult:
-        """Get time series data for the historical period and population
-        represented by the date and segment constraints.
+        """Get time series data for the historical period and population represented by
+            the date and segment constraints.
 
         n_days_observation: number of days the analysis period should cover.
 
@@ -910,18 +912,22 @@ class SampleSizing:
 
         display(disp)
 
-    def empirical_sizing(self, quantile: float = 0.9) -> pd.DataFrame:
+    def empirical_sizing(
+        self, quantile: float = 0.9, style: bool = False
+    ) -> Union[pd.DataFrame, Styler]:
         """Compute empirical effect sizes based on week-to-week fluctuations over the maximum observation period.
 
         Currently no trimming is applied.
 
         quantile: quantile level to use to select empirical effect sizes and standard deviations.
 
-        Returns a DataFrame with 1 row for each metric and columns containing:
-        - relative effect size
-        - selected values of effect size (difference), baseline mean and standard deviation
-        - sample size and eligible population proportion (adjusted for sampling) per branch
-        - index of periods for which values were selected by empirical sizing methodology
+        If `style` is False, returns a DataFrame with 1 row for each metric and columns containing:
+          - relative effect size
+          - selected values of effect size (difference), baseline mean and standard deviation
+          - sample size and eligible population proportion (adjusted for sampling) per branch
+          - index of periods for which values were selected by empirical sizing methodology
+        If `style` is True, returns a pandas Styler wrapping this DataFrame which will pretty-print
+            the results when displayed.
         """
         print(
             f"\nRunning empirical sizing for {self.n_days_enrollment} days enrollment",
@@ -942,6 +948,9 @@ class SampleSizing:
         self._set_population_size(
             list(sizing_results.values())[0]["number_of_clients_targeted"]
         )
+        if not style:
+            # If using styling, message gets printed there instead
+            self._print_population_size()
 
         # Flatten nested dict output and convert to DF
         formatted_results = {}
@@ -962,8 +971,7 @@ class SampleSizing:
             sizing_df["population_percent_per_branch"] = (
                 sizing_df["population_percent_per_branch"] * self.sample_rate
             )
-
-        return sizing_df[
+        sizing_df = sizing_df[
             [
                 "relative_effect_size",
                 "effect_size_value",
@@ -976,3 +984,41 @@ class SampleSizing:
                 "std_dev_period",
             ]
         ]
+
+        if style:
+            return self.style_empirical_sizing_result(sizing_df)
+        return sizing_df
+
+    def style_empirical_sizing_result(
+        self, empirical_sizing_df: pd.DataFrame
+    ) -> Styler:
+        """Pretty-print the DF returned by `empirical_sizing()`.
+
+        Returns a pandas Styler object.
+        """
+        self._print_population_size()
+        print()
+
+        return (
+            empirical_sizing_df[
+                [
+                    "relative_effect_size",
+                    "population_percent_per_branch",
+                    "sample_size_per_branch",
+                    "effect_size_value",
+                    "mean_value",
+                    "std_dev_value",
+                ]
+            ]
+            .rename(
+                columns={
+                    "relative_effect_size": "rel_effect_size",
+                    "population_percent_per_branch": "branch_pop_pct",
+                    "sample_size_per_branch": "branch_sample_size",
+                }
+            )
+            .style.format(thousands=",", precision=4)
+            .format(subset="branch_sample_size", thousands=",", precision=0)
+            .format("{:.2f}%", subset="branch_pop_pct")
+            .format("{:.2%}", subset="rel_effect_size")
+        )
