@@ -526,7 +526,6 @@ def get_firefox_release_dates() -> Dict[int, str]:
 ### - adapt for Android (cf cross-platform experiment)
 ### - defaults for display highlighting?
 ### - tests
-### - test coverage for get_historical_..._data
 
 
 class SampleSizing:
@@ -911,19 +910,18 @@ class SampleSizing:
 
         display(disp)
 
-    def empirical_sizing(self, quantile=0.9):
+    def empirical_sizing(self, quantile: float = 0.9) -> pd.DataFrame:
         """Compute empirical effect sizes based on week-to-week fluctuations over the maximum observation period.
 
         Currently no trimming is applied.
 
         quantile: quantile level to use to select empirical effect sizes and standard deviations.
 
-        Returns a dict containing:
-        - sizing: DF listing relative effect size, summary stats and sample sizes for each metric (rows)
-        - means: DF of means for each observation week (rows) across metrics (columns)
-        - stdevs: DF of standard deviations for each observation week (rows) across metrics (columns)
-        - eligible_population_size: number of clients included by targeting
-        - sample_rate: sampling rate applied to target population
+        Returns a DataFrame with 1 row for each metric and columns containing:
+        - relative effect size
+        - selected values of effect size (difference), baseline mean and standard deviation
+        - sample size and eligible population proportion (adjusted for sampling) per branch
+        - index of periods for which values were selected by empirical sizing methodology
         """
         print(
             f"\nRunning empirical sizing for {self.n_days_enrollment} days enrollment",

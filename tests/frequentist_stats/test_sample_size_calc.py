@@ -310,16 +310,31 @@ class TestSampleSizing:
         capsys.readouterr()
 
         df = s.empirical_sizing()
-        # TODO:
-        # - check DF output
-        # - check population size message
+        assert df.index.to_list() == ["uri_count", "active_hours"]
+        expected = {
+            "relative_effect_size": 0.6,
+            "effect_size_value": 3,
+            "mean_value": 5,
+            "std_dev_value": 2,
+            "effect_size_period": 7,
+            "mean_period": 0,
+            "std_dev_period": 7,
+        }
+        for k, v in expected.items():
+            assert df.iloc[0][k] == v
+        np.testing.assert_allclose(df.iloc[0]["sample_size_per_branch"], 11, atol=0.5)
+        np.testing.assert_allclose(
+            df.iloc[0]["population_percent_per_branch"], 0.054, atol=0.001
+        )
 
-        capsys.readouterr()
+        printed = capsys.readouterr().out.strip().split("\n")
+        assert "empirical sizing" in printed[0]
+        assert "3 days enrollment" in printed[0]
+        assert "7 days observation" in printed[0]
+
+        assert "population size: 20,000" in printed[1]
+        assert "rate of 5%" in printed[1]
 
         assert s.population_size == 20000
+        # Retrieving population size shouldn't generate any printed message
         assert not capsys.readouterr().out
-
-        with pd.option_context("display.max_columns", None):
-            print()
-            print(df)
-        assert False
