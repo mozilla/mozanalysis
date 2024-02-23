@@ -1,9 +1,19 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+"""module for sample size calculations"""
 
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Optional, Hashable, Iterator
 from datetime import datetime
+from collections import UserDict
+from math import pi
+
+from scipy.stats import norm
+from statsmodels.stats.power import tt_ind_solve_power, zt_ind_solve_power
+from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 from mozanalysis.bq import BigQueryContext
 from mozanalysis.experiment import TimeSeriesResult
@@ -11,16 +21,6 @@ from mozanalysis.metrics import Metric
 from mozanalysis.segments import Segment
 from mozanalysis.sizing import HistoricalTarget
 from mozanalysis.utils import get_time_intervals
-
-from scipy.stats import norm
-from math import pi
-from statsmodels.stats.power import tt_ind_solve_power, zt_ind_solve_power
-from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from collections import UserDict
-from typing import Hashable, Iterator
 
 class SampleSizeResultsHolder(UserDict):
     """
@@ -44,7 +44,7 @@ class SampleSizeResultsHolder(UserDict):
         self._metrics = metrics
         self._params = params
         # create this attribute to hold only the results data
-        # this dict is what was returned from the sample size 
+        # this dict is what was returned from the sample size
         # methods historically
         self.results = {k:v for k,v in self.data.items() if k not in ['metrics', 'params']}
 
@@ -59,7 +59,7 @@ class SampleSizeResultsHolder(UserDict):
             the sample size method
         """
         return pd.DataFrame(self.results).transpose()
-    
+
     @staticmethod
     def make_friendly_name(ugly_name: str) -> str:
         """Turns a name into a friendly name
@@ -74,7 +74,8 @@ class SampleSizeResultsHolder(UserDict):
         """
         keep_all_lowercase = ["per", 'of']
         split_name = ugly_name.split("_")
-        split_name = [el[0].upper()+el[1:] if el not in keep_all_lowercase else el for el in split_name]
+        split_name = [el[0].upper()+el[1:] if el not in keep_all_lowercase
+                      else el for el in split_name]
         pretty_name = " ".join(split_name)
         return pretty_name
 
@@ -84,7 +85,9 @@ class SampleSizeResultsHolder(UserDict):
         Args:
             result_name (str): sample size method output to plot. Defaults to sample_size_per_branch
         """
-        nice_metric_names = {el.name:(el.friendly_name if hasattr(el, 'friendly_name') else self.make_friendly_name(el.name)) for el in self._metrics}
+        nice_metric_names = {el.name:(el.friendly_name if hasattr(el, 'friendly_name')
+                                      else self.make_friendly_name(el.name))
+                                      for el in self._metrics}
         nice_result = self.make_friendly_name(result_name)
         df = self.get_dataframe().rename(index=nice_metric_names)
         df[result_name].plot(kind='bar')
@@ -104,7 +107,7 @@ class SampleSizeResultsHolder(UserDict):
             object: value associated with key
         """
         return self.results[key]
-    
+
     def __iter__(self)->Iterator:
         """
         overwrite this dict method so that iterating through the dict with .keys(),
@@ -114,7 +117,7 @@ class SampleSizeResultsHolder(UserDict):
             Iterator: iterator associated with results data
         """
         return iter(self.results)
-    
+
     def __len__(self)->int:
         """
         overwrite dict method so the len() function returns length of key/value
@@ -249,7 +252,7 @@ def difference_of_proportions_sample_size_calc(
               'alpha':alpha,
               'power':power,
               'outlier_percentile':outlier_percentile}
-      
+
     return SampleSizeResultsHolder(results, metrics = metrics_list,
                                    params = params)
 
@@ -318,7 +321,7 @@ def z_or_t_ind_sample_size_calc(
               'outlier_percentile':outlier_percentile,
               'solver':solver,
               'test':test}
-      
+
     return SampleSizeResultsHolder(results, metrics = metrics_list,
                                    params = params)
 
@@ -517,7 +520,7 @@ def poisson_diff_solve_sample_size(
             'alpha':alpha,
             'power':power,
             'outlier_percentile':outlier_percentile}
-      
+   
     return SampleSizeResultsHolder(results, metrics = metrics_list,
                                    params = params)
 
