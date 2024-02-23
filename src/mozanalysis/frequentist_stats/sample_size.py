@@ -22,6 +22,7 @@ from mozanalysis.segments import Segment
 from mozanalysis.sizing import HistoricalTarget
 from mozanalysis.utils import get_time_intervals
 
+
 class SampleSizeResultsHolder(UserDict):
     """
     Object to hold results from different methods.  It extends
@@ -32,9 +33,9 @@ class SampleSizeResultsHolder(UserDict):
     a method for returning results as a dataframe
     """
     def __init__(self, *args,
-               metrics: dict=None,
-               params: dict=None,
-               **kwargs):
+                 metrics: dict = None,
+                 params: dict = None,
+                 **kwargs):
         """
         Args:
             metrics (dict, optional): _description_. Defaults to None.
@@ -46,15 +47,15 @@ class SampleSizeResultsHolder(UserDict):
         # create this attribute to hold only the results data
         # this dict is what was returned from the sample size
         # methods historically
-        self.results = {k:v for k,v in self.data.items() if k not in ['metrics', 'params']}
+        self.results = {k: v for k, v in self.data.items()
+                        if k not in ['metrics', 'params']}
 
     def get_dataframe(self) -> pd.DataFrame:
         """
         returns data as a dataframe rather than a dict
-        
 
         Returns:
-            (pd.DataFrame): dataframe of results 
+            (pd.DataFrame): dataframe of results
             The index is the metric and the columns are the outputs from
             the sample size method
         """
@@ -63,9 +64,8 @@ class SampleSizeResultsHolder(UserDict):
     @staticmethod
     def make_friendly_name(ugly_name: str) -> str:
         """Turns a name into a friendly name
-        by replacing underscores with spaces and 
-        capitlizing words other than ones like "per", "of", etc        
-
+        by replacing underscores with spaces and
+        capitlizing words other than ones like "per", "of", etc
         Args:
             ugly_name (str): name to make pretty
 
@@ -79,23 +79,26 @@ class SampleSizeResultsHolder(UserDict):
         pretty_name = " ".join(split_name)
         return pretty_name
 
-    def plot_results(self, result_name: str="sample_size_per_branch"):
+    def plot_results(self, result_name: str = "sample_size_per_branch"):
         """ plots the outputs of the sampling methods
 
         Args:
-            result_name (str): sample size method output to plot. Defaults to sample_size_per_branch
+            result_name (str): sample size method output to plot.
+            Defaults to sample_size_per_branch
         """
-        nice_metric_names = {el.name:(el.friendly_name if hasattr(el, 'friendly_name')
-                                      else self.make_friendly_name(el.name))
-                                      for el in self._metrics}
+        nice_metric_names = [el.friendly_name if hasattr(el, 'friendly_name')
+                             else self.make_friendly_name(el.name)
+                             for el in self._metrics]
+        nice_metric_map = {el.name: friendly_name for el, friendly_name
+                           in zip(self._metrics, nice_metric_names)}
         nice_result = self.make_friendly_name(result_name)
-        df = self.get_dataframe().rename(index=nice_metric_names)
+        df = self.get_dataframe().rename(index=nice_metric_map)
         df[result_name].plot(kind='bar')
         plt.ylabel(nice_result)
         plt.xlabel("Metric")
         plt.show()
 
-    def __getitem__(self, key: Hashable)-> object:
+    def __getitem__(self, key: Hashable) -> object:
         """
         overwrite the __getitem__ method that enables grabbing items with []
         so that only the keys associated with the results data are available
@@ -108,7 +111,7 @@ class SampleSizeResultsHolder(UserDict):
         """
         return self.results[key]
 
-    def __iter__(self)->Iterator:
+    def __iter__(self) -> Iterator:
         """
         overwrite this dict method so that iterating through the dict with .keys(),
         .values() and .items() will only return data associated with the results
@@ -118,7 +121,7 @@ class SampleSizeResultsHolder(UserDict):
         """
         return iter(self.results)
 
-    def __len__(self)->int:
+    def __len__(self) -> int:
         """
         overwrite dict method so the len() function returns length of key/value
         pairs associated with results
@@ -127,6 +130,7 @@ class SampleSizeResultsHolder(UserDict):
             int: length of results dict
         """
         return len(self.results)
+
 
 def sample_size_curves(
     df: pd.DataFrame,
@@ -249,12 +253,12 @@ def difference_of_proportions_sample_size_calc(
             "number_of_clients_targeted": len(df),
         }
     params = {'effect_size': effect_size,
-              'alpha':alpha,
-              'power':power,
-              'outlier_percentile':outlier_percentile}
+              'alpha': alpha,
+              'power': power,
+              'outlier_percentile': outlier_percentile}
 
-    return SampleSizeResultsHolder(results, metrics = metrics_list,
-                                   params = params)
+    return SampleSizeResultsHolder(results, metrics=metrics_list,
+                                   params=params)
 
 
 def z_or_t_ind_sample_size_calc(
@@ -316,14 +320,14 @@ def z_or_t_ind_sample_size_calc(
             "number_of_clients_targeted": len(df),
         }
     params = {'effect_size': effect_size,
-              'alpha':alpha,
-              'power':power,
-              'outlier_percentile':outlier_percentile,
-              'solver':solver,
-              'test':test}
+              'alpha': alpha,
+              'power': power,
+              'outlier_percentile': outlier_percentile,
+              'solver': solver,
+              'test': test}
 
-    return SampleSizeResultsHolder(results, metrics = metrics_list,
-                                   params = params)
+    return SampleSizeResultsHolder(results, metrics=metrics_list,
+                                   params=params)
 
 
 def empirical_effect_size_sample_size_calc(
@@ -517,12 +521,12 @@ def poisson_diff_solve_sample_size(
             "number_of_clients_targeted": len(df),
         }
     params = {'effect_size': effect_size,
-            'alpha':alpha,
-            'power':power,
-            'outlier_percentile':outlier_percentile}
-   
-    return SampleSizeResultsHolder(results, metrics = metrics_list,
-                                   params = params)
+              'alpha': alpha,
+              'power': power,
+              'outlier_percentile': outlier_percentile}
+
+    return SampleSizeResultsHolder(results, metrics=metrics_list,
+                                   params=params)
 
 
 def variable_enrollment_length_sample_size_calc(
