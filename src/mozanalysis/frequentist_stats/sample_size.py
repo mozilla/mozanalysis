@@ -19,7 +19,111 @@ from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from collections import UserDict
+from typing import Hashable, Iterator
 
+class SampleSizeResultsHolder(UserDict):
+    """
+    Object to hold results from different methods.  It extends
+    the dictionary objects so that users can interact with it 
+    with a dictionary with the same keys/values as before, making
+    it backward compatible.  The dictionary functionality is extended to include
+    additional attributes to hold metadata, a method for plotting results and
+    a method for returning results as a dataframe
+    """
+    def __init__(self, *args,
+               metrics: dict=None,
+               params: dict=None,
+               **kwargs):
+        """
+        Args:
+            metrics (dict, optional): _description_. Defaults to None.
+            params (dict, optional): _description_. Defaults to None.
+        """
+        super().__init__(*args, **kwargs)
+        self._metrics = metrics
+        self._params = params
+        # create this attribute to hold only the results data
+        # this dict is what was returned from the sample size 
+        # methods historically
+        self.results = {k:v for k,v in self.data.items() if k not in ['metrics', 'params']}
+
+    def get_dataframe(self) -> pd.DataFrame:
+        """
+        returns data as a dataframe rather than a dict
+        
+
+        Returns:
+            (pd.DataFrame): dataframe of results 
+            The index is the metric and the columns are the outputs from
+            the sample size method
+        """
+        return pd.DataFrame(self.results).transpose()
+    
+    @staticmethod
+    def make_friendly_name(ugly_name: str) -> str:
+        """Turns a name into a friendly name
+        by replacing underscores with spaces and 
+        capitlizing words other than ones like "per", "of", etc        
+
+        Args:
+            ugly_name (str): name to make pretty
+
+        Returns:
+            pretty_name (str): reformatted name
+        """
+        keep_all_lowercase = ["per", 'of']
+        split_name = ugly_name.split("_")
+        split_name = [el[0].upper()+el[1:] if el not in keep_all_lowercase else el for el in split_name]
+        pretty_name = " ".join(split_name)
+        return pretty_name
+
+    def plot_results(self, result_name: str="sample_size_per_branch"):
+        """ plots the outputs of the sampling methods
+
+        Args:
+            result_name (str): sample size method output to plot. Defaults to sample_size_per_branch
+        """
+        nice_metric_names = {el.name:(el.friendly_name if hasattr(el, 'friendly_name') else self.make_friendly_name(el.name)) for el in self._metrics}
+        nice_result = self.make_friendly_name(result_name)
+        df = self.get_dataframe().rename(index=nice_metric_names)
+        df[result_name].plot(kind='bar')
+        plt.ylabel(nice_result)
+        plt.xlabel("Metric")
+        plt.show()
+
+    def __getitem__(self, key: Hashable)-> object:
+        """
+        overwrite the __getitem__ method that enables grabbing items with []
+        so that only the keys associated with the results data are available
+
+        Args:
+            key (Hashable): key to retrieve
+
+        Returns:
+            object: value associated with key
+        """
+        return self.results[key]
+    
+    def __iter__(self)->Iterator:
+        """
+        overwrite this dict method so that iterating through the dict with .keys(),
+        .values() and .items() will only return data associated with the results
+
+        Returns:
+            Iterator: iterator associated with results data
+        """
+        return iter(self.results)
+    
+    def __len__(self)->int:
+        """
+        overwrite dict method so the len() function returns length of key/value
+        pairs associated with results
+
+        Returns:
+            int: length of results dict
+        """
+        return len(self.results)
 
 def sample_size_curves(
     df: pd.DataFrame,
@@ -141,7 +245,13 @@ def difference_of_proportions_sample_size_calc(
             "population_percent_per_branch": pop_percent,
             "number_of_clients_targeted": len(df),
         }
-    return results
+    params = {'effect_size': effect_size,
+              'alpha':alpha,
+              'power':power,
+              'outlier_percentile':outlier_percentile}
+      
+    return SampleSizeResultsHolder(results, metrics = metrics_list,
+                                   params = params)
 
 
 def z_or_t_ind_sample_size_calc(
@@ -202,7 +312,15 @@ def z_or_t_ind_sample_size_calc(
             "population_percent_per_branch": pop_percent,
             "number_of_clients_targeted": len(df),
         }
-    return results
+    params = {'effect_size': effect_size,
+              'alpha':alpha,
+              'power':power,
+              'outlier_percentile':outlier_percentile,
+              'solver':solver,
+              'test':test}
+      
+    return SampleSizeResultsHolder(results, metrics = metrics_list,
+                                   params = params)
 
 
 def empirical_effect_size_sample_size_calc(
@@ -395,7 +513,13 @@ def poisson_diff_solve_sample_size(
             "population_percent_per_branch": pop_percent,
             "number_of_clients_targeted": len(df),
         }
-    return results
+    params = {'effect_size': effect_size,
+            'alpha':alpha,
+            'power':power,
+            'outlier_percentile':outlier_percentile}
+      
+    return SampleSizeResultsHolder(results, metrics = metrics_list,
+                                   params = params)
 
 
 def variable_enrollment_length_sample_size_calc(

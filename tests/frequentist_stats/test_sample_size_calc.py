@@ -74,3 +74,29 @@ def test_empirical_effect_size_sample_size_calc(fake_ts_result):
         np.testing.assert_allclose(
             r["population_percent_per_branch"], 0.844, atol=0.001
         )
+
+
+def test_results_holder():
+    df = pd.DataFrame(
+        {
+            search_clients_daily.name: np.random.normal(size=100),
+            uri_count.name: np.random.normal(size=100),
+        }
+    )
+
+    metrics = [search_clients_daily, uri_count]
+    res = z_or_t_ind_sample_size_calc(df, metrics)
+    metric_names = set([el.name for el in metrics])
+
+    # set should only have 2 values: "search_clients_daily" "uri_count"
+    assert len(res) == len(metric_names)
+    assert set(res.keys()) == metric_names
+    assert len(res.values()) == len(metric_names)
+    iter_keys = []
+    for key, _ in res.items():
+        iter_keys.append(key)
+    assert len(iter_keys) == len(metric_names)
+    assert set(iter_keys) == metric_names
+
+    # make sure the  get_dataframe isn't broken
+    _ = res.get_dataframe()
