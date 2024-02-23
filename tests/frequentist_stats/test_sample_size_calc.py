@@ -100,3 +100,4 @@ def test_results_holder():
 
     # make sure the  get_dataframe isn't broken
     _ = res.get_dataframe()
+    res.plot_results()

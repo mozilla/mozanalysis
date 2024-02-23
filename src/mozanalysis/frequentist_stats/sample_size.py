@@ -96,7 +96,7 @@ class SampleSizeResultsHolder(UserDict):
         df[result_name].plot(kind='bar')
         plt.ylabel(nice_result)
         plt.xlabel("Metric")
-        plt.show()
+        plt.show(block=False)
 
     def __getitem__(self, key: Hashable) -> object:
         """
