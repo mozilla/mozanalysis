@@ -26,7 +26,7 @@ from mozanalysis.utils import get_time_intervals
 class SampleSizeResultsHolder(UserDict):
     """
     Object to hold results from different methods.  It extends
-    the dictionary objects so that users can interact with it 
+    the dictionary objects so that users can interact with it
     with a dictionary with the same keys/values as before, making
     it backward compatible.  The dictionary functionality is extended to include
     additional attributes to hold metadata, a method for plotting results and
