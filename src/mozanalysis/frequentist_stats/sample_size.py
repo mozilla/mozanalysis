@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Optional, Tuple
 from datetime import datetime, date, timedelta
 import re
 
@@ -523,10 +523,10 @@ def get_firefox_release_dates() -> Dict[int, str]:
 
 
 ### TODO:
-### - input list of durations
 ### - adapt for Android (cf cross-platform experiment)
 ### - defaults for display highlighting?
 ### - tests
+### - review docstrings
 
 
 class SampleSizing:
@@ -753,98 +753,88 @@ class SampleSizing:
             target_list=self.targets,
         )
 
-    def sample_sizes_for_duration(
-        self, rel_effect_sizes: List[float], n_days_observation: int = None
-    ) -> dict:
-        """Compute sample sizes for multiple effect sizes and specifed observation length.
+    def sample_sizes(
+        self, rel_effect_sizes: List[float], n_days_observation: List[int] = None
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Compute sample sizes for multiple effect sizes and observation period lengths.
 
         rel_effect_sizes: list of relative effect sizes (% change in metrics, float between 0 and 1)
-        n_days_observation: length of observation period in days. Should be at most `n_days_observation_max`,
-            but can be less if we want to compute sizes for shorter lengths.
+        n_days_observation: list of observation period length in days not exceeding `n_days_observation_max`.
+            If unspecified, the single period length `n_days_observation_max` is used.
 
-        Returns a dict containing:
-        - n_days_observation: observation period length
-        - eligible_population_size: number of clients included by targeting
-        - sample_sizes: DF listing computed sample sizes across metrics (rows) and effect sizes (columns)
-        - pop_pcts: DF listing population percentage represented by each computed sample size
-        - stats: DF listing mean, sd, clipped mean, clipped sd for each metric
-        - sample_rate: sampling rate applied to target population
+        Returns 2 DataFrames:
+        TODO:
         """
-        n_days_observation = n_days_observation or self.n_days_observation_max
-        if n_days_observation > self.n_days_observation_max:
-            raise ValueError(
-                f"Cannot request observation period longer than {self.n_days_observation_max},"
-                " as was originally budgeted for."
+        n_days_observation = n_days_observation or [self.n_days_observation_max]
+        for nd in n_days_observation:
+            if nd > self.n_days_observation_max:
+                raise ValueError(
+                    f"Cannot request observation period longer than {self.n_days_observation_max},"
+                    "as was originally budgeted for."
+                )
+
+        results = []
+        stats = []
+        for nd in n_days_observation:
+            print(
+                f"\nSizing for {self.n_days_enrollment} days enrollment and {nd} days observation."
+            )
+            full_period_data = self.get_historical_single_window_data(nd)
+            if not self._population_size:
+                self._set_population_size(len(full_period_data))
+                self._print_population_size()
+
+            sizing_results = sample_size_curves(
+                full_period_data,
+                metrics_list=self.metrics,
+                solver=z_or_t_ind_sample_size_calc,
+                effect_size=rel_effect_sizes,
+                power=self.power,
+                alpha=self.alpha,
+                outlier_percentile=100 * self.outlier_percentile,
             )
 
-        ht = HistoricalTarget(
-            experiment_name=self.experiment_name,
-            start_date=self.enrollment_start_date,
-            num_dates_enrollment=self.n_days_enrollment,
-            analysis_length=n_days_observation,
-        )
+            results.append(
+                pd.concat(
+                    [
+                        v.assign(metric=k, n_days_observation=nd)
+                        for k, v in sizing_results.items()
+                    ]
+                )
+            )
 
-        # Download the full data for the observation period.
-        # DF with 1 row per client ID
-        full_period_data = ht.get_single_window_data(
-            bq_context=self.bq_context,
-            metric_list=self.metrics,
-            target_list=self.targets,
-        )
+            stats.append(
+                full_period_data[[m.name for m in self.metrics]]
+                .agg(
+                    [
+                        "mean",
+                        "std",
+                        lambda d: d[d <= d.quantile(self.outlier_percentile)].mean(),
+                        lambda d: d[d <= d.quantile(self.outlier_percentile)].std(),
+                    ]
+                )
+                .set_axis(["mean", "std", "mean_trimmed", "std_trimmed"])
+                .transpose()
+                .assign(n_days_observation=nd)
+                .rename_axis(index="metric")
+            )
 
-        pop_size = len(full_period_data)
-        sampling_str = ""
-        if self.sample_rate:
-            pop_size = int(pop_size / self.sample_rate)
-            sampling_str = f"  (sampled at a rate of {self.sample_rate:.0%})"
-
-        print(
-            f"\nSizing for {self.n_days_enrollment} days enrollment and {n_days_observation} days observation.",
-            f"\nEligible population size: {pop_size:,}{sampling_str}",
-        )
-
-        sizing_results = sample_size_curves(
-            full_period_data,
-            metrics_list=self.metrics,
-            solver=z_or_t_ind_sample_size_calc,
-            effect_size=rel_effect_sizes,
-            power=self.power,
-            alpha=self.alpha,
-            outlier_percentile=100 * self.outlier_percentile,
-        )
-
-        df_sizing = pd.concat([v.assign(metric=k) for k, v in sizing_results.items()])
-        df_sizing["population_percent_per_branch"] = (
-            df_sizing["population_percent_per_branch"] * self.sample_rate
-        )
         df_sizing = (
-            df_sizing.rename(columns={"effect_size": "rel_effect_size"})
-            .set_index(["metric", "rel_effect_size"])
-            .unstack()
+            pd.concat(results)
+            .rename(columns={"effect_size": "rel_effect_size"})
+            .drop(columns="number_of_clients_targeted")
+            .set_index(["metric", "n_days_observation", "rel_effect_size"])
+            .sort_index()
         )
-
-        overall_stats = (
-            full_period_data[[m.name for m in metrics]]
-            .agg(
-                [
-                    "mean",
-                    "std",
-                    lambda d: d[d <= d.quantile(self.outlier_percentile)].mean(),
-                    lambda d: d[d <= d.quantile(self.outlier_percentile)].std(),
-                ]
+        if self.sample_rate:
+            df_sizing["population_percent_per_branch"] = (
+                df_sizing["population_percent_per_branch"] * self.sample_rate
             )
-            .transpose()
+        df_stats = (
+            pd.concat(stats).set_index("n_days_observation", append=True).sort_index()
         )
-        overall_stats.columns = ["mean", "std", "mean_trimmed", "std_trimmed"]
 
-        return {
-            "n_days_observation": n_days_observation,
-            "eligible_population_size": pop_size,
-            "sample_sizes": df_sizing["sample_size_per_branch"],
-            "pop_pcts": df_sizing["population_percent_per_branch"],
-            "stats": overall_stats,
-            "sample_rate": self.sample_rate,
-        }
+        return df_sizing, df_stats
 
     def display_sample_size_results(
         self,
