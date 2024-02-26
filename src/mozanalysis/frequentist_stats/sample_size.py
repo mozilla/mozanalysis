@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """module for sample size calculations"""
 
-from typing import List, Union, Dict, Optional, Hashable, Iterator
+from typing import List, Union, Dict, Optional
 from datetime import datetime
 from collections import UserDict
 from math import pi
@@ -47,7 +47,7 @@ class ResultsHolder(UserDict):
         # this dict is what was returned from the sample size
         # methods historically
         self.data = {k: v for k, v in self.data.items()
-                        if k not in ['metrics', 'params']}
+                     if k not in ['metrics', 'params']}
 
     @staticmethod
     def make_friendly_name(ugly_name: str) -> str:
