@@ -78,7 +78,7 @@ def test_empirical_effect_size_sample_size_calc(fake_ts_result):
 
 
 def test_curve_results_holder():
-    """ this test ensures the results_holder object has properly formatted attributes
+    """this test ensures the results_holder object has properly formatted attributes
     and is backward compatible"""
     df = pd.DataFrame(
         {
@@ -119,7 +119,7 @@ def test_curve_results_holder():
 
 
 def test_curve_results_holder_pretty_df():
-    """ this test ensures the pretty_results function works as expected"""
+    """this test ensures the pretty_results function works as expected"""
     df = pd.DataFrame(
         {
             search_clients_daily.name: np.random.normal(size=100),
@@ -139,14 +139,16 @@ def test_curve_results_holder_pretty_df():
         outlier_percentile=99.5,
     )
 
-    experiment_effect_sizes = res._params['simulated_values']
+    experiment_effect_sizes = res._params["simulated_values"]
     cols_no_stats = set(list(experiment_effect_sizes))
-    stats_cols = {'mean',
-                  'std',
-                  'mean_trimmed',
-                  'std_trimmed',
-                  'trim_change_mean',
-                  'trim_change_std'}
+    stats_cols = {
+        "mean",
+        "std",
+        "mean_trimmed",
+        "std_trimmed",
+        "trim_change_mean",
+        "trim_change_std",
+    }
     cols_with_stats = cols_no_stats | stats_cols
 
     with pytest.raises(ValueError):
@@ -162,9 +164,11 @@ def test_curve_results_holder_pretty_df():
     assert set(with_stats.data.columns) == cols_with_stats
 
     # make sure highlight_listthan won't throw an error
-    _ = res.pretty_results(input_data=df,
-                           append_stats=True,
-                           highlight_lessthan=[(10, "green"), (20, "blue")])
+    _ = res.pretty_results(
+        input_data=df,
+        append_stats=True,
+        highlight_lessthan=[(10, "green"), (20, "blue")],
+    )
 
     # check that subset works
     subset_experiment_effect_sizes = experiment_effect_sizes[1:-1]
@@ -173,9 +177,11 @@ def test_curve_results_holder_pretty_df():
     no_stats = res.pretty_results(simulated_values=subset_experiment_effect_sizes)
     assert set(no_stats.data.columns) == set(subset_experiment_effect_sizes)
 
-    with_stats = res.pretty_results(input_data=df,
-                                    append_stats=True,
-                                    simulated_values=subset_experiment_effect_sizes)
+    with_stats = res.pretty_results(
+        input_data=df,
+        append_stats=True,
+        simulated_values=subset_experiment_effect_sizes,
+    )
     assert set(with_stats.data.columns) == subset_cols_with_stats
 
 

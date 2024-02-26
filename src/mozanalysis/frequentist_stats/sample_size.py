@@ -31,10 +31,8 @@ class ResultsHolder(UserDict):
     with a dictionary with the same keys/values as before, making
     it backward compatible.
     """
-    def __init__(self, *args,
-                 metrics: dict = None,
-                 params: dict = None,
-                 **kwargs):
+
+    def __init__(self, *args, metrics: dict = None, params: dict = None, **kwargs):
         """
         Args:
             metrics (dict, optional): _description_. Defaults to None.
@@ -46,8 +44,9 @@ class ResultsHolder(UserDict):
         # create this attribute to hold only the results data
         # this dict is what was returned from the sample size
         # methods historically
-        self.data = {k: v for k, v in self.data.items()
-                     if k not in ['metrics', 'params']}
+        self.data = {
+            k: v for k, v in self.data.items() if k not in ["metrics", "params"]
+        }
 
     @staticmethod
     def make_friendly_name(ugly_name: str) -> str:
@@ -60,10 +59,12 @@ class ResultsHolder(UserDict):
         Returns:
             pretty_name (str): reformatted name
         """
-        keep_all_lowercase = ["per", 'of']
+        keep_all_lowercase = ["per", "of"]
         split_name = ugly_name.split("_")
-        split_name = [el[0].upper()+el[1:] if el not in keep_all_lowercase
-                      else el for el in split_name]
+        split_name = [
+            el[0].upper() + el[1:] if el not in keep_all_lowercase else el
+            for el in split_name
+        ]
         pretty_name = " ".join(split_name)
         return pretty_name
 
@@ -90,28 +91,34 @@ class SampleSizeResultsHolder(ResultsHolder):
         return pd.DataFrame(self.data).transpose()
 
     def plot_results(self, result_name: str = "sample_size_per_branch"):
-        """ plots the outputs of the sampling methods
+        """plots the outputs of the sampling methods
 
         Args:
             result_name (str): sample size method output to plot.
             Defaults to sample_size_per_branch
         """
-        nice_metric_names = [el.friendly_name if hasattr(el, 'friendly_name')
-                             else self.make_friendly_name(el.name)
-                             for el in self._metrics]
-        nice_metric_map = {el.name: friendly_name for el, friendly_name
-                           in zip(self._metrics, nice_metric_names)}
+        nice_metric_names = [
+            (
+                el.friendly_name
+                if hasattr(el, "friendly_name")
+                else self.make_friendly_name(el.name)
+            )
+            for el in self._metrics
+        ]
+        nice_metric_map = {
+            el.name: friendly_name
+            for el, friendly_name in zip(self._metrics, nice_metric_names)
+        }
         nice_result = self.make_friendly_name(result_name)
         df = self.get_dataframe().rename(index=nice_metric_map)
-        df[result_name].plot(kind='bar')
+        df[result_name].plot(kind="bar")
         plt.ylabel(nice_result)
         plt.xlabel("Metric")
         plt.show(block=False)
 
 
 class SampleSizeCurveResultHolder(ResultsHolder):
-    def __init__(self, *args,
-                 **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             metrics (dict, optional): _description_. Defaults to None.
@@ -119,20 +126,23 @@ class SampleSizeCurveResultHolder(ResultsHolder):
         """
         super().__init__(*args, **kwargs)
         # need to modify results so it matches the old format
-        self.raw_df = pd.concat([el.set_index('effect_size', append=True)
-                                 for el in self.data.values()])
+        self.raw_df = pd.concat(
+            [el.set_index("effect_size", append=True) for el in self.data.values()]
+        )
         metrics = [el.name for el in self._metrics]
         results_dict = {}
         for el in metrics:
             results_dict[el] = self.raw_df.loc[el, :].reset_index()
         self.data = results_dict
 
-    def pretty_results(self,
-                       input_data: pd.DataFrame = None,
-                       pct: bool = True,
-                       simulated_values: list = None,
-                       append_stats: bool = False,
-                       highlight_lessthan: "list[tuple]" = None) -> Styler:
+    def pretty_results(
+        self,
+        input_data: pd.DataFrame = None,
+        pct: bool = True,
+        simulated_values: list = None,
+        append_stats: bool = False,
+        highlight_lessthan: "list[tuple]" = None,
+    ) -> Styler:
         """_summary_
 
         Args:
@@ -175,55 +185,64 @@ class SampleSizeCurveResultHolder(ResultsHolder):
         if append_stats:
             if input_data is None:
                 raise ValueError("append_stats is true but no raw data was provided")
-            outlier_percentile = self._params["outlier_percentile"]/100
-            overall_stats = input_data[[m.name for m in self._metrics]].agg([
-                "mean",
-                "std",
-                lambda d: d[d <= d.quantile(outlier_percentile)].mean(),
-                lambda d: d[d <= d.quantile(outlier_percentile)].std(),
-                ]).transpose()
+            outlier_percentile = self._params["outlier_percentile"] / 100
+            overall_stats = (
+                input_data[[m.name for m in self._metrics]]
+                .agg(
+                    [
+                        "mean",
+                        "std",
+                        lambda d: d[d <= d.quantile(outlier_percentile)].mean(),
+                        lambda d: d[d <= d.quantile(outlier_percentile)].std(),
+                    ]
+                )
+                .transpose()
+            )
             overall_stats.columns = ["mean", "std", "mean_trimmed", "std_trimmed"]
-            overall_stats["trim_change_mean"] = ((overall_stats["mean_trimmed"] -
-                                                  overall_stats["mean"]).abs() /
-                                                 overall_stats["mean"])
-            overall_stats["trim_change_std"] = ((overall_stats["std_trimmed"] -
-                                                 overall_stats["std"]).abs() /
-                                                overall_stats["std"])
+            overall_stats["trim_change_mean"] = (
+                overall_stats["mean_trimmed"] - overall_stats["mean"]
+            ).abs() / overall_stats["mean"]
+            overall_stats["trim_change_std"] = (
+                overall_stats["std_trimmed"] - overall_stats["std"]
+            ).abs() / overall_stats["std"]
             pretty_df = pd.concat([pretty_df, overall_stats], axis="columns")
 
-        disp = pretty_df.style.format("{:.2f}%" if pct else "{:,.0f}",
-                                      subset=simulated_values)
+        disp = pretty_df.style.format(
+            "{:.2f}%" if pct else "{:,.0f}", subset=simulated_values
+        )
         if append_stats:
             large_change_format_str = "color:maroon; font-weight:bold"
             disp = (
-                disp.set_properties(subset=overall_stats.columns,
-                                    **{"background-color": "dimgrey"})
-                .format("{:.2%}", subset=["trim_change_mean", "trim_change_std"])
+                disp.set_properties(
+                    subset=overall_stats.columns, **{"background-color": "dimgrey"}
+                ).format("{:.2%}", subset=["trim_change_mean", "trim_change_std"])
                 # highlight large changes in mean because of trimming
-                .applymap(lambda x: large_change_format_str if x > 0.15 else "",
-                          subset=["trim_change_mean"])
+                .applymap(
+                    lambda x: large_change_format_str if x > 0.15 else "",
+                    subset=["trim_change_mean"],
                 )
+            )
 
         if highlight_lessthan:
-            for lim, color in sorted(highlight_lessthan,
-                                     key=lambda x: x[0],
-                                     reverse=True):
-                disp = disp.highlight_between(subset=simulated_values,
-                                              color=color,
-                                              right=lim)
+            for lim, color in sorted(
+                highlight_lessthan, key=lambda x: x[0], reverse=True
+            ):
+                disp = disp.highlight_between(
+                    subset=simulated_values, color=color, right=lim
+                )
 
         return disp
 
 
 def sample_size_curves(
-        df: pd.DataFrame,
-        metrics_list: list,
-        solver,
-        effect_size: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.01,
-        power: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.80,
-        alpha: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.05,
-        **solver_kwargs,
-        ) -> Dict[str, pd.DataFrame]:
+    df: pd.DataFrame,
+    metrics_list: list,
+    solver,
+    effect_size: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.01,
+    power: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.80,
+    alpha: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.05,
+    **solver_kwargs,
+) -> Dict[str, pd.DataFrame]:
     """
     Loop over a list of different parameters to produce sample size estimates given
     those parameters. A single parameter in [effect_size, power, alpha] should
@@ -266,21 +285,19 @@ def sample_size_curves(
     del params[sim_var]
     results = {}
     for v in test_vals:
-        sample_sizes = solver(df,
-                              metrics_list,
-                              **{sim_var: v},
-                              **params,
-                              **solver_kwargs).get_dataframe()
+        sample_sizes = solver(
+            df, metrics_list, **{sim_var: v}, **params, **solver_kwargs
+        ).get_dataframe()
         sample_sizes[sim_var] = v
 
         results[v] = sample_sizes
 
     # add sim_var to metadata
-    params['sim_var'] = sim_var
-    params['simulated_values'] = test_vals
-    return SampleSizeCurveResultHolder(results,
-                                       metrics=metrics_list,
-                                       params={**params, **solver_kwargs})
+    params["sim_var"] = sim_var
+    params["simulated_values"] = test_vals
+    return SampleSizeCurveResultHolder(
+        results, metrics=metrics_list, params={**params, **solver_kwargs}
+    )
 
 
 def difference_of_proportions_sample_size_calc(
@@ -335,13 +352,14 @@ def difference_of_proportions_sample_size_calc(
             "population_percent_per_branch": pop_percent,
             "number_of_clients_targeted": len(df),
         }
-    params = {'effect_size': effect_size,
-              'alpha': alpha,
-              'power': power,
-              'outlier_percentile': outlier_percentile}
+    params = {
+        "effect_size": effect_size,
+        "alpha": alpha,
+        "power": power,
+        "outlier_percentile": outlier_percentile,
+    }
 
-    return SampleSizeResultsHolder(results, metrics=metrics_list,
-                                   params=params)
+    return SampleSizeResultsHolder(results, metrics=metrics_list, params=params)
 
 
 def z_or_t_ind_sample_size_calc(
@@ -402,15 +420,16 @@ def z_or_t_ind_sample_size_calc(
             "population_percent_per_branch": pop_percent,
             "number_of_clients_targeted": len(df),
         }
-    params = {'effect_size': effect_size,
-              'alpha': alpha,
-              'power': power,
-              'outlier_percentile': outlier_percentile,
-              'solver': solver,
-              'test': test}
+    params = {
+        "effect_size": effect_size,
+        "alpha": alpha,
+        "power": power,
+        "outlier_percentile": outlier_percentile,
+        "solver": solver,
+        "test": test,
+    }
 
-    return SampleSizeResultsHolder(results, metrics=metrics_list,
-                                   params=params)
+    return SampleSizeResultsHolder(results, metrics=metrics_list, params=params)
 
 
 def empirical_effect_size_sample_size_calc(
@@ -603,13 +622,14 @@ def poisson_diff_solve_sample_size(
             "population_percent_per_branch": pop_percent,
             "number_of_clients_targeted": len(df),
         }
-    params = {'effect_size': effect_size,
-              'alpha': alpha,
-              'power': power,
-              'outlier_percentile': outlier_percentile}
+    params = {
+        "effect_size": effect_size,
+        "alpha": alpha,
+        "power": power,
+        "outlier_percentile": outlier_percentile,
+    }
 
-    return SampleSizeResultsHolder(results, metrics=metrics_list,
-                                   params=params)
+    return SampleSizeResultsHolder(results, metrics=metrics_list, params=params)
 
 
 def variable_enrollment_length_sample_size_calc(
