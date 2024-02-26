@@ -354,10 +354,12 @@ def sample_size_curves(
         **solver_kwargs (dict): Arguments necessary for the provided solver.
 
     Returns:
-        A dictionary of pd.DataFrame objects. An item in the dictionary is
+        SampleSizeCurveResultHolder: The data attribute contains a dictionary
+        of pd.DataFrame objects. An item in the dictionary is
         created for each metric in metric_list, containing a DataFrame of sample
         size per branch, number of clients that satisfied targeting, and population
         proportion per branch at each value of the iterable parameter.
+        Additional methods for ease of use are documented in the class.
     """
     params = {"effect_size": effect_size, "power": power, "alpha": alpha}
     sim_var = [k for k, v in params.items() if type(v) in [list, np.ndarray, pd.Series]]
@@ -415,9 +417,11 @@ def difference_of_proportions_sample_size_calc(
             each columns.
 
     Returns:
-        A dictionary. Keys in the dictionary are the metrics column names from
+        SampleSizeResultsHolder: The data attribute contains a dictionary.
+        Keys in the dictionary are the metrics column names from
         the DataFrame; values are the required sample size per branch to achieve
-        the desired power for that metric.
+        the desired power for that metric. Additional methods for ease of use
+        are documented in the class.
     """
 
     def _get_sample_size_col(col):
@@ -478,9 +482,11 @@ def z_or_t_ind_sample_size_calc(
             each columns.
 
     Returns:
-        A dictionary. Keys in the dictionary are the metrics column names from
+        SampleSizeResultsHolder: The data attribute contains a dictionary.
+        Keys in the dictionary are the metrics column names from
         the DataFrame; values are the required sample size per branch to achieve
-        the desired power for that metric.
+        the desired power for that metric. Additional methods for ease of use
+        are documented in the class.
     """
     tests = {
         "normal": zt_ind_solve_power,
@@ -561,10 +567,12 @@ def empirical_effect_size_sample_size_calc(
             distribution of effect sizes observed in historical data.
 
     Returns:
-        A dictionary. Keys in the dictionary are the metrics column names from
+        EmpericalEffectSizeResultsHolder: The data attribute contains a dictionary.
+        Keys in the dictionary are the metrics column names from
         the DataFrame; values are dictionaries containing the required sample size
         per branch to achieve the desired power for that metric, along with
-        additional information.
+        additional information. Additional methods for ease of use
+        are documented in the class.
     """
 
     def _mann_whitney_solve_sample_size_approximation(
@@ -690,9 +698,11 @@ def poisson_diff_solve_sample_size(
             each columns.
 
     Returns:
-        A dictionary. Keys in the dictionary are the metrics column names from
+        SampleSizeResultsHolder: The data attribute contains a dictionary.
+        Keys in the dictionary are the metrics column names from
         the DataFrame; values are the required sample size per branch to achieve
-        the desired power for that metric.
+        the desired power for that metric.  Additional methods for ease of use
+        are documented in the class
     """
 
     def _get_sample_size_col(col):
