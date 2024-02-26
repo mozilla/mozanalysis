@@ -77,6 +77,30 @@ def test_empirical_effect_size_sample_size_calc(fake_ts_result):
         )
 
 
+def test_emperical_effect_size_results_holder(fake_ts_result):
+    """checks the get_dataframe method doesn't throw an error and has
+    the expected columns in the case where a weekly mean is not generated"""
+
+    @dataclass
+    class FakeMetric:
+        name: str
+
+    metric_list = [FakeMetric(name="metric1"), FakeMetric(name="metric2")]
+
+    result = empirical_effect_size_sample_size_calc(
+        res=fake_ts_result, bq_context=None, metric_list=metric_list
+    )
+
+    result_df = result.get_dataframe()
+    expected_columns = {
+        "effect_size_value",
+        "std_dev_value",
+        "sample_size_per_branch",
+        "population_percent_per_branch",
+    }
+    assert set(result_df.columns) == expected_columns
+
+
 def test_curve_results_holder():
     """this test ensures the results_holder object has properly formatted attributes
     and is backward compatible"""

@@ -117,6 +117,74 @@ class SampleSizeResultsHolder(ResultsHolder):
         plt.show(block=False)
 
 
+class EmpericalEffectSizeResultsHolder(ResultsHolder):
+    def get_dataframe(
+        self, tsdata: TimeSeriesResult = None, bq_context: BigQueryContext = None
+    ) -> pd.DataFrame:
+
+        formatted_results = {}
+        for m, r in self.data.items():
+            metric_result = {}
+            for k, v in r.items():
+                if isinstance(v, dict):
+                    for vk, vv in v.items():
+                        if vk == "period_start_day":
+                            vk = "period"
+                        metric_result[f"{k}_{vk}"] = vv
+                else:
+                    metric_result[k] = v
+            formatted_results[m] = metric_result
+
+        df = pd.DataFrame.from_dict(formatted_results, orient="index")
+        df["effect_size_base_period"] = df["effect_size_period"] - 7
+        if tsdata is None or bq_context is None:
+            if tsdata is not None or bq_context is not None:
+                raise ValueError("Both raw_ts_data and bq_context must be set")
+            return df[
+                [
+                    "effect_size_value",
+                    "std_dev_value",
+                    "sample_size_per_branch",
+                    "population_percent_per_branch",
+                ]
+            ]
+
+        weekly_mean, _ = tsdata.get_aggregated_data(
+            bq_context=bq_context, metric_list=self._metrics, aggregate_function="AVG"
+        )
+        weekly_mean_frame = (
+            weekly_mean.rename(
+                columns={"analysis_window_start": "effect_size_base_period"}
+            )
+            .set_index("effect_size_base_period")
+            .stack()
+            .to_frame(name="metric_value")
+            .reorder_levels([1, 0])
+        )
+
+        df = (
+            df.set_index("effect_size_base_period", append=True)
+            .merge(
+                weekly_mean_frame,
+                left_index=True,
+                right_index=True,
+            )
+            .droplevel(-1)
+        )
+
+        df["rel_effect_size"] = df["effect_size_value"] / df["metric_value"]
+        return df[
+            [
+                "rel_effect_size",
+                "effect_size_value",
+                "metric_value",
+                "std_dev_value",
+                "sample_size_per_branch",
+                "population_percent_per_branch",
+            ]
+        ]
+
+
 class SampleSizeCurveResultHolder(ResultsHolder):
     def __init__(self, *args, **kwargs):
         """
@@ -563,7 +631,16 @@ def empirical_effect_size_sample_size_calc(
             "population_percent_per_branch": 100.0 * (sample_size / pop_size),
         }
 
-    return size_dict  # TODO: add option to return a DataFrame
+    params = {
+        "quantile": quantile,
+        "power": power,
+        "alpha": alpha,
+        "parent_distribution": parent_distribution,
+    }
+
+    return EmpericalEffectSizeResultsHolder(
+        size_dict, metrics=metric_list, params=params
+    )
 
 
 def poisson_diff_solve_sample_size(
