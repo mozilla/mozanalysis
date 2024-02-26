@@ -329,7 +329,7 @@ def sample_size_curves(
     power: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.80,
     alpha: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.05,
     **solver_kwargs,
-) -> Dict[str, pd.DataFrame]:
+) -> SampleSizeCurveResultHolder:
     """
     Loop over a list of different parameters to produce sample size estimates given
     those parameters. A single parameter in [effect_size, power, alpha] should
@@ -394,7 +394,7 @@ def difference_of_proportions_sample_size_calc(
     alpha: float = 0.05,
     power: float = 0.90,
     outlier_percentile: float = 99.5,
-) -> dict:
+) -> SampleSizeResultsHolder:
     """
     Perform sample size calculation for an experiment to test for a
     difference in proportions.
@@ -457,7 +457,7 @@ def z_or_t_ind_sample_size_calc(
     alpha: float = 0.05,
     power: float = 0.90,
     outlier_percentile: float = 99.5,
-) -> dict:
+) -> SampleSizeResultsHolder:
     """
     Perform sample size calculation for an experiment based on independent
     samples t or z tests.
@@ -528,7 +528,7 @@ def empirical_effect_size_sample_size_calc(
     alpha: float = 0.05,
     parent_distribution: str = "normal",
     plot_effect_sizes: bool = False,
-) -> dict:
+) -> EmpericalEffectSizeResultsHolder:
     """
     Perform sample size calculation with empirical effect size and
     asymptotic approximation of Wilcoxen-Mann-Whitney U Test. Empirical effect size
@@ -669,7 +669,7 @@ def poisson_diff_solve_sample_size(
     alpha: float = 0.05,
     power: float = 0.90,
     outlier_percentile: float = 99.5,
-) -> dict:
+) -> SampleSizeResultsHolder:
     """
     Sample size for test of difference of Poisson rates,
     based on Poisson rate's asymptotic normality.
