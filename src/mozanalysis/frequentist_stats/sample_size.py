@@ -120,25 +120,46 @@ class SampleSizeResultsHolder(ResultsHolder):
 class EmpericalEffectSizeResultsHolder(ResultsHolder):
     "ResultsHolder for empirical_effect_size_sample_size_calc"
 
-    def get_dataframe(
-        self, tsdata: TimeSeriesResult = None, bq_context: BigQueryContext = None
-    ) -> pd.DataFrame:
+    def style_empirical_sizing_result(
+        self, empirical_sizing_df: pd.DataFrame
+    ) -> Styler:
+        """Pretty-print the DF returned by `empirical_sizing()`.
+
+        Returns a pandas Styler object.
+        """
+        return (
+            empirical_sizing_df[
+                [
+                    "relative_effect_size",
+                    "population_percent_per_branch",
+                    "sample_size_per_branch",
+                    "effect_size_value",
+                    "mean_value",
+                    "std_dev_value",
+                ]
+            ]
+            .rename(
+                columns={
+                    "relative_effect_size": "rel_effect_size",
+                    "population_percent_per_branch": "branch_pop_pct",
+                    "sample_size_per_branch": "branch_sample_size",
+                }
+            )
+            .style.format(thousands=",", precision=4)
+            .format(subset="branch_sample_size", thousands=",", precision=0)
+            .format("{:.2f}%", subset="branch_pop_pct")
+            .format("{:.2%}", subset="rel_effect_size")
+        )
+
+    def get_dataframe(self, style: bool = None) -> Union[pd.DataFrame, Styler]:
         """returns dataframe for results from empirical_effect_size_sample_size_calc
-        the input timeseries data and a bigquery context can additionally be passed to
-        add a column  with the weekly mean of the metrics and the effect size relative
-        to that mean
 
-        Args:
-            tsdata (TimeSeriesResult, optional): input data used to generate the
-                    metrics. Defaults to None.
-            bq_context (BigQueryContext, optional): context for doing the weekly mean.
-                    Defaults to None.
-
-        Raises:
-            ValueError: raise an error if one of tsdata or bq_context is non-null
-
+        Arguments:
+            style (bool): If true, return a cleaned up and formatted pandas Styler.
+            Otherwise return a dataframe
         Returns:
-            pd.DataFrame: dataframe containing results
+            pd.DataFrame or Styler: dataframe containing results if style is False
+            If true it returns a Styler object
         """
 
         formatted_results = {}
@@ -156,50 +177,21 @@ class EmpericalEffectSizeResultsHolder(ResultsHolder):
 
         df = pd.DataFrame.from_dict(formatted_results, orient="index")
         df["effect_size_base_period"] = df["effect_size_period"] - 7
-        if tsdata is None or bq_context is None:
-            if tsdata is not None or bq_context is not None:
-                raise ValueError("Both raw_ts_data and bq_context must be set")
-            return df[
-                [
-                    "effect_size_value",
-                    "std_dev_value",
-                    "sample_size_per_branch",
-                    "population_percent_per_branch",
-                ]
-            ]
+        df["rel_effect_size"] = df["effect_size_value"] / df["mean_value"]
+        if style:
+            return self.style_empirical_sizing_result(df)
 
-        weekly_mean, _ = tsdata.get_aggregated_data(
-            bq_context=bq_context, metric_list=self._metrics, aggregate_function="AVG"
-        )
-        weekly_mean_frame = (
-            weekly_mean.rename(
-                columns={"analysis_window_start": "effect_size_base_period"}
-            )
-            .set_index("effect_size_base_period")
-            .stack()
-            .to_frame(name="metric_value")
-            .reorder_levels([1, 0])
-        )
-
-        df = (
-            df.set_index("effect_size_base_period", append=True)
-            .merge(
-                weekly_mean_frame,
-                left_index=True,
-                right_index=True,
-            )
-            .droplevel(-1)
-        )
-
-        df["rel_effect_size"] = df["effect_size_value"] / df["metric_value"]
         return df[
             [
-                "rel_effect_size",
+                "relative_effect_size",
                 "effect_size_value",
-                "metric_value",
+                "mean_value",
                 "std_dev_value",
                 "sample_size_per_branch",
                 "population_percent_per_branch",
+                "effect_size_period",
+                "mean_period",
+                "std_dev_period",
             ]
         ]
 
@@ -222,14 +214,15 @@ class SampleSizeCurveResultHolder(ResultsHolder):
             results_dict[el] = self.raw_df.loc[el, :].reset_index()
         self.data = results_dict
 
-    def pretty_results(
+    def get_dataframe(
         self,
         input_data: pd.DataFrame = None,
         pct: bool = True,
         simulated_values: list = None,
         append_stats: bool = False,
         highlight_lessthan: "list[tuple]" = None,
-    ) -> Styler:
+        style: bool = False,
+    ) -> Union[pd.DataFrame, Styler]:
         """_summary_
 
         Args:
@@ -251,9 +244,9 @@ class SampleSizeCurveResultHolder(ResultsHolder):
                         provided
 
         Returns:
-            Styler: pandas Styler object.  Meant to be dispalyed in a
-            notebook using the IPython display function.  The underlying
-            dataframe is accessible via the .data attribute
+            pd.DataFrame or Styler: If style is false, return a dataframe.
+            Otherwise return a Styler, which is meant to be dispalyed in a
+            notebook using the IPython display function.
         """
         # choose which column to output
         if pct:
@@ -293,6 +286,8 @@ class SampleSizeCurveResultHolder(ResultsHolder):
                 overall_stats["std_trimmed"] - overall_stats["std"]
             ).abs() / overall_stats["std"]
             pretty_df = pd.concat([pretty_df, overall_stats], axis="columns")
+        if not style:
+            return pretty_df
 
         disp = pretty_df.style.format(
             "{:.2f}%" if pct else "{:,.0f}", subset=simulated_values

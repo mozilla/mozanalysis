@@ -93,19 +93,20 @@ def test_emperical_effect_size_results_holder(fake_ts_result):
 
     result_df = result.get_dataframe()
     expected_columns = {
+        "relative_effect_size",
         "effect_size_value",
+        "mean_value",
         "std_dev_value",
         "sample_size_per_branch",
         "population_percent_per_branch",
+        "effect_size_period",
+        "mean_period",
+        "std_dev_period",
     }
     assert set(result_df.columns) == expected_columns
 
-    # test exception gets raised when one of bq_context or tsdata is null
-    with pytest.raises(ValueError):
-        _ = result.get_dataframe(bq_context="I am a bq_context ;)")
-
-    with pytest.raises(ValueError):
-        _ = result.get_dataframe(tsdata=fake_ts_result)
+    # check that style runs successfully
+    _ = result.get_dataframe(style=True)
 
 
 def test_curve_results_holder():
@@ -149,8 +150,8 @@ def test_curve_results_holder():
     assert set(iter_keys) == metric_names
 
 
-def test_curve_results_holder_pretty_df():
-    """this test ensures the pretty_results function works as expected"""
+def test_curve_results_holder_get_dataframe():
+    """this test ensures the get_dataframe function works as expected"""
     df = pd.DataFrame(
         {
             search_clients_daily.name: np.random.normal(size=100),
@@ -183,35 +184,39 @@ def test_curve_results_holder_pretty_df():
     cols_with_stats = cols_no_stats | stats_cols
 
     with pytest.raises(ValueError):
-        _ = res.pretty_results(append_stats=True)
+        _ = res.get_dataframe(append_stats=True)
 
-    no_stats = res.pretty_results()
-    assert set(no_stats.data.columns) == cols_no_stats
+    no_stats = res.get_dataframe()
+    assert set(no_stats.columns) == cols_no_stats
 
-    also_no_stats = res.pretty_results(input_data=df, append_stats=False)
-    assert set(also_no_stats.data.columns) == cols_no_stats
+    also_no_stats = res.get_dataframe(input_data=df, append_stats=False)
+    assert set(also_no_stats.columns) == cols_no_stats
 
-    with_stats = res.pretty_results(input_data=df, append_stats=True)
-    assert set(with_stats.data.columns) == cols_with_stats
+    with_stats = res.get_dataframe(input_data=df, append_stats=True)
+    assert set(with_stats.columns) == cols_with_stats
 
     # make sure highlight_listthan won't throw an error
-    _ = res.pretty_results(
+    _ = res.get_dataframe(
         input_data=df,
         append_stats=True,
         highlight_lessthan=[(10, "green"), (20, "blue")],
+        style=True,
     )
 
     # check that subset works
     subset_experiment_effect_sizes = experiment_effect_sizes[1:-1]
     subset_cols_with_stats = set(subset_experiment_effect_sizes) | stats_cols
 
-    no_stats = res.pretty_results(simulated_values=subset_experiment_effect_sizes)
+    no_stats = res.get_dataframe(
+        simulated_values=subset_experiment_effect_sizes, style=True
+    )
     assert set(no_stats.data.columns) == set(subset_experiment_effect_sizes)
 
-    with_stats = res.pretty_results(
+    with_stats = res.get_dataframe(
         input_data=df,
         append_stats=True,
         simulated_values=subset_experiment_effect_sizes,
+        style=True,
     )
     assert set(with_stats.data.columns) == subset_cols_with_stats
 
