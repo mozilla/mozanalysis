@@ -13,6 +13,7 @@ from statsmodels.stats.power import tt_ind_solve_power, zt_ind_solve_power
 from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
 import numpy as np
 import pandas as pd
+from pandas.io.formats.style import Styler
 import matplotlib.pyplot as plt
 
 from mozanalysis.bq import BigQueryContext
@@ -23,14 +24,12 @@ from mozanalysis.sizing import HistoricalTarget
 from mozanalysis.utils import get_time_intervals
 
 
-class SampleSizeResultsHolder(UserDict):
+class ResultsHolder(UserDict):
     """
     Object to hold results from different methods.  It extends
     the dictionary objects so that users can interact with it
     with a dictionary with the same keys/values as before, making
-    it backward compatible.  The dictionary functionality is extended to include
-    additional attributes to hold metadata, a method for plotting results and
-    a method for returning results as a dataframe
+    it backward compatible.
     """
     def __init__(self, *args,
                  metrics: dict = None,
@@ -47,19 +46,8 @@ class SampleSizeResultsHolder(UserDict):
         # create this attribute to hold only the results data
         # this dict is what was returned from the sample size
         # methods historically
-        self.results = {k: v for k, v in self.data.items()
+        self.data = {k: v for k, v in self.data.items()
                         if k not in ['metrics', 'params']}
-
-    def get_dataframe(self) -> pd.DataFrame:
-        """
-        returns data as a dataframe rather than a dict
-
-        Returns:
-            (pd.DataFrame): dataframe of results
-            The index is the metric and the columns are the outputs from
-            the sample size method
-        """
-        return pd.DataFrame(self.results).transpose()
 
     @staticmethod
     def make_friendly_name(ugly_name: str) -> str:
@@ -78,6 +66,28 @@ class SampleSizeResultsHolder(UserDict):
                       else el for el in split_name]
         pretty_name = " ".join(split_name)
         return pretty_name
+
+
+class SampleSizeResultsHolder(ResultsHolder):
+    """
+    Object to hold results from different methods.  It extends
+    the dictionary objects so that users can interact with it
+    with a dictionary with the same keys/values as before, making
+    it backward compatible.  The dictionary functionality is extended to include
+    additional attributes to hold metadata, a method for plotting results and
+    a method for returning results as a dataframe
+    """
+
+    def get_dataframe(self) -> pd.DataFrame:
+        """
+        returns data as a dataframe rather than a dict
+
+        Returns:
+            (pd.DataFrame): dataframe of results
+            The index is the metric and the columns are the outputs from
+            the sample size method
+        """
+        return pd.DataFrame(self.data).transpose()
 
     def plot_results(self, result_name: str = "sample_size_per_branch"):
         """ plots the outputs of the sampling methods
@@ -98,49 +108,122 @@ class SampleSizeResultsHolder(UserDict):
         plt.xlabel("Metric")
         plt.show(block=False)
 
-    def __getitem__(self, key: Hashable) -> object:
+
+class SampleSizeCurveResultHolder(ResultsHolder):
+    def __init__(self, *args,
+                 **kwargs):
         """
-        overwrite the __getitem__ method that enables grabbing items with []
-        so that only the keys associated with the results data are available
+        Args:
+            metrics (dict, optional): _description_. Defaults to None.
+            params (dict, optional): _description_. Defaults to None.
+        """
+        super().__init__(*args, **kwargs)
+        # need to modify results so it matches the old format
+        self.raw_df = pd.concat([el.set_index('effect_size', append=True)
+                                 for el in self.data.values()])
+        metrics = [el.name for el in self._metrics]
+        results_dict = {}
+        for el in metrics:
+            results_dict[el] = self.raw_df.loc[el, :].reset_index()
+        self.data = results_dict
+
+    def pretty_results(self,
+                       input_data: pd.DataFrame = None,
+                       pct: bool = True,
+                       simulated_values: list = None,
+                       append_stats: bool = False,
+                       highlight_lessthan: "list[tuple]" = None) -> Styler:
+        """_summary_
 
         Args:
-            key (Hashable): key to retrieve
+            input_data (pd.DataFrame, optional): Input data used to generate results,
+                used to generate statistics. Defaults to None.
+            pct (bool, optional): If true, percentage of population will be used in
+                output rather than raw counts. Defaults to True.
+            simulated_values (list, optional): List of simulated values to subset
+                output to. If None, all values will be included. Defaults to None.
+            append_stats (bool, optional): _description_. If True, summary statistics on
+                the raw metrics are provided. Defaults to False.
+            highlight_lessthan (list[tuple], optional): List of
+                (<cutoff (float)>, <color (string)>) tuples.
+                Sample size entries less than <cutoff> will be highlighted in <color>
+                in the displayed table. Defaults to None.
+
+        Raises:
+            ValueError: Raises error if append_stats is True but no input_data is
+                        provided
 
         Returns:
-            object: value associated with key
+            Styler: pandas Styler object.  Meant to be dispalyed in a
+            notebook using the IPython display function.  The underlying
+            dataframe is accessible via the .data attribute
         """
-        return self.results[key]
+        # choose which column to output
+        if pct:
+            subset_col = "population_percent_per_branch"
+        else:
+            subset_col = "sample_size_per_branch"
 
-    def __iter__(self) -> Iterator:
-        """
-        overwrite this dict method so that iterating through the dict with .keys(),
-        .values() and .items() will only return data associated with the results
+        # reformate raw_df to make different simulatd values into columns
+        if simulated_values is None:
+            simulated_values = self._params["simulated_values"]
+            pretty_df = self.raw_df[subset_col].unstack()
+        else:
+            pretty_df = self.raw_df[subset_col].unstack()[simulated_values]
 
-        Returns:
-            Iterator: iterator associated with results data
-        """
-        return iter(self.results)
+        # get stats if input_data is non-null and append_stats is True
+        if append_stats:
+            if input_data is None:
+                raise ValueError("append_stats is true but no raw data was provided")
+            outlier_percentile = self._params["outlier_percentile"]/100
+            overall_stats = input_data[[m.name for m in self._metrics]].agg([
+                "mean",
+                "std",
+                lambda d: d[d <= d.quantile(outlier_percentile)].mean(),
+                lambda d: d[d <= d.quantile(outlier_percentile)].std(),
+                ]).transpose()
+            overall_stats.columns = ["mean", "std", "mean_trimmed", "std_trimmed"]
+            overall_stats["trim_change_mean"] = ((overall_stats["mean_trimmed"] -
+                                                  overall_stats["mean"]).abs() /
+                                                 overall_stats["mean"])
+            overall_stats["trim_change_std"] = ((overall_stats["std_trimmed"] -
+                                                 overall_stats["std"]).abs() /
+                                                overall_stats["std"])
+            pretty_df = pd.concat([pretty_df, overall_stats], axis="columns")
 
-    def __len__(self) -> int:
-        """
-        overwrite dict method so the len() function returns length of key/value
-        pairs associated with results
+        disp = pretty_df.style.format("{:.2f}%" if pct else "{:,.0f}",
+                                      subset=simulated_values)
+        if append_stats:
+            large_change_format_str = "color:maroon; font-weight:bold"
+            disp = (
+                disp.set_properties(subset=overall_stats.columns,
+                                    **{"background-color": "dimgrey"})
+                .format("{:.2%}", subset=["trim_change_mean", "trim_change_std"])
+                # highlight large changes in mean because of trimming
+                .applymap(lambda x: large_change_format_str if x > 0.15 else "",
+                          subset=["trim_change_mean"])
+                )
 
-        Returns:
-            int: length of results dict
-        """
-        return len(self.results)
+        if highlight_lessthan:
+            for lim, color in sorted(highlight_lessthan,
+                                     key=lambda x: x[0],
+                                     reverse=True):
+                disp = disp.highlight_between(subset=simulated_values,
+                                              color=color,
+                                              right=lim)
+
+        return disp
 
 
 def sample_size_curves(
-    df: pd.DataFrame,
-    metrics_list: list,
-    solver,
-    effect_size: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.01,
-    power: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.80,
-    alpha: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.05,
-    **solver_kwargs,
-) -> Dict[str, pd.DataFrame]:
+        df: pd.DataFrame,
+        metrics_list: list,
+        solver,
+        effect_size: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.01,
+        power: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.80,
+        alpha: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.05,
+        **solver_kwargs,
+        ) -> Dict[str, pd.DataFrame]:
     """
     Loop over a list of different parameters to produce sample size estimates given
     those parameters. A single parameter in [effect_size, power, alpha] should
@@ -170,7 +253,6 @@ def sample_size_curves(
         size per branch, number of clients that satisfied targeting, and population
         proportion per branch at each value of the iterable parameter.
     """
-
     params = {"effect_size": effect_size, "power": power, "alpha": alpha}
     sim_var = [k for k, v in params.items() if type(v) in [list, np.ndarray, pd.Series]]
 
@@ -182,22 +264,23 @@ def sample_size_curves(
     sim_var = sim_var[0]
     test_vals = params[sim_var]
     del params[sim_var]
-
     results = {}
-    for metric in metrics_list:
-        sample_sizes = []
-        for v in test_vals:
-            sample_sizes.append(
-                {
-                    **{sim_var: v},
-                    **solver(df, [metric], **{sim_var: v}, **params, **solver_kwargs)[
-                        metric.name
-                    ],
-                }
-            )
-        results[metric.name] = pd.DataFrame(sample_sizes)
+    for v in test_vals:
+        sample_sizes = solver(df,
+                              metrics_list,
+                              **{sim_var: v},
+                              **params,
+                              **solver_kwargs).get_dataframe()
+        sample_sizes[sim_var] = v
 
-    return results
+        results[v] = sample_sizes
+
+    # add sim_var to metadata
+    params['sim_var'] = sim_var
+    params['simulated_values'] = test_vals
+    return SampleSizeCurveResultHolder(results,
+                                       metrics=metrics_list,
+                                       params={**params, **solver_kwargs})
 
 
 def difference_of_proportions_sample_size_calc(

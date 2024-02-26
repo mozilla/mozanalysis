@@ -10,6 +10,7 @@ import pytest
 from mozanalysis.frequentist_stats.sample_size import (
     z_or_t_ind_sample_size_calc,
     empirical_effect_size_sample_size_calc,
+    sample_size_curves,
 )
 from mozanalysis.metrics.desktop import search_clients_daily, uri_count
 
@@ -74,6 +75,108 @@ def test_empirical_effect_size_sample_size_calc(fake_ts_result):
         np.testing.assert_allclose(
             r["population_percent_per_branch"], 0.844, atol=0.001
         )
+
+
+def test_curve_results_holder():
+    """ this test ensures the results_holder object has properly formatted attributes
+    and is backward compatible"""
+    df = pd.DataFrame(
+        {
+            search_clients_daily.name: np.random.normal(size=100),
+            uri_count.name: np.random.normal(size=100),
+        }
+    )
+
+    metrics = [search_clients_daily, uri_count]
+    effect_size = np.arange(0.01, 0.11, 0.01)
+    res = sample_size_curves(
+        df,
+        metrics,
+        solver=z_or_t_ind_sample_size_calc,
+        effect_size=effect_size,
+        power=0.8,
+        alpha=0.05,
+        outlier_percentile=99.5,
+    )
+    metric_names = set([el.name for el in metrics])
+
+    # set should only have 2 values: "search_clients_daily" "uri_count"
+    assert len(res) == len(metric_names)
+    assert set(res.keys()) == metric_names
+    assert len(res.values()) == len(metric_names)
+    iter_keys = []
+    for key, val in res.items():
+        iter_keys.append(key)
+        assert set(val.columns) == {
+            "effect_size",
+            "sample_size_per_branch",
+            "population_percent_per_branch",
+            "number_of_clients_targeted",
+        }
+        assert set(val["effect_size"]) == set(effect_size)
+    assert len(iter_keys) == len(metric_names)
+    assert set(iter_keys) == metric_names
+
+
+def test_curve_results_holder_pretty_df():
+    """ this test ensures the pretty_results function works as expected"""
+    df = pd.DataFrame(
+        {
+            search_clients_daily.name: np.random.normal(size=100),
+            uri_count.name: np.random.normal(size=100),
+        }
+    )
+
+    metrics = [search_clients_daily, uri_count]
+    effect_size = np.arange(0.01, 0.11, 0.01)
+    res = sample_size_curves(
+        df,
+        metrics,
+        solver=z_or_t_ind_sample_size_calc,
+        effect_size=effect_size,
+        power=0.8,
+        alpha=0.05,
+        outlier_percentile=99.5,
+    )
+
+    experiment_effect_sizes = res._params['simulated_values']
+    cols_no_stats = set(list(experiment_effect_sizes))
+    stats_cols = {'mean',
+                  'std',
+                  'mean_trimmed',
+                  'std_trimmed',
+                  'trim_change_mean',
+                  'trim_change_std'}
+    cols_with_stats = cols_no_stats | stats_cols
+
+    with pytest.raises(ValueError):
+        _ = res.pretty_results(append_stats=True)
+
+    no_stats = res.pretty_results()
+    assert set(no_stats.data.columns) == cols_no_stats
+
+    also_no_stats = res.pretty_results(input_data=df, append_stats=False)
+    assert set(also_no_stats.data.columns) == cols_no_stats
+
+    with_stats = res.pretty_results(input_data=df, append_stats=True)
+    assert set(with_stats.data.columns) == cols_with_stats
+
+    # make sure highlight_listthan won't throw an error
+    _ = res.pretty_results(input_data=df,
+                           append_stats=True,
+                           highlight_lessthan=[(10, "green"), (20, "blue")])
+
+    # check that subset works
+    subset_experiment_effect_sizes = experiment_effect_sizes[1:-1]
+    subset_cols_with_stats = set(subset_experiment_effect_sizes) | stats_cols
+
+    no_stats = res.pretty_results(simulated_values=subset_experiment_effect_sizes)
+    assert set(no_stats.data.columns) == set(subset_experiment_effect_sizes)
+
+    with_stats = res.pretty_results(input_data=df,
+                                    append_stats=True,
+                                    simulated_values=subset_experiment_effect_sizes)
+    assert set(with_stats.data.columns) == subset_cols_with_stats
 
 
 def test_results_holder():
