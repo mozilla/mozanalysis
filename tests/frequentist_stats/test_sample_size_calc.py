@@ -100,6 +100,13 @@ def test_emperical_effect_size_results_holder(fake_ts_result):
     }
     assert set(result_df.columns) == expected_columns
 
+    # test exception gets raised when one of bq_context or tsdata is null
+    with pytest.raises(ValueError):
+        _ = result.get_dataframe(bq_context="I am a bq_context ;)")
+
+    with pytest.raises(ValueError):
+        _ = result.get_dataframe(tsdata=fake_ts_result)
+
 
 def test_curve_results_holder():
     """this test ensures the results_holder object has properly formatted attributes

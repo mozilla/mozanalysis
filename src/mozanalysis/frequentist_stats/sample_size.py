@@ -118,9 +118,28 @@ class SampleSizeResultsHolder(ResultsHolder):
 
 
 class EmpericalEffectSizeResultsHolder(ResultsHolder):
+    "ResultsHolder for empirical_effect_size_sample_size_calc"
+
     def get_dataframe(
         self, tsdata: TimeSeriesResult = None, bq_context: BigQueryContext = None
     ) -> pd.DataFrame:
+        """returns dataframe for results from empirical_effect_size_sample_size_calc
+        the input timeseries data and a bigquery context can additionally be passed to
+        add a column  with the weekly mean of the metrics and the effect size relative
+        to that mean
+
+        Args:
+            tsdata (TimeSeriesResult, optional): input data used to generate the
+                    metrics. Defaults to None.
+            bq_context (BigQueryContext, optional): context for doing the weekly mean.
+                    Defaults to None.
+
+        Raises:
+            ValueError: raise an error if one of tsdata or bq_context is non-null
+
+        Returns:
+            pd.DataFrame: dataframe containing results
+        """
 
         formatted_results = {}
         for m, r in self.data.items():
