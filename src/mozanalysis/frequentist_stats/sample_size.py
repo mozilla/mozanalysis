@@ -151,7 +151,7 @@ class EmpericalEffectSizeResultsHolder(ResultsHolder):
             .format("{:.2%}", subset="rel_effect_size")
         )
 
-    def get_dataframe(self, style: bool = None) -> Union[pd.DataFrame, Styler]:
+    def get_dataframe(self, style: bool = True) -> Union[pd.DataFrame, Styler]:
         """returns dataframe for results from empirical_effect_size_sample_size_calc
 
         Arguments:
