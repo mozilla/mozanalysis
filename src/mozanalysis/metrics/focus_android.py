@@ -7,6 +7,24 @@
 # in https://github.com/mozilla/metric-hub
 
 from mozanalysis.config import ConfigLoader
+import warnings
+
+warnings.simplefilter("default")
+warnings.warn(
+    """
+    metrics and data sources created in mozanalysis are deprecated
+    please create directly from metric-hub with ConfigLoader like
+
+    from mozanalysis.config import ConfigLoader
+    metric=ConfigLoader.get_metric(metric_slug="active_hours",app_name="firefox_desktop")
+
+    and data sources like
+    data_source=ConfigLoader.get_data_source(data_source_slug="active_hours",
+                                                app_name="firefox_desktop")
+
+    """,
+    DeprecationWarning,
+)
 
 baseline = ConfigLoader.get_data_source("baseline", "focus_android")
 
