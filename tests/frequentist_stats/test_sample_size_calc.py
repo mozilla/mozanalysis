@@ -106,7 +106,7 @@ def test_emperical_effect_size_results_holder(fake_ts_result):
     assert set(result_df.columns) == expected_columns
 
     # check that style runs successfully
-    _ = result.get_dataframe(style=True)
+    _ = result.get_styled_dataframe()
 
 
 def test_curve_results_holder():
@@ -195,28 +195,53 @@ def test_curve_results_holder_get_dataframe():
     with_stats = res.get_dataframe(input_data=df, append_stats=True)
     assert set(with_stats.columns) == cols_with_stats
 
-    # make sure highlight_listthan won't throw an error
-    _ = res.get_dataframe(
+
+def test_get_styled_dataframe():
+    "make sure highlight_listthan will not throw an error"
+    df = pd.DataFrame(
+        {
+            search_clients_daily.name: np.random.normal(size=100),
+            uri_count.name: np.random.normal(size=100),
+        }
+    )
+
+    metrics = [search_clients_daily, uri_count]
+    effect_size = np.arange(0.01, 0.11, 0.01)
+    res = sample_size_curves(
+        df,
+        metrics,
+        solver=z_or_t_ind_sample_size_calc,
+        effect_size=effect_size,
+        power=0.8,
+        alpha=0.05,
+        outlier_percentile=99.5,
+    )
+    experiment_effect_sizes = res._params["simulated_values"]
+    stats_cols = {
+        "mean",
+        "std",
+        "mean_trimmed",
+        "std_trimmed",
+        "trim_change_mean",
+        "trim_change_std",
+    }
+    _ = res.get_styled_dataframe(
         input_data=df,
         append_stats=True,
         highlight_lessthan=[(10, "green"), (20, "blue")],
-        style=True,
     )
 
     # check that subset works
     subset_experiment_effect_sizes = experiment_effect_sizes[1:-1]
     subset_cols_with_stats = set(subset_experiment_effect_sizes) | stats_cols
 
-    no_stats = res.get_dataframe(
-        simulated_values=subset_experiment_effect_sizes, style=True
-    )
+    no_stats = res.get_styled_dataframe(simulated_values=subset_experiment_effect_sizes)
     assert set(no_stats.data.columns) == set(subset_experiment_effect_sizes)
 
-    with_stats = res.get_dataframe(
+    with_stats = res.get_styled_dataframe(
         input_data=df,
         append_stats=True,
         simulated_values=subset_experiment_effect_sizes,
-        style=True,
     )
     assert set(with_stats.data.columns) == subset_cols_with_stats
 

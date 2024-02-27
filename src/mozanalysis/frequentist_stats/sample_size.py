@@ -151,7 +151,7 @@ class EmpericalEffectSizeResultsHolder(ResultsHolder):
             .format("{:.2%}", subset="rel_effect_size")
         )
 
-    def get_dataframe(self, style: bool = True) -> Union[pd.DataFrame, Styler]:
+    def get_dataframe(self) -> pd.DataFrame:
         """returns dataframe for results from empirical_effect_size_sample_size_calc
 
         Arguments:
@@ -178,8 +178,6 @@ class EmpericalEffectSizeResultsHolder(ResultsHolder):
         df = pd.DataFrame.from_dict(formatted_results, orient="index")
         df["effect_size_base_period"] = df["effect_size_period"] - 7
         df["rel_effect_size"] = df["effect_size_value"] / df["mean_value"]
-        if style:
-            return self.style_empirical_sizing_result(df)
 
         return df[
             [
@@ -194,6 +192,19 @@ class EmpericalEffectSizeResultsHolder(ResultsHolder):
                 "std_dev_period",
             ]
         ]
+
+    def get_styled_dataframe(self) -> Styler:
+        """returns styled dataframe for results from
+        empirical_effect_size_sample_size_calc
+
+        Arguments:
+            style (bool): If true, return a cleaned up and formatted pandas Styler.
+            Otherwise return a dataframe
+        Returns:
+            Styler: styled dataframe for visualization
+        """
+        df = self.get_dataframe()
+        return self.style_empirical_sizing_result(df)
 
 
 class SampleSizeCurveResultHolder(ResultsHolder):
@@ -214,16 +225,38 @@ class SampleSizeCurveResultHolder(ResultsHolder):
             results_dict[el] = self.raw_df.loc[el, :].reset_index()
         self.data = results_dict
 
+    def set_raw_data_stats(self, input_data: pd.DataFrame) -> pd.DataFrame:
+        outlier_percentile = self._params["outlier_percentile"] / 100
+        overall_stats = (
+            input_data[[m.name for m in self._metrics]]
+            .agg(
+                [
+                    "mean",
+                    "std",
+                    lambda d: d[d <= d.quantile(outlier_percentile)].mean(),
+                    lambda d: d[d <= d.quantile(outlier_percentile)].std(),
+                ]
+            )
+            .transpose()
+        )
+        overall_stats.columns = ["mean", "std", "mean_trimmed", "std_trimmed"]
+        overall_stats["trim_change_mean"] = (
+            overall_stats["mean_trimmed"] - overall_stats["mean"]
+        ).abs() / overall_stats["mean"]
+        overall_stats["trim_change_std"] = (
+            overall_stats["std_trimmed"] - overall_stats["std"]
+        ).abs() / overall_stats["std"]
+        self._raw_data_stats = overall_stats
+
     def get_dataframe(
         self,
         input_data: pd.DataFrame = None,
         pct: bool = True,
         simulated_values: list = None,
         append_stats: bool = False,
-        highlight_lessthan: "list[tuple]" = None,
-        style: bool = False,
-    ) -> Union[pd.DataFrame, Styler]:
-        """_summary_
+    ) -> pd.DataFrame:
+        """
+        obtain data for sample size curves
 
         Args:
             input_data (pd.DataFrame, optional): Input data used to generate results,
@@ -244,9 +277,7 @@ class SampleSizeCurveResultHolder(ResultsHolder):
                         provided
 
         Returns:
-            pd.DataFrame or Styler: If style is false, return a dataframe.
-            Otherwise return a Styler, which is meant to be dispalyed in a
-            notebook using the IPython display function.
+            pd.DataFrame : dataframe consolidating data
         """
         # choose which column to output
         if pct:
@@ -265,29 +296,25 @@ class SampleSizeCurveResultHolder(ResultsHolder):
         if append_stats:
             if input_data is None:
                 raise ValueError("append_stats is true but no raw data was provided")
-            outlier_percentile = self._params["outlier_percentile"] / 100
-            overall_stats = (
-                input_data[[m.name for m in self._metrics]]
-                .agg(
-                    [
-                        "mean",
-                        "std",
-                        lambda d: d[d <= d.quantile(outlier_percentile)].mean(),
-                        lambda d: d[d <= d.quantile(outlier_percentile)].std(),
-                    ]
-                )
-                .transpose()
-            )
-            overall_stats.columns = ["mean", "std", "mean_trimmed", "std_trimmed"]
-            overall_stats["trim_change_mean"] = (
-                overall_stats["mean_trimmed"] - overall_stats["mean"]
-            ).abs() / overall_stats["mean"]
-            overall_stats["trim_change_std"] = (
-                overall_stats["std_trimmed"] - overall_stats["std"]
-            ).abs() / overall_stats["std"]
-            pretty_df = pd.concat([pretty_df, overall_stats], axis="columns")
-        if not style:
-            return pretty_df
+            self.set_raw_data_stats(input_data)
+            pretty_df = pd.concat([pretty_df, self._raw_data_stats], axis="columns")
+        return pretty_df
+
+    def get_styled_dataframe(
+        self,
+        input_data: pd.DataFrame = None,
+        pct: bool = True,
+        simulated_values: list = None,
+        append_stats: bool = False,
+        highlight_lessthan: "list[tuple]" = None,
+    ) -> Styler:
+
+        pretty_df = self.get_dataframe(
+            input_data,
+            pct=pct,
+            simulated_values=simulated_values,
+            append_stats=append_stats,
+        )
 
         disp = pretty_df.style.format(
             "{:.2f}%" if pct else "{:,.0f}", subset=simulated_values
@@ -296,7 +323,8 @@ class SampleSizeCurveResultHolder(ResultsHolder):
             large_change_format_str = "color:maroon; font-weight:bold"
             disp = (
                 disp.set_properties(
-                    subset=overall_stats.columns, **{"background-color": "dimgrey"}
+                    subset=self._raw_data_stats.columns,
+                    **{"background-color": "dimgrey"},
                 ).format("{:.2%}", subset=["trim_change_mean", "trim_change_std"])
                 # highlight large changes in mean because of trimming
                 .applymap(
