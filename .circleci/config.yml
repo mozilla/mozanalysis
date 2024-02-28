@@ -23,12 +23,14 @@ test_settings: &test_settings
     - run:
         name: Submit code coverage data
         command: |
-          # Skip this step if running via the CircleCI local CLI.
-          [ -z "$CIRCLE_BUILD_NUM" ] && exit 0
-          # Activate the virtualenv so that codecov can find the 'coverage' executable.
-          source .tox/$CIRCLE_JOB/bin/activate
-          # Upload to codecov and flag (-F) with the name of the job.
-          bash <(curl -s https://codecov.io/bash) -F $CIRCLE_JOB
+          curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
+          curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
+          gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
+          shasum -a 256 -c codecov.SHA256SUM
+          chmod +x codecov
+          ./codecov -F "$(basename $PWD | sed s/[^a-z]/_/g)"
 
 
 
