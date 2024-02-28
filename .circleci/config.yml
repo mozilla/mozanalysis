@@ -44,11 +44,11 @@ jobs:
   py310:
     <<: *test_settings
     docker:
-      - image: python:3.10-bookworm
+      - image: cimg/python:3.10
 
   lint:
     docker:
-      - image: python:3.10-bookworm
+      - image: cimg/python:3.10
     steps:
     - checkout
     - run:
@@ -61,7 +61,7 @@ jobs:
   # below for trigger logic.
   deploy:
     docker:
-      - image: python:3.10-bookworm
+      - image: cimg/python:3.10
     steps:
       - checkout
       - run:
@@ -83,7 +83,7 @@ jobs:
 
   docs: &docs_settings
     docker:
-      - image: python:3.10-bookworm
+      - image: cimg/python:3.10
     steps:
       - checkout
       - run:
