@@ -9,12 +9,6 @@
 test_settings: &test_settings
   steps:
     - checkout
-    - run: &install_packages
-        name: Install system packages
-        command: |
-          # pyspark needs to run Java, so we install openjdk.
-          apt-get update
-          apt-get install -y default-jre-headless
     - run: &run_tox_environment_matching_circleci_job_name
         name: Run tox job
         command: |
