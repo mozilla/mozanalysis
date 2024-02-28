@@ -39,14 +39,14 @@ test_settings: &test_settings
 version: 2
 jobs:
 
-  py38:
+  py310:
     <<: *test_settings
     docker:
-      - image: python:3.8-buster
+      - image: python:3.10-buster
 
   lint:
     docker:
-      - image: python:3.8-buster
+      - image: python:3.10-buster
     steps:
     - checkout
     - run:
@@ -59,7 +59,7 @@ jobs:
   # below for trigger logic.
   deploy:
     docker:
-      - image: python:3.8-buster
+      - image: python:3.10-buster
     steps:
       - checkout
       - run:
@@ -81,7 +81,7 @@ jobs:
 
   docs: &docs_settings
     docker:
-      - image: python:3.8-buster
+      - image: python:3.10-buster
     steps:
       - checkout
       - run:
@@ -125,7 +125,7 @@ workflows:
   version: 2
   build:
     jobs:
-      - py38
+      - py310
       - lint
       - docs
       - docs-deploy:

@@ -1,0 +1,5 @@
+line-length=88
+exclude = [".git","__pycache__"]
+
+[lint]
+ignore= ["E741"]
