@@ -524,7 +524,6 @@ def get_firefox_release_dates() -> Dict[int, str]:
 
 ### TODO:
 ### - adapt for Android (cf cross-platform experiment)
-### - defaults for display highlighting?
 ### - tests
 ### - review docstrings
 
@@ -763,14 +762,17 @@ class SampleSizing:
             If unspecified, the single period length `n_days_observation_max` is used.
 
         Returns 2 DataFrames:
-        TODO:
+        - A DataFrame indexed by (n_days_observation, rel_effect_size, metric) listing required sample sizes
+          and population percent per branch
+        - A DataFrame indexed by (n_days_observation, metric) listing summary
+          stats and trimmed stats (as used by Jetstream).
         """
         n_days_observation = n_days_observation or [self.n_days_observation_max]
         for nd in n_days_observation:
             if nd > self.n_days_observation_max:
                 raise ValueError(
                     f"Cannot request observation period longer than {self.n_days_observation_max},"
-                    "as was originally budgeted for."
+                    + " as was originally budgeted for."
                 )
 
         results = []
@@ -823,7 +825,7 @@ class SampleSizing:
             pd.concat(results)
             .rename(columns={"effect_size": "rel_effect_size"})
             .drop(columns="number_of_clients_targeted")
-            .set_index(["metric", "n_days_observation", "rel_effect_size"])
+            .set_index(["n_days_observation", "rel_effect_size", "metric"])
             .sort_index()
         )
         if self.sample_rate:
@@ -831,76 +833,147 @@ class SampleSizing:
                 df_sizing["population_percent_per_branch"] * self.sample_rate
             )
         df_stats = (
-            pd.concat(stats).set_index("n_days_observation", append=True).sort_index()
+            pd.concat(stats)
+            .set_index("n_days_observation", append=True)
+            .swaplevel()
+            .sort_index()
         )
 
         return df_sizing, df_stats
 
     def display_sample_size_results(
         self,
-        sizing_result,
-        pct=True,
-        effect_sizes=None,
-        append_stats=False,
-        highlight_lessthan=None,
-    ):
-        """Pretty-print the sample sizing results returned by `sample_sizes_for_duration()`.
+        sizing_result: pd.DataFrame,
+        n_days_observation: int,
+        stats_df: pd.DataFrame = None,
+        show_population_pct: bool = True,
+        rel_effect_sizes: List[float] = None,
+        highlight_lessthan: List[float] = None,
+        trim_highlight_threshold: float = 0.15,
+    ) -> Styler:
+        """Display sizing results for a given observation period length.
 
-        sizing_result: sizing result dict returned by sample_sizes_for_duration()
-        pct: should sample sizes be displayed as a percentage of overall population or as an absolute count?
-        effect_sizes: effect sizes to display results for. Can be used to subset columns displayed
-        append_stats: should summary stats be appended to the table? If so, displays mean & stdev,
-            clipped mean & stdev, and relative differences between stat and clipped stat for each.
-        highlight_lessthan: list of (<cutoff (float)>, <color (string)>) tuples. Sample size entries less than <cutoff>
-            will be highlighted in <color> in the displayed table.
+        `sample_sizes()` must be run first and its outputs are passed in here.
+
+        This pretty-prints the sample size results computed by `sample_sizes()` for a given
+        observation length, either in terms of absolute sample sizes or population percentages.
+        Results are presented as a table with a row for each metric and a column for each relative effect size,
+        with the option of appending summary stats for each metric.
+
+        It is also possible to highlight all sample size results which are below one or more thresholds.
+        This helps to answer questions like: if only 5% of the population is available per branch for this experiment,
+        what detectable effect sizes can I expect for each metric.
+
+        sizing_result: DF containing sample sizes and population percentages as returned by `sample_sizes()`.
+        n_days_observation: observation period length to display results for. This should be one
+            of the values of `n_days_observation` supplied when `sample_sizes()` was run.
+        stats_df: DF containing summary statistics as returned by `sample_sizes()`. If supplied,
+            summary stats for each metric are displayed alongside sample sizes.
+        show_population_pct: if `True`, sample sizes are displayed as population percentages,
+            otherwise as counts of clients.
+        rel_effect_sizes: list of relative effect sizes to display sample size results for.
+            This should be a subset of the `rel_effect_sizes` supplied when `sample_sizes()` was run.
+            If not provided, results for all available relative effect sizes are presented
+        highlight_lessthan: list of sample size thresholds to highlight in the results. For each threshold,
+            sample sizes lower than it (but higher than any other thresholds) are highlighted in a predefined colour.
+            When `show_population_pct` is `True`, thresholds should be expressed as a percentage between 0 and 100,
+            not a decimal between 0 and 1 (for example, to set a threshold for 5%, supply `[5]`).
+            At most 3 different thresholds are supported: only the 3 lowest thresholds supplied will be used,
+            and any others are silently ignored.
+        trim_highlight_threshold: if summary stats are shown, cases for which the trimmed mean differs
+            from the raw mean by more than this threshold are highlighted. These metrics are strongly affected
+            by outliers. The threshold should be a relative difference value between 0 and 1.
+
+        Returns a pandas Styler object.
         """
-        sampling_str = (
-            f"  (sampled at a rate of {sizing_result['sample_rate']:.0%})"
-            if sizing_result["sample_rate"]
-            else ""
-        )
-        print(
-            f"\nSizing for {sizing_result['n_days_observation']} days observation.",
-            f"Eligible population size: {sizing_result['eligible_population_size']:,}{sampling_str}\n",
-        )
-        subset = "pop_pcts" if pct else "sample_sizes"
-        pp = sizing_result[subset]
-        if effect_sizes:
-            pp = pp[effect_sizes]
+        if n_days_observation not in sizing_result.index.get_level_values(
+            "n_days_observation"
+        ):
+            raise ValueError(
+                f"No sizing results for {n_days_observation} days observation available."
+                + " Rerun `sample_sizing()` with this value to compute."
+            )
+        if rel_effect_sizes:
+            es_original = rel_effect_sizes
+            rel_effect_sizes = sizing_result.index.get_level_values(
+                "rel_effect_size"
+            ).intersection(rel_effect_sizes)
+            if rel_effect_sizes.empty:
+                raise ValueError(
+                    f"None of the requested effect sizes {es_original} have sizing results available."
+                    + " Rerun `sample_sizing()` with these values to compute."
+                )
         else:
-            effect_sizes = pp.columns
-        if append_stats:
-            stats_df = sizing_result["stats"]
+            rel_effect_sizes = sizing_result.index.get_level_values(
+                "rel_effect_size"
+            ).unique()
+
+        print(f"\nSizing for {n_days_observation} days observation.", end="")
+        self._print_population_size()
+        print()
+
+        result_col = (
+            "population_percent_per_branch"
+            if show_population_pct
+            else "sample_size_per_branch"
+        )
+        sizing_result = (
+            sizing_result.loc[n_days_observation]
+            .loc[rel_effect_sizes, result_col]
+            .unstack("rel_effect_size")
+        )
+
+        if stats_df is not None:
+            stats_df = stats_df.loc[n_days_observation]
             stats_df["trim_change_mean"] = (
                 stats_df["mean_trimmed"] - stats_df["mean"]
             ).abs() / stats_df["mean"]
             stats_df["trim_change_std"] = (
                 stats_df["std_trimmed"] - stats_df["std"]
             ).abs() / stats_df["std"]
-            pp = pd.concat([pp, stats_df], axis="columns")
 
-        disp = pp.style.format("{:.2f}%" if pct else "{:,.0f}", subset=effect_sizes)
-        if append_stats:
-            disp = (
-                disp.set_properties(
-                    subset=stats_df.columns, **{"background-color": "dimgrey"}
+        sizing_result = pd.concat([sizing_result, stats_df], axis="columns")
+
+        styler = (
+            sizing_result.style.format(
+                "{:.2f}%" if show_population_pct else "{:,.0f}", subset=rel_effect_sizes
+            )
+            # Round off displayed effect size values to smallest precision for readability
+            .format_index(
+                axis="columns",
+                precision=int(-np.floor(np.log10(rel_effect_sizes)).min()),
+            )
+        )
+        if stats_df is not None:
+            styler = (
+                styler.set_properties(
+                    subset=stats_df.columns,
+                    **{"background-color": "tan", "color": "black"},
                 ).format("{:.2%}", subset=["trim_change_mean", "trim_change_std"])
                 # highlight large changes in mean because of trimming
                 .applymap(
-                    lambda x: "color:maroon; font-weight:bold" if x > 0.15 else "",
+                    lambda x: "color:maroon; font-weight:bold"
+                    if x > trim_highlight_threshold
+                    else "",
                     subset=["trim_change_mean"],
                 )
             )
 
+        # Colours chosen to work reasonably well in either light or dark mode
+        # Ordered from highest to lowest cutoff
+        highlight_colours = ["lightgreen", "skyblue", "gold"]
         if highlight_lessthan:
-            for lim, color in sorted(
-                highlight_lessthan, key=lambda x: x[0], reverse=True
-            ):
-                disp = disp.highlight_between(
-                    subset=effect_sizes, color=color, right=lim
+            # Only 3 cutoffs suported. Any others are silently dropped
+            highlight_lessthan = sorted(highlight_lessthan)[:3]
+            # Apply from highest to lowest cutoff so that lower cutoffs overwrite higher ones
+            for lim, colour in list(zip(highlight_lessthan, highlight_colours))[::-1]:
+                styler = styler.highlight_between(
+                    subset=rel_effect_sizes,
+                    right=lim,
+                    props=f"background-color:{colour};color:black",
                 )
 
-        display(disp)
+        return styler
 
     def empirical_sizing(
         self, quantile: float = 0.9, style: bool = False
