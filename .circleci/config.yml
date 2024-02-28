@@ -14,7 +14,17 @@ test_settings: &test_settings
         command: |
           pip install tox
           tox -e $CIRCLE_JOB
-    - codecov/upload
+    - run:
+        name: Submit code coverage data
+        command: |
+          curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
+          curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
+          gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
+          shasum -a 256 -c codecov.SHA256SUM
+          chmod +x codecov
+          ./codecov -F "$(basename $PWD | sed s/[^a-z]/_/g)"
 
 
 
@@ -22,10 +32,9 @@ test_settings: &test_settings
 # Jobs: see https://circleci.com/docs/2.0/jobs-steps/
 ####################
 
-version: '2.1'
-orbs:
-  codecov: codecov/codecov@4.0.1
+version: 2
 jobs:
+
   py310:
     <<: *test_settings
     docker:
