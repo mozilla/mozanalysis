@@ -81,8 +81,6 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_packages
-      - run:
           <<: *run_tox_environment_matching_circleci_job_name
       - persist_to_workspace:
           root: docs/_build
