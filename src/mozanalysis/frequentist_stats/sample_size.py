@@ -251,7 +251,7 @@ class SampleSizeCurveResultHolder(ResultsHolder):
     def get_dataframe(
         self,
         input_data: pd.DataFrame = None,
-        pct: bool = True,
+        show_population_pct: bool = True,
         simulated_values: list = None,
         append_stats: bool = False,
     ) -> pd.DataFrame:
@@ -261,7 +261,7 @@ class SampleSizeCurveResultHolder(ResultsHolder):
         Args:
             input_data (pd.DataFrame, optional): Input data used to generate results,
                 used to generate statistics. Defaults to None.
-            pct (bool, optional): If true, percentage of population will be used in
+            show_population_pct (bool, optional): If true, percentage of population will be used in
                 output rather than raw counts. Defaults to True.
             simulated_values (list, optional): List of simulated values to subset
                 output to. If None, all values will be included. Defaults to None.
@@ -280,7 +280,7 @@ class SampleSizeCurveResultHolder(ResultsHolder):
             pd.DataFrame : dataframe consolidating data
         """
         # choose which column to output
-        if pct:
+        if show_population_pct:
             subset_col = "population_percent_per_branch"
         else:
             subset_col = "sample_size_per_branch"
@@ -303,42 +303,90 @@ class SampleSizeCurveResultHolder(ResultsHolder):
     def get_styled_dataframe(
         self,
         input_data: pd.DataFrame = None,
-        pct: bool = True,
-        simulated_values: list = None,
+        show_population_pct: bool = True,
+        simulated_values: List[float] = None,
         append_stats: bool = False,
-        highlight_lessthan: "list[tuple]" = None,
+        highlight_lessthan: List[float] = None,
+        trim_highlight_threshold: float = 0.15,
     ) -> Styler:
+        """
+        Returns styled dataframe useful for visualization
+
+        Args:
+            input_data (pd.DataFrame, optional): Metric data used for summary stats.
+                Defaults to None.
+            show_population_pct (bool, optional): Controls whether output is a percent
+                of population or a count. Defaults to True.
+            simulated_values (List[float], optional): List of values that were varied
+                to create curves. Defaults to None.
+            append_stats (bool, optional): Controls whether or not to append summary
+                stats to output dataframe. Defaults to False.
+            highlight_lessthan (List[float], optional): list of sample size thresholds
+                to highlight in the results. For each threshold, sample sizes lower than
+                it (but higher than any other thresholds) are highlighted in a
+                predefined colour. When `show_population_pct` is `True`, thresholds
+                should be expressed as a percentage between 0 and 100, not a decimal
+                between 0 and 1 (for example, to set a threshold for 5%, supply `[5]`).
+                At most 3 different thresholds are supported: only the 3 lowest
+                thresholds supplied will be used, and any others are silently ignored.
+                Defaults to None.
+            trim_highlight_threshold (float, optional): if summary stats are shown,
+                cases for which the trimmed mean differs from the raw mean by more
+                than this threshold are highlighted. These metrics are strongly affected
+                by outliers. The threshold should be a relative difference value between
+                0 and 1.. Defaults to 0.15.
+
+        Returns:
+            Styler: styled output
+        """
+        if simulated_values is None:
+            simulated_values = self._params["simulated_values"]
 
         pretty_df = self.get_dataframe(
             input_data,
-            pct=pct,
+            show_population_pct=show_population_pct,
             simulated_values=simulated_values,
             append_stats=append_stats,
         )
 
-        disp = pretty_df.style.format(
-            "{:.2f}%" if pct else "{:,.0f}", subset=simulated_values
+        disp = (
+            pretty_df.style.format(
+                "{:.2f}%" if show_population_pct else "{:,.0f}", subset=simulated_values
+            )
+            # Round displayed effect size values to smallest precision for readability
+            .format_index(
+                axis="columns",
+                precision=int(-np.floor(np.log10(simulated_values)).min()),
+            )
         )
         if append_stats:
             large_change_format_str = "color:maroon; font-weight:bold"
             disp = (
                 disp.set_properties(
                     subset=self._raw_data_stats.columns,
-                    **{"background-color": "dimgrey"},
+                    **{"background-color": "tan", "color": "black"},
                 ).format("{:.2%}", subset=["trim_change_mean", "trim_change_std"])
                 # highlight large changes in mean because of trimming
                 .applymap(
-                    lambda x: large_change_format_str if x > 0.15 else "",
+                    lambda x: (
+                        large_change_format_str if x > trim_highlight_threshold else ""
+                    ),
                     subset=["trim_change_mean"],
                 )
             )
 
+        # Colours chosen to work reasonably well in either light or dark mode
+        # Ordered from highest to lowest cutoff
+        highlight_colours = ["lightgreen", "skyblue", "gold"]
         if highlight_lessthan:
-            for lim, color in sorted(
-                highlight_lessthan, key=lambda x: x[0], reverse=True
-            ):
+            # Only 3 cutoffs suported. Any others are silently dropped
+            highlight_lessthan = sorted(highlight_lessthan)[:3]
+            # Apply from highest to lowest cutoff so that lower cutoffs overwrite higher
+            for lim, colour in list(zip(highlight_lessthan, highlight_colours))[::-1]:
                 disp = disp.highlight_between(
-                    subset=simulated_values, color=color, right=lim
+                    subset=simulated_values,
+                    right=lim,
+                    props=f"background-color:{colour};color:black",
                 )
 
         return disp
