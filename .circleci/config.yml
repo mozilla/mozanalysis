@@ -52,8 +52,8 @@ jobs:
     - run:
         name: Run linting
         command: |
-          pip install flake8
-          flake8 src/ tests/
+          pip install ruff
+          ruff check src/ tests/
 
   # Runs when the repository is tagged for release; see the workflows section
   # below for trigger logic.
