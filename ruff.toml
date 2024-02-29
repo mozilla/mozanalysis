@@ -18,3 +18,4 @@ select = [
     "PT", # flake8-pytest-style
     "RUF", # Ruff-specific rules
 ]
+
