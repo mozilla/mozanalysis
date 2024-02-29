@@ -39,9 +39,8 @@ def compare_branches(
             branch, probably the control). Change these when making
             Bonferroni corrections.
 
-    Returns:
-    -------
-        a dictionary:
+    Returns a dictionary:
+
         * 'individual': dictionary mapping branch names to a pandas
           Series of summary stats for the posterior distribution over
           the branch's conversion rate.
@@ -171,14 +170,8 @@ def compare_branches_from_agg(
         num_conversions_label: Label for the df column containing the
             number of conversions in each branch.
         num_samples: The number of samples to compute
-        individual_summary_quantiles: quantilies used for individual
-            summary
-        comparative_summary_quantiles: quantiles used for comparative
-            summary
 
-    Returns:
-    -------
-      a dictionary:
+    Returns a dictionary:
 
         * 'individual': dictionary mapping branch names to a pandas
           Series of summary stats for the posterior distribution over
@@ -234,9 +227,7 @@ def get_samples(df, num_enrollments_label, num_conversions_label, num_samples):
             number of conversions in each branch.
         num_samples: The number of samples to compute
 
-    Returns:
-    -------
-       a pandas.DataFrame of sampled conversion rates
+    Returns a pandas.DataFrame of sampled conversion rates
 
         * columns: list of branches
         * index: enumeration of samples

@@ -30,9 +30,8 @@ def sample_size_curves(
     alpha: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.05,
     **solver_kwargs,
 ) -> Dict[str, pd.DataFrame]:
-    """Loop through different parameters to produce sample size estimates for each.
-
-    A single parameter in [effect_size, power, alpha] should
+    """Loop over a list of different parameters to produce sample size estimates given
+    those parameters. A single parameter in [effect_size, power, alpha] should
     be passed a list; the sample size curve will be calculated with this as
     the variable.
 
@@ -43,8 +42,8 @@ def sample_size_curves(
             used to construct the results df from HistoricalTarget. The names
             of these metrics are used to return results for sample size
             calculation for each.
-        solver: any function that returns sample size as function of
-            effect_size, power, alpha The solver being used to calculate sample
+        solver (any function that returns sample size as function of
+            effect_size, power, alpha): The solver being used to calculate sample
             size.
         effect_size (float or ArrayLike, default .01): For test of differences in
             proportions, the absolute difference; for tests of differences in mean,
@@ -99,7 +98,8 @@ def difference_of_proportions_sample_size_calc(
     power: float = 0.90,
     outlier_percentile: float = 99.5,
 ) -> dict:
-    """Perform sample size calculation testing for a difference in proportions.
+    """Perform sample size calculation for an experiment to test for a
+    difference in proportions.
 
     Args:
     ----
@@ -156,7 +156,8 @@ def z_or_t_ind_sample_size_calc(
     power: float = 0.90,
     outlier_percentile: float = 99.5,
 ) -> dict:
-    """Perform sample size calculation based on independent samples t or z tests.
+    """Perform sample size calculation for an experiment based on independent
+    samples t or z tests.
 
     Args:
     ----
@@ -219,10 +220,8 @@ def empirical_effect_size_sample_size_calc(
     parent_distribution: str = "normal",
     plot_effect_sizes: bool = False,
 ) -> dict:
-    """Perform sample size calculation.
-
-    Uses empirical effect size and asymptotic approximation
-    of Wilcoxen-Mann-Whitney U Test. Empirical effect size
+    """Perform sample size calculation with empirical effect size and
+    asymptotic approximation of Wilcoxen-Mann-Whitney U Test. Empirical effect size
     is estimated using a quantile of week-to-week changes over
     the course of the study, and the variance in the test statistic is
     estimated as a quantile of weekly variance in metrics. Sample
@@ -237,7 +236,7 @@ def empirical_effect_size_sample_size_calc(
             mozanalysis.sizing.HistoricalTarget.get_time_series_data.
         bq_context: A mozanalysis.bq.BigQueryContext object that handles downloading
             time series data from BigQuery.
-        metric_list (list of mozanalysis.metrics.Metric): List of metrics
+        metrics_list (list of mozanalysis.metrics.Metric): List of metrics
             used to construct the results df from HistoricalTarget. The names
             of these metrics are used to return results for sample size
             calculation for each.
@@ -264,9 +263,8 @@ def empirical_effect_size_sample_size_calc(
     def _mann_whitney_solve_sample_size_approximation(
         effect_size, std, alpha=0.05, power=0.8, parent_distribution="normal"
     ):
-        """Wilcoxen-Mann-Whitney rank sum test sample size calculation.
-
-        Based on asymptotic efficiency relative to the t-test.
+        """Wilcoxen-Mann-Whitney rank sum test sample size calculation,
+        based on asymptotic efficiency relative to the t-test.
         """
         rel_effect_size = effect_size / std
         are = {
@@ -355,9 +353,8 @@ def poisson_diff_solve_sample_size(
     power: float = 0.90,
     outlier_percentile: float = 99.5,
 ) -> dict:
-    """Sample size for test of difference of Poisson rates.
-
-    Based on Poisson rate's asymptotic normality.
+    """Sample size for test of difference of Poisson rates,
+    based on Poisson rate's asymptotic normality.
 
     Args:
     ----
@@ -419,11 +416,10 @@ def variable_enrollment_length_sample_size_calc(
     variable_window_length: int = 7,
     experiment_name: Optional[str] = "",
     app_id: Optional[str] = "",
+    to_pandas: bool = True,
     **sizing_kwargs,
 ) -> Dict[str, Union[Dict[str, int], pd.DataFrame]]:
-    """Sample size calculation over a variable enrollment window.
-
-    This function
+    """Sample size calculation over a variable enrollment window. This function
     will fetch a DataFrame with metrics defined in metric_list for a target
     population defined in the target_list over an enrollment window of length
     max_enrollment_days. Sample size calculation is performed

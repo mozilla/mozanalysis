@@ -34,9 +34,8 @@ def compare_samples(
         comparative_summary_quantiles (list of float): Quantiles that
             define the summary stats for the comparative stats.
 
-    Returns:
-    -------
-        A dictionary. When the values of ``samples`` are Series, then this function
+    Returns a dictionary:
+        When the values of ``samples`` are Series, then this function
         returns a dictionary with the following keys and
         values:
 
