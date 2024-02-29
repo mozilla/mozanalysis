@@ -5,7 +5,6 @@ exclude = [".git","__pycache__"]
 ignore= ["E741",
         "D100", # module-level docstrings
         "D104"] # package-level docstrings
-        
 select = [
     "E", # pycodestyle
     "W", # pycodestyle
