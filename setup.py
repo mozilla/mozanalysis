@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 tests_require = [
     "mock",
     "pytest",
-    "pytest-black",
+    "pytest-ruff",
     "pytest-cov",
     "pytest-timeout",
 ]
@@ -25,6 +25,7 @@ setup(
     url="https://github.com/mozilla/mozanalysis",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
+    python_requires=">=3.10,<=3.11",
     install_requires=[
         "attrs",
         "mozilla-metric-config-parser",
