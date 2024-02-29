@@ -8,13 +8,24 @@ edited by data scientists.
 
 Online documentation is available at https://mozilla.github.io/mozanalysis/
 
-## Installing from pypi
+##  Installation from pypi
 - To install this package from pypi run:
 ```
 pip install mozanalysis
 ```
 
+## Development
+Linting and Formatting are done with Ruff.
+
 ## Testing locally
+
+### With pytest
+First one must ensure that all the test dependencies are installed.  To do so, navigate to the root of the repo and run
+```
+pip install -e ".[testing]"
+```
+
+Then run `pytest` on the commandline
 
 ### with Tox
 
@@ -26,7 +37,7 @@ or the tests you run. Options after `--` or positional arguments are forwarded t
 For example, you can run:
 
 * `tox -e lint` to lint
-* `tox -e py37 -- -k utils` to only run tests with "utils" somewhere in the name, on Python 3.7
+* `tox -e py310 -- -k utils` to only run tests with "utils" somewhere in the name, on Python 3.10
 * `tox tests/test_utils.py` to run tests in a specific file
 
 ### with the CircleCI utilities
@@ -37,7 +48,7 @@ CircleCI runs for continuous integration by
 and invoking:
 
 ```bash
-circleci build --job py37
+circleci build --job py310
 ```
 
 See [.circleci/config.yml](https://github.com/mozilla/mozanalysis/blob/main/.circleci/config.yml)
