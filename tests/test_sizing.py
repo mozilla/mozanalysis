@@ -1,10 +1,11 @@
+from cheap_lint import sql_lint
+
 import mozanalysis.metrics.desktop as mad
 import mozanalysis.segments.desktop as msd
-from cheap_lint import sql_lint
 from mozanalysis.experiment import TimeLimits
-from mozanalysis.metrics import DataSource, Metric
-from mozanalysis.segments import Segment, SegmentDataSource
 from mozanalysis.sizing import HistoricalTarget
+from mozanalysis.segments import Segment, SegmentDataSource
+from mozanalysis.metrics import Metric, DataSource
 
 
 def test_multiple_datasource():
@@ -109,9 +110,7 @@ def test_custom_query_override_target():
 
     assert (
         "custom_query_target_table" in target_sql
-    )
-    assert (
-        "TEST AGG SELECT STATEMENT" not in target_sql
+        and "TEST AGG SELECT STATEMENT" not in target_sql
     )
 
 

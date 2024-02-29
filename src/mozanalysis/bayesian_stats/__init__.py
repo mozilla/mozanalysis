@@ -179,7 +179,7 @@ def _summarize_one_branch_samples_single(samples, quantiles=DEFAULT_QUANTILES):
 
     q_index = [str(v) for v in quantiles]
 
-    res = pd.Series(index=[*q_index, "mean"], dtype="float")
+    res = pd.Series(index=q_index + ["mean"], dtype="float")
 
     res[q_index] = np.quantile(samples, quantiles)
     res["mean"] = np.mean(samples)
@@ -194,8 +194,8 @@ def _summarize_joint_samples_single(focus, reference, quantiles=DEFAULT_QUANTILE
     str_quantiles = [str(q) for q in quantiles]
 
     index = pd.MultiIndex.from_tuples(
-        [("rel_uplift", q) for q in [*str_quantiles, "exp"]]
-        + [("abs_uplift", q) for q in [*str_quantiles, "exp"]]
+        [("rel_uplift", q) for q in str_quantiles + ["exp"]]
+        + [("abs_uplift", q) for q in str_quantiles + ["exp"]]
         + [("max_abs_diff", "0.95"), ("prob_win",)]
     )
 

@@ -2,16 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from typing import List, Union, Dict, Optional
 from datetime import datetime
-from math import pi
-from typing import Dict, List, Optional, Union
-
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from scipy.stats import norm
-from statsmodels.stats.power import tt_ind_solve_power, zt_ind_solve_power
-from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
 
 from mozanalysis.bq import BigQueryContext
 from mozanalysis.experiment import TimeSeriesResult
@@ -19,6 +11,14 @@ from mozanalysis.metrics import Metric
 from mozanalysis.segments import Segment
 from mozanalysis.sizing import HistoricalTarget
 from mozanalysis.utils import get_time_intervals
+
+from scipy.stats import norm
+from math import pi
+from statsmodels.stats.power import tt_ind_solve_power, zt_ind_solve_power
+from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def sample_size_curves(
@@ -268,7 +268,7 @@ def empirical_effect_size_sample_size_calc(
             "laplace": 2.0 / 3.0,
         }
 
-        if parent_distribution not in are:
+        if parent_distribution not in are.keys():
             raise ValueError(f"Parent distribution must be in {are.keys()}")
 
         t_sample_size = tt_ind_solve_power(
@@ -479,7 +479,7 @@ def variable_enrollment_length_sample_size_calc(
             df=df_interval, metrics_list=metric_list, test="t", **sizing_kwargs
         )
         final_res = {}
-        for key in res:
+        for key in res.keys():
             final_res[key] = {
                 "enrollment_end_date": interval_end_dates[i],
                 **res[key],
@@ -496,7 +496,7 @@ def variable_enrollment_length_sample_size_calc(
         for m in metric_list:
             results_dict[m.name].append(res[m.name])
 
-    for m in results_dict:
+    for m in results_dict.keys():
         results_dict[m] = pd.DataFrame(results_dict[m])
 
     return results_dict

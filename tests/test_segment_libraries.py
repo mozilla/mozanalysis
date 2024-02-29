@@ -1,7 +1,8 @@
-import mozanalysis.metrics.desktop as mmd
-import mozanalysis.segments.desktop as msd
 import pytest
 from cheap_lint import sql_lint
+
+import mozanalysis.metrics.desktop as mmd
+import mozanalysis.segments.desktop as msd
 from mozanalysis.segments import Segment, SegmentDataSource
 
 from . import enumerate_included
@@ -65,7 +66,7 @@ def test_segment_data_source_window_start_validates():
         window_end=-1,
     )
 
-    with pytest.raises(ValueError, match="window_start must be <= window_end"):
+    with pytest.raises(ValueError):
         SegmentDataSource(
             name="bla",
             from_expr="bla",
@@ -85,15 +86,11 @@ def test_segment_validates_not_metric_data_source():
 
 def test_included_segments_have_docs(included_segments):
     for name, segment in included_segments:
-        assert segment.friendly_name
-        assert segment.description, name
+        assert segment.friendly_name and segment.description, name
 
 
 def test_complains_about_template_without_default():
-    with pytest.raises(
-        ValueError,
-        match="foo: from_expr contains a dataset template but no value was provided.",
-    ):
+    with pytest.raises(ValueError):
         SegmentDataSource(
             name="foo",
             from_expr="moz-fx-data-shared-prod.{dataset}.foo",

@@ -6,19 +6,23 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import pytest
+
 from mozanalysis.frequentist_stats.sample_size import (
-    empirical_effect_size_sample_size_calc,
     z_or_t_ind_sample_size_calc,
+    empirical_effect_size_sample_size_calc,
 )
 from mozanalysis.metrics.desktop import search_clients_daily, uri_count
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_ts_result():
     class FakeTimeSeriesResult:
         def get_aggregated_data(self, metric_list, aggregate_function, **kwargs):
             periods = [0, 7, 14]
-            values = [5, 2, 1] if aggregate_function == "AVG" else [1, 2, 1]
+            if aggregate_function == "AVG":
+                values = [5, 2, 1]
+            else:
+                values = [1, 2, 1]
 
             df = pd.DataFrame({"analysis_window_start": periods})
             for m in metric_list:
@@ -38,7 +42,7 @@ def test_sample_size_calc_desktop():
 
     res = z_or_t_ind_sample_size_calc(df, [search_clients_daily, uri_count])
 
-    assert all(c in res for c in df.columns)
+    assert all([c in res.keys() for c in df.columns])
 
     assert res[search_clients_daily.name]["sample_size_per_branch"] > 1000000
     assert res[uri_count.name]["sample_size_per_branch"] > 1000000

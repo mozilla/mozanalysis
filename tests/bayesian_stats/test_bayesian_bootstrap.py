@@ -1,10 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import mozanalysis.bayesian_stats.bayesian_bootstrap as mabsbb
 import numpy as np
 import pandas as pd
 import pytest
+
+import mozanalysis.bayesian_stats.bayesian_bootstrap as mabsbb
 
 
 def test_resample_and_agg_once():
@@ -128,7 +129,7 @@ def test_compare_branches():
     assert res["individual"]["same"]["mean"] == pytest.approx(0.5, rel=1e-1)
     assert res["individual"]["bigger"]["mean"] == pytest.approx(0.75, rel=1e-1)
 
-    assert "control" not in res["comparative"]
+    assert "control" not in res["comparative"].keys()
     assert res["comparative"]["same"][("rel_uplift", "exp")] == pytest.approx(
         0, abs=0.1
     )
@@ -175,7 +176,7 @@ def test_compare_branches_multistat():
         0.75, rel=1e-1
     )
 
-    assert "control" not in res["comparative"]
+    assert "control" not in res["comparative"].keys()
 
     assert res["comparative"]["same"].loc[
         "mean", ("rel_uplift", "exp")

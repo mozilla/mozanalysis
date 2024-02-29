@@ -3,25 +3,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import annotations
 
-from datetime import date
-from typing import TYPE_CHECKING, Tuple
-
 import attr
 
-from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
+from typing import List, Optional, Tuple, Dict, Union
+from pandas import DataFrame
+
+from mozanalysis.bq import sanitize_table_name_for_bq, BigQueryContext
+from mozanalysis.utils import hash_ish
 from mozanalysis.experiment import (
     AnalysisWindow,
     TimeLimits,
-    TimeSeriesResult,
     add_days,
+    TimeSeriesResult,
 )
-from mozanalysis.utils import hash_ish
-
-if TYPE_CHECKING:
-    from pandas import DataFrame
-
-    from mozanalysis.metrics import DataSource, Metric
-    from mozanalysis.segments import Segment, SegmentDataSource
+from mozanalysis.metrics import Metric, DataSource
+from mozanalysis.segments import Segment, SegmentDataSource
+from datetime import date
 
 
 @attr.s(frozen=False, slots=True)
@@ -108,9 +105,9 @@ class HistoricalTarget:
     def get_single_window_data(
         self,
         bq_context: BigQueryContext,
-        metric_list: list[Metric],
-        target_list: list[Segment] | None = None,
-        custom_targets_query: str | None = None,
+        metric_list: List[Metric],
+        target_list: Optional[List[Segment]] = None,
+        custom_targets_query: Optional[str] = None,
         replace_tables: bool = False,
     ) -> DataFrame:
         """Return a DataFrame containing per-client metric values.
@@ -169,10 +166,10 @@ class HistoricalTarget:
         today = date.today().strftime("%Y-%m-%d")
         if last_date_full_data >= today:
             raise ValueError(
-                f"Based on the start date, {self.start_date}"
-                + f", with {self.num_dates_enrollment} days of enrollment "
-                + f"and analysis of length {self.analysis_length} days, "
-                + f"the last day of analysis is {last_date_full_data}"
+                "Based on the start date, {}".format(self.start_date)
+                + ", with {} days of enrollment ".format(self.num_dates_enrollment)
+                + "and analysis of length {} days, ".format(self.analysis_length)
+                + "the last day of analysis is {}".format(last_date_full_data)
                 + ", which is in the future."
             )
 
@@ -233,10 +230,10 @@ class HistoricalTarget:
     def get_time_series_data(
         self,
         bq_context: BigQueryContext,
-        metric_list: list[Metric],
+        metric_list: List[Metric],
         time_series_period: str = "weekly",
-        custom_targets_query: str | None = None,
-        target_list: list[HistoricalTarget] | None = None,
+        custom_targets_query: Optional[str] = None,
+        target_list: Optional[List[HistoricalTarget]] = None,
         replace_tables: bool = False,
     ) -> TimeSeriesResult:
         """Return a TimeSeriesResult with per-client metric values.
@@ -292,10 +289,10 @@ class HistoricalTarget:
         today = date.today().strftime("%Y-%m-%d")
         if last_date_full_data >= today:
             raise ValueError(
-                f"Based on the start date, {self.start_date}"
-                + f", with {self.num_dates_enrollment} days of enrollment "
-                + f"and analysis of length {self.analysis_length} days, "
-                + f"the last day of analysis is {last_date_full_data}"
+                "Based on the start date, {}".format(self.start_date)
+                + ", with {} days of enrollment ".format(self.num_dates_enrollment)
+                + "and analysis of length {} days, ".format(self.analysis_length)
+                + "the last day of analysis is {}".format(last_date_full_data)
                 + ", which is in the future."
             )
 
@@ -353,8 +350,8 @@ class HistoricalTarget:
     def build_targets_query(
         self,
         time_limits: TimeLimits,
-        target_list: Segment | None = None,
-        custom_targets_query: str | None = None,
+        target_list: Optional[Segment] = None,
+        custom_targets_query: Optional[str] = None,
     ) -> str:
 
         return """
@@ -366,7 +363,7 @@ class HistoricalTarget:
 
     def build_metrics_query(
         self,
-        metric_list: list[Metric],
+        metric_list: List[Metric],
         time_limits: TimeLimits,
         targets_table: str,
     ) -> str:
@@ -421,7 +418,7 @@ class HistoricalTarget:
         )
 
     @staticmethod
-    def _build_analysis_windows_query(analysis_windows: tuple[AnalysisWindow]) -> str:
+    def _build_analysis_windows_query(analysis_windows: Tuple[AnalysisWindow]) -> str:
         """Return SQL to construct a table of analysis windows.
 
         To query a time series, we construct a table of analysis windows
@@ -431,14 +428,17 @@ class HistoricalTarget:
         This method writes the SQL to define the analysis window table.
         """
         return "\n        UNION ALL\n        ".join(
-            f"""(SELECT {aw.start} AS analysis_window_start,
-                {aw.end} AS analysis_window_end)"""
+            """(SELECT {aws} AS analysis_window_start,
+                {awe} AS analysis_window_end)""".format(
+                aws=aw.start,
+                awe=aw.end,
+            )
             for aw in analysis_windows
         )
 
     def _partition_by_data_source(
-        self, metric_list: list[Metric]
-    ) -> dict[DataSource | SegmentDataSource, list[Metric | Segment]]:
+        self, metric_list: List[Metric]
+    ) -> Dict[Union[DataSource, SegmentDataSource], List[Union[Metric, Segment]]]:
         """Return a dict mapping data sources to target/metric lists."""
         data_sources = {m.data_source for m in metric_list}
 
@@ -447,7 +447,7 @@ class HistoricalTarget:
         }
 
     def _build_targets_query(
-        self, target_list: list[Segment], time_limits: TimeLimits
+        self, target_list: List[Segment], time_limits: TimeLimits
     ) -> str:
 
         target_queries = []
@@ -461,30 +461,36 @@ class HistoricalTarget:
             )
 
             target_queries.append(
-                f"""
+                """
         ds_{i} AS (
-                {query_for_target}
-            ),"""
+                {query}
+            ),""".format(
+                    i=i, query=query_for_target
+                )
             )
 
             target_columns.append(
-                f"""
-                    ,ds_{i}.{t.name}
-                    ,ds_{i}.target_first_date as {t.name}_first_date
                 """
+                    ,ds_{i}.{name}
+                    ,ds_{i}.target_first_date as {name}_first_date
+                """.format(
+                    i=i, name=t.name
+                )
             )
 
             if i != 0:
                 target_joins.append(
-                    f"""
+                    """
                     INNER JOIN ds_{i}
                         ON ds_{i}.client_id = ds_0.client_id
                         AND ds_{i}.target_first_date <= ds_0.target_last_date
                         AND ds_{i}.target_last_date >= ds_0.target_first_date
-                        """
+                        """.format(
+                        i=i
+                    )
                 )
 
-            dates_columns.append(f"{t.name}_first_date")
+            dates_columns.append("{name}_first_date".format(name=t.name))
 
         target_def = "WITH" + " ".join(q for q in target_queries)
 
@@ -510,23 +516,27 @@ class HistoricalTarget:
             target_first_dates=", ".join(c for c in dates_columns)
         )
 
-        return f"""
-        {target_def}
+        return """
+        {query_for_targets}
         {joined_query}
-        {unpivot_join}
+        {final_table}
         SELECT
             client_id,
             max(min_dates) as enrollment_date
         FROM unpivoted
         GROUP BY client_id
-        """
+        """.format(
+            query_for_targets=target_def,
+            joined_query=joined_query,
+            final_table=unpivot_join,
+        )
 
     def _build_metrics_query_bits(
-        self, metric_list: list[Metric], time_limits: TimeLimits
-    ) -> tuple[list[str], list[str]]:
+        self, metric_list: List[Metric], time_limits: TimeLimits
+    ) -> Tuple[List[str], List[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
         ds_metrics = self._partition_by_data_source(metric_list)
-        ds_metrics = dict(ds_metrics.items())
+        ds_metrics = {ds: metrics for ds, metrics in ds_metrics.items()}
 
         metrics_columns = []
         metrics_joins = []
@@ -541,15 +551,17 @@ class HistoricalTarget:
                 from_expr_dataset=self.app_id,
             )
             metrics_joins.append(
-                f"""    LEFT JOIN (
-        {query_for_metrics}
+                """    LEFT JOIN (
+        {query}
         ) ds_{i} USING (client_id, analysis_window_start, analysis_window_end)
-                """
+                """.format(
+                    query=query_for_metrics, i=i
+                )
             )
 
             for m in ds_metrics[ds]:
                 metrics_columns.append(
-                    f"ds_{i}.{m.name}"
+                    "ds_{i}.{metric_name}".format(i=i, metric_name=m.name)
                 )
 
         return metrics_columns, metrics_joins

@@ -1,12 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import mozanalysis.bayesian_stats.bayesian_bootstrap as mabsbb
-import mozanalysis.bayesian_stats.binary as mabsbin
-import mozanalysis.frequentist_stats.bootstrap as mafsb
 import numpy as np
 import pandas as pd
 import pytest
+
+import mozanalysis.bayesian_stats.bayesian_bootstrap as mabsbb
+import mozanalysis.bayesian_stats.binary as mabsbin
+import mozanalysis.frequentist_stats.bootstrap as mafsb
 
 
 def test_bootstrap_vs_beta():

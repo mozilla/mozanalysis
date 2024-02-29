@@ -4,9 +4,9 @@
 import datetime
 import hashlib
 from functools import reduce
-from typing import List, Union
 
 import numpy as np
+from typing import Union, List
 
 
 def all_(l):
