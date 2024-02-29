@@ -7,6 +7,12 @@
 # We use it to expose modules available in mozanalysis package.
 # https://github.com/mozilla/jetstream
 import os
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("mozanalysis")
+except PackageNotFoundError:
+    __version__ = "unknown version"
 
 __all__ = []
 basedir = os.path.dirname(__file__)
