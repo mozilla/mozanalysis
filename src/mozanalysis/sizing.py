@@ -71,7 +71,6 @@ class HistoricalTarget:
         metrics_sql = ht.get_metrics_sql()
 
     Args:
-    ----
         experiment_name (str): A simple name of this analysis, which is used
             to create table names when saving results in BigQuery.
         start_date (str): e.g. '2019-01-01'. First date for historical data to be
@@ -87,7 +86,6 @@ class HistoricalTarget:
             dataset derived from its app ID, like `org_mozilla_firefox`.
 
     Attributes:
-    ----------
         experiment_name (str): Name of the study, used in naming tables
             related to this analysis.
         start_date (str): e.g. '2019-01-01'. First date on which enrollment
@@ -95,7 +93,6 @@ class HistoricalTarget:
         num_dates_enrollment (int): Number of days to consider to enroll clients
             in the analysis.
         analysis_length (int, optional): Number of days to include for analysis
-
     """
 
     experiment_name = attr.ib()
@@ -123,7 +120,6 @@ class HistoricalTarget:
         will simply read the results from this table.
 
         Args:
-        ----
             bq_context (BigQueryContext): BigQuery configuration and client.
             metric_list (list of mozanalysis.metric.Metric): The metrics
                 to analyze.
@@ -147,7 +143,6 @@ class HistoricalTarget:
                 the same experiment name with different settings
 
         Returns:
-        -------
             A pandas DataFrame of experiment data. One row per ``client_id``.
             Some metadata columns, then one column per metric in
             ``metric_list``, and one column per sanity-check metric.
@@ -161,7 +156,6 @@ class HistoricalTarget:
                 * ...
                 * [metric n]: The client's value for the nth (final)
                   metric in ``metric_list``.
-
         """
         if not (custom_targets_query or target_list):
             raise ValueError(
@@ -251,7 +245,6 @@ class HistoricalTarget:
         with different analysis windows, and reorganising the results.
 
         Args:
-        ----
             bq_context (BigQueryContext): BigQuery configuration and client.
             metric_list (list of mozanalysis.metric.Metric): The metrics
                 to analyze.
@@ -277,7 +270,6 @@ class HistoricalTarget:
                 the same experiment name with different settings
 
         Returns:
-        -------
             A :class:`mozanalysis.experiment.TimeSeriesResult` object,
             which may be used to obtain a
             pandas DataFrame of per-client metric data, for each
@@ -292,7 +284,6 @@ class HistoricalTarget:
                 * ...
                 * [metric n]: The client's value for the nth (final)
                   metric in ``metric_list``.
-
         """
         last_date_full_data = add_days(
             self.start_date, self.num_dates_enrollment + self.analysis_length - 1
@@ -387,7 +378,6 @@ class HistoricalTarget:
         dataframe.
 
         Args:
-        ----
             metric_list (list of mozanalysis.metric.Metric):
                 The metrics to analyze.
             time_limits (TimeLimits): An object describing the
@@ -395,11 +385,9 @@ class HistoricalTarget:
             targets_table (str): The name of the targets BigQuery table
 
         Returns:
-        -------
             A string containing a BigQuery SQL expression.
 
         Building this query is the main goal of this module.
-
         """
         analysis_windows_query = self._build_analysis_windows_query(
             time_limits.analysis_windows
@@ -636,7 +624,6 @@ class ContinuousEnrollmentTimeLimits:
         parameters:
 
         Args:
-        ----
             first_enrollment_date (str): First date on which enrollment
                 events were received; the start date of the experiment.
             last_date_full_data (str): The most recent date for which we
@@ -655,7 +642,6 @@ class ContinuousEnrollmentTimeLimits:
                 factor ``7`` removes weekly seasonality, and the ``+1``
                 accounts for the fact that enrollment typically starts a few
                 hours before UTC midnight.
-
         """
         analysis_window = AnalysisWindow(0, analysis_length_dates - 1)
 

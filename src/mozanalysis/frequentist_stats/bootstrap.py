@@ -25,7 +25,6 @@ def compare_branches(
     regardless of what you may read on Stack Overflow.
 
     Args:
-    ----
         df: a pandas DataFrame of queried experiment data in the
             standard format (see ``mozanalysis.experiment``).
         col_label (str or list): Label for the df column contaning the metric
@@ -72,7 +71,6 @@ def compare_branches(
         DataFrames. Each row in each DataFrame corresponds to one output
         of `stat_fn`, and is the Series that would be returned if ``stat_fn``
         computed only this statistic.
-
     """
     branch_list = df.branch.unique()
 
@@ -115,7 +113,6 @@ def bootstrap_one_branch(
     of the outputs of ``stat_fn``.
 
     Args:
-    ----
         data: The data as a 1D numpy array, pandas series, or pandas dataframe.
         stat_fn: Either a function that aggregates each resampled
             population to a scalar (e.g. the default value ``np.mean``
@@ -131,7 +128,6 @@ def bootstrap_one_branch(
         summary_quantiles (list, optional): Quantiles to determine the
             confidence bands on the branch statistics. Change these
             when making Bonferroni corrections.
-
     """
     samples = get_bootstrap_samples(
         data, stat_fn, num_samples, seed_start, threshold_quantile
@@ -152,7 +148,6 @@ def get_bootstrap_samples(
     Do the resampling in parallel over the cluster.
 
     Args:
-    ----
         data: The data as a 1D numpy array, pandas series, or pandas dataframe.
         stat_fn: Either a function that aggregates each resampled
             population to a scalar (e.g. the default value ``np.mean``
@@ -172,14 +167,12 @@ def get_bootstrap_samples(
             quantile, above which to discard outliers. E.g. ``0.9999``.
 
     Returns:
-    -------
         ``stat_fn`` evaluated over ``num_samples`` samples.
 
             * By default, a pandas Series of sampled means
             * if ``stat_fn`` returns a scalar, a pandas Series
             * if ``stat_fn`` returns a dict, a pandas DataFrame
               with columns set to the dict keys.
-
     """
     if type(data) is not np.ndarray:
         data = np.array(data.to_numpy(dtype="float", na_value=np.nan))
@@ -232,18 +225,18 @@ def compare_branches_quantiles(
     individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
     comparative_summary_quantiles=mabs.DEFAULT_QUANTILES,
 ):
-    """Performs inferences on the metric quantiles inspired by Spotify's
+    """
+    Performs inferences on the metric quantiles inspired by Spotify's
     "Resampling-free bootstrap inference for quantiles" approach
     https://arxiv.org/pdf/2202.10992.pdf.
 
     Parameters are similar to `compare_branches` except for:
 
     Args:
-    ----
         quantiles (List[float]): a list of quantiles upon which inferences are desired.
         Ex: 0.2 is the 20th percentile, 0.5 is the median, etc.
-
     """
+
     if quantiles_of_interest is None:
         quantiles_of_interest = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     branch_list = df.branch.unique()

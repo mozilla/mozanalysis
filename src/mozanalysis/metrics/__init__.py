@@ -28,7 +28,6 @@ class DataSource:
     """Represents a table or view, from which Metrics may be defined.
 
     Args:
-    ----
         name (str): Name for the Data Source. Used in sanity metric
             column names.
         from_expr (str): FROM expression - often just a fully-qualified
@@ -59,7 +58,6 @@ class DataSource:
             `{dataset}` in from_expr if a value is not provided
             at runtime. Mandatory if from_expr contains a
             `{dataset}` parameter.
-
     """
 
     name = attr.ib(validator=attr.validators.instance_of(str))
@@ -88,10 +86,8 @@ class DataSource:
         If ``from_expr`` is not a template, returns ``from_expr``.
 
         Args:
-        ----
             dataset (str or None): Dataset name to substitute
                 into the from expression.
-
         """
         effective_dataset = dataset or self.default_dataset
         if effective_dataset is None:
@@ -329,7 +325,6 @@ class Metric:
     Needs to be combined with an analysis window to be measurable!
 
     Args:
-    ----
         name (str): A slug; uniquely identifies this metric in tables
         data_source (DataSource): where to find the metric
         select_expr (str): a SQL snippet representing a clause of a SELECT
@@ -339,7 +334,6 @@ class Metric:
         friendly_name (str): A human-readable dashboard title for this metric
         description (str): A paragraph of Markdown-formatted text describing
             what the metric measures, to be shown on dashboards
-
     """
 
     name = attr.ib(type=str)

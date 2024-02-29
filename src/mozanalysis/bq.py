@@ -27,13 +27,11 @@ class BigQueryContext:
     """Holds a BigQuery client, and some configuration.
 
     Args:
-    ----
         dataset_id (str): Your `BigQuery dataset id`_.
         project_id (str, optional): Your BigQuery project_id.
             Defaults to the DS team's project.
 
     .. _BigQuery dataset id: https://cloud.google.com/bigquery/docs/datasets
-
     """
 
     def __init__(self, dataset_id, project_id="moz-fx-data-bq-data-science"):
@@ -49,7 +47,6 @@ class BigQueryContext:
         Returns a ``google.cloud.bigquery.table.RowIterator``
 
         Args:
-        ----
             sql (str): A SQL query.
             results_table (str, optional): A table name, not including
                 a project_id or dataset_id. The table name is used as a
@@ -58,7 +55,6 @@ class BigQueryContext:
                 ``results_table`` to include a hash of ``sql``.
             replace_tables (bool): Indicates if the results table should
                 be replaced with new results, if that table is found.
-
         """
         if not results_table:
             return self.client.query(sql).result()

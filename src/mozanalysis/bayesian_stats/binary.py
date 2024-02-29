@@ -21,7 +21,6 @@ def compare_branches(
     See `compare_branches_from_agg` for more details.
 
     Args:
-    ----
         df (pd.DataFrame): Queried experiment data in the standard
             format.
         col_label (str): Label for the df column contaning the metric
@@ -49,7 +48,6 @@ def compare_branches(
           conversion rate relative to the reference branch - see docs
           for
           :meth:`mozanalysis.bayesian_stats.summarize_samples.summarize_joint_samples`.
-
     """
     agg_col = aggregate_col(df, col_label)
 
@@ -66,14 +64,12 @@ def aggregate_col(df, col_label):
     """Return the number of enrollments and conversions per branch.
 
     Args:
-    ----
         df (pd.DataFrame): Queried experiment data in the standard
             format.
         col_label (str): Label for the df column contaning the metric
             to be analyzed.
 
     Returns:
-    -------
         A DataFrame. The index is the list of branches. It has the
         following columns:
 
@@ -81,7 +77,6 @@ def aggregate_col(df, col_label):
           this branch who were eligible for the metric.
         * num_conversions: The number of these enrolled experiment subjects
           who met the metric's conversion criteria.
-
     """
     # I would have used `isin` but it seems to be ~100x slower?
     if not ((df[col_label] == 0) | (df[col_label] == 1)).all():
@@ -106,7 +101,6 @@ def summarize_one_branch_from_agg(
     distribution over the branch's conversion rate.
 
     Args:
-    ----
         s (pd.Series): Holds the number of enrollments and number of
             conversions for this branch and metric.
         num_enrollments_label (str, optional): The label in this Series
@@ -117,10 +111,8 @@ def summarize_one_branch_from_agg(
             statistics.
 
     Returns:
-    -------
         A pandas Series; the index contains the stringified
         ``quantiles`` plus ``'mean'``.
-
     """
     beta = st.beta(
         s.loc[num_conversions_label] + 1,
@@ -156,7 +148,6 @@ def compare_branches_from_agg(
     Beta(1, 1) (uniform) prior over the conversion rate parameter.
 
     Args:
-    ----
         df: A pandas dataframe of integers.
 
             * ``df.index`` lists the experiment branches
@@ -181,7 +172,6 @@ def compare_branches_from_agg(
           conversion rate relative to the reference branch - see docs
           for
           :meth:`mozanalysis.stats.summarize_samples.summarize_joint_samples`.
-
     """
     assert ref_branch_label in df.index, "What's the reference branch?"
 
@@ -214,7 +204,6 @@ def get_samples(df, num_enrollments_label, num_conversions_label, num_samples):
     Assumes a Beta(1, 1) prior.
 
     Args:
-    ----
         df: A pandas dataframe of integers:
 
             * ``df.index`` lists the experiment branches
@@ -231,7 +220,6 @@ def get_samples(df, num_enrollments_label, num_conversions_label, num_samples):
 
         * columns: list of branches
         * index: enumeration of samples
-
     """
     samples = pd.DataFrame(index=np.arange(num_samples), columns=df.index)
     for branch_label, r in df.iterrows():

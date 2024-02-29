@@ -19,7 +19,6 @@ class SegmentDataSource:
 
 
     Args:
-    ----
         name (str): Name for the Data Source. Should be unique to avoid
             confusion.
         from_expr (str): FROM expression - often just a fully-qualified
@@ -39,7 +38,6 @@ class SegmentDataSource:
             `{dataset}` in from_expr if a value is not provided
             at runtime. Mandatory if from_expr contains a
             `{dataset}` parameter.
-
     """
 
     name = attr.ib(validator=attr.validators.instance_of(str))
@@ -59,10 +57,8 @@ class SegmentDataSource:
         If ``from_expr`` is not a template, returns ``from_expr``.
 
         Args:
-        ----
             dataset (str or None): Dataset name to substitute
                 into the from expression.
-
         """
         effective_dataset = dataset or self.default_dataset
         if effective_dataset is None:
@@ -119,7 +115,8 @@ class SegmentDataSource:
         time_limits,
         from_expr_dataset=None,
     ):
-        """Return a nearly-self contained SQL query, for use with
+        """
+        Return a nearly-self contained SQL query, for use with
         mozanalysis.sizing.HistoricalTarget.
 
         This query returns all distinct client IDs that satisfy the criteria
@@ -161,7 +158,6 @@ class Segment:
     """Represents an experiment Segment.
 
     Args:
-    ----
         name (str): The segment's name; will be a column name.
         data_source (SegmentDataSource): Data source that provides
             the columns referenced in ``select_expr``.
@@ -172,7 +168,6 @@ class Segment:
         friendly_name (str): A human-readable dashboard title for this segment
         description (str): A paragraph of Markdown-formatted text describing
             the segment in more detail, to be shown on dashboards
-
     """
 
     name = attr.ib(type=str)

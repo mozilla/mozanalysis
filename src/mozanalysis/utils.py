@@ -16,15 +16,12 @@ def all_(l):
     `all()`.
 
     Args:
-    ----
         l: A list of `Column`s of booleans. Or, more generally,
             an iterable of items to reduce over.
 
     Returns:
-    -------
         A `Column` of booleans representing the logical AND. Or,
             more generally, the result of the logical AND.
-
     """
     return reduce(lambda x, y: x & y, l)
 
@@ -36,15 +33,12 @@ def any_(l):
     `any()`.
 
     Args:
-    ----
         l: A list of `Column`s of booleans. Or, more generally,
             an iterable of items to reduce over.
 
     Returns:
-    -------
         A `Column` of booleans representing the logical OR. Or,
             more generally, the result of the logical OR.
-
     """
     return reduce(lambda x, y: x | y, l)
 
@@ -71,16 +65,13 @@ def filter_outliers(branch_data, threshold_quantile):
     results.
 
     Args:
-    ----
         branch_data: Data for one branch as a 1D ndarray or similar.
         threshold_quantile (float): Sets outliers above this
             quantile equal to the value of this quantile.
 
     Returns:
-    -------
         branch_data with values capped at or below the threshold
         quantile.
-
     """
     if threshold_quantile > 1 or threshold_quantile < 0.5:
         raise ValueError("'threshold_quantile' should be close to, and <= 1")
@@ -106,18 +97,16 @@ def get_time_intervals(
     variable enrollment lengths.
 
     Args:
-    ----
         start_date: First date of enrollment for sizing job.
         interval: Number of days to increment the enrollment end date by.
         max_num_dates_enrollment: Ceiling for the length of the enrollment
             period.
 
     Returns:
-    -------
         date_list: List of dates where variable enrollment windows will
             end.
-
     """
+
     if isinstance(start_date, str):
         start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
 
