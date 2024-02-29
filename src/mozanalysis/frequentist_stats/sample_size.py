@@ -261,8 +261,8 @@ class SampleSizeCurveResultHolder(ResultsHolder):
         Args:
             input_data (pd.DataFrame, optional): Input data used to generate results,
                 used to generate statistics. Defaults to None.
-            show_population_pct (bool, optional): If true, percentage of population will be used in
-                output rather than raw counts. Defaults to True.
+            show_population_pct (bool, optional): If true, percentage of population
+                will be used in output rather than raw counts. Defaults to True.
             simulated_values (list, optional): List of simulated values to subset
                 output to. If None, all values will be included. Defaults to None.
             append_stats (bool, optional): _description_. If True, summary statistics on
@@ -365,7 +365,8 @@ class SampleSizeCurveResultHolder(ResultsHolder):
                 disp.set_properties(
                     subset=self._raw_data_stats.columns,
                     **{"background-color": "tan", "color": "black"},
-                ).format("{:.2%}", subset=["trim_change_mean", "trim_change_std"])
+                )
+                .format("{:.2%}", subset=["trim_change_mean", "trim_change_std"])
                 # highlight large changes in mean because of trimming
                 .applymap(
                     lambda x: (
