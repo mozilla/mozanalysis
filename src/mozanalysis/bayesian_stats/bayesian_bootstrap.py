@@ -12,6 +12,7 @@ def bb_mean(values, prob_weights):
     """Calculate the mean of a bootstrap replicate.
 
     Args:
+    ----
         values (pd.Series, ndarray): One dimensional array
             of observed values
         prob_weights (pd.Series, ndarray): Equally shaped
@@ -19,7 +20,9 @@ def bb_mean(values, prob_weights):
             each value.
 
     Returns:
+    -------
         The mean as a np.float.
+
     """
     return np.dot(values, prob_weights)
 
@@ -28,25 +31,25 @@ def make_bb_quantile_closure(quantiles):
     """Return a function to calculate quantiles for a bootstrap replicate.
 
     Args:
+    ----
         quantiles (float, list of floats): Quantiles to compute
 
     Returns a function that calculates quantiles for a bootstrap replicate:
 
-        Args:
-
+    Args:
+    ----
             values (pd.Series, ndarray):
                 One dimensional array of observed values
             prob_weights (pd.Series, ndarray):
                 Equally shaped array of the probability weight associated with
                 each value.
 
-        Returns:
-
+    Returns:
+    -------
             * A quantile as a np.float, or
             * several quantiles as a dict keyed by the quantiles
 
     """
-
     # If https://github.com/numpy/numpy/pull/9211/ is ever merged then
     # we can just use that instead.
 
@@ -70,6 +73,7 @@ def make_bb_quantile_closure(quantiles):
         """Calculate quantiles for a bootstrap replicate.
 
         Args:
+        ----
             values (pd.Series, ndarray): One dimensional array
                 of observed values
             prob_weights (pd.Series, ndarray): Equally shaped
@@ -77,9 +81,10 @@ def make_bb_quantile_closure(quantiles):
                 each value.
 
         Returns:
-
+        -------
             * A quantile as a np.float, or
             * several quantiles as a dict keyed by the quantiles
+
         """
         # assume values is previously sorted, as per np.unique()
         cdf = np.cumsum(prob_weights)
@@ -106,6 +111,7 @@ def compare_branches(
     """Jointly sample bootstrapped statistics then compare them.
 
     Args:
+    ----
         df: a pandas DataFrame of queried experiment data in the
             standard format (see `mozanalysis.experiment`).
         col_label (str): Label for the df column contaning the metric
@@ -141,6 +147,7 @@ def compare_branches(
             Bonferroni corrections.
 
     Returns:
+    -------
         If ``stat_fn`` returns a scalar (this is the default), then
         this function returns a dictionary has the following keys and
         values:
@@ -157,6 +164,7 @@ def compare_branches(
         DataFrames. Each row in each DataFrame corresponds to one output
         of ``stat_fn``, and is the Series that would be returned if
         ``stat_fn`` computed only this statistic.
+
     """
     branch_list = df.branch.unique()
 
@@ -198,6 +206,7 @@ def bootstrap_one_branch(
     then returns summary statistics for the results.
 
     Args:
+    ----
         data: The data as a list, 1D numpy array, or pandas Series
         stat_fn (callable, optional): A function that either:
 
@@ -221,6 +230,7 @@ def bootstrap_one_branch(
         summary_quantiles (list, optional): Quantiles to determine the
             confidence bands on the branch statistics. Change these
             when making Bonferroni corrections.
+
     """
     samples = get_bootstrap_samples(
         data, stat_fn, num_samples, seed_start, threshold_quantile
@@ -239,6 +249,7 @@ def get_bootstrap_samples(
     """Return ``stat_fn`` evaluated on resampled data.
 
     Args:
+    ----
         data: The data as a list, 1D numpy array, or pandas series
         stat_fn (callable, optional): A function that either:
 
@@ -267,12 +278,15 @@ def get_bootstrap_samples(
             quantile, above which to discard outliers. E.g. ``0.9999``.
 
     Returns:
+    -------
         A Series or DataFrame with one row per sample and one column
         per output of ``stat_fn``.
 
     References:
+    ----------
         Rubin, Donald B. The Bayesian Bootstrap. Ann. Statist. 9 (1981),
             no. 1, 130--134. https://dx.doi.org/10.1214/aos/1176345338
+
     """
     if type(data) is not np.ndarray:
         data = np.array(data.to_numpy(dtype="float", na_value=np.nan))

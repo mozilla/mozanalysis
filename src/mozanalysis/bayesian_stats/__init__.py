@@ -22,6 +22,7 @@ def compare_samples(
     reference branch.
 
     Args:
+    ----
         samples (dict of pandas.Series or pandas.DataFrame): Each key
             is the label for a branch. Each value is the corresponding
             sample set.
@@ -50,6 +51,7 @@ def compare_samples(
         this function returns a similar dictionary, except the Series
         are replaced with DataFrames. The index for each DataFrame is
         the columns of a value of ``samples``.
+
     """
     branch_list = list(samples.keys())
 
@@ -83,6 +85,7 @@ def summarize_one_branch_samples(samples, quantiles=DEFAULT_QUANTILES):
     concerning one branch of an experiment.
 
     Args:
+    ----
         samples (pandas.Series or pandas.DataFrame): Samples over which
             to compute the mean and quantiles.
         quantiles (list, optional): The quantiles to compute - a good
@@ -90,6 +93,7 @@ def summarize_one_branch_samples(samples, quantiles=DEFAULT_QUANTILES):
             corrections are required.
 
     Returns:
+    -------
         If ``samples`` is a Series, then returns a pandas Series;
         the index contains the stringified ``quantiles`` plus
         ``'mean'``.
@@ -97,6 +101,7 @@ def summarize_one_branch_samples(samples, quantiles=DEFAULT_QUANTILES):
         If ``samples`` is a DataFrame, then returns a pandas DataFrame;
         the columns contain the stringified ``quantiles`` plus
         ``'mean'``. The index matches the columns of ``samples``.
+
     """
     if isinstance(samples, pd.DataFrame) or not np.isscalar(samples[0]):
         return _summarize_one_branch_samples_batch(samples, quantiles)
@@ -133,6 +138,7 @@ def summarize_joint_samples(focus, reference, quantiles=DEFAULT_QUANTILES):
     or in batch mode (supply DataFrames as arguments).
 
     Args:
+    ----
         focus (pandas.Series or pandas.DataFrame): Bootstrapped samples
             or samples of a model parameter for a branch of an
             experiment. If a DataFrame, each column represents a
@@ -145,6 +151,7 @@ def summarize_joint_samples(focus, reference, quantiles=DEFAULT_QUANTILES):
             corrections are required.
 
     Returns:
+    -------
         A pandas Series or DataFrame containing a MultiIndex with the
         following labels on the higher level and stringified floats
         on the inner level
@@ -163,6 +170,7 @@ def summarize_joint_samples(focus, reference, quantiles=DEFAULT_QUANTILES):
 
         If returning a DataFrame, this MultiIndex is for the columns, and
         the index matches the columns of ``focus``.
+
     """
     if isinstance(focus, pd.DataFrame) or not np.isscalar(focus[0]):
         return _summarize_joint_samples_batch(focus, reference, quantiles)

@@ -42,6 +42,7 @@ def compare_branches(df, col_label, ref_branch_label="control", thresholds=None)
     run statistics to compute values for x, with uncertainty.
 
     Args:
+    ----
         df: a pandas DataFrame of queried experiment data in the
             standard format. Target metric should be non-negative.
         col_label (str): Label for the df column contaning the metric
@@ -63,6 +64,7 @@ def compare_branches(df, col_label, ref_branch_label="control", thresholds=None)
           conversion rate relative to the reference branch - see docs
           for
           :meth:`mozanalysis.stats.summarize_samples.summarize_joint_samples_batch`.
+
     """
     branch_list = df.branch.unique()
 
@@ -91,12 +93,15 @@ def get_thresholds(col, max_num_thresholds=101):
     Assumes that the values are non-negative, with zero as a special case.
 
     Args:
+    ----
         col: a Series of individuals' data for a metric
         max_num_thresholds (int): Return at most this many threshold values.
 
     Returns:
+    -------
         A list of thresholds. By default these are de-duped percentiles
         of the nonzero data.
+
     """
     if col.isnull().any():
         raise ValueError("'col' contains null values")

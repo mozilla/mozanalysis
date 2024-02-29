@@ -11,8 +11,7 @@ METRIC_HUB_JETSTREAM_REPO = "https://github.com/mozilla/metric-hub/tree/main/jet
 
 
 class _ConfigLoader:
-    """
-    Loads config files from an external repository.
+    """Loads config files from an external repository.
 
     Config objects are converted into mozanalysis native types.
     """

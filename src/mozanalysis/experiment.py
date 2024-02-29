@@ -97,6 +97,7 @@ class Experiment:
         )
 
     Args:
+    ----
         experiment_slug (str): Name of the study, used to identify
             the enrollment events specific to this study.
         start_date (str): e.g. '2019-01-01'. First date on which enrollment
@@ -113,6 +114,7 @@ class Experiment:
         app_name (str, optional): The Glean app name, like `fenix`.
 
     Attributes:
+    ----------
         experiment_slug (str): Name of the study, used to identify
             the enrollment events specific to this study.
         start_date (str): e.g. '2019-01-01'. First date on which enrollment
@@ -124,6 +126,7 @@ class Experiment:
             factor '7' removes weekly seasonality, and the ``+1`` accounts
             for the fact that enrollment typically starts a few hours
             before UTC midnight.
+
     """
 
     experiment_slug = attr.ib()
@@ -133,8 +136,7 @@ class Experiment:
     app_name = attr.ib(default=None)
 
     def get_app_name(self):
-        """
-        Determine the correct app name.
+        """Determine the correct app name.
 
         If no explicit app name has been passed into Experiment, lookup app name from
         a pre-defined list. (this is deprecated)
@@ -169,6 +171,7 @@ class Experiment:
         will simply read the results from this table.
 
         Args:
+        ----
             bq_context (BigQueryContext): BigQuery configuration and client.
             metric_list (list of mozanalysis.metric.Metric or str): The metrics
                 to analyze.
@@ -213,6 +216,7 @@ class Experiment:
                 segments to study.
 
         Returns:
+        -------
             A pandas DataFrame of experiment data. One row per ``client_id``.
             Some metadata columns, then one column per metric in
             ``metric_list``, and one column per sanity-check metric.
@@ -238,6 +242,7 @@ class Experiment:
             enrolled client, regardless of whether the client has data
             in ``data_source`` - was agreed upon by the DS team, and is the
             standard format for queried experimental data.
+
         """
         time_limits = TimeLimits.for_single_analysis_window(
             self.start_date,
@@ -301,6 +306,7 @@ class Experiment:
         with different analysis windows, and reorganising the results.
 
         Args:
+        ----
             bq_context (BigQueryContext): BigQuery configuration and client.
             metric_list (list of mozanalysis.metric.Metric):
                 The metrics to analyze.
@@ -342,6 +348,7 @@ class Experiment:
                 segments to study.
 
         Returns:
+        -------
             A :class:`mozanalysis.experiment.TimeSeriesResult` object,
             which may be used to obtain a
             pandas DataFrame of per-client metric data, for each
@@ -364,8 +371,8 @@ class Experiment:
                 * [sanity check n]: The client's value for the last
                   sanity check metric for the last data source that
                   supports sanity checks.
-        """
 
+        """
         time_limits = TimeLimits.for_ts(
             self.start_date,
             last_date_full_data,
@@ -429,6 +436,7 @@ class Experiment:
         """Return a SQL query for querying enrollment and exposure data.
 
         Args:
+        ----
             time_limits (TimeLimits): An object describing the
                 interval(s) to query
             enrollments_query_type (EnrollmentsQueryType):
@@ -456,7 +464,9 @@ class Experiment:
                 downsampling enrollments. Default 100.
 
         Returns:
+        -------
             A string containing a BigQuery SQL expression.
+
         """
         sample_size = sample_size or 100
 
@@ -509,6 +519,7 @@ class Experiment:
         be computed for these clients.
 
         Args:
+        ----
             metric_list (list of mozanalysis.metric.Metric or str):
                 The metrics to analyze.
             time_limits (TimeLimits): An object describing the
@@ -521,9 +532,11 @@ class Experiment:
                 for certain analysis bases (such as exposures).
 
         Returns:
+        -------
             A string containing a BigQuery SQL expression.
 
         Building this query is the main goal of this module.
+
         """
         analysis_windows_query = self._build_analysis_windows_query(
             time_limits.analysis_windows
@@ -951,7 +964,6 @@ class Experiment:
         view by adding one non-NULL boolean column per segment. It does
         not otherwise tamper with the ``raw_enrollments`` view.
         """
-
         # Do similar things to what we do for metrics, but in a less
         # ostentatious place, since people are likely to come to the
         # source code asking how metrics work, but less likely to
@@ -976,7 +988,6 @@ class Experiment:
         self, segment_list: list[Segment], time_limits: TimeLimits
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to segments."""
-
         # resolve segment slugs
         segments = []
         for segment in segment_list:
@@ -1064,6 +1075,7 @@ class TimeLimits:
         """Return a ``TimeLimits`` instance with the following parameters
 
         Args:
+        ----
             first_enrollment_date (str): First date on which enrollment
                 events were received; the start date of the experiment.
             last_date_full_data (str): The most recent date for which we
@@ -1082,6 +1094,7 @@ class TimeLimits:
                 factor ``7`` removes weekly seasonality, and the ``+1``
                 accounts for the fact that enrollment typically starts a few
                 hours before UTC midnight.
+
         """
         analysis_window = AnalysisWindow(
             analysis_start_days, analysis_start_days + analysis_length_dates - 1
@@ -1130,6 +1143,7 @@ class TimeLimits:
         """Return a ``TimeLimits`` instance for a time series.
 
         Args:
+        ----
             first_enrollment_date (str): First date on which enrollment
                 events were received; the start date of the experiment.
             last_date_full_data (str): The most recent date for which we
@@ -1140,6 +1154,7 @@ class TimeLimits:
             num_dates_enrollment (int): Take this many days of client
                 enrollments. This is a mandatory argument because it
                 determines the number of points in the time series.
+
         """
         period_duration = {"daily": 1, "weekly": 7, "28_day": 28}
 
@@ -1216,10 +1231,12 @@ class AnalysisWindow:
     For example, ``AnalysisWindow(0, 6)`` is the first week after enrollment.
 
     Args:
+    ----
         start (int): First day of the analysis window, in days since
             enrollment.
         end (int): Final day of the analysis window, in days since
             enrollment.
+
     """
 
     start = attr.ib(type=int)
@@ -1266,9 +1283,11 @@ class TimeSeriesResult:
         results is your responsibility.
 
         Args:
+        ----
             bq_context (BigQueryContext)
             analysis_window (AnalysisWindow or int): The analysis
                 window, or its start day as an int.
+
         """
         if isinstance(analysis_window, int):
             try:
@@ -1292,7 +1311,9 @@ class TimeSeriesResult:
         to be downloaded.
 
         Args:
+        ----
             bq_context (BigQueryContext)
+
         """
         size = self._get_table_size(bq_context)
 
@@ -1314,11 +1335,12 @@ class TimeSeriesResult:
         for each metric in the supplied metric_list.
 
         Args:
+        ----
             bq_context (BigQueryContext)
             metric_list (list of mozanalysis.metrics.Metric)
             aggregate_fuction (str)
-        """
 
+        """
         return (
             bq_context.run_query(
                 self._build_aggregated_data_query(metric_list, aggregate_function)
@@ -1336,10 +1358,8 @@ class TimeSeriesResult:
             yield (aw.start, self.get(bq_context, aw))
 
     def _get_table_size(self, bq_context: BigQueryContext) -> float:
+        """Get table size in memory for table being requested by `get_full_data`.
         """
-        Get table size in memory for table being requested by `get_full_data`.
-        """
-
         table_info = self.fully_qualified_table_name.split(".")
 
         query = f"""

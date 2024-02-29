@@ -23,6 +23,7 @@ class ExposureSignal:
 
 
     Args:
+    ----
         name (str): A slug; uniquely identifies this exposure signal in tables
         data_source (DataSource): data source to query from
         select_expr (str): a SQL snippet representing a clause of a SELECT
@@ -33,6 +34,7 @@ class ExposureSignal:
             what the exposure signal represents, to be shown on dashboards
         window_start (int): Optional, see above
         window_end (int): Optional, see above
+
     """
 
     name = attr.ib(type=str)
