@@ -3,3 +3,4 @@ exclude = [".git","__pycache__"]
 
 [lint]
 ignore= ["E741"]
+select= ['E', 'F']
