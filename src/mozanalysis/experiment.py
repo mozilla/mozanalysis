@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 class EnrollmentsQueryType(str, Enum):
+    """Dataclass holding Enrollments Query Types."""
+
     CIRRUS = "cirrus"
     FENIX_FALLBACK = "fenix-fallback"
     NORMANDY = "normandy"
@@ -530,6 +532,9 @@ class Experiment:
             exposure_signal (Optional[ExposureSignal]): Optional exposure
                 signal parameter that will be used for computing metrics
                 for certain analysis bases (such as exposures).
+            analysis_basis (str): Sets population on which analysis will be,
+                uses the AnalysisBasis dataclass for standardization and
+                defaults to enrollments
 
         Returns:
         -------
@@ -618,7 +623,7 @@ class Experiment:
         enrollments_query_type: EnrollmentsQueryType,
         sample_size: int = 100,
     ) -> str:
-        """Return SQL to query a list of enrollments and their branches"""
+        """Return SQL to query a list of enrollments and their branches."""
         if enrollments_query_type == EnrollmentsQueryType.NORMANDY:
             return self._build_enrollments_query_normandy(time_limits, sample_size)
         elif enrollments_query_type == EnrollmentsQueryType.GLEAN_EVENT:
@@ -645,7 +650,7 @@ class Experiment:
     def _build_exposure_query(
         self, time_limits: TimeLimits, exposure_query_type: EnrollmentsQueryType
     ) -> str:
-        """Return SQL to query a list of exposures and their branches"""
+        """Return SQL to query a list of exposures and their branches."""
         if exposure_query_type == EnrollmentsQueryType.NORMANDY:
             return self._build_exposure_query_normandy(time_limits)
         elif exposure_query_type == EnrollmentsQueryType.GLEAN_EVENT:
@@ -675,7 +680,7 @@ class Experiment:
     def _build_enrollments_query_normandy(
         self, time_limits: TimeLimits, sample_size: int = 100
     ) -> str:
-        """Return SQL to query enrollments for a normandy experiment"""
+        """Return SQL to query enrollments for a normandy experiment."""
         return """
         SELECT
             e.client_id,
@@ -703,7 +708,8 @@ class Experiment:
     def _build_enrollments_query_fenix_baseline(
         self, time_limits: TimeLimits, sample_size: int = 100
     ) -> str:
-        """Return SQL to query enrollments for a Fenix no-event experiment
+        """Return SQL to query enrollments for a Fenix no-event experiment.
+
         If enrollment events are available for this experiment, then you
         can take a better approach than this method. But in the absence
         of enrollment events (e.g. in a Mako-based experiment, which
@@ -746,7 +752,7 @@ class Experiment:
     def _build_enrollments_query_glean_event(
         self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
     ) -> str:
-        """Return SQL to query enrollments for a Glean no-event experiment
+        """Return SQL to query enrollments for a Glean no-event experiment.
 
         If enrollment events are available for this experiment, then you
         can take a better approach than this method. But in the absence
@@ -785,7 +791,7 @@ class Experiment:
     def _build_enrollments_query_cirrus(
         self, time_limits: TimeLimits, dataset: str
     ) -> str:
-        """Return SQL to query enrollments for a Cirrus experiment (uses Glean)
+        """Return SQL to query enrollments for a Cirrus experiment (uses Glean).
 
         If enrollment events are available for this experiment, then you
         can take a better approach than this method. But in the absence
@@ -822,7 +828,7 @@ class Experiment:
         )
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
-        """Return SQL to query exposures for a normandy experiment"""
+        """Return SQL to query exposures for a normandy experiment."""
         return """
         SELECT
             e.client_id,
@@ -861,7 +867,7 @@ class Experiment:
         client_id_field: str = "client_info.client_id",
         event_category: str = "nimbus_events",
     ) -> str:
-        """Return SQL to query exposures for a Glean no-event experiment"""
+        """Return SQL to query exposures for a Glean no-event experiment."""
         return """
             SELECT
                 exposures.client_id,
@@ -1072,7 +1078,7 @@ class TimeLimits:
         analysis_length_dates: int,
         num_dates_enrollment: int | None = None,
     ) -> TimeLimits:
-        """Return a ``TimeLimits`` instance with the following parameters
+        """Return a ``TimeLimits`` instance with the following parameters.
 
         Args:
         ----
@@ -1085,7 +1091,7 @@ class TimeLimits:
             analysis_start_days (int): the start of the analysis window,
                 measured in 'days since the client enrolled'. We ignore data
                 collected outside this analysis window.
-            analysis_length_days (int): the length of the analysis window,
+            analysis_length_dates (int): the length of the analysis window,
                 measured in days.
             num_dates_enrollment (int, optional): Only include this many days
                 of enrollments. If ``None`` then use the maximum number of days
@@ -1284,7 +1290,7 @@ class TimeSeriesResult:
 
         Args:
         ----
-            bq_context (BigQueryContext)
+            bq_context (BigQueryContext): BigQuery Context
             analysis_window (AnalysisWindow or int): The analysis
                 window, or its start day as an int.
 
@@ -1312,7 +1318,7 @@ class TimeSeriesResult:
 
         Args:
         ----
-            bq_context (BigQueryContext)
+            bq_context (BigQueryContext): BigQuery Context
 
         """
         size = self._get_table_size(bq_context)
@@ -1328,17 +1334,19 @@ class TimeSeriesResult:
         metric_list: list,
         aggregate_function: str = "AVG",
     ) -> tuple[DataFrame, int]:
-        """Results from a time series query, aggregated over analysis windows
-        by a SQL aggregate function.
+        """Results from a time series query, aggregated over analysis windows.
+
+        Aggregation done by a SQL aggregate function.
 
         This DataFrame has a row for each analysis window, with a column
         for each metric in the supplied metric_list.
 
         Args:
         ----
-            bq_context (BigQueryContext)
-            metric_list (list of mozanalysis.metrics.Metric)
-            aggregate_fuction (str)
+            bq_context (BigQueryContext): BigQuery Context
+            metric_list (list of mozanalysis.metrics.Metric): List of
+                standardized metrics to aggregate
+            aggregate_function (str): SQL aggregation function
 
         """
         return (
@@ -1351,15 +1359,16 @@ class TimeSeriesResult:
         )
 
     def keys(self):
+        """Return list of keys."""
         return [aw.start for aw in self.analysis_windows]
 
     def items(self, bq_context):
+        """Create generator of items for the analysis window."""
         for aw in self.analysis_windows:
             yield (aw.start, self.get(bq_context, aw))
 
     def _get_table_size(self, bq_context: BigQueryContext) -> float:
-        """Get table size in memory for table being requested by `get_full_data`.
-        """
+        """Get table size in memory for table being requested by `get_full_data`."""
         table_info = self.fully_qualified_table_name.split(".")
 
         query = f"""

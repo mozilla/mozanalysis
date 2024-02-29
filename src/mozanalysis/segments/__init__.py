@@ -55,7 +55,8 @@ class SegmentDataSource:
         self.from_expr_for(None)
 
     def from_expr_for(self, dataset: Optional[str]) -> str:
-        """Expands the ``from_expr`` template for the given dataset.
+        """Expand the ``from_expr`` template for the given dataset.
+
         If ``from_expr`` is not a template, returns ``from_expr``.
 
         Args:
@@ -119,8 +120,9 @@ class SegmentDataSource:
         time_limits,
         from_expr_dataset=None,
     ):
-        """Return a nearly-self contained SQL query, for use with
-        mozanalysis.sizing.HistoricalTarget.
+        """Return a nearly-self contained SQL query.
+
+        For use with mozanalysis.sizing.HistoricalTarget.
 
         This query returns all distinct client IDs that satisfy the criteria
         for inclusion in a historical analysis using this datasource.
@@ -151,7 +153,8 @@ class SegmentDataSource:
         )
 
     @window_start.validator
-    def window_start_lte_window_end(self, attribute, value):
+    def window_start_lte_window_end(self, value):
+        """Check that input value is less than or equal to self.window_end."""
         if value > self.window_end:
             raise ValueError("window_start must be <= window_end")
 

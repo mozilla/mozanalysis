@@ -53,7 +53,9 @@ def compare_branches(df, col_label, ref_branch_label="control", thresholds=None)
         thresholds (list/ndarray, optional): Thresholds that define the
             metric's quantization; ``df[col_label]``
 
-    Returns a dictionary:
+    Returns:
+    -------
+        a dictionary:
 
         * 'individual': dictionary mapping branch names to a pandas
           DataFrame containing values from the survival function.
@@ -88,7 +90,7 @@ def compare_branches(df, col_label, ref_branch_label="control", thresholds=None)
 
 
 def get_thresholds(col, max_num_thresholds=101):
-    """Return a set of interesting thresholds for the dataset ``col``
+    """Return a set of interesting thresholds for the dataset ``col``.
 
     Assumes that the values are non-negative, with zero as a special case.
 

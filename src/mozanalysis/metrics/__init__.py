@@ -84,7 +84,8 @@ class DataSource:
         self.from_expr_for(None)
 
     def from_expr_for(self, dataset: str | None) -> str:
-        """Expands the ``from_expr`` template for the given dataset.
+        """Expand the ``from_expr`` template for the given dataset.
+
         If ``from_expr`` is not a template, returns ``from_expr``.
 
         Args:
@@ -105,6 +106,11 @@ class DataSource:
 
     @property
     def experiments_column_expr(self) -> str:
+        """Create a SQL snippet to ignore pre-enrollment first day.
+
+        Specific to the experiment columnn type
+
+        """
         if self.experiments_column_type is None:
             return ""
 
@@ -200,8 +206,9 @@ class DataSource:
         from_expr_dataset: str | None = None,
         continuous_enrollment: bool = False,
     ) -> str:
-        """Return a nearly-self contained SQL query that constructs
-        the metrics query for targeting historical data without
+        """Return a nearly-self contained metrics SQL query.
+
+        It constructs the metrics query for targeting historical data without
         an associated experiment slug.
 
         This query does not define ``targets`` but otherwise could
@@ -249,6 +256,13 @@ class DataSource:
         )
 
     def get_sanity_metrics(self, experiment_slug: str) -> list[Metric]:
+        """Get Santiy Metrics based on the experiment column type.
+
+        Args:
+        ----
+            experiment_slug (str): experiment identifier
+
+        """
         if self.experiments_column_type is None:
             return []
 
@@ -361,7 +375,7 @@ def agg_any(select_expr: str) -> str:
 
 
 def agg_histogram_mean(select_expr: str) -> str:
-    """Produces an expression for the mean of an unparsed histogram."""
+    """Produce an expression for the mean of an unparsed histogram."""
     return f"""SAFE_DIVIDE(
                 SUM(CAST(JSON_EXTRACT_SCALAR({select_expr}, "$.sum") AS int64)),
                 SUM((SELECT SUM(value) FROM UNNEST(mozfun.hist.extract({select_expr}).values)))

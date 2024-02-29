@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def sanitize_table_name_for_bq(table_name):
+    """Replace - and other special characters in table_name with _."""
     of_good_character_but_possibly_verbose = re.sub(r"[^a-zA-Z_0-9]", "_", table_name)
 
     if len(of_good_character_but_possibly_verbose) <= 1024:
@@ -36,7 +37,18 @@ class BigQueryContext:
 
     """
 
-    def __init__(self, dataset_id, project_id="moz-fx-data-bq-data-science"):
+    def __init__(
+        self, dataset_id: str, project_id: str = "moz-fx-data-bq-data-science"
+    ):
+        """Set up BigQueryContext.
+
+        Args:
+        ----
+            dataset_id (str): Dataset to write data to
+            project_id (str, optional): Project from which data is read.
+            Defaults to "moz-fx-data-bq-data-science".
+
+        """
         self.dataset_id = dataset_id
         self.project_id = project_id
         self.client = bigquery.Client(project=project_id)

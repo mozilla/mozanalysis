@@ -2,7 +2,9 @@ line-length=88
 exclude = [".git","__pycache__"]
 
 [lint]
-ignore= ["E741"]
+ignore= ["E741",
+        "D100", # module-level docstrings
+        "D104"] # package-level docstrings
 select = [
     "E", # pycodestyle
     "W", # pycodestyle

@@ -57,7 +57,7 @@ def add_days(date_string, n_days):
 
 
 def date_sub(date_string_l, date_string_r):
-    """Return the number of days between two date strings like '2019-01-01'"""
+    """Return the number of days between two date strings like '2019-01-01'."""
     date_l = datetime.datetime.strptime(date_string_l, "%Y-%m-%d")
     date_r = datetime.datetime.strptime(date_string_r, "%Y-%m-%d")
     return (date_l - date_r).days
@@ -102,6 +102,7 @@ def get_time_intervals(
     max_num_dates_enrollment: int,
 ) -> List[datetime.datetime]:
     """Use a start date and create end dates for enrollment intervals.
+
     Used to generate intervals of enrollment to calculate metrics over
     variable enrollment lengths.
 

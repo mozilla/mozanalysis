@@ -365,7 +365,10 @@ class HistoricalTarget:
         target_list: Segment | None = None,
         custom_targets_query: str | None = None,
     ) -> str:
+        """Create targets query.
 
+        If custom_targets_query is null, uses the built-in _build_targets_query method
+        """
         return """
         {targets_query}
         """.format(
@@ -461,7 +464,6 @@ class HistoricalTarget:
     def _build_targets_query(
         self, target_list: list[Segment], time_limits: TimeLimits
     ) -> str:
-
         target_queries = []
         target_columns = []
         dates_columns = []
@@ -518,9 +520,7 @@ class HistoricalTarget:
                 SELECT * FROM joined
                 UNPIVOT(min_dates for target_date in ({target_first_dates}))
             )
-        """.format(
-            target_first_dates=", ".join(c for c in dates_columns)
-        )
+        """.format(target_first_dates=", ".join(c for c in dates_columns))
 
         return f"""
         {target_def}
@@ -560,13 +560,12 @@ class HistoricalTarget:
             )
 
             for m in ds_metrics[ds]:
-                metrics_columns.append(
-                    f"ds_{i}.{m.name}"
-                )
+                metrics_columns.append(f"ds_{i}.{m.name}")
 
         return metrics_columns, metrics_joins
 
     def get_targets_sql(self):
+        """Return _targets_sql if set."""
         if not self._targets_sql:
             raise ValueError(
                 "Target SQL not available; call `get_single_window_data` first"
@@ -574,6 +573,7 @@ class HistoricalTarget:
         return self._targets_sql
 
     def get_metrics_sql(self):
+        """Return _metrics_sql if set."""
         if not self._metrics_sql:
             raise ValueError(
                 "Metric SQL not available; call `get_single_window_data` first"
@@ -632,29 +632,14 @@ class ContinuousEnrollmentTimeLimits:
         first_date_full_data: str,
         analysis_length_dates: str,
     ) -> ContinuousEnrollmentTimeLimits:
-        """Return a ``ContinuousEnrollmentTimeLimits`` instance with the following
-        parameters:
+        """Return a ``ContinuousEnrollmentTimeLimits`` instance.
 
         Args:
         ----
-            first_enrollment_date (str): First date on which enrollment
+            first_date_full_data (str): First date on which enrollment
                 events were received; the start date of the experiment.
-            last_date_full_data (str): The most recent date for which we
-                have complete data, e.g. '2019-03-22'. If you want to ignore
-                all data collected after a certain date (e.g. when the
-                experiment recipe was deactivated), then do that here.
-            analysis_start_days (int): the start of the analysis window,
-                measured in 'days since the client enrolled'. We ignore data
-                collected outside this analysis window.
-            analysis_length_days (int): the length of the analysis window,
+            analysis_length_dates (int): the length of the analysis window,
                 measured in days.
-            num_dates_enrollment (int, optional): Only include this many days
-                of enrollments. If ``None`` then use the maximum number of days
-                as determined by the metric's analysis window and
-                ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The
-                factor ``7`` removes weekly seasonality, and the ``+1``
-                accounts for the fact that enrollment typically starts a few
-                hours before UTC midnight.
 
         """
         analysis_window = AnalysisWindow(0, analysis_length_dates - 1)
