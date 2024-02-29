@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 tests_require = [
     "mock",
-    "pytest<7",
+    "pytest",
     "pytest-black",
     "pytest-cov",
     "pytest-timeout",
