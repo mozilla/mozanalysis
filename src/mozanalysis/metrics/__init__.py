@@ -2,14 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import annotations
-from typing import Optional, List, TYPE_CHECKING
+
 from enum import Enum
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from mozanalysis.experiment import TimeLimits
 
-import attr
 import logging
+
+import attr
 
 logger = logging.getLogger(__name__)
 
@@ -71,15 +73,15 @@ class DataSource:
     def _check_experiments_column_type(self, attribute, value):
         if value not in self.EXPERIMENT_COLUMN_TYPES:
             raise ValueError(
-                f"experiments_column_type {repr(value)} must be one of: "
-                f"{repr(self.EXPERIMENT_COLUMN_TYPES)}"
+                f"experiments_column_type {value!r} must be one of: "
+                f"{self.EXPERIMENT_COLUMN_TYPES!r}"
             )
 
     @default_dataset.validator
     def _check_default_dataset_provided_if_needed(self, attribute, value):
         self.from_expr_for(None)
 
-    def from_expr_for(self, dataset: Optional[str]) -> str:
+    def from_expr_for(self, dataset: str | None) -> str:
         """Expands the ``from_expr`` template for the given dataset.
         If ``from_expr`` is not a template, returns ``from_expr``.
 
@@ -131,10 +133,10 @@ class DataSource:
 
     def build_query(
         self,
-        metric_list: List[Metric],
+        metric_list: list[Metric],
         time_limits: TimeLimits,
         experiment_slug: str,
-        from_expr_dataset: Optional[str] = None,
+        from_expr_dataset: str | None = None,
         analysis_basis: str = AnalysisBasis.ENROLLMENTS,
         exposure_signal=None,
     ) -> str:
@@ -173,9 +175,7 @@ class DataSource:
             fddr=time_limits.first_date_data_required,
             lddr=time_limits.last_date_data_required,
             metrics=",\n            ".join(
-                "{se} AS {n}".format(
-                    se=m.select_expr.format(experiment_slug=experiment_slug), n=m.name
-                )
+                f"{m.select_expr.format(experiment_slug=experiment_slug)} AS {m.name}"
                 for m in metric_list
             ),
             date="exposure_date"
@@ -189,11 +189,11 @@ class DataSource:
 
     def build_query_targets(
         self,
-        metric_list: List[Metric],
+        metric_list: list[Metric],
         time_limits: TimeLimits,
         experiment_name: str,
         analysis_length: int,
-        from_expr_dataset: Optional[str] = None,
+        from_expr_dataset: str | None = None,
         continuous_enrollment: bool = False,
     ) -> str:
         """Return a nearly-self contained SQL query that constructs
@@ -222,9 +222,7 @@ class DataSource:
             client_id=self.client_id_column or "client_id",
             from_expr=self.from_expr_for(from_expr_dataset),
             metrics=",\n            ".join(
-                "{se} AS {n}".format(
-                    se=m.select_expr.format(experiment_name=experiment_name), n=m.name
-                )
+                f"{m.select_expr.format(experiment_name=experiment_name)} AS {m.name}"
                 for m in metric_list
             ),
             date_clause="""
@@ -246,7 +244,7 @@ class DataSource:
             ),
         )
 
-    def get_sanity_metrics(self, experiment_slug: str) -> List[Metric]:
+    def get_sanity_metrics(self, experiment_slug: str) -> list[Metric]:
         if self.experiments_column_type is None:
             return []
 
@@ -265,11 +263,9 @@ class DataSource:
                     name=self.name + "_has_non_enrolled_data",
                     data_source=self,
                     select_expr=agg_any(
-                        """`mozfun.map.get_key`(
+                        f"""`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
-            ) IS NULL""".format(
-                            experiment_slug=experiment_slug
-                        )
+            ) IS NULL"""
                     ),
                 ),
             ]
@@ -289,11 +285,9 @@ class DataSource:
                     name=self.name + "_has_non_enrolled_data",
                     data_source=self,
                     select_expr=agg_any(
-                        """`mozfun.map.get_key`(
+                        f"""`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
-            ).branch IS NULL""".format(
-                            experiment_slug=experiment_slug
-                        )
+            ).branch IS NULL"""
                     ),
                 ),
             ]
@@ -313,11 +307,9 @@ class DataSource:
                     name=self.name + "_has_non_enrolled_data",
                     data_source=self,
                     select_expr=agg_any(
-                        """`mozfun.map.get_key`(
+                        f"""`mozfun.map.get_key`(
                 ds.ping_info.experiments, '{experiment_slug}'
-            ).branch IS NULL""".format(
-                            experiment_slug=experiment_slug
-                        )
+            ).branch IS NULL"""
                     ),
                 ),
             ]
@@ -354,12 +346,12 @@ class Metric:
 
 def agg_sum(select_expr: str) -> str:
     """Return a SQL fragment for the sum over the data, with 0-filled nulls."""
-    return "COALESCE(SUM({}), 0)".format(select_expr)
+    return f"COALESCE(SUM({select_expr}), 0)"
 
 
 def agg_any(select_expr: str) -> str:
     """Return the logical OR, with FALSE-filled nulls."""
-    return "COALESCE(LOGICAL_OR({}), FALSE)".format(select_expr)
+    return f"COALESCE(LOGICAL_OR({select_expr}), FALSE)"
 
 
 def agg_histogram_mean(select_expr: str) -> str:
