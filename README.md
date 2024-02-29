@@ -37,7 +37,7 @@ or the tests you run. Options after `--` or positional arguments are forwarded t
 For example, you can run:
 
 * `tox -e lint` to lint
-* `tox -e py310 -- -k utils` to only run tests with "utils" somewhere in the name, on Python 3.7
+* `tox -e py310 -- -k utils` to only run tests with "utils" somewhere in the name, on Python 3.10
 * `tox tests/test_utils.py` to run tests in a specific file
 
 ### with the CircleCI utilities
