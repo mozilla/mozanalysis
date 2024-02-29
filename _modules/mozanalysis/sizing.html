@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,9 +14,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -97,7 +97,9 @@
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span>
 
 
-<div class="viewcode-block" id="HistoricalTarget"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="HistoricalTarget">
+<a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget">[docs]</a>
+<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">HistoricalTarget</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Query historical data.</span>
 
@@ -178,7 +180,9 @@
     <span class="n">_metrics_sql</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_targets_sql</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-<div class="viewcode-block" id="HistoricalTarget.get_single_window_data"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget.get_single_window_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_window_data</span><span class="p">(</span>
+<div class="viewcode-block" id="HistoricalTarget.get_single_window_data">
+<a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget.get_single_window_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_single_window_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">,</span>
         <span class="n">metric_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
@@ -303,7 +307,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span><span class="p">,</span> <span class="n">full_res_table_name</span><span class="p">,</span> <span class="n">replace_tables</span>
         <span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="HistoricalTarget.get_time_series_data"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget.get_time_series_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_series_data</span><span class="p">(</span>
+
+<div class="viewcode-block" id="HistoricalTarget.get_time_series_data">
+<a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget.get_time_series_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_time_series_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">,</span>
         <span class="n">metric_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
@@ -423,6 +430,7 @@
             <span class="n">analysis_windows</span><span class="o">=</span><span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">build_targets_query</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
@@ -437,7 +445,9 @@
             <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_targets_query</span><span class="p">(</span><span class="n">target_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="HistoricalTarget.build_metrics_query"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget.build_metrics_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_metrics_query</span><span class="p">(</span>
+<div class="viewcode-block" id="HistoricalTarget.build_metrics_query">
+<a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget.build_metrics_query">[docs]</a>
+    <span class="k">def</span> <span class="nf">build_metrics_query</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">metric_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
         <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
@@ -492,6 +502,7 @@
             <span class="n">metrics_joins</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">),</span>
             <span class="n">targets_table</span><span class="o">=</span><span class="n">targets_table</span><span class="p">,</span>
         <span class="p">)</span></div>
+
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_build_analysis_windows_query</span><span class="p">(</span><span class="n">analysis_windows</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">AnalysisWindow</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -657,7 +668,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span></div>
 
 
-<div class="viewcode-block" id="ContinuousEnrollmentTimeLimits"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ContinuousEnrollmentTimeLimits">
+<a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits">[docs]</a>
+<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ContinuousEnrollmentTimeLimits</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Expresses time limits for different kinds of analysis windows.</span>
 
@@ -702,7 +716,9 @@
 
     <span class="n">analysis_windows</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">Tuple</span><span class="p">[</span><span class="n">AnalysisWindow</span><span class="p">])</span>
 
-<div class="viewcode-block" id="ContinuousEnrollmentTimeLimits.for_single_analysis_window"><a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits.for_single_analysis_window">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ContinuousEnrollmentTimeLimits.for_single_analysis_window">
+<a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits.for_single_analysis_window">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">for_single_analysis_window</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">first_date_full_data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -742,7 +758,9 @@
             <span class="n">last_date_data_required</span><span class="o">=</span><span class="n">last_date_data_required</span><span class="p">,</span>
             <span class="n">analysis_windows</span><span class="o">=</span><span class="p">(</span><span class="n">analysis_window</span><span class="p">,),</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">tl</span></div></div>
+        <span class="k">return</span> <span class="n">tl</span></div>
+</div>
+
 </pre></div>
 
            </div>

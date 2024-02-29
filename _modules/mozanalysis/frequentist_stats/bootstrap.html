@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,9 +14,9 @@
   
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
         <script src="../../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -84,7 +84,9 @@
 <span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="kn">import</span> <span class="n">filter_outliers</span>
 
 
-<div class="viewcode-block" id="compare_branches"><a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.compare_branches">[docs]</a><span class="k">def</span> <span class="nf">compare_branches</span><span class="p">(</span>
+<div class="viewcode-block" id="compare_branches">
+<a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.compare_branches">[docs]</a>
+<span class="k">def</span> <span class="nf">compare_branches</span><span class="p">(</span>
     <span class="n">df</span><span class="p">,</span>
     <span class="n">col_label</span><span class="p">,</span>
     <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span>
@@ -176,7 +178,10 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="bootstrap_one_branch"><a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch">[docs]</a><span class="k">def</span> <span class="nf">bootstrap_one_branch</span><span class="p">(</span>
+
+<div class="viewcode-block" id="bootstrap_one_branch">
+<a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.bootstrap_one_branch">[docs]</a>
+<span class="k">def</span> <span class="nf">bootstrap_one_branch</span><span class="p">(</span>
     <span class="n">data</span><span class="p">,</span>
     <span class="n">stat_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
     <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
@@ -214,7 +219,10 @@
     <span class="k">return</span> <span class="n">mabs</span><span class="o">.</span><span class="n">summarize_one_branch_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">summary_quantiles</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_bootstrap_samples"><a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples">[docs]</a><span class="k">def</span> <span class="nf">get_bootstrap_samples</span><span class="p">(</span>
+
+<div class="viewcode-block" id="get_bootstrap_samples">
+<a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.get_bootstrap_samples">[docs]</a>
+<span class="k">def</span> <span class="nf">get_bootstrap_samples</span><span class="p">(</span>
     <span class="n">data</span><span class="p">,</span>
     <span class="n">stat_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
     <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
@@ -281,6 +289,7 @@
     <span class="k">return</span> <span class="n">summary_df</span></div>
 
 
+
 <span class="k">def</span> <span class="nf">_resample_and_agg_once</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">unique_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">unique_seed</span><span class="p">)</span>
 
@@ -293,7 +302,9 @@
     <span class="k">return</span> <span class="n">stat_fn</span><span class="p">(</span><span class="n">resampled_data</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="compare_branches_quantiles"><a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.compare_branches_quantiles">[docs]</a><span class="k">def</span> <span class="nf">compare_branches_quantiles</span><span class="p">(</span>
+<div class="viewcode-block" id="compare_branches_quantiles">
+<a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.compare_branches_quantiles">[docs]</a>
+<span class="k">def</span> <span class="nf">compare_branches_quantiles</span><span class="p">(</span>
     <span class="n">df</span><span class="p">,</span>
     <span class="n">col_label</span><span class="p">,</span>
     <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span>
@@ -342,7 +353,10 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_quantile_bootstrap_samples"><a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.get_quantile_bootstrap_samples">[docs]</a><span class="k">def</span> <span class="nf">get_quantile_bootstrap_samples</span><span class="p">(</span>
+
+<div class="viewcode-block" id="get_quantile_bootstrap_samples">
+<a class="viewcode-back" href="../../../api/frequentist_stats/bootstrap.html#mozanalysis.frequentist_stats.bootstrap.get_quantile_bootstrap_samples">[docs]</a>
+<span class="k">def</span> <span class="nf">get_quantile_bootstrap_samples</span><span class="p">(</span>
     <span class="n">data</span><span class="p">,</span> <span class="n">quantiles_of_interest</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Params are similar to `get_bootstrap_samples`&quot;&quot;&quot;</span>
@@ -367,6 +381,7 @@
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">df</span></div>
+
 </pre></div>
 
            </div>

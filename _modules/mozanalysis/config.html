@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,9 +14,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -86,7 +86,9 @@
 <span class="n">METRIC_HUB_JETSTREAM_REPO</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/mozilla/metric-hub/tree/main/jetstream&quot;</span>
 
 
-<div class="viewcode-block" id="_ConfigLoader"><a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader">[docs]</a><span class="k">class</span> <span class="nc">_ConfigLoader</span><span class="p">:</span>
+<div class="viewcode-block" id="_ConfigLoader">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader">[docs]</a>
+<span class="k">class</span> <span class="nc">_ConfigLoader</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loads config files from an external repository.</span>
 
@@ -106,7 +108,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_collection</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span>
 
-<div class="viewcode-block" id="_ConfigLoader.with_configs_from"><a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.with_configs_from">[docs]</a>    <span class="k">def</span> <span class="nf">with_configs_from</span><span class="p">(</span>
+<div class="viewcode-block" id="_ConfigLoader.with_configs_from">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.with_configs_from">[docs]</a>
+    <span class="k">def</span> <span class="nf">with_configs_from</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">repo_urls</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">is_private</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_ConfigLoader&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load configs from another repository and merge with default configs.&quot;&quot;&quot;</span>
@@ -119,7 +123,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">config_collection</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="_ConfigLoader.get_metric"><a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_metric">[docs]</a>    <span class="k">def</span> <span class="nf">get_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+<div class="viewcode-block" id="_ConfigLoader.get_metric">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_metric">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a metric definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.Metric` instance.</span>
@@ -143,7 +150,10 @@
             <span class="n">bigger_is_better</span><span class="o">=</span><span class="n">metric_definition</span><span class="o">.</span><span class="n">bigger_is_better</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="_ConfigLoader.get_data_source"><a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_data_source">[docs]</a>    <span class="k">def</span> <span class="nf">get_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+<div class="viewcode-block" id="_ConfigLoader.get_data_source">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_data_source">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a data source definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.DataSource` instance.</span>
@@ -169,7 +179,10 @@
             <span class="n">default_dataset</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">default_dataset</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="_ConfigLoader.get_segment"><a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_segment">[docs]</a>    <span class="k">def</span> <span class="nf">get_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+<div class="viewcode-block" id="_ConfigLoader.get_segment">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_segment">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a segment definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.segments.Segment` instance.</span>
@@ -192,7 +205,10 @@
             <span class="n">description</span><span class="o">=</span><span class="n">segment_definition</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="_ConfigLoader.get_segment_data_source"><a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_segment_data_source">[docs]</a>    <span class="k">def</span> <span class="nf">get_segment_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+<div class="viewcode-block" id="_ConfigLoader.get_segment_data_source">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_segment_data_source">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_segment_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a segment data source definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.segments.SegmentDataSource` instance.</span>
@@ -217,7 +233,10 @@
             <span class="n">default_dataset</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">default_dataset</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="_ConfigLoader.get_outcome_metric"><a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_outcome_metric">[docs]</a>    <span class="k">def</span> <span class="nf">get_outcome_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+<div class="viewcode-block" id="_ConfigLoader.get_outcome_metric">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_outcome_metric">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_outcome_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a metric definition from an outcome defined for the given app.</span>
 
 <span class="sd">        Parametrized metrics are not supported, since they may not be defined outside</span>
@@ -260,7 +279,10 @@
             <span class="n">bigger_is_better</span><span class="o">=</span><span class="n">metric</span><span class="o">.</span><span class="n">bigger_is_better</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="_ConfigLoader.get_outcome_data_source"><a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_outcome_data_source">[docs]</a>    <span class="k">def</span> <span class="nf">get_outcome_data_source</span><span class="p">(</span>
+
+<div class="viewcode-block" id="_ConfigLoader.get_outcome_data_source">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_outcome_data_source">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_outcome_data_source</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a data source definition from an outcome defined for the given app.</span>
@@ -296,7 +318,9 @@
             <span class="k">if</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span>
             <span class="k">else</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span><span class="p">,</span>
             <span class="n">default_dataset</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">default_dataset</span><span class="p">,</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
+
 
 
 <span class="n">ConfigLoader</span> <span class="o">=</span> <span class="n">_ConfigLoader</span><span class="p">()</span>

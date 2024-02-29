@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -15,9 +15,9 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
         <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
@@ -104,10 +104,10 @@
            <div itemprop="articleBody">
              
   <section id="module-mozanalysis.bq">
-<span id="mozanalysis-bq"></span><h1><a class="reference internal" href="#module-mozanalysis.bq" title="mozanalysis.bq"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a><a class="headerlink" href="#module-mozanalysis.bq" title="Permalink to this heading"></a></h1>
+<span id="mozanalysis-bq"></span><h1><a class="reference internal" href="#module-mozanalysis.bq" title="mozanalysis.bq"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bq</span></code></a><a class="headerlink" href="#module-mozanalysis.bq" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="mozanalysis.bq.BigQueryContext">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mozanalysis.bq.</span></span><span class="sig-name descname"><span class="pre">BigQueryContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'moz-fx-data-bq-data-science'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mozanalysis.bq.</span></span><span class="sig-name descname"><span class="pre">BigQueryContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'moz-fx-data-bq-data-science'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext" title="Link to this definition"></a></dt>
 <dd><p>Holds a BigQuery client, and some configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -120,7 +120,7 @@ Defaults to the DS team’s project.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mozanalysis.bq.BigQueryContext.run_query">
-<span class="sig-name descname"><span class="pre">run_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sql</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_tables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.run_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.run_query" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">run_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sql</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_tables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.run_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.run_query" title="Link to this definition"></a></dt>
 <dd><p>Run a query and return the result.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">results_table</span></code> is provided, then save the results
 into there (or just query from there if it already exists).
@@ -143,7 +143,7 @@ be replaced with new results, if that table is found.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mozanalysis.bq.BigQueryContext.fully_qualify_table_name">
-<span class="sig-name descname"><span class="pre">fully_qualify_table_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.fully_qualify_table_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.fully_qualify_table_name" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fully_qualify_table_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/bq.html#BigQueryContext.fully_qualify_table_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.bq.BigQueryContext.fully_qualify_table_name" title="Link to this definition"></a></dt>
 <dd><p>Given a table name, return it fully qualified.</p>
 </dd></dl>
 
