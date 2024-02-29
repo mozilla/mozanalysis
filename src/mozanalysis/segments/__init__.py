@@ -1,8 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-"""Segment classes store data about populations targeted by tests."""
-
 from typing import Optional
 
 import attr
@@ -155,7 +153,7 @@ class SegmentDataSource:
         )
 
     @window_start.validator
-    def window_start_lte_window_end(self, attribute, value):
+    def window_start_lte_window_end(self, value):
         """Check that input value is less than or equal to self.window_end."""
         if value > self.window_end:
             raise ValueError("window_start must be <= window_end")
