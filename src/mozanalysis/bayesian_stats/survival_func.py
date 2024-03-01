@@ -115,7 +115,7 @@ def get_thresholds(col, max_num_thresholds=101):
         # that lead to dumb choices. That leaves us with 'nearest'
         interpolation="nearest",
     )
-    return sorted([np.float64(0), *list(nonzero_quantiles.unique())])[
+    return sorted([np.float64(0)] + list(nonzero_quantiles.unique()))[
         :-1
     ]  # The thresholds get used as `>` not `>=`, so exclude the max value
 
