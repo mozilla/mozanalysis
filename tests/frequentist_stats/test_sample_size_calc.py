@@ -54,6 +54,19 @@ def mock_historical_target(fake_ts_result, monkeypatch):
         ):
             return fake_ts_result
 
+        def get_single_window_data(
+            self,
+            bq_context,
+            metric_list,
+            target_list,
+            **kwargs,
+        ):
+            fake_vals = np.arange(10)
+            df = pd.DataFrame({"client_id": [f"c{i}" for i in range(len(fake_vals))]})
+            for m in metric_list:
+                df[m.name] = fake_vals
+            return df
+
     monkeypatch.setattr(sample_size, "HistoricalTarget", MockHistoricalTarget)
 
 
@@ -142,6 +155,24 @@ class TestSampleSizing:
             power=0.8,
             outlier_percentile=0.99,
             sample_rate=0.05,
+        )
+
+    @pytest.fixture
+    def sample_sizer_no_sampling(self, mock_historical_target):
+        # Instance to use for testing sample size calculations with no sampling
+        return SampleSizing(
+            experiment_name="test",
+            bq_context="bqcontext",
+            metrics=[uri_count, active_hours],
+            targets=[regular_users_v3],
+            n_days_observation_max=7,
+            n_days_enrollment=3,
+            n_days_launch_after_version_release=5,
+            end_date="2023-12-15",
+            alpha=0.02,
+            power=0.8,
+            outlier_percentile=0.99,
+            sample_rate=0,
         )
 
     def test_init(self, capsys):
@@ -307,6 +338,107 @@ class TestSampleSizing:
         assert "(browser_version_info.major_version >= 100)" in target_str[2]
         assert "sample_id" not in target_str[2]
 
+    def test_sample_sizes(self, sample_sizer, capsys):
+        sizing_df, stats_df = sample_sizer.sample_sizes([0.02, 0.03], [3, 5])
+
+        assert isinstance(sizing_df, pd.DataFrame)
+        assert sizing_df.index.nlevels == 3
+        assert sizing_df.index.get_level_values(0).to_list() == [3, 3, 3, 3, 5, 5, 5, 5]
+        assert (
+            sizing_df.index.get_level_values(1).to_list()
+            == [0.02, 0.02, 0.03, 0.03] * 2
+        )
+        assert (
+            sizing_df.index.get_level_values(2).to_list()
+            == ["active_hours", "uri_count"] * 4
+        )
+        np.testing.assert_allclose(
+            sizing_df.iloc[0]["sample_size_per_branch"], 23522, atol=0.5
+        )
+        np.testing.assert_allclose(
+            sizing_df.iloc[0]["population_percent_per_branch"], 11761, atol=0.5
+        )
+        np.testing.assert_allclose(
+            sizing_df.iloc[2]["sample_size_per_branch"], 10454, atol=0.5
+        )
+        np.testing.assert_allclose(
+            sizing_df.iloc[2]["population_percent_per_branch"], 5227, atol=0.5
+        )
+
+        assert isinstance(stats_df, pd.DataFrame)
+        assert stats_df.index.nlevels == 2
+        assert stats_df.index.get_level_values(0).to_list() == [3, 3, 5, 5]
+        assert (
+            stats_df.index.get_level_values(1).to_list()
+            == ["active_hours", "uri_count"] * 2
+        )
+        assert stats_df.iloc[0]["mean"] == 4.5
+        assert stats_df.iloc[0]["mean_trimmed"] == 4.0
+        np.testing.assert_allclose(stats_df.iloc[0]["std"], 3.027, atol=0.001)
+        np.testing.assert_allclose(stats_df.iloc[0]["std_trimmed"], 2.739, atol=0.001)
+
+        printed = capsys.readouterr().out.strip().split("\n")
+        assert "3 days enrollment" in printed[0]
+        assert "3 days observation" in printed[0]
+
+        assert "population size: 200" in printed[1]
+        assert "rate of 5%" in printed[1]
+
+        assert "3 days enrollment" in printed[-1]
+        assert "5 days observation" in printed[-1]
+
+        assert sample_sizer.population_size == 200
+        # Retrieving population size shouldn't generate any printed message
+        assert not capsys.readouterr().out
+
+    def test_sample_sizes_no_obs(self, sample_sizer):
+        sizing_df, stats_df = sample_sizer.sample_sizes([0.02, 0.03])
+
+        # Just check that the right number of results were returned
+        # and n_days_observation was updated
+        assert sizing_df.index.get_level_values(0).to_list() == [7, 7, 7, 7]
+        assert stats_df.index.get_level_values(0).to_list() == [7, 7]
+
+    def test_sample_sizes_bad_obs(self, sample_sizer):
+        with pytest.raises(ValueError):
+            sample_sizer.sample_sizes([0.02, 0.03], [7, 14])
+
+    def test_sample_sizes_no_sampling(self, sample_sizer_no_sampling, capsys):
+        sizing_df, stats_df = sample_sizer_no_sampling.sample_sizes([0.02, 0.03], [3])
+
+        np.testing.assert_allclose(
+            sizing_df.iloc[0]["population_percent_per_branch"], 235219, atol=0.5
+        )
+        np.testing.assert_allclose(
+            sizing_df.iloc[2]["population_percent_per_branch"], 104542, atol=0.5
+        )
+
+        printed = capsys.readouterr().out.strip().split("\n")
+        assert "population size: 10" in printed[1]
+        assert "sampled at a rate" not in printed[1]
+
+        assert sample_sizer_no_sampling.population_size == 10
+
+    def test_display_sample_size_results(self, sample_sizer, capsys):
+        sizing_df, stats_df = sample_sizer.sample_sizes([0.02, 0.03], [3, 5])
+        # Clear buffer
+        capsys.readouterr()
+
+        s = sample_sizer.display_sample_size_results(
+            sizing_result=sizing_df,
+            n_days_observation=3,
+            stats_df=stats_df,
+            show_population_pct=True,
+            rel_effect_sizes=None,
+        )
+
+        assert isinstance(s, Styler)
+
+        printed = capsys.readouterr().out
+        assert "3 days observation" in printed
+        assert "population size: 200" in printed
+        assert "rate of 5%" in printed
+
     def test_empirical_sizing(self, sample_sizer, capsys):
         df = sample_sizer.empirical_sizing()
 
@@ -339,6 +471,19 @@ class TestSampleSizing:
         assert sample_sizer.population_size == 20000
         # Retrieving population size shouldn't generate any printed message
         assert not capsys.readouterr().out
+
+    def test_empirical_sizing_no_sampling(self, sample_sizer_no_sampling, capsys):
+        df = sample_sizer_no_sampling.empirical_sizing()
+
+        np.testing.assert_allclose(
+            df.iloc[0]["population_percent_per_branch"], 1.09, atol=0.005
+        )
+
+        printed = capsys.readouterr().out.strip().split("\n")
+        assert "population size: 1,000" in printed[1]
+        assert "sampled at a rate" not in printed[1]
+
+        assert sample_sizer_no_sampling.population_size == 1000
 
     def test_empirical_sizing_with_styler(self, sample_sizer):
         sdf = sample_sizer.empirical_sizing(style=True)

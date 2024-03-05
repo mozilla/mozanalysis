@@ -524,6 +524,11 @@ def get_firefox_release_dates() -> Dict[int, str]:
 
 ### TODO:
 ### - adapt for Android (cf cross-platform experiment)
+###   * historical segment
+### - min version should be optional
+### - default to no sampling?
+### - save HistoricalTarget to attr?
+### - display legend for colours
 ### - tests
 ### - review docstrings
 
@@ -908,7 +913,7 @@ class SampleSizing:
                 "rel_effect_size"
             ).unique()
 
-        print(f"\nSizing for {n_days_observation} days observation.", end="")
+        print(f"\nSizing for {n_days_observation} days observation.", end=" ")
         self._print_population_size()
         print()
 
