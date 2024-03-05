@@ -6,6 +6,8 @@ import re
 
 from google.api_core.exceptions import Conflict
 from google.cloud import bigquery
+from google.cloud.bigquery_storage import BigQueryReadClient
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,7 @@ class BigQueryContext:
         self.dataset_id = dataset_id
         self.project_id = project_id
         self.client = bigquery.Client(project=project_id)
+        self.read_client = BigQueryReadClient()
 
     def run_query(self, sql, results_table=None, replace_tables=False):
         """Run a query and return the result.

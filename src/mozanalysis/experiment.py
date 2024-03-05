@@ -276,7 +276,9 @@ class Experiment:
             "_".join([last_date_full_data, self.experiment_slug, hash_ish(metrics_sql)])
         )
 
-        return bq_context.run_query(metrics_sql, full_res_table_name).to_dataframe()
+        return bq_context.run_query(metrics_sql, full_res_table_name).to_dataframe(
+            bqstorage_client=bq_context.read_client
+        )
 
     def get_time_series_data(
         self,
@@ -627,9 +629,7 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Cirrus enrollments query"
                 )
-            return self._build_enrollments_query_cirrus(
-                time_limits, self.app_id
-            )
+            return self._build_enrollments_query_cirrus(time_limits, self.app_id)
         else:
             raise ValueError
 
@@ -927,9 +927,7 @@ class Experiment:
                 """    LEFT JOIN (
         {query}
         ) ds_{i} USING (client_id, branch, analysis_window_start, analysis_window_end)
-                """.format(
-                    query=query_for_metrics, i=i
-                )
+                """.format(query=query_for_metrics, i=i)
             )
 
             for m in ds_metrics[ds]:
@@ -1006,9 +1004,7 @@ class Experiment:
                 """    LEFT JOIN (
         {query}
         ) ds_{i} USING (client_id, branch)
-                """.format(
-                    query=query_for_segments, i=i
-                )
+                """.format(query=query_for_segments, i=i)
             )
 
             for m in ds_segments[ds]:
@@ -1298,7 +1294,7 @@ class TimeSeriesResult:
 
         return bq_context.run_query(
             self._build_analysis_window_subset_query(analysis_window)
-        ).to_dataframe()
+        ).to_dataframe(bqstorage_client=bq_context.read_client)
 
     def get_full_data(self, bq_context: BigQueryContext) -> DataFrame:
         """Get the full DataFrame from TimeSeriesResult.
@@ -1319,7 +1315,9 @@ class TimeSeriesResult:
         )
 
         table = bq_context.client.get_table(self.fully_qualified_table_name)
-        return bq_context.client.list_rows(table).to_dataframe()
+        return bq_context.client.list_rows(table).to_dataframe(
+            bqstorage_client=bq_context.read_client
+        )
 
     def get_aggregated_data(
         self,
@@ -1342,9 +1340,9 @@ class TimeSeriesResult:
         return (
             bq_context.run_query(
                 self._build_aggregated_data_query(metric_list, aggregate_function)
-            ).to_dataframe(),
+            ).to_dataframe(bqstorage_client=bq_context.read_client),
             bq_context.run_query(self._table_sample_size_query())
-            .to_dataframe()["population_size"]
+            .to_dataframe(bqstorage_client=bq_context.read_client)["population_size"]
             .values[0],
         )
 
@@ -1373,7 +1371,9 @@ class TimeSeriesResult:
             project_id=table_info[0], dataset_id=table_info[1], table_id=table_info[2]
         )
 
-        size = bq_context.run_query(query).to_dataframe()
+        size = bq_context.run_query(query).to_dataframe(
+            bqstorage_client=bq_context.read_client
+        )
 
         return size["size"].iloc[0].round(2)
 
@@ -1402,7 +1402,6 @@ class TimeSeriesResult:
     def _build_aggregated_data_query(
         self, metric_list: List[Metric], aggregate_function: str
     ) -> str:
-
         return """
         SELECT
             analysis_window_start,

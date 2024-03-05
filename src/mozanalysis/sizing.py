@@ -225,7 +225,7 @@ class HistoricalTarget:
 
         return bq_context.run_query(
             self._metrics_sql, full_res_table_name, replace_tables
-        ).to_dataframe()
+        ).to_dataframe(bqstorage_client=bq_context.read_client)
 
     def get_time_series_data(
         self,
@@ -353,7 +353,6 @@ class HistoricalTarget:
         target_list: Optional[Segment] = None,
         custom_targets_query: Optional[str] = None,
     ) -> str:
-
         return """
         {targets_query}
         """.format(
@@ -449,7 +448,6 @@ class HistoricalTarget:
     def _build_targets_query(
         self, target_list: List[Segment], time_limits: TimeLimits
     ) -> str:
-
         target_queries = []
         target_columns = []
         dates_columns = []
@@ -464,18 +462,14 @@ class HistoricalTarget:
                 """
         ds_{i} AS (
                 {query}
-            ),""".format(
-                    i=i, query=query_for_target
-                )
+            ),""".format(i=i, query=query_for_target)
             )
 
             target_columns.append(
                 """
                     ,ds_{i}.{name}
                     ,ds_{i}.target_first_date as {name}_first_date
-                """.format(
-                    i=i, name=t.name
-                )
+                """.format(i=i, name=t.name)
             )
 
             if i != 0:
@@ -485,9 +479,7 @@ class HistoricalTarget:
                         ON ds_{i}.client_id = ds_0.client_id
                         AND ds_{i}.target_first_date <= ds_0.target_last_date
                         AND ds_{i}.target_last_date >= ds_0.target_first_date
-                        """.format(
-                        i=i
-                    )
+                        """.format(i=i)
                 )
 
             dates_columns.append("{name}_first_date".format(name=t.name))
@@ -512,9 +504,7 @@ class HistoricalTarget:
                 SELECT * FROM joined
                 UNPIVOT(min_dates for target_date in ({target_first_dates}))
             )
-        """.format(
-            target_first_dates=", ".join(c for c in dates_columns)
-        )
+        """.format(target_first_dates=", ".join(c for c in dates_columns))
 
         return """
         {query_for_targets}
@@ -554,9 +544,7 @@ class HistoricalTarget:
                 """    LEFT JOIN (
         {query}
         ) ds_{i} USING (client_id, analysis_window_start, analysis_window_end)
-                """.format(
-                    query=query_for_metrics, i=i
-                )
+                """.format(query=query_for_metrics, i=i)
             )
 
             for m in ds_metrics[ds]:
