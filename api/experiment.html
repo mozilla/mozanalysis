@@ -598,15 +598,20 @@ determines the number of points in the time series.</p></li>
 <dt class="sig sig-object py" id="mozanalysis.experiment.AnalysisWindow">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mozanalysis.experiment.</span></span><span class="sig-name descname"><span class="pre">AnalysisWindow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mozanalysis/experiment.html#AnalysisWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.experiment.AnalysisWindow" title="Link to this definition"></a></dt>
 <dd><p>Represents the range of days in which to measure a metric.</p>
-<p>The range is measured in “days after enrollment”, and is inclusive.</p>
-<p>For example, <code class="docutils literal notranslate"><span class="pre">AnalysisWindow(0,</span> <span class="pre">6)</span></code> is the first week after enrollment.</p>
+<p>The range is measured in “days relative enrollment”, and is inclusive.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">AnalysisWindow(0,</span> <span class="pre">6)</span></code> is the first week after enrollment
+and <cite>AnalysisWindow(-8,-1)</cite> is the week before enrollment</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>start</strong> (<em>int</em>) – First day of the analysis window, in days since
-enrollment.</p></li>
-<li><p><strong>end</strong> (<em>int</em>) – Final day of the analysis window, in days since
-enrollment.</p></li>
+<li><p><strong>start</strong> (<em>int</em>) – First day of the analysis window, in days relative
+to enrollment start. 0 indicates the date of enrollment.
+Positive numbers are after enrollment, negative are before.
+Must be the same sign as <cite>end</cite> (zero counts as positive)</p></li>
+<li><p><strong>end</strong> (<em>int</em>) – Final day of the analysis window, in days relative
+to enrollment start. 0 indicates the date of enrollment.
+Positive numbers are after enrollment, negative are before.
+Must be the same sign as <cite>start</cite> (zero counts as positive).</p></li>
 </ul>
 </dd>
 </dl>

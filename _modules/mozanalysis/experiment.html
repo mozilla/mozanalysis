@@ -723,9 +723,7 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">&quot;App ID must be defined for building Cirrus enrollments query&quot;</span>
                 <span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_cirrus</span><span class="p">(</span>
-                <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span>
-            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_cirrus</span><span class="p">(</span><span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
 
@@ -1304,12 +1302,6 @@
     <span class="nd">@first_enrollment_date</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">_validate_first_enrollment_date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_enrollment_date</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_enrollment_date</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_enrollment_date</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_date_data_required</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_enrollment_date</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span>
-
-    <span class="nd">@last_enrollment_date</span><span class="o">.</span><span class="n">validator</span>
-    <span class="k">def</span> <span class="nf">_validate_last_enrollment_date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_enrollment_date</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span>
 
     <span class="nd">@first_date_data_required</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">_validate_first_date_data_required</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
@@ -1335,15 +1327,20 @@
 <span class="k">class</span> <span class="nc">AnalysisWindow</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents the range of days in which to measure a metric.</span>
 
-<span class="sd">    The range is measured in &quot;days after enrollment&quot;, and is inclusive.</span>
+<span class="sd">    The range is measured in &quot;days relative enrollment&quot;, and is inclusive.</span>
 
-<span class="sd">    For example, ``AnalysisWindow(0, 6)`` is the first week after enrollment.</span>
+<span class="sd">    For example, ``AnalysisWindow(0, 6)`` is the first week after enrollment</span>
+<span class="sd">    and `AnalysisWindow(-8,-1)` is the week before enrollment</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        start (int): First day of the analysis window, in days since</span>
-<span class="sd">            enrollment.</span>
-<span class="sd">        end (int): Final day of the analysis window, in days since</span>
-<span class="sd">            enrollment.</span>
+<span class="sd">        start (int): First day of the analysis window, in days relative</span>
+<span class="sd">            to enrollment start. 0 indicates the date of enrollment.</span>
+<span class="sd">            Positive numbers are after enrollment, negative are before.</span>
+<span class="sd">            Must be the same sign as `end` (zero counts as positive)</span>
+<span class="sd">        end (int): Final day of the analysis window, in days relative</span>
+<span class="sd">            to enrollment start. 0 indicates the date of enrollment.</span>
+<span class="sd">            Positive numbers are after enrollment, negative are before.</span>
+<span class="sd">            Must be the same sign as `start` (zero counts as positive).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">start</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
@@ -1351,11 +1348,13 @@
 
     <span class="nd">@start</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">_validate_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">value</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
 
     <span class="nd">@end</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">_validate_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span></div>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">value</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">value</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 
@@ -1522,7 +1521,6 @@
     <span class="k">def</span> <span class="nf">_build_aggregated_data_query</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span> <span class="n">aggregate_function</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        SELECT</span>
 <span class="s2">            analysis_window_start,</span>
