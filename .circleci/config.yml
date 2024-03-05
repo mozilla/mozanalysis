@@ -9,12 +9,6 @@
 test_settings: &test_settings
   steps:
     - checkout
-    - run: &install_packages
-        name: Install system packages
-        command: |
-          # pyspark needs to run Java, so we install openjdk.
-          apt-get update
-          apt-get install -y default-jre-headless
     - run: &run_tox_environment_matching_circleci_job_name
         name: Run tox job
         command: |
@@ -23,12 +17,14 @@ test_settings: &test_settings
     - run:
         name: Submit code coverage data
         command: |
-          # Skip this step if running via the CircleCI local CLI.
-          [ -z "$CIRCLE_BUILD_NUM" ] && exit 0
-          # Activate the virtualenv so that codecov can find the 'coverage' executable.
-          source .tox/$CIRCLE_JOB/bin/activate
-          # Upload to codecov and flag (-F) with the name of the job.
-          bash <(curl -s https://codecov.io/bash) -F $CIRCLE_JOB
+          curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
+          curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
+          gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
+          shasum -a 256 -c codecov.SHA256SUM
+          chmod +x codecov
+          ./codecov -F "$(basename $PWD | sed s/[^a-z]/_/g)"
 
 
 
@@ -39,27 +35,27 @@ test_settings: &test_settings
 version: 2
 jobs:
 
-  py38:
+  py310:
     <<: *test_settings
     docker:
-      - image: python:3.8-buster
+      - image: cimg/python:3.10
 
   lint:
     docker:
-      - image: python:3.8-buster
+      - image: cimg/python:3.10
     steps:
     - checkout
     - run:
         name: Run linting
         command: |
-          pip install flake8
-          flake8 src/ tests/
+          pip install ruff
+          ruff check src/ tests/
 
   # Runs when the repository is tagged for release; see the workflows section
   # below for trigger logic.
   deploy:
     docker:
-      - image: python:3.8-buster
+      - image: cimg/python:3.10
     steps:
       - checkout
       - run:
@@ -81,11 +77,9 @@ jobs:
 
   docs: &docs_settings
     docker:
-      - image: python:3.8-buster
+      - image: cimg/python:3.10
     steps:
       - checkout
-      - run:
-          <<: *install_packages
       - run:
           <<: *run_tox_environment_matching_circleci_job_name
       - persist_to_workspace:
@@ -125,7 +119,7 @@ workflows:
   version: 2
   build:
     jobs:
-      - py38
+      - py310
       - lint
       - docs
       - docs-deploy:

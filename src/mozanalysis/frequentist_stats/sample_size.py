@@ -97,7 +97,6 @@ def difference_of_proportions_sample_size_calc(
     power: float = 0.90,
     outlier_percentile: float = 99.5,
 ) -> dict:
-
     """
     Perform sample size calculation for an experiment to test for a
     difference in proportions.
@@ -124,7 +123,6 @@ def difference_of_proportions_sample_size_calc(
     """
 
     def _get_sample_size_col(col):
-
         p = np.percentile(df[col], q=[outlier_percentile])[0]
         mean = df.loc[df[col] <= p, col].mean()
         p2 = mean + effect_size
@@ -155,7 +153,6 @@ def z_or_t_ind_sample_size_calc(
     power: float = 0.90,
     outlier_percentile: float = 99.5,
 ) -> dict:
-
     """
     Perform sample size calculation for an experiment based on independent
     samples t or z tests.
@@ -188,7 +185,6 @@ def z_or_t_ind_sample_size_calc(
     solver = tests[test]
 
     def _get_sample_size_col(col):
-
         p = np.percentile(df[col], q=[outlier_percentile])[0]
         sd = df.loc[df[col] <= p, col].std()
         mean = df.loc[df[col] <= p, col].mean()
@@ -219,7 +215,6 @@ def empirical_effect_size_sample_size_calc(
     parent_distribution: str = "normal",
     plot_effect_sizes: bool = False,
 ) -> dict:
-
     """
     Perform sample size calculation with empirical effect size and
     asymptotic approximation of Wilcoxen-Mann-Whitney U Test. Empirical effect size
@@ -253,14 +248,14 @@ def empirical_effect_size_sample_size_calc(
 
     Returns:
         A dictionary. Keys in the dictionary are the metrics column names from
-        the DataFrame; values are the required sample size per branch to achieve
-        the desired power for that metric.
+        the DataFrame; values are dictionaries containing the required sample size
+        per branch to achieve the desired power for that metric, along with
+        additional information.
     """
 
     def _mann_whitney_solve_sample_size_approximation(
         effect_size, std, alpha=0.05, power=0.8, parent_distribution="normal"
     ):
-
         """
         Wilcoxen-Mann-Whitney rank sum test sample size calculation,
         based on asymptotic efficiency relative to the t-test.
@@ -291,8 +286,7 @@ def empirical_effect_size_sample_size_calc(
         bq_context=bq_context, metric_list=metric_list, aggregate_function="STDDEV"
     )
 
-    effect_size = {}
-    std = {}
+    size_dict = {}
 
     for m in metric_list:
         res_mean["diff"] = res_mean[m.name].diff().abs()
@@ -306,39 +300,41 @@ def empirical_effect_size_sample_size_calc(
         m_quantile = res_mean["diff"].quantile(q=quantile, interpolation="nearest")
         m_std = res_std[m.name].quantile(q=quantile, interpolation="nearest")
 
-        effect_size[m.name] = {
+        effect_size = {
             "value": m_quantile,
             "period_start_day": res_mean.loc[
                 res_mean["diff"] == m_quantile, "analysis_window_start"
             ].values[0],
         }
-        std[m.name] = {
+        effect_size_base_period = effect_size["period_start_day"] - 7
+        metric_value = {
+            "value": res_mean.loc[
+                res_mean["analysis_window_start"] == effect_size_base_period, m.name
+            ].values[0],
+            "period_start_day": effect_size_base_period,
+        }
+        std = {
             "value": m_std,
             "period_start_day": res_std.loc[
                 res_std[m.name] == m_std, "analysis_window_start"
             ].values[0],
         }
-
-    size_dict = {
-        m.name: {
-            "effect_size": effect_size[m.name],
-            "std_dev": std[m.name],
-            "sample_size_per_branch": _mann_whitney_solve_sample_size_approximation(
-                effect_size=effect_size[m.name]["value"],
-                std=std[m.name]["value"],
-                power=power,
-                alpha=alpha,
-                parent_distribution=parent_distribution,
-            ),
-        }
-        for m in metric_list
-    }
-
-    for k in size_dict.keys():
-        size_dict[k]["number_of_clients_targeted"] = pop_size
-        size_dict[k]["population_percent_per_branch"] = 100.0 * (
-            size_dict[k]["sample_size_per_branch"] / pop_size
+        sample_size = _mann_whitney_solve_sample_size_approximation(
+            effect_size=effect_size["value"],
+            std=std["value"],
+            power=power,
+            alpha=alpha,
+            parent_distribution=parent_distribution,
         )
+        size_dict[m.name] = {
+            "effect_size": effect_size,
+            "mean": metric_value,
+            "std_dev": std,
+            "relative_effect_size": effect_size["value"] / metric_value["value"],
+            "sample_size_per_branch": sample_size,
+            "number_of_clients_targeted": pop_size,
+            "population_percent_per_branch": 100.0 * (sample_size / pop_size),
+        }
 
     return size_dict  # TODO: add option to return a DataFrame
 
@@ -377,7 +373,6 @@ def poisson_diff_solve_sample_size(
     """
 
     def _get_sample_size_col(col):
-
         p = np.percentile(df[col], q=[outlier_percentile])[0]
         sd = df.loc[df[col] <= p, col].std()
         mean = df.loc[df[col] <= p, col].mean()
@@ -479,7 +474,6 @@ def variable_enrollment_length_sample_size_calc(
     )
 
     def _for_interval_sample_size_calculation(i):
-
         df_interval = df.loc[df["enrollment_date"] < interval_end_dates[i]]
         res = z_or_t_ind_sample_size_calc(
             df=df_interval, metrics_list=metric_list, test="t", **sizing_kwargs
