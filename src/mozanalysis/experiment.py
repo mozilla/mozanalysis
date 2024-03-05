@@ -1222,7 +1222,7 @@ class AnalysisWindow:
     The range is measured in "days relative enrollment", and is inclusive.
 
     For example, ``AnalysisWindow(0, 6)`` is the first week after enrollment
-    and `AnalysisWindow(-8,-1)` is the week before enrollument
+    and `AnalysisWindow(-8,-1)` is the week before enrollment
 
     Args:
         start (int): First day of the analysis window, in days relative
