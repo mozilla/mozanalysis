@@ -250,6 +250,7 @@ def test_time_limits_has_right_date_in_error_message():
 
 def test_analysis_window_validates_start():
     AnalysisWindow(0, 1)
+    AnalysisWindow(-2, -1)
     with pytest.raises(AssertionError):
         AnalysisWindow(-1, 1)
 

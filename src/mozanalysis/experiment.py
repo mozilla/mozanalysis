@@ -627,9 +627,7 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Cirrus enrollments query"
                 )
-            return self._build_enrollments_query_cirrus(
-                time_limits, self.app_id
-            )
+            return self._build_enrollments_query_cirrus(time_limits, self.app_id)
         else:
             raise ValueError
 
@@ -1199,12 +1197,6 @@ class TimeLimits:
     @first_enrollment_date.validator
     def _validate_first_enrollment_date(self, attribute, value):
         assert self.first_enrollment_date <= self.last_enrollment_date
-        assert self.first_enrollment_date <= self.first_date_data_required
-        assert self.first_enrollment_date <= self.last_date_data_required
-
-    @last_enrollment_date.validator
-    def _validate_last_enrollment_date(self, attribute, value):
-        assert self.last_enrollment_date <= self.last_date_data_required
 
     @first_date_data_required.validator
     def _validate_first_date_data_required(self, attribute, value):
@@ -1227,15 +1219,20 @@ class TimeLimits:
 class AnalysisWindow:
     """Represents the range of days in which to measure a metric.
 
-    The range is measured in "days after enrollment", and is inclusive.
+    The range is measured in "days relative enrollment", and is inclusive.
 
-    For example, ``AnalysisWindow(0, 6)`` is the first week after enrollment.
+    For example, ``AnalysisWindow(0, 6)`` is the first week after enrollment
+    and `AnalysisWindow(-8,-1)` is the week before enrollment
 
     Args:
-        start (int): First day of the analysis window, in days since
-            enrollment.
-        end (int): Final day of the analysis window, in days since
-            enrollment.
+        start (int): First day of the analysis window, in days relative
+            to enrollment start. 0 indicates the date of enrollment.
+            Positive numbers are after enrollment, negative are before.
+            Must be the same sign as `end` (zero counts as positive)
+        end (int): Final day of the analysis window, in days relative
+            to enrollment start. 0 indicates the date of enrollment.
+            Positive numbers are after enrollment, negative are before.
+            Must be the same sign as `start` (zero counts as positive).
     """
 
     start = attr.ib(type=int)
@@ -1243,11 +1240,13 @@ class AnalysisWindow:
 
     @start.validator
     def _validate_start(self, attribute, value):
-        assert value >= 0
+        assert (value >= 0 and self.end >= 0) or (value < 0 and self.end < 0)
 
     @end.validator
     def _validate_end(self, attribute, value):
-        assert value >= self.start
+        assert (value >= self.start) and (
+            (value >= 0 and self.start >= 0) or (value < 0 and self.start < 0)
+        )
 
 
 @attr.s(frozen=True, slots=True)
@@ -1402,7 +1401,6 @@ class TimeSeriesResult:
     def _build_aggregated_data_query(
         self, metric_list: List[Metric], aggregate_function: str
     ) -> str:
-
         return """
         SELECT
             analysis_window_start,
