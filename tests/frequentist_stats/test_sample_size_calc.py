@@ -77,7 +77,7 @@ def test_empirical_effect_size_sample_size_calc(fake_ts_result):
         )
 
 
-def test_emperical_effect_size_results_holder(fake_ts_result):
+def test_empirical_effect_size_results_holder(fake_ts_result):
     """checks the get_dataframe method doesn't throw an error and has
     the expected columns in the case where a weekly mean is not generated"""
 

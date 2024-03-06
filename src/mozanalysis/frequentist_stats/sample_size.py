@@ -117,7 +117,7 @@ class SampleSizeResultsHolder(ResultsHolder):
         plt.show(block=False)
 
 
-class EmpericalEffectSizeResultsHolder(ResultsHolder):
+class EmpiricalEffectSizeResultsHolder(ResultsHolder):
     "ResultsHolder for empirical_effect_size_sample_size_calc"
 
     def style_empirical_sizing_result(
@@ -606,7 +606,7 @@ def empirical_effect_size_sample_size_calc(
     alpha: float = 0.05,
     parent_distribution: str = "normal",
     plot_effect_sizes: bool = False,
-) -> EmpericalEffectSizeResultsHolder:
+) -> EmpiricalEffectSizeResultsHolder:
     """
     Perform sample size calculation with empirical effect size and
     asymptotic approximation of Wilcoxen-Mann-Whitney U Test. Empirical effect size
@@ -639,7 +639,7 @@ def empirical_effect_size_sample_size_calc(
             distribution of effect sizes observed in historical data.
 
     Returns:
-        EmpericalEffectSizeResultsHolder: The data attribute contains a dictionary.
+        EmpiricalEffectSizeResultsHolder: The data attribute contains a dictionary.
         Keys in the dictionary are the metrics column names from
         the DataFrame; values are dictionaries containing the required sample size
         per branch to achieve the desired power for that metric, along with
@@ -737,7 +737,7 @@ def empirical_effect_size_sample_size_calc(
         "parent_distribution": parent_distribution,
     }
 
-    return EmpericalEffectSizeResultsHolder(
+    return EmpiricalEffectSizeResultsHolder(
         size_dict, metrics=metric_list, params=params
     )
 
