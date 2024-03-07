@@ -1075,7 +1075,7 @@ class TimeLimits:
         if last_date_data_required > last_date_full_data:
             raise ValueError(
                 f"You said you wanted {num_dates_enrollment} dates of enrollment, "
-                + f"and need data from the {analysis_window.end}th day after enrollment."  # noqa: E501
+                + f"and need data from the {analysis_window.end}th day after enrollment. "  # noqa: E501
                 + f"For that, you need to wait until we have data for {last_date_data_required}."  # noqa:E501
             )
 
