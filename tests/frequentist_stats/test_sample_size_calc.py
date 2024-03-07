@@ -78,7 +78,7 @@ def test_empirical_effect_size_sample_size_calc(fake_ts_result):
 
 
 def test_empirical_effect_size_results_holder(fake_ts_result):
-    """checks the get_dataframe method doesn't throw an error and has
+    """checks the dataframe property doesn't throw an error and has
     the expected columns in the case where a weekly mean is not generated"""
 
     @dataclass
@@ -91,7 +91,7 @@ def test_empirical_effect_size_results_holder(fake_ts_result):
         res=fake_ts_result, bq_context=None, metric_list=metric_list
     )
 
-    result_df = result.get_dataframe()
+    result_df = result.dataframe
     expected_columns = {
         "relative_effect_size",
         "effect_size_value",
@@ -150,8 +150,8 @@ def test_curve_results_holder():
     assert set(iter_keys) == metric_names
 
 
-def test_curve_results_holder_get_dataframe():
-    """this test ensures the get_dataframe function works as expected"""
+def test_curve_results_holder_dataframe():
+    """this test ensures the dataframe property function works as expected"""
     df = pd.DataFrame(
         {
             search_clients_daily.name: np.random.normal(size=100),
@@ -171,29 +171,14 @@ def test_curve_results_holder_get_dataframe():
         outlier_percentile=99.5,
     )
 
-    experiment_effect_sizes = res._params["simulated_values"]
-    cols_no_stats = set(list(experiment_effect_sizes))
-    stats_cols = {
-        "mean",
-        "std",
-        "mean_trimmed",
-        "std_trimmed",
-        "trim_change_mean",
-        "trim_change_std",
+    cols_no_stats = {
+        "sample_size_per_branch",
+        "population_percent_per_branch",
+        "number_of_clients_targeted",
     }
-    cols_with_stats = cols_no_stats | stats_cols
 
-    with pytest.raises(ValueError):
-        _ = res.get_dataframe(append_stats=True)
-
-    no_stats = res.get_dataframe()
+    no_stats = res.dataframe
     assert set(no_stats.columns) == cols_no_stats
-
-    also_no_stats = res.get_dataframe(input_data=df, append_stats=False)
-    assert set(also_no_stats.columns) == cols_no_stats
-
-    with_stats = res.get_dataframe(input_data=df, append_stats=True)
-    assert set(with_stats.columns) == cols_with_stats
 
 
 def test_get_styled_dataframe():
@@ -231,12 +216,22 @@ def test_get_styled_dataframe():
         highlight_lessthan=[(10, "green"), (20, "blue")],
     )
 
+    with pytest.raises(ValueError):
+        _ = res.get_styled_dataframe(append_stats=True)
+
     # check that subset works
     subset_experiment_effect_sizes = experiment_effect_sizes[1:-1]
     subset_cols_with_stats = set(subset_experiment_effect_sizes) | stats_cols
 
     no_stats = res.get_styled_dataframe(simulated_values=subset_experiment_effect_sizes)
     assert set(no_stats.data.columns) == set(subset_experiment_effect_sizes)
+
+    with_stats = res.get_styled_dataframe(
+        input_data=df,
+        append_stats=False,
+        simulated_values=subset_experiment_effect_sizes,
+    )
+    assert set(with_stats.data.columns) == set(subset_experiment_effect_sizes)
 
     with_stats = res.get_styled_dataframe(
         input_data=df,
@@ -269,5 +264,5 @@ def test_results_holder():
     assert set(iter_keys) == metric_names
 
     # make sure the  get_dataframe isn't broken
-    _ = res.get_dataframe()
+    _ = res.dataframe
     res.plot_results()

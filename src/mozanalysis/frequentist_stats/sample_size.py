@@ -91,14 +91,11 @@ class SampleSizeResultsHolder(ResultsHolder):
     a method for returning results as a dataframe
     """
 
-    def get_dataframe(self) -> pd.DataFrame:
-        """
-        returns data as a dataframe rather than a dict
+    @property
+    def dataframe(self) -> pd.DataFrame:
+        """dataframe property
 
-        Returns:
-            (pd.DataFrame): dataframe of results
-            The index is the metric and the columns are the outputs from
-            the sample size method
+        returns data as a dataframe rather than a dict
         """
         return pd.DataFrame(self.data).transpose()
 
@@ -118,7 +115,7 @@ class SampleSizeResultsHolder(ResultsHolder):
             for el in self._metrics
         }
         nice_result = self.make_friendly_name(result_name)
-        df = self.get_dataframe().rename(index=nice_metric_map)
+        df = self.dataframe.rename(index=nice_metric_map)
         df[result_name].plot(kind="bar")
         plt.ylabel(nice_result)
         plt.xlabel("Metric")
@@ -159,15 +156,11 @@ class EmpiricalEffectSizeResultsHolder(ResultsHolder):
             .format("{:.2%}", subset="rel_effect_size")
         )
 
-    def get_dataframe(self) -> pd.DataFrame:
-        """returns dataframe for results from empirical_effect_size_sample_size_calc
+    @property
+    def dataframe(self) -> pd.DataFrame:
+        """dataframe property
 
-        Arguments:
-            style (bool): If true, return a cleaned up and formatted pandas Styler.
-            Otherwise return a dataframe
-        Returns:
-            pd.DataFrame: dataframe containing results
-        """
+        returns results consolidated into a dataframe"""
 
         formatted_results = {}
         for m, r in self.data.items():
@@ -208,7 +201,7 @@ class EmpiricalEffectSizeResultsHolder(ResultsHolder):
         Returns:
             Styler: styled dataframe for visualization
         """
-        df = self.get_dataframe()
+        df = self.dataframe
         return self.style_empirical_sizing_result(df)
 
 
@@ -253,53 +246,10 @@ class SampleSizeCurveResultHolder(ResultsHolder):
         ).abs() / overall_stats["std"]
         self._raw_data_stats = overall_stats
 
-    def get_dataframe(
-        self,
-        input_data: pd.DataFrame = None,
-        show_population_pct: bool = True,
-        simulated_values: list = None,
-        append_stats: bool = False,
-    ) -> pd.DataFrame:
-        """
-        obtain data for sample size curves
-
-        Args:
-            input_data (pd.DataFrame, optional): Input data used to generate results,
-                used to generate statistics. Defaults to None.
-            show_population_pct (bool, optional): If true, percentage of population
-                will be used in output rather than raw counts. Defaults to True.
-            simulated_values (list, optional): List of simulated values to subset
-                output to. If None, all values will be included. Defaults to None.
-            append_stats (bool, optional): If True, summary statistics on
-                the raw metrics are provided. Defaults to False.
-
-        Raises:
-            ValueError: Raises error if append_stats is True but no input_data is
-                        provided
-
-        Returns:
-            pd.DataFrame : dataframe consolidating data
-        """
-        # choose which column to output
-        if show_population_pct:
-            subset_col = "population_percent_per_branch"
-        else:
-            subset_col = "sample_size_per_branch"
-
-        # reformate raw_df to make different simulatd values into columns
-        if simulated_values is None:
-            simulated_values = self._params["simulated_values"]
-            pretty_df = self.raw_df[subset_col].unstack()
-        else:
-            pretty_df = self.raw_df[subset_col].unstack()[simulated_values]
-
-        # get stats if input_data is non-null and append_stats is True
-        if append_stats:
-            if input_data is None:
-                raise ValueError("append_stats is true but no raw data was provided")
-            self.set_raw_data_stats(input_data)
-            pretty_df = pd.concat([pretty_df, self._raw_data_stats], axis="columns")
-        return pretty_df
+    @property
+    def dataframe(self) -> pd.DataFrame:
+        """dataframe property"""
+        return self.raw_df
 
     def get_styled_dataframe(
         self,
@@ -340,15 +290,28 @@ class SampleSizeCurveResultHolder(ResultsHolder):
         Returns:
             Styler: styled output
         """
+        # choose which column to output
+        if show_population_pct:
+            subset_col = "population_percent_per_branch"
+        else:
+            subset_col = "sample_size_per_branch"
+
+        # reformate raw_df to make different simulatd values into columns
         if simulated_values is None:
             simulated_values = self._params["simulated_values"]
+            pretty_df = self.raw_df[subset_col].unstack()
+        else:
+            pretty_df = self.raw_df[subset_col].unstack()[simulated_values]
 
-        pretty_df = self.get_dataframe(
-            input_data,
-            show_population_pct=show_population_pct,
-            simulated_values=simulated_values,
-            append_stats=append_stats,
-        )
+        # get stats if input_data is non-null and append_stats is True
+        if append_stats:
+            if input_data is None:
+                raise ValueError("append_stats is true but no raw data was provided")
+            self.set_raw_data_stats(input_data)
+            pretty_df = pd.concat([pretty_df, self._raw_data_stats], axis="columns")
+
+        if simulated_values is None:
+            simulated_values = self._params["simulated_values"]
 
         disp = (
             pretty_df.style.format(
@@ -449,7 +412,7 @@ def sample_size_curves(
     for v in test_vals:
         sample_sizes = solver(
             df, metrics_list, **{sim_var: v}, **params, **solver_kwargs
-        ).get_dataframe()
+        ).dataframe
         sample_sizes[sim_var] = v
 
         results[v] = sample_sizes
