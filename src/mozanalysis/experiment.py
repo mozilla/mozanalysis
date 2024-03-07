@@ -663,7 +663,7 @@ class Experiment:
         self, time_limits: TimeLimits, sample_size: int = 100
     ) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
-        return """
+        return f"""
         SELECT
             e.client_id,
             `mozfun.map.get_key`(e.event_map_values, 'branch')
@@ -676,16 +676,11 @@ class Experiment:
             e.event_category = 'normandy'
             AND e.event_method = 'enroll'
             AND e.submission_date
-                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
-            AND e.event_string_value = '{experiment_slug}'
+                BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+            AND e.event_string_value = '{self.experiment_slug}'
             AND e.sample_id < {sample_size}
         GROUP BY e.client_id, branch
-            """.format(
-            experiment_slug=self.experiment_slug,
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-            sample_size=sample_size,
-        )
+            """  # noqa:E501
 
     def _build_enrollments_query_fenix_baseline(
         self, time_limits: TimeLimits, sample_size: int = 100
@@ -742,7 +737,7 @@ class Experiment:
         ``ping_info.experiments`` to get a list of who is in what branch
         and when they enrolled.
         """
-        return """
+        return f"""
             SELECT events.client_info.client_id AS client_id,
                 mozfun.map.get_key(
                     e.extra,
@@ -750,24 +745,18 @@ class Experiment:
                 ) AS branch,
                 DATE(MIN(events.submission_timestamp)) AS enrollment_date,
                 COUNT(events.submission_timestamp) AS num_enrollment_events
-            FROM `moz-fx-data-shared-prod.{dataset}.events` events,
+            FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.events` events,
             UNNEST(events.events) AS e
             WHERE
                 events.client_info.client_id IS NOT NULL AND
                 DATE(events.submission_timestamp)
-                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+                BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                 AND e.category = "nimbus_events"
-                AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
+                AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND sample_id < {sample_size}
             GROUP BY client_id, branch
-            """.format(
-            experiment_slug=self.experiment_slug,
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-            dataset=self.app_id or dataset,
-            sample_size=sample_size,
-        )
+            """  # noqa:E501
 
     def _build_enrollments_query_cirrus(
         self, time_limits: TimeLimits, dataset: str
@@ -781,7 +770,7 @@ class Experiment:
         ``ping_info.experiments`` to get a list of who is in what branch
         and when they enrolled.
         """
-        return """
+        return f"""
             SELECT
                 mozfun.map.get_key(e.extra, "user_id") AS client_id,
                 mozfun.map.get_key(
@@ -790,27 +779,22 @@ class Experiment:
                 ) AS branch,
                 DATE(MIN(events.submission_timestamp)) AS enrollment_date,
                 COUNT(events.submission_timestamp) AS num_enrollment_events
-            FROM `moz-fx-data-shared-prod.{dataset}.enrollment` events,
+            FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.enrollment` events,
             UNNEST(events.events) AS e
             WHERE
                 mozfun.map.get_key(e.extra, "user_id") IS NOT NULL AND
                 DATE(events.submission_timestamp)
-                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+                BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                 AND e.category = "cirrus_events"
-                AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
+                AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND client_info.app_channel = 'production'
             GROUP BY client_id, branch
-            """.format(
-            experiment_slug=self.experiment_slug,
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-            dataset=self.app_id or dataset,
-        )
+            """  # noqa:E501
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query exposures for a normandy experiment"""
-        return """
+        return f"""
         SELECT
             e.client_id,
             e.branch,
@@ -828,18 +812,14 @@ class Experiment:
                 event_category = 'normandy'
                 AND (event_method = 'exposure' OR event_method = 'expose')
                 AND submission_date
-                    BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
-                AND event_string_value = '{experiment_slug}'
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                AND event_string_value = '{self.experiment_slug}'
         ) e
         ON re.client_id = e.client_id AND
             re.branch = e.branch AND
             e.submission_date >= re.enrollment_date
         GROUP BY e.client_id, e.branch
-            """.format(
-            experiment_slug=self.experiment_slug,
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-        )
+            """  # noqa: E501
 
     def _build_exposure_query_glean_event(
         self,
@@ -849,7 +829,7 @@ class Experiment:
         event_category: str = "nimbus_events",
     ) -> str:
         """Return SQL to query exposures for a Glean no-event experiment"""
-        return """
+        return f"""
             SELECT
                 exposures.client_id,
                 exposures.branch,
@@ -862,29 +842,22 @@ class Experiment:
                     mozfun.map.get_key(event.extra, 'branch') AS branch,
                     DATE(events.submission_timestamp) AS submission_date
                 FROM
-                    `moz-fx-data-shared-prod.{dataset}.events` events,
+                    `moz-fx-data-shared-prod.{self.app_id or dataset}.events` events,
                     UNNEST(events.events) AS event
                 WHERE
                     DATE(events.submission_timestamp)
-                    BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                     AND event.category = '{event_category}'
                     AND mozfun.map.get_key(
                         event.extra,
-                        "experiment") = '{experiment_slug}'
+                        "experiment") = '{self.experiment_slug}'
                     AND (event.name = 'expose' OR event.name = 'exposure')
             ) exposures
             ON re.client_id = exposures.client_id AND
                 re.branch = exposures.branch AND
                 exposures.submission_date >= re.enrollment_date
             GROUP BY client_id, branch
-            """.format(
-            client_id_field=client_id_field,
-            experiment_slug=self.experiment_slug,
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-            dataset=self.app_id or dataset,
-            event_category=event_category,
-        )
+            """  # noqa: E501
 
     def _build_metrics_query_bits(
         self,
@@ -1102,12 +1075,8 @@ class TimeLimits:
         if last_date_data_required > last_date_full_data:
             raise ValueError(
                 f"You said you wanted {num_dates_enrollment} dates of enrollment, "
-                + "and need data from the {}th day after enrollment. ".format(
-                    analysis_window.end
-                )
-                + "For that, you need to wait until we have data for {}.".format(
-                    last_date_data_required
-                )
+                + f"and need data from the {analysis_window.end}th day after enrollment."  # noqa: E501
+                + f"For that, you need to wait until we have data for {last_date_data_required}."  # noqa:E501
             )
 
         tl = cls(
