@@ -11,6 +11,7 @@ tests_require = [
     "pytest-ruff",
     "pytest-cov",
     "pytest-timeout",
+    "ruff==0.3.1",
 ]
 
 docs_require = ["Sphinx", "sphinx-autobuild", "sphinx-rtd-theme"]
