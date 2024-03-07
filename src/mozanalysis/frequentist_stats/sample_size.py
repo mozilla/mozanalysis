@@ -28,15 +28,17 @@ class ResultsHolder(UserDict):
     """
     Object to hold results from different methods.  It extends
     the dictionary objects so that users can interact with it
-    with a dictionary with the same keys/values as before, making
+    like a dictionary with the same keys/values as before, making
     it backward compatible.
     """
 
     def __init__(self, *args, metrics: dict = None, params: dict = None, **kwargs):
         """
         Args:
-            metrics (dict, optional): _description_. Defaults to None.
-            params (dict, optional): _description_. Defaults to None.
+            metrics (list, optional): List of metrics used to generate the results.
+                                     Defaults to None.
+            params (dict, optional): Parameters used to generated the results.
+                                    Defaults to None.
         """
         super().__init__(*args, **kwargs)
         self._metrics = metrics
@@ -47,6 +49,16 @@ class ResultsHolder(UserDict):
         self.data = {
             k: v for k, v in self.data.items() if k not in ["metrics", "params"]
         }
+
+    @property
+    def metrics(self):
+        """the metrics property"""
+        return self._metrics
+
+    @property
+    def params(self):
+        """the self property"""
+        return self._params
 
     @staticmethod
     def make_friendly_name(ugly_name: str) -> str:
@@ -97,17 +109,13 @@ class SampleSizeResultsHolder(ResultsHolder):
             result_name (str): sample size method output to plot.
             Defaults to sample_size_per_branch
         """
-        nice_metric_names = [
-            (
+        nice_metric_map = {
+            el.name: (
                 el.friendly_name
                 if hasattr(el, "friendly_name")
                 else self.make_friendly_name(el.name)
             )
             for el in self._metrics
-        ]
-        nice_metric_map = {
-            el.name: friendly_name
-            for el, friendly_name in zip(self._metrics, nice_metric_names)
         }
         nice_result = self.make_friendly_name(result_name)
         df = self.get_dataframe().rename(index=nice_metric_map)
@@ -158,8 +166,7 @@ class EmpiricalEffectSizeResultsHolder(ResultsHolder):
             style (bool): If true, return a cleaned up and formatted pandas Styler.
             Otherwise return a dataframe
         Returns:
-            pd.DataFrame or Styler: dataframe containing results if style is False
-            If true it returns a Styler object
+            pd.DataFrame: dataframe containing results
         """
 
         formatted_results = {}
@@ -176,8 +183,6 @@ class EmpiricalEffectSizeResultsHolder(ResultsHolder):
             formatted_results[m] = metric_result
 
         df = pd.DataFrame.from_dict(formatted_results, orient="index")
-        df["effect_size_base_period"] = df["effect_size_period"] - 7
-        df["rel_effect_size"] = df["effect_size_value"] / df["mean_value"]
 
         return df[
             [
@@ -265,12 +270,8 @@ class SampleSizeCurveResultHolder(ResultsHolder):
                 will be used in output rather than raw counts. Defaults to True.
             simulated_values (list, optional): List of simulated values to subset
                 output to. If None, all values will be included. Defaults to None.
-            append_stats (bool, optional): _description_. If True, summary statistics on
+            append_stats (bool, optional): If True, summary statistics on
                 the raw metrics are provided. Defaults to False.
-            highlight_lessthan (list[tuple], optional): List of
-                (<cutoff (float)>, <color (string)>) tuples.
-                Sample size entries less than <cutoff> will be highlighted in <color>
-                in the displayed table. Defaults to None.
 
         Raises:
             ValueError: Raises error if append_stats is True but no input_data is
