@@ -180,7 +180,7 @@ def summarize_joint_samples(focus, reference, quantiles=DEFAULT_QUANTILES):
 
 
 def _summarize_one_branch_samples_single(samples, quantiles=DEFAULT_QUANTILES):
-    if not isinstance(samples, (pd.Series, np.ndarray, list)):
+    if not isinstance(samples, pd.Series | np.ndarray | list):
         # Hey pd.Series.agg - don't apply me elementwise!
         # Raising this error allows ``_summarize_one_branch_samples_batch``
         # to work also for non-batch ``samples`` (i.e. doing double duty)

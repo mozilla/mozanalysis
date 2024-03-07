@@ -239,7 +239,7 @@ def test_compare_branches_quantiles():
 
         arr_dict = {
             f"{label:.1}": arr_quantile
-            for label, arr_quantile in zip(deciles, arr_quantiles)
+            for label, arr_quantile in zip(deciles, arr_quantiles, strict=False)
         }
         return arr_dict
 

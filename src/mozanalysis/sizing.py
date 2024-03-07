@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 
 import attr
 
@@ -612,7 +612,7 @@ class ContinuousEnrollmentTimeLimits:
     first_date_data_required = attr.ib(type=str)
     last_date_data_required = attr.ib(type=str)
 
-    analysis_windows = attr.ib(type=Tuple[AnalysisWindow])
+    analysis_windows = attr.ib(type=tuple[AnalysisWindow])
 
     @classmethod
     def for_single_analysis_window(

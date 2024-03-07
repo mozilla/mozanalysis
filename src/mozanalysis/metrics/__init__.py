@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from mozanalysis.experiment import TimeLimits
@@ -65,7 +65,7 @@ class DataSource:
     experiments_column_type = attr.ib(default="simple", type=str)
     client_id_column = attr.ib(default="client_id", type=str)
     submission_date_column = attr.ib(default="submission_date", type=str)
-    default_dataset = attr.ib(default=None, type=Optional[str])
+    default_dataset = attr.ib(default=None, type=str | None)
 
     EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean")
 
@@ -339,8 +339,8 @@ class Metric:
     name = attr.ib(type=str)
     data_source = attr.ib(type=DataSource)
     select_expr = attr.ib(type=str)
-    friendly_name = attr.ib(type=Optional[str], default=None)
-    description = attr.ib(type=Optional[str], default=None)
+    friendly_name = attr.ib(type=str | None, default=None)
+    description = attr.ib(type=str | None, default=None)
     bigger_is_better = attr.ib(type=bool, default=True)
 
 

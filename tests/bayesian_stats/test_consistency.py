@@ -102,7 +102,7 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles():
     quantiles = [0.3, 0.5, 0.9]
 
     def calc_quantiles(x):
-        return dict(zip(quantiles, np.quantile(x, quantiles)))
+        return dict(zip(quantiles, np.quantile(x, quantiles), strict=False))
 
     bb_res = mabsbb.bootstrap_one_branch(
         data,
@@ -152,7 +152,7 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles():
     quantiles = [0.1, 0.5, 0.95]
 
     def calc_quantiles(x):
-        return dict(zip(quantiles, np.quantile(x, quantiles)))
+        return dict(zip(quantiles, np.quantile(x, quantiles), strict=False))
 
     bb_res = mabsbb.bootstrap_one_branch(
         data,

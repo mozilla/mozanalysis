@@ -4,7 +4,6 @@
 
 from datetime import datetime
 from math import pi
-from typing import Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,11 +24,11 @@ def sample_size_curves(
     df: pd.DataFrame,
     metrics_list: list,
     solver,
-    effect_size: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.01,
-    power: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.80,
-    alpha: Union[float, Union[np.ndarray, pd.Series, List[float]]] = 0.05,
+    effect_size: float | np.ndarray | pd.Series | list[float] = 0.01,
+    power: float | np.ndarray | pd.Series | list[float] = 0.80,
+    alpha: float | np.ndarray | pd.Series | list[float] = 0.05,
     **solver_kwargs,
-) -> Dict[str, pd.DataFrame]:
+) -> dict[str, pd.DataFrame]:
     """
     Loop over a list of different parameters to produce sample size estimates given
     those parameters. A single parameter in [effect_size, power, alpha] should
@@ -91,7 +90,7 @@ def sample_size_curves(
 
 def difference_of_proportions_sample_size_calc(
     df: pd.DataFrame,
-    metrics_list: List[Metric],
+    metrics_list: list[Metric],
     effect_size: float = 0.01,
     alpha: float = 0.05,
     power: float = 0.90,
@@ -146,7 +145,7 @@ def difference_of_proportions_sample_size_calc(
 
 def z_or_t_ind_sample_size_calc(
     df: pd.DataFrame,
-    metrics_list: List[Metric],
+    metrics_list: list[Metric],
     test: str = "z",
     effect_size: float = 0.01,
     alpha: float = 0.05,
@@ -341,7 +340,7 @@ def empirical_effect_size_sample_size_calc(
 
 def poisson_diff_solve_sample_size(
     df: pd.DataFrame,
-    metrics_list: List[Metric],
+    metrics_list: list[Metric],
     effect_size: float = 0.01,
     alpha: float = 0.05,
     power: float = 0.90,
@@ -400,17 +399,17 @@ def poisson_diff_solve_sample_size(
 
 def variable_enrollment_length_sample_size_calc(
     bq_context: BigQueryContext,
-    start_date: Union[str, datetime],
+    start_date: str | datetime,
     max_enrollment_days: int,
     analysis_length: int,
-    metric_list: List[Metric],
-    target_list: List[Segment],
+    metric_list: list[Metric],
+    target_list: list[Segment],
     variable_window_length: int = 7,
-    experiment_name: Optional[str] = "",
-    app_id: Optional[str] = "",
+    experiment_name: str | None = "",
+    app_id: str | None = "",
     to_pandas: bool = True,
     **sizing_kwargs,
-) -> Dict[str, Union[Dict[str, int], pd.DataFrame]]:
+) -> dict[str, dict[str, int] | pd.DataFrame]:
     """
     Sample size calculation over a variable enrollment window. This function
     will fetch a DataFrame with metrics defined in metric_list for a target

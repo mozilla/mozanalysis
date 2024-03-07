@@ -16,7 +16,7 @@ def test_get_thresholds():
     assert len(data) - 1 == 101
     assert len(res) == 101
 
-    for d, r in zip(data.sort_values()[:-1], res):
+    for d, r in zip(data.sort_values()[:-1], res, strict=False):
         assert r == pytest.approx(d)
 
 

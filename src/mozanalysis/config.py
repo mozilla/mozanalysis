@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from dataclasses import dataclass
-from typing import List, Optional
 
 from metric_config_parser.config import ConfigCollection
 
@@ -17,7 +16,7 @@ class _ConfigLoader:
     Config objects are converted into mozanalysis native types.
     """
 
-    config_collection: Optional[ConfigCollection] = None
+    config_collection: ConfigCollection | None = None
 
     @property
     def configs(self) -> ConfigCollection:
@@ -31,7 +30,7 @@ class _ConfigLoader:
         return self._configs
 
     def with_configs_from(
-        self, repo_urls: Optional[List[str]], is_private: bool = False
+        self, repo_urls: list[str] | None, is_private: bool = False
     ) -> "_ConfigLoader":
         """Load configs from another repository and merge with default configs."""
         if not repo_urls:

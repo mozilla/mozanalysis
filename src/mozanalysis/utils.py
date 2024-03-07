@@ -4,7 +4,6 @@
 import datetime
 import hashlib
 from functools import reduce
-from typing import List, Union
 
 import numpy as np
 
@@ -88,10 +87,10 @@ def hash_ish(string, hex_chars=12):
 
 
 def get_time_intervals(
-    start_date: Union[str, datetime.datetime],
+    start_date: str | datetime.datetime,
     interval: int,
     max_num_dates_enrollment: int,
-) -> List[datetime.datetime]:
+) -> list[datetime.datetime]:
     """Use a start date and create end dates for enrollment intervals.
     Used to generate intervals of enrollment to calculate metrics over
     variable enrollment lengths.
