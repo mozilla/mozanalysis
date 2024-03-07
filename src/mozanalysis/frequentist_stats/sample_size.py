@@ -214,8 +214,9 @@ class SampleSizeCurveResultHolder(ResultsHolder):
         """
         super().__init__(*args, **kwargs)
         # need to modify results so it matches the old format
+        sim_var = self._params["sim_var"]
         self.raw_df = pd.concat(
-            [el.set_index("effect_size", append=True) for el in self.data.values()]
+            [el.set_index(sim_var, append=True) for el in self.data.values()]
         )
         metrics = [el.name for el in self._metrics]
         results_dict = {}

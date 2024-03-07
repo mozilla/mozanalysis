@@ -181,6 +181,37 @@ def test_curve_results_holder_dataframe():
     assert set(no_stats.columns) == cols_no_stats
 
 
+def test_curve_results_holder_dataframe_simvar_alpha():
+    """this test ensures the dataframe property function works as expected"""
+    df = pd.DataFrame(
+        {
+            search_clients_daily.name: np.random.normal(size=100),
+            uri_count.name: np.random.normal(size=100),
+        }
+    )
+
+    metrics = [search_clients_daily, uri_count]
+    alpha = np.arange(0.01, 0.11, 0.01)
+    res = sample_size_curves(
+        df,
+        metrics,
+        solver=z_or_t_ind_sample_size_calc,
+        effect_size=0.05,
+        power=0.8,
+        alpha=alpha,
+        outlier_percentile=99.5,
+    )
+
+    cols_no_stats = {
+        "sample_size_per_branch",
+        "population_percent_per_branch",
+        "number_of_clients_targeted",
+    }
+
+    no_stats = res.dataframe
+    assert set(no_stats.columns) == cols_no_stats
+
+
 def test_get_styled_dataframe():
     "make sure highlight_listthan will not throw an error"
     df = pd.DataFrame(
