@@ -21,6 +21,7 @@ Jetstream currently uses this process to manage dependencies.  It involves uses 
 
 * +: Jetstream uses it already so there is an existing base of experties in the data team
 * +: Dependabot is a built-in github tool that has additional uses like checking for security vulnerabilities
+* +: Dependencies can be automatically updated with a script like the [update_deps](https://github.com/mozilla/jetstream/blob/main/script/update_deps) script in Jetstream
 * -: Still using pip's dependency resolver, which is fast but can have issues with incompatible versions.  This may be mitigated or even solved by the way pip-tools pins dependencies.
 * -: Jetstream doesn't use `pyproject.toml` for configuring dependencies, though it does seem to be supported by `pip-tools`
 
