@@ -1,7 +1,7 @@
 # Tooling for Better Dependency Management
 
-* Status: 
-* Deciders: 
+* Status: Pending
+* Deciders: jsnyder, mikewilli
 * Date: 2024-03-08
 
 
@@ -19,8 +19,8 @@ Currently dependencies are very loosly defined in the `setup.py`. This can lead 
 ### 1. pip-tools to generate requirements.txt
 Jetstream currently uses this process to manage dependencies.  It involves uses pip-tools to generate a requirements.txt and requirements.in file from the setup.py. [dependabot](https://github.blog/2020-06-01-keep-all-your-packages-up-to-date-with-dependabot/) is a built-in github tool that is used to periodically check for dependency updates and create pull requests to implement them.  [Here](https://github.com/mozilla/jetstream/pull/2017) is an example of such a pull request.
 
+* : Dependabot already used in Jetstream
 * +: Jetstream uses it already so there is an existing base of experties in the data team
-* +: Dependabot is a built-in github tool that has additional uses like checking for security vulnerabilities
 * +: Dependencies can be automatically updated with a script like the [update_deps](https://github.com/mozilla/jetstream/blob/main/script/update_deps) script in Jetstream
 * -: Still using pip's dependency resolver, which is fast but can have issues with incompatible versions.  This may be mitigated or even solved by the way pip-tools pins dependencies.
 * -: Jetstream doesn't use `pyproject.toml` for configuring dependencies, though it does seem to be supported by `pip-tools`
@@ -28,6 +28,7 @@ Jetstream currently uses this process to manage dependencies.  It involves uses 
 ### 2. poetry
 (poetry)[https://python-poetry.org/] is a popular tool for dependency managment.  When starting development with a poetry project, one uses the `poetry install` command to create a virtual environment for the project and install the package and its dependencies.  New dependencies are added with the `poetry add` command.  poetry (and other tools) are configured in the `pyproject.toml`.
 
+* : Can add Dependabot, which is alrady built-in to github tool that has additional uses like checking for security vulnerabilities
 * +: Very reliable dependency resolution
 * +: Uses `pyproject.toml`, which is the new standard and is nice for consolidating other config files
 * +: Also acts as a virtualenv manager
@@ -39,3 +40,5 @@ Jetstream currently uses this process to manage dependencies.  It involves uses 
 * -: would need to update tox to use poetry to build and publish package
 
 ## Decision Outcome
+
+The pip-tools method wins out because it is familiar and simple.  It would be nice to use the PR that adds this functionality to move as much configuation as possible in to a `pyproject.toml` file.
