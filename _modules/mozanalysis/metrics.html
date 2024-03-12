@@ -86,8 +86,26 @@
 
 <span class="kn">import</span> <span class="nn">attr</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    metrics and data sources created in mozanalysis are deprecated</span>
+<span class="sd">    please create directly from metric-hub with ConfigLoader like</span>
+
+<span class="sd">    from mozanalysis.config import ConfigLoader</span>
+<span class="sd">    metric=ConfigLoader.get_metric(metric_slug=&quot;active_hours&quot;,app_name=&quot;firefox_desktop&quot;)</span>
+
+<span class="sd">    and data sources like</span>
+<span class="sd">    data_source=ConfigLoader.get_data_source(data_source_slug=&quot;active_hours&quot;,</span>
+<span class="sd">                                                app_name=&quot;firefox_desktop&quot;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="ne">DeprecationWarning</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="AnalysisBasis">
@@ -357,9 +375,7 @@
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
 <span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="sd">                ds.experiments, &#39;{experiment_slug}&#39;</span>
-<span class="sd">            ) IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span>
-                        <span class="p">)</span>
+<span class="sd">            ) IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span><span class="p">)</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">]</span>
@@ -381,9 +397,7 @@
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
 <span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="sd">                ds.experiments, &#39;{experiment_slug}&#39;</span>
-<span class="sd">            ).branch IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span>
-                        <span class="p">)</span>
+<span class="sd">            ).branch IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span><span class="p">)</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">]</span>
@@ -405,9 +419,7 @@
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
 <span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
 <span class="sd">                ds.ping_info.experiments, &#39;{experiment_slug}&#39;</span>
-<span class="sd">            ).branch IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span>
-                        <span class="p">)</span>
+<span class="sd">            ).branch IS NULL&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span><span class="p">)</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">]</span>
