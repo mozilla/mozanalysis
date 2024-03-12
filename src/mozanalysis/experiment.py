@@ -972,7 +972,7 @@ class Experiment:
                 f"""    LEFT JOIN (
         {query_for_segments}
         ) ds_{i} USING (client_id, branch)
-                """.format(query=query_for_segments, i=i)
+                """
             )
 
             for m in ds_segments[ds]:
