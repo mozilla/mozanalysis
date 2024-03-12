@@ -2,8 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from typing import List, Union, Dict, Optional
-from datetime import datetime
+from typing import List, Union, Dict, Optional, Tuple
+from datetime import datetime, date, timedelta
+import re
 
 from mozanalysis.bq import BigQueryContext
 from mozanalysis.experiment import TimeSeriesResult
@@ -11,14 +12,17 @@ from mozanalysis.metrics import Metric
 from mozanalysis.segments import Segment
 from mozanalysis.sizing import HistoricalTarget
 from mozanalysis.utils import get_time_intervals
+from mozanalysis.config import ConfigLoader
 
 from scipy.stats import norm
-from math import pi
+from math import pi, ceil
 from statsmodels.stats.power import tt_ind_solve_power, zt_ind_solve_power
 from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
 import numpy as np
 import pandas as pd
+from pandas.io.formats.style import Styler
 import matplotlib.pyplot as plt
+import requests
 
 
 def sample_size_curves(
@@ -500,3 +504,589 @@ def variable_enrollment_length_sample_size_calc(
         results_dict[m] = pd.DataFrame(results_dict[m])
 
     return results_dict
+
+
+def get_firefox_release_dates() -> Dict[int, str]:
+    """Download historical major release dates for Firefox Desktop.
+
+    Returns a dict of {<version_int>: <iso_date>}
+    """
+    r = requests.get("https://whattrainisitnow.com/api/firefox/releases/")
+    release_dates = r.json()
+    major_releases = {}
+    for v, d in release_dates.items():
+        m = re.fullmatch("(\d+)\.0", v)
+        if m:
+            major_releases[int(m.group(1))] = d
+
+    return major_releases
+
+
+### TODO:
+### - adapt for Android (cf cross-platform experiment)
+###   * historical segment
+### - min version should be optional
+### - default to no sampling?
+### - save HistoricalTarget to attr?
+### - display legend for colours
+### - tests
+### - review docstrings
+
+
+class SampleSizing:
+    """Run sample size calculations for Firefox Desktop over a historical period.
+
+    This helps to simplify the calculation by collecting relevant information,
+    passing it through to the sizing tools, and returning pretty-printed output.
+    In particular:
+
+    - Given desired experiment length, automatically determines a historical version
+      to start from in order to span full experiment period.
+    - Allows for running sizing on a sample, handling sampling automatically
+    - Computes sizing for multiple relative effect sizes and returns summary stats
+    - Runs empirical sizing and returns summary stats
+
+    Target filter updating works in 2 ways. To specify explicitly where filters are added,
+    include the clause `AND {historical_targeting}` in the target SQL condition.
+    Otherwise, filters will be injected to replace the final occurrence of `AND` in the target expression.
+
+    Currently, only Firefox Desktop is supported.
+
+    experiment_name: name slug for the analysis, used in BQ table names
+    bq_context: BigQuery configuration and client
+    metrics: list of mozanalysis Metrics to analyze
+    targets: list mozanalysis Segments defining user population to include. For sizing,
+        only clients in the intersection of all targets are included.
+    n_days_observation_max: max number of days the observation period will cover.
+        The historical period will be chosen to allow for this observation length,
+        in case sizing is computed for different time periods.
+    n_days_enrollment: number of days over which clients are enrolled
+    n_days_launch_after_version_release: number of days after version release to begin enrollment
+    end_date: most recent date the historical period should cover. Set this to push
+        the historical period further into the past. If unspecified, will be set to "yesterday".
+    alpha: desired significance level of the experiment
+    power: desired power of the experiment
+    outlier_percentile: metric values higher than this percentile level will be trimmed.
+        Specified as a number between 0 and 1. Set to 0 to disable.
+    sample_rate: sampling rate to apply to the population, specified as a number between 0 and 1.
+        If set, only this proportion of clients will be retained from the targets
+        for sizing calculations. Set to 0 to disable.
+    """
+
+    def __init__(
+        self,
+        experiment_name: str,
+        bq_context: BigQueryContext,
+        metrics: List[Metric],
+        targets: List[Segment],
+        n_days_observation_max: int,
+        n_days_enrollment: int = 7,
+        n_days_launch_after_version_release: int = 7,
+        end_date: Optional[str] = None,
+        alpha: float = 0.05,
+        power: float = 0.9,
+        outlier_percentile: float = 0.995,
+        sample_rate: float = 0.01,
+    ):
+        self.bq_context = bq_context
+        self.experiment_name = experiment_name
+        self.metrics = list(metrics)
+        self.targets = list(targets)
+
+        self.n_days_observation_max = n_days_observation_max
+        self.n_days_enrollment = n_days_enrollment
+        self.n_days_launch_after_version_release = n_days_launch_after_version_release
+        self.end_date = end_date
+
+        self.alpha = alpha
+        self.power = power
+        self.outlier_percentile = outlier_percentile
+        self.sample_rate = 0 if sample_rate >= 1 else sample_rate
+
+        self.total_historical_period_days = (
+            n_days_launch_after_version_release
+            + n_days_enrollment
+            + n_days_observation_max
+        )
+        # Will be set after pulling data
+        self._population_size = None
+
+        # Sets self.min_major_version, self.min_major_version_date
+        self._find_latest_feasible_historical_version()
+        self.enrollment_start_date = (
+            date.fromisoformat(self.min_major_version_date)
+            + timedelta(days=self.n_days_launch_after_version_release)
+        ).isoformat()
+
+        print(
+            "\nTotal historical time period will include:",
+            f"\n- {n_days_launch_after_version_release} days wait after new version release to launch",
+            f"\n- {n_days_enrollment} days enrollment",
+            f"\n- up to {n_days_observation_max} days observation.",
+            f"\nTo accomodate this, the historical period will start from version {self.min_major_version}",
+            f"released on {self.min_major_version_date}.",
+            f"Enrollment will start on {self.enrollment_start_date}.",
+        )
+        if self.sample_rate:
+            print(
+                f"Target population will be sampled at a rate of {self.sample_rate:.0%}."
+            )
+
+        # Update segment definitions to use this version and any sampling.
+        self._update_targets_for_historical_period()
+
+    def _find_latest_feasible_historical_version(self) -> None:
+        """Find latest version matching our timeline."""
+        # Allow a gap of 2 days to be on the safe side.
+        latest_feasible_date = date.today() - timedelta(days=2)
+        if self.end_date:
+            end_date = date.fromisoformat(self.end_date)
+        else:
+            end_date = latest_feasible_date
+        if end_date > latest_feasible_date:
+            print(
+                f"\nRequested end date {end_date.isoformat()} is later than",
+                f"the latest feasible date {latest_feasible_date.isoformat()}.",
+                f"Using {latest_feasible_date.isoformat()} as the end date.",
+            )
+            end_date = latest_feasible_date
+        start_date_str = (
+            end_date - timedelta(days=self.total_historical_period_days)
+        ).isoformat()
+
+        # Find the most recent version released prior the desired start date.
+        major_releases = get_firefox_release_dates()
+        self.min_major_version = max(
+            [v for v, d in major_releases.items() if d <= start_date_str]
+        )
+        self.min_major_version_date = major_releases[self.min_major_version]
+
+    def _update_targets_for_historical_period(self) -> None:
+        """Add an additional Segment to the target list to filter on version and sample ID."""
+        historical_filter = (
+            f"(browser_version_info.major_version >= {self.min_major_version})"
+        )
+        if self.sample_rate and self.sample_rate < 1:
+            max_sample_id = ceil(self.sample_rate * 100)
+            historical_filter += f" AND (sample_id < {max_sample_id})"
+
+        historical_target = Segment(
+            name="_historical",
+            data_source=ConfigLoader.get_segment_data_source(
+                "clients_daily", "firefox_desktop"
+            ),
+            select_expr=f"COALESCE(LOGICAL_AND({historical_filter}), FALSE)",
+        )
+        self.targets.append(historical_target)
+        print("\nTargeting population matching all of:")
+        for t in self.targets:
+            print(t.select_expr)
+
+    @property
+    def population_size(self) -> int:
+        """Get the size of the full eligible population defined by the targeting (ignoring sampling).
+
+        This is unset until a sample size calculation is run which results in the data
+            getting pulled.
+        """
+        if not self._population_size:
+            print("Population size will be set on running a sample size calculation")
+        return self._population_size
+
+    def _print_population_size(self) -> None:
+        """Prints a message displaying population size."""
+        msg = f"Eligible population size: {self._population_size:,}"
+        if self.sample_rate:
+            msg += f", sampled at a rate of {self.sample_rate:.0%}"
+
+        print(msg)
+
+    def _set_population_size(self, pop_size: int) -> None:
+        """Set the full population size based on the output of a sample size calculation.
+
+        Makes adjustment for sampling.
+        """
+        if self.sample_rate:
+            pop_size = int(pop_size / self.sample_rate)
+        self._population_size = pop_size
+
+    def get_historical_single_window_data(
+        self, n_days_observation: int
+    ) -> pd.DataFrame:
+        """Get single window data for the historical period and population represented by
+            the date and segment constraints.
+
+        n_days_observation: number of days the analysis period should cover.
+
+        Returns a DataFrame with 1 row per client.
+        """
+        ht = HistoricalTarget(
+            experiment_name=self.experiment_name,
+            start_date=self.enrollment_start_date,
+            num_dates_enrollment=self.n_days_enrollment,
+            analysis_length=n_days_observation,
+        )
+
+        return ht.get_single_window_data(
+            bq_context=self.bq_context,
+            metric_list=self.metrics,
+            target_list=self.targets,
+        )
+
+    def get_historical_time_series_data(
+        self, n_days_observation: int
+    ) -> TimeSeriesResult:
+        """Get time series data for the historical period and population represented by
+            the date and segment constraints.
+
+        n_days_observation: number of days the analysis period should cover.
+
+        Returns a TimeSeriesResult.
+        """
+        ht = HistoricalTarget(
+            experiment_name=self.experiment_name,
+            start_date=self.enrollment_start_date,
+            num_dates_enrollment=self.n_days_enrollment,
+            analysis_length=n_days_observation,
+        )
+
+        return ht.get_time_series_data(
+            bq_context=self.bq_context,
+            metric_list=self.metrics,
+            time_series_period="weekly",
+            target_list=self.targets,
+        )
+
+    def sample_sizes(
+        self, rel_effect_sizes: List[float], n_days_observation: List[int] = None
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Compute sample sizes for multiple effect sizes and observation period lengths.
+
+        rel_effect_sizes: list of relative effect sizes (% change in metrics, float between 0 and 1)
+        n_days_observation: list of observation period length in days not exceeding `n_days_observation_max`.
+            If unspecified, the single period length `n_days_observation_max` is used.
+
+        Returns 2 DataFrames:
+        - A DataFrame indexed by (n_days_observation, rel_effect_size, metric) listing required sample sizes
+          and population percent per branch
+        - A DataFrame indexed by (n_days_observation, metric) listing summary
+          stats and trimmed stats (as used by Jetstream).
+        """
+        n_days_observation = n_days_observation or [self.n_days_observation_max]
+        for nd in n_days_observation:
+            if nd > self.n_days_observation_max:
+                raise ValueError(
+                    f"Cannot request observation period longer than {self.n_days_observation_max},"
+                    + " as was originally budgeted for."
+                )
+
+        results = []
+        stats = []
+        for nd in n_days_observation:
+            print(
+                f"\nSizing for {self.n_days_enrollment} days enrollment and {nd} days observation."
+            )
+            full_period_data = self.get_historical_single_window_data(nd)
+            if not self._population_size:
+                self._set_population_size(len(full_period_data))
+                self._print_population_size()
+
+            sizing_results = sample_size_curves(
+                full_period_data,
+                metrics_list=self.metrics,
+                solver=z_or_t_ind_sample_size_calc,
+                effect_size=rel_effect_sizes,
+                power=self.power,
+                alpha=self.alpha,
+                outlier_percentile=100 * self.outlier_percentile,
+            )
+
+            results.append(
+                pd.concat(
+                    [
+                        v.assign(metric=k, n_days_observation=nd)
+                        for k, v in sizing_results.items()
+                    ]
+                )
+            )
+
+            stats.append(
+                full_period_data[[m.name for m in self.metrics]]
+                .agg(
+                    [
+                        "mean",
+                        "std",
+                        lambda d: d[d <= d.quantile(self.outlier_percentile)].mean(),
+                        lambda d: d[d <= d.quantile(self.outlier_percentile)].std(),
+                    ]
+                )
+                .set_axis(["mean", "std", "mean_trimmed", "std_trimmed"])
+                .transpose()
+                .assign(n_days_observation=nd)
+                .rename_axis(index="metric")
+            )
+
+        df_sizing = (
+            pd.concat(results)
+            .rename(columns={"effect_size": "rel_effect_size"})
+            .drop(columns="number_of_clients_targeted")
+            .set_index(["n_days_observation", "rel_effect_size", "metric"])
+            .sort_index()
+        )
+        if self.sample_rate:
+            df_sizing["population_percent_per_branch"] = (
+                df_sizing["population_percent_per_branch"] * self.sample_rate
+            )
+        df_stats = (
+            pd.concat(stats)
+            .set_index("n_days_observation", append=True)
+            .swaplevel()
+            .sort_index()
+        )
+
+        return df_sizing, df_stats
+
+    def display_sample_size_results(
+        self,
+        sizing_result: pd.DataFrame,
+        n_days_observation: int,
+        stats_df: pd.DataFrame = None,
+        show_population_pct: bool = True,
+        rel_effect_sizes: List[float] = None,
+        highlight_lessthan: List[float] = None,
+        trim_highlight_threshold: float = 0.15,
+    ) -> Styler:
+        """Display sizing results for a given observation period length.
+
+        `sample_sizes()` must be run first and its outputs are passed in here.
+
+        This pretty-prints the sample size results computed by `sample_sizes()` for a given
+        observation length, either in terms of absolute sample sizes or population percentages.
+        Results are presented as a table with a row for each metric and a column for each relative effect size,
+        with the option of appending summary stats for each metric.
+
+        It is also possible to highlight all sample size results which are below one or more thresholds.
+        This helps to answer questions like: if only 5% of the population is available per branch for this experiment,
+        what detectable effect sizes can I expect for each metric.
+
+        sizing_result: DF containing sample sizes and population percentages as returned by `sample_sizes()`.
+        n_days_observation: observation period length to display results for. This should be one
+            of the values of `n_days_observation` supplied when `sample_sizes()` was run.
+        stats_df: DF containing summary statistics as returned by `sample_sizes()`. If supplied,
+            summary stats for each metric are displayed alongside sample sizes.
+        show_population_pct: if `True`, sample sizes are displayed as population percentages,
+            otherwise as counts of clients.
+        rel_effect_sizes: list of relative effect sizes to display sample size results for.
+            This should be a subset of the `rel_effect_sizes` supplied when `sample_sizes()` was run.
+            If not provided, results for all available relative effect sizes are presented
+        highlight_lessthan: list of sample size thresholds to highlight in the results. For each threshold,
+            sample sizes lower than it (but higher than any other thresholds) are highlighted in a predefined colour.
+            When `show_population_pct` is `True`, thresholds should be expressed as a percentage between 0 and 100,
+            not a decimal between 0 and 1 (for example, to set a threshold for 5%, supply `[5]`).
+            At most 3 different thresholds are supported: only the 3 lowest thresholds supplied will be used,
+            and any others are silently ignored.
+        trim_highlight_threshold: if summary stats are shown, cases for which the trimmed mean differs
+            from the raw mean by more than this threshold are highlighted. These metrics are strongly affected
+            by outliers. The threshold should be a relative difference value between 0 and 1.
+
+        Returns a pandas Styler object.
+        """
+        if n_days_observation not in sizing_result.index.get_level_values(
+            "n_days_observation"
+        ):
+            raise ValueError(
+                f"No sizing results for {n_days_observation} days observation available."
+                + " Rerun `sample_sizing()` with this value to compute."
+            )
+        if rel_effect_sizes:
+            es_original = rel_effect_sizes
+            rel_effect_sizes = sizing_result.index.get_level_values(
+                "rel_effect_size"
+            ).intersection(rel_effect_sizes)
+            if rel_effect_sizes.empty:
+                raise ValueError(
+                    f"None of the requested effect sizes {es_original} have sizing results available."
+                    + " Rerun `sample_sizing()` with these values to compute."
+                )
+        else:
+            rel_effect_sizes = sizing_result.index.get_level_values(
+                "rel_effect_size"
+            ).unique()
+
+        print(f"\nSizing for {n_days_observation} days observation.", end=" ")
+        self._print_population_size()
+        print()
+
+        result_col = (
+            "population_percent_per_branch"
+            if show_population_pct
+            else "sample_size_per_branch"
+        )
+        sizing_result = (
+            sizing_result.loc[n_days_observation]
+            .loc[rel_effect_sizes, result_col]
+            .unstack("rel_effect_size")
+        )
+
+        if stats_df is not None:
+            stats_df = stats_df.loc[n_days_observation]
+            stats_df["trim_change_mean"] = (
+                stats_df["mean_trimmed"] - stats_df["mean"]
+            ).abs() / stats_df["mean"]
+            stats_df["trim_change_std"] = (
+                stats_df["std_trimmed"] - stats_df["std"]
+            ).abs() / stats_df["std"]
+
+        sizing_result = pd.concat([sizing_result, stats_df], axis="columns")
+
+        styler = (
+            sizing_result.style.format(
+                "{:.2f}%" if show_population_pct else "{:,.0f}", subset=rel_effect_sizes
+            )
+            # Round off displayed effect size values to smallest precision for readability
+            .format_index(
+                axis="columns",
+                precision=int(-np.floor(np.log10(rel_effect_sizes)).min()),
+            )
+        )
+        if stats_df is not None:
+            styler = (
+                styler.set_properties(
+                    subset=stats_df.columns,
+                    **{"background-color": "tan", "color": "black"},
+                ).format("{:.2%}", subset=["trim_change_mean", "trim_change_std"])
+                # highlight large changes in mean because of trimming
+                .applymap(
+                    lambda x: "color:maroon; font-weight:bold"
+                    if x > trim_highlight_threshold
+                    else "",
+                    subset=["trim_change_mean"],
+                )
+            )
+
+        # Colours chosen to work reasonably well in either light or dark mode
+        # Ordered from highest to lowest cutoff
+        highlight_colours = ["lightgreen", "skyblue", "gold"]
+        if highlight_lessthan:
+            # Only 3 cutoffs suported. Any others are silently dropped
+            highlight_lessthan = sorted(highlight_lessthan)[:3]
+            # Apply from highest to lowest cutoff so that lower cutoffs overwrite higher ones
+            for lim, colour in list(zip(highlight_lessthan, highlight_colours))[::-1]:
+                styler = styler.highlight_between(
+                    subset=rel_effect_sizes,
+                    right=lim,
+                    props=f"background-color:{colour};color:black",
+                )
+
+        return styler
+
+    def empirical_sizing(
+        self, quantile: float = 0.9, style: bool = False
+    ) -> Union[pd.DataFrame, Styler]:
+        """Compute empirical effect sizes based on week-to-week fluctuations over the maximum observation period.
+
+        Currently no trimming is applied.
+
+        quantile: quantile level to use to select empirical effect sizes and standard deviations.
+
+        If `style` is False, returns a DataFrame with 1 row for each metric and columns containing:
+          - relative effect size
+          - selected values of effect size (difference), baseline mean and standard deviation
+          - sample size and eligible population proportion (adjusted for sampling) per branch
+          - index of periods for which values were selected by empirical sizing methodology
+        If `style` is True, returns a pandas Styler wrapping this DataFrame which will pretty-print
+            the results when displayed.
+        """
+        print(
+            f"\nRunning empirical sizing for {self.n_days_enrollment} days enrollment",
+            f"and {self.n_days_observation_max} days observation.",
+        )
+
+        tsdata = self.get_historical_time_series_data(self.n_days_observation_max)
+
+        sizing_results = empirical_effect_size_sample_size_calc(
+            res=tsdata,
+            bq_context=self.bq_context,
+            metric_list=self.metrics,
+            quantile=quantile,
+            power=self.power,
+            alpha=self.alpha,
+        )
+
+        self._set_population_size(
+            list(sizing_results.values())[0]["number_of_clients_targeted"]
+        )
+        if not style:
+            # If using styling, message gets printed there instead
+            self._print_population_size()
+
+        # Flatten nested dict output and convert to DF
+        formatted_results = {}
+        for m, r in sizing_results.items():
+            metric_result = {}
+            for k, v in r.items():
+                if isinstance(v, dict):
+                    for vk, vv in v.items():
+                        if vk == "period_start_day":
+                            vk = "period"
+                        metric_result[f"{k}_{vk}"] = vv
+                else:
+                    metric_result[k] = v
+            formatted_results[m] = metric_result
+
+        sizing_df = pd.DataFrame.from_dict(formatted_results, orient="index")
+        if self.sample_rate:
+            sizing_df["population_percent_per_branch"] = (
+                sizing_df["population_percent_per_branch"] * self.sample_rate
+            )
+        sizing_df = sizing_df[
+            [
+                "relative_effect_size",
+                "effect_size_value",
+                "mean_value",
+                "std_dev_value",
+                "sample_size_per_branch",
+                "population_percent_per_branch",
+                "effect_size_period",
+                "mean_period",
+                "std_dev_period",
+            ]
+        ]
+
+        if style:
+            return self.style_empirical_sizing_result(sizing_df)
+        return sizing_df
+
+    def style_empirical_sizing_result(
+        self, empirical_sizing_df: pd.DataFrame
+    ) -> Styler:
+        """Pretty-print the DF returned by `empirical_sizing()`.
+
+        Returns a pandas Styler object.
+        """
+        self._print_population_size()
+        print()
+
+        return (
+            empirical_sizing_df[
+                [
+                    "relative_effect_size",
+                    "population_percent_per_branch",
+                    "sample_size_per_branch",
+                    "effect_size_value",
+                    "mean_value",
+                    "std_dev_value",
+                ]
+            ]
+            .rename(
+                columns={
+                    "relative_effect_size": "rel_effect_size",
+                    "population_percent_per_branch": "branch_pop_pct",
+                    "sample_size_per_branch": "branch_sample_size",
+                }
+            )
+            .style.format(thousands=",", precision=4)
+            .format(subset="branch_sample_size", thousands=",", precision=0)
+            .format("{:.2f}%", subset="branch_pop_pct")
+            .format("{:.2%}", subset="rel_effect_size")
+        )
