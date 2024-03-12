@@ -181,20 +181,19 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            custom_enrollments_query (str): A full SQL query to be used
-                in the main query::
+            custom_enrollments_query (str): A full SQL query that
+                will generate the `enrollments` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
 
-                    WITH raw_enrollments AS ({custom_enrollments_query})
-
-                N.B. this query's results must be uniquely keyed by
+                WARNING: this query's results must be uniquely keyed by
                 (client_id, branch), or else your results will be subtly
                 wrong.
 
-            custom_exposure_query (str): A full SQL query to be used in the main
-                query::
-
-                    WITH ...
-                    exposures AS ({custom_exposure_query})
+            custom_exposure_query (str):  A full SQL query that
+                will generate the `exposures` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
 
                 If not provided, the exposure will be determined based on
                 `exposure_signal`, if provided, or Normandy and Nimbus exposure events.
@@ -310,20 +309,19 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            custom_enrollments_query (str): A full SQL query to be used
-                in the main query::
+            custom_enrollments_query (str): A full SQL query that
+                will generate the `enrollments` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
 
-                    WITH raw_enrollments AS ({custom_enrollments_query})
-
-                N.B. this query's results must be uniquely keyed by
+                WARNING: this query's results must be uniquely keyed by
                 (client_id, branch), or else your results will be subtly
                 wrong.
 
-            custom_exposure_query (str): A full SQL query to be used in the main
-                query::
-
-                    WITH ...
-                    exposures AS ({custom_exposure_query})
+            custom_exposure_query (str): A full SQL query that
+                will generate the `exposures` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
 
                 If not provided, the exposure will be determined based on
                 `exposure_signal`, if provided, or Normandy and Nimbus exposure events.
@@ -431,15 +429,18 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            custom_enrollments_query (str): A full SQL query to be used
-                in the main query::
+            custom_enrollments_query (str): A full SQL query that
+                will generate the `enrollments` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
 
-                    WITH raw_enrollments AS ({custom_enrollments_query})
-            custom_exposure_query (str): A full SQL query to be used in the main
-                query::
-
-                    WITH ...
-                    exposures AS ({custom_exposure_query})
+                WARNING: this query's results must be uniquely keyed by
+                (client_id, branch), or else your results will be subtly
+                wrong.
+            custom_exposure_query (str): A full SQL query that
+                will generate the `exposures` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
 
             exposure_signal (ExposureSignal): Optional signal definition of when a
                 client has been exposed to the experiment
@@ -925,9 +926,7 @@ class Experiment:
                 """    LEFT JOIN (
         {query}
         ) ds_{i} USING (client_id, branch, analysis_window_start, analysis_window_end)
-                """.format(
-                    query=query_for_metrics, i=i
-                )
+                """.format(query=query_for_metrics, i=i)
             )
 
             for m in ds_metrics[ds]:
@@ -1004,9 +1003,7 @@ class Experiment:
                 """    LEFT JOIN (
         {query}
         ) ds_{i} USING (client_id, branch)
-                """.format(
-                    query=query_for_segments, i=i
-                )
+                """.format(query=query_for_segments, i=i)
             )
 
             for m in ds_segments[ds]:
