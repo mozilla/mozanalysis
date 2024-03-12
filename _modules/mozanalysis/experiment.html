@@ -267,20 +267,19 @@
 <span class="sd">                Specifies the query type to use to get the experiment&#39;s</span>
 <span class="sd">                enrollments, unless overridden by</span>
 <span class="sd">                ``custom_enrollments_query``.</span>
-<span class="sd">            custom_enrollments_query (str): A full SQL query to be used</span>
-<span class="sd">                in the main query::</span>
+<span class="sd">            custom_enrollments_query (str): A full SQL query that</span>
+<span class="sd">                will generate the `enrollments` common table expression</span>
+<span class="sd">                used in the main query. The query must produce the columns</span>
+<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.</span>
 
-<span class="sd">                    WITH raw_enrollments AS ({custom_enrollments_query})</span>
-
-<span class="sd">                N.B. this query&#39;s results must be uniquely keyed by</span>
+<span class="sd">                WARNING: this query&#39;s results must be uniquely keyed by</span>
 <span class="sd">                (client_id, branch), or else your results will be subtly</span>
 <span class="sd">                wrong.</span>
 
-<span class="sd">            custom_exposure_query (str): A full SQL query to be used in the main</span>
-<span class="sd">                query::</span>
-
-<span class="sd">                    WITH ...</span>
-<span class="sd">                    exposures AS ({custom_exposure_query})</span>
+<span class="sd">            custom_exposure_query (str):  A full SQL query that</span>
+<span class="sd">                will generate the `exposures` common table expression</span>
+<span class="sd">                used in the main query. The query must produce the columns</span>
+<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.</span>
 
 <span class="sd">                If not provided, the exposure will be determined based on</span>
 <span class="sd">                `exposure_signal`, if provided, or Normandy and Nimbus exposure events.</span>
@@ -399,20 +398,19 @@
 <span class="sd">                Specifies the query type to use to get the experiment&#39;s</span>
 <span class="sd">                enrollments, unless overridden by</span>
 <span class="sd">                ``custom_enrollments_query``.</span>
-<span class="sd">            custom_enrollments_query (str): A full SQL query to be used</span>
-<span class="sd">                in the main query::</span>
+<span class="sd">            custom_enrollments_query (str): A full SQL query that</span>
+<span class="sd">                will generate the `enrollments` common table expression</span>
+<span class="sd">                used in the main query. The query must produce the columns</span>
+<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.</span>
 
-<span class="sd">                    WITH raw_enrollments AS ({custom_enrollments_query})</span>
-
-<span class="sd">                N.B. this query&#39;s results must be uniquely keyed by</span>
+<span class="sd">                WARNING: this query&#39;s results must be uniquely keyed by</span>
 <span class="sd">                (client_id, branch), or else your results will be subtly</span>
 <span class="sd">                wrong.</span>
 
-<span class="sd">            custom_exposure_query (str): A full SQL query to be used in the main</span>
-<span class="sd">                query::</span>
-
-<span class="sd">                    WITH ...</span>
-<span class="sd">                    exposures AS ({custom_exposure_query})</span>
+<span class="sd">            custom_exposure_query (str): A full SQL query that</span>
+<span class="sd">                will generate the `exposures` common table expression</span>
+<span class="sd">                used in the main query. The query must produce the columns</span>
+<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.</span>
 
 <span class="sd">                If not provided, the exposure will be determined based on</span>
 <span class="sd">                `exposure_signal`, if provided, or Normandy and Nimbus exposure events.</span>
@@ -523,15 +521,18 @@
 <span class="sd">                Specifies the query type to use to get the experiment&#39;s</span>
 <span class="sd">                enrollments, unless overridden by</span>
 <span class="sd">                ``custom_enrollments_query``.</span>
-<span class="sd">            custom_enrollments_query (str): A full SQL query to be used</span>
-<span class="sd">                in the main query::</span>
+<span class="sd">            custom_enrollments_query (str): A full SQL query that</span>
+<span class="sd">                will generate the `enrollments` common table expression</span>
+<span class="sd">                used in the main query. The query must produce the columns</span>
+<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.</span>
 
-<span class="sd">                    WITH raw_enrollments AS ({custom_enrollments_query})</span>
-<span class="sd">            custom_exposure_query (str): A full SQL query to be used in the main</span>
-<span class="sd">                query::</span>
-
-<span class="sd">                    WITH ...</span>
-<span class="sd">                    exposures AS ({custom_exposure_query})</span>
+<span class="sd">                WARNING: this query&#39;s results must be uniquely keyed by</span>
+<span class="sd">                (client_id, branch), or else your results will be subtly</span>
+<span class="sd">                wrong.</span>
+<span class="sd">            custom_exposure_query (str): A full SQL query that</span>
+<span class="sd">                will generate the `exposures` common table expression</span>
+<span class="sd">                used in the main query. The query must produce the columns</span>
+<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.</span>
 
 <span class="sd">            exposure_signal (ExposureSignal): Optional signal definition of when a</span>
 <span class="sd">                client has been exposed to the experiment</span>
@@ -1021,9 +1022,7 @@
 <span class="w">                </span><span class="sd">&quot;&quot;&quot;    LEFT JOIN (</span>
 <span class="sd">        {query}</span>
 <span class="sd">        ) ds_{i} USING (client_id, branch, analysis_window_start, analysis_window_end)</span>
-<span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">query</span><span class="o">=</span><span class="n">query_for_metrics</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span>
-                <span class="p">)</span>
+<span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">query_for_metrics</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
             <span class="p">)</span>
 
             <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ds_metrics</span><span class="p">[</span><span class="n">ds</span><span class="p">]:</span>
@@ -1100,9 +1099,7 @@
 <span class="w">                </span><span class="sd">&quot;&quot;&quot;    LEFT JOIN (</span>
 <span class="sd">        {query}</span>
 <span class="sd">        ) ds_{i} USING (client_id, branch)</span>
-<span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">query</span><span class="o">=</span><span class="n">query_for_segments</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span>
-                <span class="p">)</span>
+<span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">query_for_segments</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
             <span class="p">)</span>
 
             <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ds_segments</span><span class="p">[</span><span class="n">ds</span><span class="p">]:</span>

@@ -290,21 +290,18 @@ measured in days.</p></li>
 Specifies the query type to use to get the experiment’s
 enrollments, unless overridden by
 <code class="docutils literal notranslate"><span class="pre">custom_enrollments_query</span></code>.</p></li>
-<li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
-in the main query:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="n">raw_enrollments</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_enrollments_query</span><span class="p">})</span>
-</pre></div>
-</div>
-<p>N.B. this query’s results must be uniquely keyed by
+<li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query that
+will generate the <cite>enrollments</cite> common table expression
+used in the main query. The query must produce the columns
+<cite>client_id</cite>, <cite>branch</cite>, <cite>enrollment_date</cite>, and <cite>num_enrolled_events</cite>.</p>
+<p>WARNING: this query’s results must be uniquely keyed by
 (client_id, branch), or else your results will be subtly
 wrong.</p>
 </p></li>
-<li><p><strong>custom_exposure_query</strong> (<em>str</em>) – <p>A full SQL query to be used in the main
-query:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="o">...</span>
-<span class="n">exposures</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_exposure_query</span><span class="p">})</span>
-</pre></div>
-</div>
+<li><p><strong>custom_exposure_query</strong> (<em>str</em>) – <p>A full SQL query that
+will generate the <cite>exposures</cite> common table expression
+used in the main query. The query must produce the columns
+<cite>client_id</cite>, <cite>branch</cite>, <cite>enrollment_date</cite>, and <cite>num_exposure_events</cite>.</p>
 <p>If not provided, the exposure will be determined based on
 <cite>exposure_signal</cite>, if provided, or Normandy and Nimbus exposure events.
 <cite>custom_exposure_query</cite> takes precedence over <cite>exposure_signal</cite>.</p>
@@ -371,21 +368,18 @@ analysis window should be.</p></li>
 Specifies the query type to use to get the experiment’s
 enrollments, unless overridden by
 <code class="docutils literal notranslate"><span class="pre">custom_enrollments_query</span></code>.</p></li>
-<li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
-in the main query:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="n">raw_enrollments</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_enrollments_query</span><span class="p">})</span>
-</pre></div>
-</div>
-<p>N.B. this query’s results must be uniquely keyed by
+<li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query that
+will generate the <cite>enrollments</cite> common table expression
+used in the main query. The query must produce the columns
+<cite>client_id</cite>, <cite>branch</cite>, <cite>enrollment_date</cite>, and <cite>num_enrolled_events</cite>.</p>
+<p>WARNING: this query’s results must be uniquely keyed by
 (client_id, branch), or else your results will be subtly
 wrong.</p>
 </p></li>
-<li><p><strong>custom_exposure_query</strong> (<em>str</em>) – <p>A full SQL query to be used in the main
-query:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="o">...</span>
-<span class="n">exposures</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_exposure_query</span><span class="p">})</span>
-</pre></div>
-</div>
+<li><p><strong>custom_exposure_query</strong> (<em>str</em>) – <p>A full SQL query that
+will generate the <cite>exposures</cite> common table expression
+used in the main query. The query must produce the columns
+<cite>client_id</cite>, <cite>branch</cite>, <cite>enrollment_date</cite>, and <cite>num_exposure_events</cite>.</p>
 <p>If not provided, the exposure will be determined based on
 <cite>exposure_signal</cite>, if provided, or Normandy and Nimbus exposure events.
 <cite>custom_exposure_query</cite> takes precedence over <cite>exposure_signal</cite>.</p>
@@ -442,19 +436,18 @@ interval(s) to query</p></li>
 Specifies the query type to use to get the experiment’s
 enrollments, unless overridden by
 <code class="docutils literal notranslate"><span class="pre">custom_enrollments_query</span></code>.</p></li>
-<li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query to be used
-in the main query:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="n">raw_enrollments</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_enrollments_query</span><span class="p">})</span>
-</pre></div>
-</div>
+<li><p><strong>custom_enrollments_query</strong> (<em>str</em>) – <p>A full SQL query that
+will generate the <cite>enrollments</cite> common table expression
+used in the main query. The query must produce the columns
+<cite>client_id</cite>, <cite>branch</cite>, <cite>enrollment_date</cite>, and <cite>num_enrolled_events</cite>.</p>
+<p>WARNING: this query’s results must be uniquely keyed by
+(client_id, branch), or else your results will be subtly
+wrong.</p>
 </p></li>
-<li><p><strong>custom_exposure_query</strong> (<em>str</em>) – <p>A full SQL query to be used in the main
-query:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH</span> <span class="o">...</span>
-<span class="n">exposures</span> <span class="n">AS</span> <span class="p">({</span><span class="n">custom_exposure_query</span><span class="p">})</span>
-</pre></div>
-</div>
-</p></li>
+<li><p><strong>custom_exposure_query</strong> (<em>str</em>) – A full SQL query that
+will generate the <cite>exposures</cite> common table expression
+used in the main query. The query must produce the columns
+<cite>client_id</cite>, <cite>branch</cite>, <cite>enrollment_date</cite>, and <cite>num_exposure_events</cite>.</p></li>
 <li><p><strong>exposure_signal</strong> (<a class="reference internal" href="exposure.html#mozanalysis.exposure.ExposureSignal" title="mozanalysis.exposure.ExposureSignal"><em>ExposureSignal</em></a>) – Optional signal definition of when a
 client has been exposed to the experiment</p></li>
 <li><p><strong>segment_list</strong> (<em>list</em><em> of </em><em>mozanalysis.segment.Segment</em><em> or </em><em>str</em>) – The user
