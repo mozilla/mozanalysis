@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 import logging
 import warnings
+
 import attr
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ warnings.warn(
 
     """,
     DeprecationWarning,
+    stacklevel=1,
 )
 
 
