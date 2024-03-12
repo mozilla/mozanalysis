@@ -8,6 +8,7 @@
 
 from mozanalysis.config import ConfigLoader
 
+
 clients_daily = ConfigLoader.get_data_source("clients_daily", "firefox_desktop")
 
 search_clients_engines_sources_daily = ConfigLoader.get_data_source(

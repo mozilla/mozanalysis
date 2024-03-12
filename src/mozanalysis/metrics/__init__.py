@@ -10,8 +10,26 @@ if TYPE_CHECKING:
 
 import attr
 import logging
+import warnings
 
 logger = logging.getLogger(__name__)
+
+warnings.simplefilter("default")
+warnings.warn(
+    """
+    metrics and data sources created in mozanalysis are deprecated
+    please create directly from metric-hub with ConfigLoader like
+
+    from mozanalysis.config import ConfigLoader
+    metric=ConfigLoader.get_metric(metric_slug="active_hours",app_name="firefox_desktop")
+
+    and data sources like
+    data_source=ConfigLoader.get_data_source(data_source_slug="active_hours",
+                                                app_name="firefox_desktop")
+
+    """,
+    DeprecationWarning,
+)
 
 
 class AnalysisBasis(Enum):
@@ -267,9 +285,7 @@ class DataSource:
                     select_expr=agg_any(
                         """`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
-            ) IS NULL""".format(
-                            experiment_slug=experiment_slug
-                        )
+            ) IS NULL""".format(experiment_slug=experiment_slug)
                     ),
                 ),
             ]
@@ -291,9 +307,7 @@ class DataSource:
                     select_expr=agg_any(
                         """`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
-            ).branch IS NULL""".format(
-                            experiment_slug=experiment_slug
-                        )
+            ).branch IS NULL""".format(experiment_slug=experiment_slug)
                     ),
                 ),
             ]
@@ -315,9 +329,7 @@ class DataSource:
                     select_expr=agg_any(
                         """`mozfun.map.get_key`(
                 ds.ping_info.experiments, '{experiment_slug}'
-            ).branch IS NULL""".format(
-                            experiment_slug=experiment_slug
-                        )
+            ).branch IS NULL""".format(experiment_slug=experiment_slug)
                     ),
                 ),
             ]
