@@ -186,20 +186,19 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            custom_enrollments_query (str): A full SQL query to be used
-                in the main query::
+            custom_enrollments_query (str): A full SQL query that
+                will generate the `enrollments` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
 
-                    WITH raw_enrollments AS ({custom_enrollments_query})
-
-                N.B. this query's results must be uniquely keyed by
+                WARNING: this query's results must be uniquely keyed by
                 (client_id, branch), or else your results will be subtly
                 wrong.
 
-            custom_exposure_query (str): A full SQL query to be used in the main
-                query::
-
-                    WITH ...
-                    exposures AS ({custom_exposure_query})
+            custom_exposure_query (str):  A full SQL query that
+                will generate the `exposures` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
 
                 If not provided, the exposure will be determined based on
                 `exposure_signal`, if provided, or Normandy and Nimbus exposure events.
@@ -315,20 +314,19 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            custom_enrollments_query (str): A full SQL query to be used
-                in the main query::
+            custom_enrollments_query (str): A full SQL query that
+                will generate the `enrollments` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
 
-                    WITH raw_enrollments AS ({custom_enrollments_query})
-
-                N.B. this query's results must be uniquely keyed by
+                WARNING: this query's results must be uniquely keyed by
                 (client_id, branch), or else your results will be subtly
                 wrong.
 
-            custom_exposure_query (str): A full SQL query to be used in the main
-                query::
-
-                    WITH ...
-                    exposures AS ({custom_exposure_query})
+            custom_exposure_query (str): A full SQL query that
+                will generate the `exposures` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
 
                 If not provided, the exposure will be determined based on
                 `exposure_signal`, if provided, or Normandy and Nimbus exposure events.
@@ -436,15 +434,18 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            custom_enrollments_query (str): A full SQL query to be used
-                in the main query::
+            custom_enrollments_query (str): A full SQL query that
+                will generate the `enrollments` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
 
-                    WITH raw_enrollments AS ({custom_enrollments_query})
-            custom_exposure_query (str): A full SQL query to be used in the main
-                query::
-
-                    WITH ...
-                    exposures AS ({custom_exposure_query})
+                WARNING: this query's results must be uniquely keyed by
+                (client_id, branch), or else your results will be subtly
+                wrong.
+            custom_exposure_query (str): A full SQL query that
+                will generate the `exposures` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
 
             exposure_signal (ExposureSignal): Optional signal definition of when a
                 client has been exposed to the experiment
@@ -971,7 +972,7 @@ class Experiment:
                 f"""    LEFT JOIN (
         {query_for_segments}
         ) ds_{i} USING (client_id, branch)
-                """
+                """.format(query=query_for_segments, i=i)
             )
 
             for m in ds_segments[ds]:
@@ -1152,12 +1153,6 @@ class TimeLimits:
     @first_enrollment_date.validator
     def _validate_first_enrollment_date(self, attribute, value):
         assert self.first_enrollment_date <= self.last_enrollment_date
-        assert self.first_enrollment_date <= self.first_date_data_required
-        assert self.first_enrollment_date <= self.last_date_data_required
-
-    @last_enrollment_date.validator
-    def _validate_last_enrollment_date(self, attribute, value):
-        assert self.last_enrollment_date <= self.last_date_data_required
 
     @first_date_data_required.validator
     def _validate_first_date_data_required(self, attribute, value):
@@ -1180,15 +1175,20 @@ class TimeLimits:
 class AnalysisWindow:
     """Represents the range of days in which to measure a metric.
 
-    The range is measured in "days after enrollment", and is inclusive.
+    The range is measured in "days relative enrollment", and is inclusive.
 
-    For example, ``AnalysisWindow(0, 6)`` is the first week after enrollment.
+    For example, ``AnalysisWindow(0, 6)`` is the first week after enrollment
+    and `AnalysisWindow(-8,-1)` is the week before enrollment
 
     Args:
-        start (int): First day of the analysis window, in days since
-            enrollment.
-        end (int): Final day of the analysis window, in days since
-            enrollment.
+        start (int): First day of the analysis window, in days relative
+            to enrollment start. 0 indicates the date of enrollment.
+            Positive numbers are after enrollment, negative are before.
+            Must be the same sign as `end` (zero counts as positive)
+        end (int): Final day of the analysis window, in days relative
+            to enrollment start. 0 indicates the date of enrollment.
+            Positive numbers are after enrollment, negative are before.
+            Must be the same sign as `start` (zero counts as positive).
     """
 
     start = attr.ib(type=int)
@@ -1196,11 +1196,13 @@ class AnalysisWindow:
 
     @start.validator
     def _validate_start(self, attribute, value):
-        assert value >= 0
+        assert (value >= 0 and self.end >= 0) or (value < 0 and self.end < 0)
 
     @end.validator
     def _validate_end(self, attribute, value):
-        assert value >= self.start
+        assert (value >= self.start) and (
+            (value >= 0 and self.start >= 0) or (value < 0 and self.start < 0)
+        )
 
 
 @attr.s(frozen=True, slots=True)
