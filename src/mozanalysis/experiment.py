@@ -1154,14 +1154,14 @@ class TimeLimits:
     def _validate_first_enrollment_date(self, attribute, value):
         assert self.first_enrollment_date <= self.last_enrollment_date, (
             f"first enrollment date of {self.first_enrollment_date} ",
-            "was not on or before last enrollment date of {self.last_enrollment_date}",
+            f"was not on or before last enrollment date of {self.last_enrollment_date}",
         )
 
     @first_date_data_required.validator
     def _validate_first_date_data_required(self, attribute, value):
         assert self.first_date_data_required <= self.last_date_data_required, (
             f"first date data required of {self.first_date_data_required} was not on ",
-            "or before last date data required of {self.last_date_data_required}",
+            f"or before last date data required of {self.last_date_data_required}",
         )
 
         min_analysis_window_start = min(aw.start for aw in self.analysis_windows)
@@ -1170,7 +1170,7 @@ class TimeLimits:
         )
         assert self.first_date_data_required == observation_period_start, (
             f"first date data required of {self.first_date_data_required} ",
-            "did not match computed start of observation {observation_period_start}",
+            f"did not match computed start of observation {observation_period_start}",
         )
 
     @last_date_data_required.validator
@@ -1181,7 +1181,7 @@ class TimeLimits:
         )
         assert self.last_date_data_required == observation_period_end, (
             f"last date data required of {self.last_date_data_required} ",
-            "did not match computed start of observation {observation_period_end}",
+            f"did not match computed start of observation {observation_period_end}",
         )
 
 
