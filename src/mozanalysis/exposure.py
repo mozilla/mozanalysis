@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from typing import Optional
-
 import attr
 
 from mozanalysis.metrics import DataSource
@@ -38,10 +36,10 @@ class ExposureSignal:
     name = attr.ib(type=str)
     data_source = attr.ib(type=DataSource)
     select_expr = attr.ib(type=str)
-    friendly_name = attr.ib(type=Optional[str], default=None)
-    description = attr.ib(type=Optional[str], default=None)
-    window_start = attr.ib(type=Optional[int], default=None)
-    window_end = attr.ib(type=Optional[int], default=None)
+    friendly_name = attr.ib(type=str | None, default=None)
+    description = attr.ib(type=str | None, default=None)
+    window_start = attr.ib(type=str | None, default=None)
+    window_end = attr.ib(type=str | None, default=None)
 
     def build_query(
         self,

@@ -1,13 +1,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import numpy as np
-import pandas as pd
-import pytest
-
 import mozanalysis.bayesian_stats.bayesian_bootstrap as mabsbb
 import mozanalysis.bayesian_stats.binary as mabsbin
 import mozanalysis.frequentist_stats.bootstrap as mafsb
+import numpy as np
+import pandas as pd
+import pytest
 
 
 def test_bootstrap_vs_beta():
@@ -103,7 +102,7 @@ def test_bayesian_bootstrap_vs_bootstrap_geometric_quantiles():
     quantiles = [0.3, 0.5, 0.9]
 
     def calc_quantiles(x):
-        return dict(zip(quantiles, np.quantile(x, quantiles)))
+        return dict(zip(quantiles, np.quantile(x, quantiles), strict=False))
 
     bb_res = mabsbb.bootstrap_one_branch(
         data,
@@ -153,7 +152,7 @@ def test_bayesian_bootstrap_vs_bootstrap_poisson_quantiles():
     quantiles = [0.1, 0.5, 0.95]
 
     def calc_quantiles(x):
-        return dict(zip(quantiles, np.quantile(x, quantiles)))
+        return dict(zip(quantiles, np.quantile(x, quantiles), strict=False))
 
     bb_res = mabsbb.bootstrap_one_branch(
         data,

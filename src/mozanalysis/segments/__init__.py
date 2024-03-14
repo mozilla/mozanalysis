@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from typing import Optional
+
 import warnings
 
 import attr
@@ -22,6 +22,7 @@ warnings.warn(
 
     """,
     DeprecationWarning,
+    stacklevel=1,
 )
 
 
@@ -65,13 +66,13 @@ class SegmentDataSource:
     window_end = attr.ib(default=0, type=int)
     client_id_column = attr.ib(default="client_id", type=str)
     submission_date_column = attr.ib(default="submission_date", type=str)
-    default_dataset = attr.ib(default=None, type=Optional[str])
+    default_dataset = attr.ib(default=None, type=str | None)
 
     @default_dataset.validator
     def _check_default_dataset_provided_if_needed(self, attribute, value):
         self.from_expr_for(None)
 
-    def from_expr_for(self, dataset: Optional[str]) -> str:
+    def from_expr_for(self, dataset: str | None) -> str:
         """Expands the ``from_expr`` template for the given dataset.
         If ``from_expr`` is not a template, returns ``from_expr``.
 
@@ -192,5 +193,5 @@ class Segment:
     name = attr.ib(type=str)
     data_source = attr.ib(validator=attr.validators.instance_of(SegmentDataSource))
     select_expr = attr.ib(type=str)
-    friendly_name = attr.ib(type=Optional[str], default=None)
-    description = attr.ib(type=Optional[str], default=None)
+    friendly_name = attr.ib(type=str | None, default=None)
+    description = attr.ib(type=str | None, default=None)

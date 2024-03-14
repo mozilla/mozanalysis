@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from typing import List, Optional
 from dataclasses import dataclass
 
 from metric_config_parser.config import ConfigCollection
@@ -17,7 +16,7 @@ class _ConfigLoader:
     Config objects are converted into mozanalysis native types.
     """
 
-    config_collection: Optional[ConfigCollection] = None
+    config_collection: ConfigCollection | None = None
 
     @property
     def configs(self) -> ConfigCollection:
@@ -31,7 +30,7 @@ class _ConfigLoader:
         return self._configs
 
     def with_configs_from(
-        self, repo_urls: Optional[List[str]], is_private: bool = False
+        self, repo_urls: list[str] | None, is_private: bool = False
     ) -> "_ConfigLoader":
         """Load configs from another repository and merge with default configs."""
         if not repo_urls:
@@ -87,9 +86,11 @@ class _ConfigLoader:
             from_expr=data_source_definition.from_expression,
             client_id_column=data_source_definition.client_id_column,
             submission_date_column=data_source_definition.submission_date_column,
-            experiments_column_type=None
-            if data_source_definition.experiments_column_type == "none"
-            else data_source_definition.experiments_column_type,
+            experiments_column_type=(
+                None
+                if data_source_definition.experiments_column_type == "none"
+                else data_source_definition.experiments_column_type
+            ),
             default_dataset=data_source_definition.default_dataset,
         )
 
@@ -216,9 +217,11 @@ class _ConfigLoader:
             from_expr=data_source_definition.from_expression,
             client_id_column=data_source_definition.client_id_column,
             submission_date_column=data_source_definition.submission_date_column,
-            experiments_column_type=None
-            if data_source_definition.experiments_column_type == "none"
-            else data_source_definition.experiments_column_type,
+            experiments_column_type=(
+                None
+                if data_source_definition.experiments_column_type == "none"
+                else data_source_definition.experiments_column_type
+            ),
             default_dataset=data_source_definition.default_dataset,
         )
 

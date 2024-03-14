@@ -1,6 +1,3 @@
-import pytest
-from cheap_lint import sql_lint
-
 import mozanalysis.metrics.desktop as mmd
 import mozanalysis.metrics.fenix as mmf
 import mozanalysis.metrics.firefox_ios as mmios
@@ -8,6 +5,8 @@ import mozanalysis.metrics.focus_android as mmfoc
 import mozanalysis.metrics.focus_ios as iosfoc
 import mozanalysis.metrics.klar_android as mmk
 import mozanalysis.metrics.klar_ios as iosk
+import pytest
+from cheap_lint import sql_lint
 from mozanalysis.metrics import DataSource, Metric
 
 from . import enumerate_included
