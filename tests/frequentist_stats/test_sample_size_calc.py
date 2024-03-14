@@ -9,6 +9,7 @@ import pytest
 from mozanalysis.frequentist_stats.sample_size import (
     empirical_effect_size_sample_size_calc,
     sample_size_curves,
+    z_or_t_ind_sample_size_calc,
 )
 from mozanalysis.metrics.desktop import search_clients_daily, uri_count
 
@@ -125,7 +126,7 @@ def test_curve_results_holder():
         alpha=0.05,
         outlier_percentile=99.5,
     )
-    metric_names = set([el.name for el in metrics])
+    metric_names = {el.name for el in metrics}
 
     # set should only have 2 values: "search_clients_daily" "uri_count"
     assert len(res) == len(metric_names)
@@ -242,7 +243,9 @@ def test_get_styled_dataframe():
         highlight_lessthan=[(10, "green"), (20, "blue")],
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="append_stats is true but no raw data was provided"
+    ):
         _ = res.get_styled_dataframe(append_stats=True)
 
     # check that subset works
@@ -277,7 +280,7 @@ def test_results_holder():
 
     metrics = [search_clients_daily, uri_count]
     res = z_or_t_ind_sample_size_calc(df, metrics)
-    metric_names = set([el.name for el in metrics])
+    metric_names = {el.name for el in metrics}
 
     # set should only have 2 values: "search_clients_daily" "uri_count"
     assert len(res) == len(metric_names)

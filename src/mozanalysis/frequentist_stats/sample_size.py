@@ -3,17 +3,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """module for sample size calculations"""
 
-from datetime import datetime
 from collections import UserDict
+from datetime import datetime
 from math import pi
 
-from scipy.stats import norm
-from statsmodels.stats.power import tt_ind_solve_power, zt_ind_solve_power
-from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from pandas.io.formats.style import Styler
-import matplotlib.pyplot as plt
+from scipy.stats import norm
+from statsmodels.stats.power import tt_ind_solve_power, zt_ind_solve_power
+from statsmodels.stats.proportion import samplesize_proportions_2indep_onetail
 
 from mozanalysis.bq import BigQueryContext
 from mozanalysis.experiment import TimeSeriesResult
@@ -31,7 +31,9 @@ class ResultsHolder(UserDict):
     it backward compatible.
     """
 
-    def __init__(self, *args, metrics: dict = None, params: dict = None, **kwargs):
+    def __init__(
+        self, *args, metrics: dict | None = None, params: dict | None = None, **kwargs
+    ):
         """
         Args:
             metrics (list, optional): List of metrics used to generate the results.
@@ -255,9 +257,9 @@ class SampleSizeCurveResultHolder(ResultsHolder):
         self,
         input_data: pd.DataFrame = None,
         show_population_pct: bool = True,
-        simulated_values: List[float] = None,
+        simulated_values: list[float] | None = None,
         append_stats: bool = False,
-        highlight_lessthan: List[float] = None,
+        highlight_lessthan: list[float] | None = None,
         trim_highlight_threshold: float = 0.15,
     ) -> Styler:
         """
@@ -347,7 +349,9 @@ class SampleSizeCurveResultHolder(ResultsHolder):
             # Only 3 cutoffs suported. Any others are silently dropped
             highlight_lessthan = sorted(highlight_lessthan)[:3]
             # Apply from highest to lowest cutoff so that lower cutoffs overwrite higher
-            for lim, colour in list(zip(highlight_lessthan, highlight_colours))[::-1]:
+            for lim, colour in list(
+                zip(highlight_lessthan, highlight_colours, strict=False)
+            )[::-1]:
                 disp = disp.highlight_between(
                     subset=simulated_values,
                     right=lim,
@@ -365,11 +369,7 @@ def sample_size_curves(
     power: float | np.ndarray | pd.Series | list[float] = 0.80,
     alpha: float | np.ndarray | pd.Series | list[float] = 0.05,
     **solver_kwargs,
-<<<<<<< HEAD
 ) -> SampleSizeCurveResultHolder:
-=======
-) -> dict[str, pd.DataFrame]:
->>>>>>> main
     """
     Loop over a list of different parameters to produce sample size estimates given
     those parameters. A single parameter in [effect_size, power, alpha] should
