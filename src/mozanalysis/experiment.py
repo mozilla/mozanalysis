@@ -1181,7 +1181,7 @@ class TimeLimits:
         )
         assert self.last_date_data_required == observation_period_end, (
             f"last date data required of {self.last_date_data_required} ",
-            f"did not match computed start of observation {observation_period_end}",
+            f"did not match computed end of observation {observation_period_end}",
         )
 
 
