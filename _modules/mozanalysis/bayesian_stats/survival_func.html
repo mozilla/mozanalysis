@@ -206,7 +206,7 @@
 <span class="k">def</span> <span class="nf">_one_thresh</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run stats on the fraction of clients above ``threshold``.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;df&#39; contains null values for &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col_label</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;df&#39; contains null values for &#39;</span><span class="si">{</span><span class="n">col_label</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="s2">&quot;_tmp_threshold_val&quot;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>

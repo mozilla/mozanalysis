@@ -78,7 +78,6 @@
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 
 <span class="kn">from</span> <span class="nn">metric_config_parser.config</span> <span class="kn">import</span> <span class="n">ConfigCollection</span>
@@ -95,7 +94,7 @@
 <span class="sd">    Config objects are converted into mozanalysis native types.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">config_collection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigCollection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">config_collection</span><span class="p">:</span> <span class="n">ConfigCollection</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">configs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConfigCollection</span><span class="p">:</span>
@@ -111,7 +110,7 @@
 <div class="viewcode-block" id="_ConfigLoader.with_configs_from">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.with_configs_from">[docs]</a>
     <span class="k">def</span> <span class="nf">with_configs_from</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">repo_urls</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">is_private</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">repo_urls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_private</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_ConfigLoader&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load configs from another repository and merge with default configs.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">repo_urls</span><span class="p">:</span>
@@ -173,9 +172,11 @@
             <span class="n">from_expr</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">from_expression</span><span class="p">,</span>
             <span class="n">client_id_column</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">client_id_column</span><span class="p">,</span>
             <span class="n">submission_date_column</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">submission_date_column</span><span class="p">,</span>
-            <span class="n">experiments_column_type</span><span class="o">=</span><span class="kc">None</span>
-            <span class="k">if</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span>
-            <span class="k">else</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span><span class="p">,</span>
+            <span class="n">experiments_column_type</span><span class="o">=</span><span class="p">(</span>
+                <span class="kc">None</span>
+                <span class="k">if</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span>
+                <span class="k">else</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span>
+            <span class="p">),</span>
             <span class="n">default_dataset</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">default_dataset</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -314,9 +315,11 @@
             <span class="n">from_expr</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">from_expression</span><span class="p">,</span>
             <span class="n">client_id_column</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">client_id_column</span><span class="p">,</span>
             <span class="n">submission_date_column</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">submission_date_column</span><span class="p">,</span>
-            <span class="n">experiments_column_type</span><span class="o">=</span><span class="kc">None</span>
-            <span class="k">if</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span>
-            <span class="k">else</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span><span class="p">,</span>
+            <span class="n">experiments_column_type</span><span class="o">=</span><span class="p">(</span>
+                <span class="kc">None</span>
+                <span class="k">if</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span>
+                <span class="k">else</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span>
+            <span class="p">),</span>
             <span class="n">default_dataset</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">default_dataset</span><span class="p">,</span>
         <span class="p">)</span></div>
 </div>

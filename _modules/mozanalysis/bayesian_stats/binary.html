@@ -162,7 +162,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># I would have used `isin` but it seems to be ~100x slower?</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All values in column &#39;</span><span class="si">{}</span><span class="s2">&#39; must be 0 or 1.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col_label</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All values in column &#39;</span><span class="si">{</span><span class="n">col_label</span><span class="si">}</span><span class="s2">&#39; must be 0 or 1.&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">(</span>
         <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;branch&quot;</span><span class="p">)[</span><span class="n">col_label</span><span class="p">]</span>

@@ -100,6 +100,7 @@
 <span class="sd">    reference branch.</span>
 
 <span class="sd">    Args:</span>
+<span class="sd">    ------</span>
 <span class="sd">        samples (dict of pandas.Series or pandas.DataFrame): Each key</span>
 <span class="sd">            is the label for a branch. Each value is the corresponding</span>
 <span class="sd">            sample set.</span>
@@ -111,8 +112,9 @@
 <span class="sd">        comparative_summary_quantiles (list of float): Quantiles that</span>
 <span class="sd">            define the summary stats for the comparative stats.</span>
 
-<span class="sd">    Returns a dictionary:</span>
-<span class="sd">        When the values of ``samples`` are Series, then this function</span>
+<span class="sd">    Returns:</span>
+<span class="sd">    ---------</span>
+<span class="sd">        A dictionary. When the values of ``samples`` are Series, then this function</span>
 <span class="sd">        returns a dictionary with the following keys and</span>
 <span class="sd">        values:</span>
 
@@ -128,6 +130,7 @@
 <span class="sd">        this function returns a similar dictionary, except the Series</span>
 <span class="sd">        are replaced with DataFrames. The index for each DataFrame is</span>
 <span class="sd">        the columns of a value of ``samples``.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">branch_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
@@ -164,6 +167,7 @@
 <span class="sd">    concerning one branch of an experiment.</span>
 
 <span class="sd">    Args:</span>
+<span class="sd">    -----</span>
 <span class="sd">        samples (pandas.Series or pandas.DataFrame): Samples over which</span>
 <span class="sd">            to compute the mean and quantiles.</span>
 <span class="sd">        quantiles (list, optional): The quantiles to compute - a good</span>
@@ -171,6 +175,7 @@
 <span class="sd">            corrections are required.</span>
 
 <span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
 <span class="sd">        If ``samples`` is a Series, then returns a pandas Series;</span>
 <span class="sd">        the index contains the stringified ``quantiles`` plus</span>
 <span class="sd">        ``&#39;mean&#39;``.</span>
@@ -178,6 +183,7 @@
 <span class="sd">        If ``samples`` is a DataFrame, then returns a pandas DataFrame;</span>
 <span class="sd">        the columns contain the stringified ``quantiles`` plus</span>
 <span class="sd">        ``&#39;mean&#39;``. The index matches the columns of ``samples``.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
         <span class="k">return</span> <span class="n">_summarize_one_branch_samples_batch</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">)</span>
@@ -217,6 +223,7 @@
 <span class="sd">    or in batch mode (supply DataFrames as arguments).</span>
 
 <span class="sd">    Args:</span>
+<span class="sd">    -----</span>
 <span class="sd">        focus (pandas.Series or pandas.DataFrame): Bootstrapped samples</span>
 <span class="sd">            or samples of a model parameter for a branch of an</span>
 <span class="sd">            experiment. If a DataFrame, each column represents a</span>
@@ -229,6 +236,7 @@
 <span class="sd">            corrections are required.</span>
 
 <span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
 <span class="sd">        A pandas Series or DataFrame containing a MultiIndex with the</span>
 <span class="sd">        following labels on the higher level and stringified floats</span>
 <span class="sd">        on the inner level</span>
@@ -247,6 +255,7 @@
 
 <span class="sd">        If returning a DataFrame, this MultiIndex is for the columns, and</span>
 <span class="sd">        the index matches the columns of ``focus``.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">focus</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
         <span class="k">return</span> <span class="n">_summarize_joint_samples_batch</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">)</span>
@@ -256,7 +265,7 @@
 
 
 <span class="k">def</span> <span class="nf">_summarize_one_branch_samples_single</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">list</span><span class="p">):</span>
         <span class="c1"># Hey pd.Series.agg - don&#39;t apply me elementwise!</span>
         <span class="c1"># Raising this error allows ``_summarize_one_branch_samples_batch``</span>
         <span class="c1"># to work also for non-batch ``samples`` (i.e. doing double duty)</span>

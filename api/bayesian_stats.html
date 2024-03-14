@@ -112,24 +112,27 @@ statistics (percentiles and the mean) for the quantity for each
 individual branch. Also return comparative summary statistics for
 the uplift of this quantity for each branch with respect to the
 reference branch.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>samples</strong> (<em>dict</em><em> of </em><em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Each key
-is the label for a branch. Each value is the corresponding
-sample set.</p></li>
-<li><p><strong>ref_branch_label</strong> (<em>str</em>) – Label for the reference branch
-(typically the control).</p></li>
-<li><p><strong>individual_summary_quantiles</strong> (<em>list</em><em> of </em><em>float</em>) – Quantiles that
-define the summary stats for the individual branches’
-samples.</p></li>
-<li><p><strong>comparative_summary_quantiles</strong> (<em>list</em><em> of </em><em>float</em>) – Quantiles that
-define the summary stats for the comparative stats.</p></li>
-</ul>
+<section id="args">
+<h2>Args:<a class="headerlink" href="#args" title="Link to this heading"></a></h2>
+<blockquote>
+<div><dl class="simple">
+<dt>samples (dict of pandas.Series or pandas.DataFrame): Each key</dt><dd><p>is the label for a branch. Each value is the corresponding
+sample set.</p>
+</dd>
+<dt>ref_branch_label (str): Label for the reference branch</dt><dd><p>(typically the control).</p>
+</dd>
+<dt>individual_summary_quantiles (list of float): Quantiles that</dt><dd><p>define the summary stats for the individual branches’
+samples.</p>
+</dd>
+<dt>comparative_summary_quantiles (list of float): Quantiles that</dt><dd><p>define the summary stats for the comparative stats.</p>
 </dd>
 </dl>
-<dl>
-<dt>Returns a dictionary:</dt><dd><p>When the values of <code class="docutils literal notranslate"><span class="pre">samples</span></code> are Series, then this function
+</div></blockquote>
+</section>
+<section id="returns">
+<h2>Returns:<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>A dictionary. When the values of <code class="docutils literal notranslate"><span class="pre">samples</span></code> are Series, then this function
 returns a dictionary with the following keys and
 values:</p>
 <blockquote>
@@ -147,8 +150,8 @@ reference branch.</p>
 this function returns a similar dictionary, except the Series
 are replaced with DataFrames. The index for each DataFrame is
 the columns of a value of <code class="docutils literal notranslate"><span class="pre">samples</span></code>.</p>
-</dd>
-</dl>
+</div></blockquote>
+</section>
 </dd></dl>
 
 <dl class="py function">
@@ -161,26 +164,29 @@ quantiles and the mean.</p>
 for stats when bootstrapping, or credible intervals around Bayesian
 model parameters; in both cases <code class="docutils literal notranslate"><span class="pre">samples</span></code> are from a posterior
 concerning one branch of an experiment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>samples</strong> (<em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Samples over which
-to compute the mean and quantiles.</p></li>
-<li><p><strong>quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – The quantiles to compute - a good
-reason to override the defaults would be when Bonferroni
-corrections are required.</p></li>
-</ul>
+<section id="id1">
+<h2>Args:<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<blockquote>
+<div><dl class="simple">
+<dt>samples (pandas.Series or pandas.DataFrame): Samples over which</dt><dd><p>to compute the mean and quantiles.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>If <code class="docutils literal notranslate"><span class="pre">samples</span></code> is a Series, then returns a pandas Series;
+<dt>quantiles (list, optional): The quantiles to compute - a good</dt><dd><p>reason to override the defaults would be when Bonferroni
+corrections are required.</p>
+</dd>
+</dl>
+</div></blockquote>
+</section>
+<section id="id2">
+<h2>Returns:<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>If <code class="docutils literal notranslate"><span class="pre">samples</span></code> is a Series, then returns a pandas Series;
 the index contains the stringified <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus
 <code class="docutils literal notranslate"><span class="pre">'mean'</span></code>.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">samples</span></code> is a DataFrame, then returns a pandas DataFrame;
 the columns contain the stringified <code class="docutils literal notranslate"><span class="pre">quantiles</span></code> plus
 <code class="docutils literal notranslate"><span class="pre">'mean'</span></code>. The index matches the columns of <code class="docutils literal notranslate"><span class="pre">samples</span></code>.</p>
-</p>
-</dd>
-</dl>
+</div></blockquote>
+</section>
 </dd></dl>
 
 <dl class="py function">
@@ -210,23 +216,27 @@ same format that would be supplied to <cite>summarize_one_branch_samples</cite>
 when analyzing the branches independently.</p>
 <p>Can be used to analyse a single metric (supply Series as arguments)
 or in batch mode (supply DataFrames as arguments).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>focus</strong> (<em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – Bootstrapped samples
-or samples of a model parameter for a branch of an
+<section id="id3">
+<h2>Args:<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<blockquote>
+<div><dl class="simple">
+<dt>focus (pandas.Series or pandas.DataFrame): Bootstrapped samples</dt><dd><p>or samples of a model parameter for a branch of an
 experiment. If a DataFrame, each column represents a
-different quantity.</p></li>
-<li><p><strong>reference</strong> (<em>pandas.Series</em><em> or </em><em>pandas.DataFrame</em>) – The same
-quantity, calculated for a different branch (typically the
-control).</p></li>
-<li><p><strong>quantiles</strong> (<em>list</em><em>, </em><em>optional</em>) – The quantiles to compute - a good
-reason to override the defaults would be when Bonferroni
-corrections are required.</p></li>
-</ul>
+different quantity.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>A pandas Series or DataFrame containing a MultiIndex with the
+<dt>reference (pandas.Series or pandas.DataFrame): The same</dt><dd><p>quantity, calculated for a different branch (typically the
+control).</p>
+</dd>
+<dt>quantiles (list, optional): The quantiles to compute - a good</dt><dd><p>reason to override the defaults would be when Bonferroni
+corrections are required.</p>
+</dd>
+</dl>
+</div></blockquote>
+</section>
+<section id="id4">
+<h2>Returns:<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>A pandas Series or DataFrame containing a MultiIndex with the
 following labels on the higher level and stringified floats
 on the inner level</p>
 <ul class="simple">
@@ -244,9 +254,8 @@ branch.</p></li>
 </ul>
 <p>If returning a DataFrame, this MultiIndex is for the columns, and
 the index matches the columns of <code class="docutils literal notranslate"><span class="pre">focus</span></code>.</p>
-</p>
-</dd>
-</dl>
+</div></blockquote>
+</section>
 </dd></dl>
 
 </section>

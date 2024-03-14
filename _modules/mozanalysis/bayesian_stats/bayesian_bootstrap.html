@@ -247,9 +247,7 @@
 
     <span class="k">if</span> <span class="n">ref_branch_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">branch_list</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;Branch label &#39;</span><span class="si">{b}</span><span class="s2">&#39; not in branch list &#39;</span><span class="si">{bl}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">b</span><span class="o">=</span><span class="n">ref_branch_label</span><span class="p">,</span> <span class="n">bl</span><span class="o">=</span><span class="n">branch_list</span>
-            <span class="p">)</span>
+            <span class="sa">f</span><span class="s2">&quot;Branch label &#39;</span><span class="si">{</span><span class="n">ref_branch_label</span><span class="si">}</span><span class="s2">&#39; not in branch list &#39;</span><span class="si">{</span><span class="n">branch_list</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
     <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span>
@@ -401,9 +399,9 @@
 
 
 
-<span class="k">def</span> <span class="nf">_resample_and_agg_once</span><span class="p">(</span>
-    <span class="n">data_values</span><span class="p">,</span> <span class="n">data_counts</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="p">):</span>
+<span class="k">def</span> <span class="nf">_resample_and_agg_once</span><span class="p">(</span><span class="n">data_values</span><span class="p">,</span> <span class="n">data_counts</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">prob_weights</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">dirichlet</span><span class="p">(</span><span class="n">data_counts</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">stat_fn</span><span class="p">(</span><span class="n">data_values</span><span class="p">,</span> <span class="n">prob_weights</span><span class="p">)</span>
