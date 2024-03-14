@@ -1,5 +1,4 @@
 import pytest
-
 from mozanalysis.metrics import DataSource
 
 
@@ -13,7 +12,7 @@ def test_datasource_constructor_succeeds(experiments_column_type):
 
 
 @pytest.mark.parametrize(
-    "name,from_expr,experiments_column_type,error",
+    ("name", "from_expr", "experiments_column_type", "error"),
     [
         (None, "mytable", "simple", TypeError),
         ("name", None, "simple", TypeError),
@@ -30,7 +29,10 @@ def test_datasource_constructor_fails(name, from_expr, experiments_column_type, 
 
 
 def test_complains_about_template_without_default():
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="foo: from_expr contains a dataset template but no value was provided.",
+    ):
         DataSource(
             name="foo",
             from_expr="moz-fx-data-shared-prod.{dataset}.foo",

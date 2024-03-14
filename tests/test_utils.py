@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import numpy as np
-import pytest
 import pandas as pd
+import pytest
 from mozanalysis.utils import add_days, all_, any_, date_sub, filter_outliers
 
 
@@ -37,7 +37,7 @@ def test_all_():
     assert pres["mixed_5"][1::2].all()
 
     # Check this workaround is still necessary:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"The truth value of a Series is ambiguous.*"):
         all([df.all_true, df.all_true])
 
 
@@ -70,7 +70,7 @@ def test_any_():
     assert pres["mixed_5"][1::2].all()
 
     # Check this workaround is still necessary:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"The truth value of a Series is ambiguous.*"):
         any([df.all_true, df.all_true])
 
 

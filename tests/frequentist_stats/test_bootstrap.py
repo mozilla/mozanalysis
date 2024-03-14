@@ -1,11 +1,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import mozanalysis.frequentist_stats.bootstrap as mafsb
 import numpy as np
 import pandas as pd
 import pytest
-
-import mozanalysis.frequentist_stats.bootstrap as mafsb
 
 
 def test_resample_and_agg_once():
@@ -130,7 +129,7 @@ def test_compare_branches():
     assert res["individual"]["same"]["mean"] == pytest.approx(0.5, rel=1e-1)
     assert res["individual"]["bigger"]["mean"] == pytest.approx(0.75, rel=1e-1)
 
-    assert "control" not in res["comparative"].keys()
+    assert "control" not in res["comparative"]
     assert res["comparative"]["same"][("rel_uplift", "exp")] == pytest.approx(
         0, abs=0.1
     )
@@ -181,7 +180,7 @@ def test_compare_branches_multistat():
         0.75, rel=1e-1
     )
 
-    assert "control" not in res["comparative"].keys()
+    assert "control" not in res["comparative"]
 
     assert res["comparative"]["same"].loc[
         "mean", ("rel_uplift", "exp")
@@ -208,7 +207,7 @@ def test_compare_branches_multiple_metrics():
     df = pd.DataFrame(
         {
             "branch": ["control"] * n + ["treatment"] * n,
-            "ad_click": [x for x in range(n, 0, -1)] * 2,
+            "ad_click": list(range(n, 0, -1)) * 2,
             "sap": [10 * x for x in range(n, 0, -1)] * 2,
         }
     )
@@ -240,7 +239,7 @@ def test_compare_branches_quantiles():
 
         arr_dict = {
             f"{label:.1}": arr_quantile
-            for label, arr_quantile in zip(deciles, arr_quantiles)
+            for label, arr_quantile in zip(deciles, arr_quantiles, strict=False)
         }
         return arr_dict
 
