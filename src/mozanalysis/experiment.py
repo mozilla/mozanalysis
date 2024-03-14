@@ -1152,23 +1152,33 @@ class TimeLimits:
 
     @first_enrollment_date.validator
     def _validate_first_enrollment_date(self, attribute, value):
-        assert self.first_enrollment_date <= self.last_enrollment_date
+        assert (
+            self.first_enrollment_date <= self.last_enrollment_date
+        ), f"first enrollment date of {self.first_enrollment_date} was not on or before last enrollment date of {self.last_enrollment_date}"
 
     @first_date_data_required.validator
     def _validate_first_date_data_required(self, attribute, value):
-        assert self.first_date_data_required <= self.last_date_data_required
+        assert (
+            self.first_date_data_required <= self.last_date_data_required
+        ), f"first date data required of {self.first_date_data_required} was not on or before last date data required of {self.last_date_data_required}"
 
         min_analysis_window_start = min(aw.start for aw in self.analysis_windows)
-        assert self.first_date_data_required == add_days(
+        observation_period_start = add_days(
             self.first_enrollment_date, min_analysis_window_start
         )
+        assert (
+            self.first_date_data_required == observation_period_start
+        ), f"first date data required of {self.first_date_data_required} did not match computed start of observation {observation_period_start}"
 
     @last_date_data_required.validator
     def _validate_last_date_data_required(self, attribute, value):
         max_analysis_window_end = max(aw.end for aw in self.analysis_windows)
-        assert self.last_date_data_required == add_days(
+        observation_period_end = add_days(
             self.last_enrollment_date, max_analysis_window_end
         )
+        assert (
+            self.last_date_data_required == observation_period_end
+        ), f"last date data required of {self.last_date_data_required} did not match computed start of observation {observation_period_end}"
 
 
 @attr.s(frozen=True, slots=True)
