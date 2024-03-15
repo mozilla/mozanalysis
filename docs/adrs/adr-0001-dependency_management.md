@@ -39,6 +39,15 @@ Jetstream currently uses this process to manage dependencies.  It involves uses 
 * -: Not wildely use in the data team
 * -: would need to update tox to use poetry to build and publish package
 
+### 3. mamba/conda
+(mamba)[https://mamba.readthedocs.io/en/latest/] is a fast, robust, and cross-platform package manager. It is fully compatible with conda, which is a common package manager in Python, and can be a drop-in replacement for conda. Mamba creates a virtual environment that is isolated from each other.
+
+* Creates isolated virtual environment that encapsulates all the packages in its own designated space
+* Can assign a specific Python version to the given virtual environment
+* Dependency resoluion is fast and optimized for parallelism
+* Uses an `environment.yml` to specify dependencies
+* Can consume `pyproject.toml` when specifying packages
+
 ## Decision Outcome
 
 The pip-tools method wins out because it is familiar and simple.  It would be nice to use the PR that adds this functionality to move as much configuation as possible in to a `pyproject.toml` file.
