@@ -1257,22 +1257,36 @@
 
     <span class="nd">@first_enrollment_date</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">_validate_first_enrollment_date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_enrollment_date</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_enrollment_date</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_enrollment_date</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;first enrollment date of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;was not on or before last enrollment date of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@first_date_data_required</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">_validate_first_date_data_required</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_date_data_required</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_date_data_required</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="p">,</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;first date data required of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">first_date_data_required</span><span class="si">}</span><span class="s2"> was not on &quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;or before last date data required of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="n">min_analysis_window_start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_windows</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_date_data_required</span> <span class="o">==</span> <span class="n">add_days</span><span class="p">(</span>
+        <span class="n">observation_period_start</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="p">,</span> <span class="n">min_analysis_window_start</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_date_data_required</span> <span class="o">==</span> <span class="n">observation_period_start</span><span class="p">,</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;first date data required of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">first_date_data_required</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;did not match computed start of observation </span><span class="si">{</span><span class="n">observation_period_start</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="nd">@last_date_data_required</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">_validate_last_date_data_required</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="n">max_analysis_window_end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">aw</span><span class="o">.</span><span class="n">end</span> <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_windows</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span> <span class="o">==</span> <span class="n">add_days</span><span class="p">(</span>
+        <span class="n">observation_period_end</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="p">,</span> <span class="n">max_analysis_window_end</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span> <span class="o">==</span> <span class="n">observation_period_end</span><span class="p">,</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;last date data required of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;did not match computed end of observation </span><span class="si">{</span><span class="n">observation_period_end</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
