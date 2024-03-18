@@ -170,18 +170,23 @@ class HistoricalTarget:
         target_list_sources = {el.app_name for el in target_list if el.app_name}
 
         if len(metric_list_sources) > 1:
-            raise ValueError("metric_list contains multiple metric-hub sources")
+            warnings.warn(
+                "metric_list contains multiple metric-hub sources", stacklevel=1
+            )
 
         if len(target_list_sources) > 1:
-            raise ValueError("target_list contains multiple metric-hub sources")
+            warnings.warn(
+                "target_list contains multiple metric-hub sources", stacklevel=1
+            )
 
         if (
             metric_list_sources
             and target_list_sources
             and metric_list_sources != target_list_sources
         ):
-            raise ValueError(
-                "metric_list and target_list metric-hub sources do not match"
+            warnings.warn(
+                "metric_list and target_list metric-hub sources do not match",
+                stacklevel=1,
             )
 
         last_date_full_data = add_days(
@@ -252,20 +257,15 @@ class HistoricalTarget:
             self._metrics_sql, full_res_table_name, replace_tables
         ).to_dataframe()
 
-        if (len(metric_list_sources) < len(metric_list)) or (
-            len(target_list_sources) < len(target_list)
-        ):
-            # case where there is a custom definition
-            # so sources have not been checked
-            for metric_obj in metric_list:
-                if all(output[metric_obj.name] == 0):
-                    raise warnings.warn(
-                        (
-                            f"Metric {metric_obj.name} is all 0, which may indicate"
-                            + " segements and metric do not have a common source"
-                        ),
-                        stacklevel=1,
-                    )
+        for metric_obj in metric_list:
+            if all(output[metric_obj.name] == 0):
+                warnings.warn(
+                    (
+                        f"Metric {metric_obj.name} is all 0, which may indicate"
+                        + " segements and metric do not have a common source"
+                    ),
+                    stacklevel=1,
+                )
         return output
 
     def get_time_series_data(

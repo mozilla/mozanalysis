@@ -1,3 +1,5 @@
+import pandas as pd
+
 import mozanalysis.metrics.desktop as mad
 import mozanalysis.segments.desktop as msd
 import pytest
@@ -9,10 +11,31 @@ from mozanalysis.segments import Segment, SegmentDataSource
 from mozanalysis.sizing import HistoricalTarget
 
 
+class DumbResponse:
+    """mock class that is returned by the DumbBQ run_query"""
+
+    @staticmethod
+    def to_dataframe():
+        """Returns empty dataframe with columns corresponeding to metrics
+        tested in test_mixed_metric, test_target_metric_mismatch
+        and test_target_metric_mismatch_with_custom"""
+        return pd.DataFrame(columns=["active_hours", "baseline_ping_count", "qcdou"])
+
+
+class DumbBQ:
+    def run_query(self, *args, **kwargs):
+        """returns a DumbResponse object"""
+        return DumbResponse()
+
+    def fully_qualify_table_name(self, *args, **kwargs):
+        """just exists so an error isn't thrown"""
+        return
+
+
 def test_mixed_metric():
     # NOTE: no equivalent of this test for targets because only
     # desktop currently has segements defined in metric-hub
-    bq_context = None  # test will fail before BQContext is used so this is fine
+    bq_context = DumbBQ()
 
     ht = HistoricalTarget(
         experiment_name="my_test_name",
@@ -30,9 +53,7 @@ def test_mixed_metric():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.raises(
-        ValueError, match="metric_list contains multiple metric-hub sources"
-    ):
+    with pytest.warns(match="metric_list contains multiple metric-hub sources"):
         _ = ht.get_single_window_data(
             bq_context,
             metric_list=[active_hours, baseline_ping_count],
@@ -41,7 +62,7 @@ def test_mixed_metric():
 
 
 def test_target_metric_mismatch():
-    bq_context = None  # test will fail before BQContext is used so this is fine
+    bq_context = DumbBQ()
 
     ht = HistoricalTarget(
         experiment_name="my_test_name",
@@ -58,8 +79,8 @@ def test_target_metric_mismatch():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.raises(
-        ValueError, match="metric_list and target_list metric-hub sources do not match"
+    with pytest.warns(
+        match="metric_list and target_list metric-hub sources do not match"
     ):
         _ = ht.get_single_window_data(
             bq_context,
@@ -71,7 +92,7 @@ def test_target_metric_mismatch():
 def test_target_metric_mismatch_with_custom():
     """Includes a custom metric, so the metric_list check should pass
     but the target_list and metric_list comparision should still fail"""
-    bq_context = None  # test will fail before BQContext is used so this is fine
+    bq_context = DumbBQ()
 
     ht = HistoricalTarget(
         experiment_name="my_test_name",
@@ -99,8 +120,8 @@ def test_target_metric_mismatch_with_custom():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.raises(
-        ValueError, match="metric_list and target_list metric-hub sources do not match"
+    with pytest.warns(
+        match="metric_list and target_list metric-hub sources do not match"
     ):
         _ = ht.get_single_window_data(
             bq_context,
