@@ -52,7 +52,7 @@ def test_mixed_metric():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.warns(match="metric_list contains multiple metric-hub sources"):
+    with pytest.warns(match="metric_list contains multiple metric-hub apps"):
         _ = ht.get_single_window_data(
             bq_context,
             metric_list=[active_hours, baseline_ping_count],
@@ -78,9 +78,7 @@ def test_target_metric_mismatch():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.warns(
-        match="metric_list and target_list metric-hub sources do not match"
-    ):
+    with pytest.warns(match="metric_list and target_list metric-hub apps do not match"):
         _ = ht.get_single_window_data(
             bq_context,
             metric_list=[baseline_ping_count],
@@ -119,9 +117,7 @@ def test_target_metric_mismatch_with_custom():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.warns(
-        match="metric_list and target_list metric-hub sources do not match"
-    ):
+    with pytest.warns(match="metric_list and target_list metric-hub apps do not match"):
         _ = ht.get_single_window_data(
             bq_context,
             metric_list=[baseline_ping_count, qcdou],

@@ -170,14 +170,10 @@ class HistoricalTarget:
         target_list_sources = {el.app_name for el in target_list if el.app_name}
 
         if len(metric_list_sources) > 1:
-            warnings.warn(
-                "metric_list contains multiple metric-hub sources", stacklevel=1
-            )
+            warnings.warn("metric_list contains multiple metric-hub apps", stacklevel=1)
 
         if len(target_list_sources) > 1:
-            warnings.warn(
-                "target_list contains multiple metric-hub sources", stacklevel=1
-            )
+            warnings.warn("target_list contains multiple metric-hub apps", stacklevel=1)
 
         if (
             metric_list_sources
@@ -185,7 +181,7 @@ class HistoricalTarget:
             and metric_list_sources != target_list_sources
         ):
             warnings.warn(
-                "metric_list and target_list metric-hub sources do not match",
+                "metric_list and target_list metric-hub apps do not match",
                 stacklevel=1,
             )
 
@@ -262,7 +258,7 @@ class HistoricalTarget:
                 warnings.warn(
                     (
                         f"Metric {metric_obj.name} is all 0, which may indicate"
-                        + " segments and metric do not have a common source"
+                        + " segments and metric do not have a common app"
                     ),
                     stacklevel=1,
                 )
@@ -542,9 +538,7 @@ class HistoricalTarget:
                 SELECT * FROM joined
                 UNPIVOT(min_dates for target_date in ({target_first_dates}))
             )
-        """.format(
-            target_first_dates=", ".join(c for c in dates_columns)
-        )
+        """.format(target_first_dates=", ".join(c for c in dates_columns))
 
         return f"""
         {target_def}
