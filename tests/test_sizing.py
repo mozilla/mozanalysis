@@ -1,13 +1,12 @@
-import pytest
-
 import mozanalysis.metrics.desktop as mad
 import mozanalysis.segments.desktop as msd
+import pytest
 from cheap_lint import sql_lint
+from mozanalysis.config import ConfigLoader
 from mozanalysis.experiment import TimeLimits
 from mozanalysis.metrics import DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
 from mozanalysis.sizing import HistoricalTarget
-from mozanalysis.config import ConfigLoader
 
 
 def test_mixed_metric():
