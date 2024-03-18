@@ -1,7 +1,6 @@
-import pandas as pd
-
 import mozanalysis.metrics.desktop as mad
 import mozanalysis.segments.desktop as msd
+import pandas as pd
 import pytest
 from cheap_lint import sql_lint
 from mozanalysis.config import ConfigLoader
