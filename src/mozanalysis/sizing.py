@@ -262,7 +262,7 @@ class HistoricalTarget:
                 warnings.warn(
                     (
                         f"Metric {metric_obj.name} is all 0, which may indicate"
-                        + " segements and metric do not have a common source"
+                        + " segments and metric do not have a common source"
                     ),
                     stacklevel=1,
                 )
@@ -542,7 +542,9 @@ class HistoricalTarget:
                 SELECT * FROM joined
                 UNPIVOT(min_dates for target_date in ({target_first_dates}))
             )
-        """.format(target_first_dates=", ".join(c for c in dates_columns))
+        """.format(
+            target_first_dates=", ".join(c for c in dates_columns)
+        )
 
         return f"""
         {target_def}
