@@ -69,6 +69,47 @@ def test_target_metric_mismatch():
         )
 
 
+def test_target_metric_mismatch_with_custom():
+    """Includes a custom metric, so the metric_list check should pass
+    but the target_list and metric_list comparision should still fail"""
+    bq_context = None  # test will fail before BQContext is used so this is fine
+
+    ht = HistoricalTarget(
+        experiment_name="my_test_name",
+        start_date="2021-01-01",
+        num_dates_enrollment=2,
+        analysis_length=4,
+    )
+
+    baseline_ping_count = ConfigLoader.get_metric(
+        "baseline_ping_count", "focus_android"
+    )
+    clients_daily = ConfigLoader.get_data_source(
+        "search_clients_daily", "firefox_desktop"
+    )
+    qcdou = Metric(
+        name="qcdou",
+        data_source=clients_daily,
+        select_expr="""COUNTIF(
+    active_hours_sum > 0 AND
+    scalar_parent_browser_engagement_total_uri_count_normal_and_private_mode_sum > 0
+)""",
+    )
+
+    allweek_regular_v1 = ConfigLoader.get_segment(
+        "allweek_regular_v1", "firefox_desktop"
+    )
+
+    with pytest.raises(
+        ValueError, match="metric_list and target_list metric-hub sources do not match"
+    ):
+        _ = ht.get_single_window_data(
+            bq_context,
+            metric_list=[baseline_ping_count, qcdou],
+            target_list=[allweek_regular_v1],
+        )
+
+
 def test_multiple_datasource():
     test_target = HistoricalTarget("test_targ", "2022-01-01", 7, 3)
 
