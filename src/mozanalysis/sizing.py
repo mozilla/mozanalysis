@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from datetime import date
 from typing import TYPE_CHECKING
+import warnings
 
 import attr
 
@@ -247,9 +248,25 @@ class HistoricalTarget:
             )
         )
 
-        return bq_context.run_query(
+        output = bq_context.run_query(
             self._metrics_sql, full_res_table_name, replace_tables
         ).to_dataframe()
+
+        if (len(metric_list_sources) < len(metric_list)) or (
+            len(target_list_sources) < len(target_list)
+        ):
+            # case where there is a custom definition
+            # so sources have not been checked
+            for metric_obj in metric_list:
+                if all(output[metric_obj.name] == 0):
+                    raise warnings.warn(
+                        (
+                            f"Metric {metric_obj.name} is all 0, which may indicate"
+                            + " segements and metric do not have a common source"
+                        ),
+                        stacklevel=1,
+                    )
+        return output
 
     def get_time_series_data(
         self,
