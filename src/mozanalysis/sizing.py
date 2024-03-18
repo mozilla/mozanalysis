@@ -162,6 +162,27 @@ class HistoricalTarget:
                 "Either custom_target_query or target_list must be provided"
             )
 
+        # validate metric_list and target_list are from the same source
+        # filter out el.app_name is None, there are cases where metric-hub
+        # was not used and it's up to users to ensure the sources match
+        metric_list_sources = {el.app_name for el in metric_list if el.app_name}
+        target_list_sources = {el.app_name for el in target_list if el.app_name}
+
+        if len(metric_list_sources) > 1:
+            raise ValueError("metric_list contains multiple metric-hub sources")
+
+        if len(target_list_sources) > 1:
+            raise ValueError("target_list contains multiple metric-hub sources")
+
+        if (
+            metric_list_sources
+            and target_list_sources
+            and metric_list_sources != target_list_sources
+        ):
+            raise ValueError(
+                "metric_list and target_list metric-hub sources do not match"
+            )
+
         last_date_full_data = add_days(
             self.start_date, self.num_dates_enrollment + self.analysis_length - 1
         )
@@ -356,7 +377,6 @@ class HistoricalTarget:
         target_list: Segment | None = None,
         custom_targets_query: str | None = None,
     ) -> str:
-
         return """
         {targets_query}
         """.format(
@@ -449,7 +469,6 @@ class HistoricalTarget:
     def _build_targets_query(
         self, target_list: list[Segment], time_limits: TimeLimits
     ) -> str:
-
         target_queries = []
         target_columns = []
         dates_columns = []
@@ -506,9 +525,7 @@ class HistoricalTarget:
                 SELECT * FROM joined
                 UNPIVOT(min_dates for target_date in ({target_first_dates}))
             )
-        """.format(
-            target_first_dates=", ".join(c for c in dates_columns)
-        )
+        """.format(target_first_dates=", ".join(c for c in dates_columns))
 
         return f"""
         {target_def}
@@ -548,9 +565,7 @@ class HistoricalTarget:
             )
 
             for m in ds_metrics[ds]:
-                metrics_columns.append(
-                    f"ds_{i}.{m.name}"
-                )
+                metrics_columns.append(f"ds_{i}.{m.name}")
 
         return metrics_columns, metrics_joins
 

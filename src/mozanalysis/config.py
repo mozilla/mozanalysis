@@ -64,6 +64,7 @@ class _ConfigLoader:
                 metric_definition.data_source.name, app_name
             ),
             bigger_is_better=metric_definition.bigger_is_better,
+            app_name=app_name,
         )
 
     def get_data_source(self, data_source_slug: str, app_name: str):
@@ -92,6 +93,7 @@ class _ConfigLoader:
                 else data_source_definition.experiments_column_type
             ),
             default_dataset=data_source_definition.default_dataset,
+            app_name=app_name,
         )
 
     def get_segment(self, segment_slug: str, app_name: str):
@@ -115,6 +117,7 @@ class _ConfigLoader:
             .render(),
             friendly_name=segment_definition.friendly_name,
             description=segment_definition.description,
+            app_name=app_name,
         )
 
     def get_segment_data_source(self, data_source_slug: str, app_name: str):
@@ -140,6 +143,7 @@ class _ConfigLoader:
             client_id_column=data_source_definition.client_id_column,
             submission_date_column=data_source_definition.submission_date_column,
             default_dataset=data_source_definition.default_dataset,
+            app_name=app_name,
         )
 
     def get_outcome_metric(self, metric_slug: str, outcome_slug: str, app_name: str):
