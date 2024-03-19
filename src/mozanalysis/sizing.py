@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import annotations
 
+import warnings
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -162,6 +163,28 @@ class HistoricalTarget:
                 "Either custom_target_query or target_list must be provided"
             )
 
+        # validate metric_list and target_list are from the same source
+        # filter out el.app_name is None, there are cases where metric-hub
+        # was not used and it's up to users to ensure the sources match
+        metric_list_sources = {el.app_name for el in metric_list if el.app_name}
+        target_list_sources = {el.app_name for el in target_list if el.app_name}
+
+        if len(metric_list_sources) > 1:
+            warnings.warn("metric_list contains multiple metric-hub apps", stacklevel=1)
+
+        if len(target_list_sources) > 1:
+            warnings.warn("target_list contains multiple metric-hub apps", stacklevel=1)
+
+        if (
+            metric_list_sources
+            and target_list_sources
+            and metric_list_sources != target_list_sources
+        ):
+            warnings.warn(
+                "metric_list and target_list metric-hub apps do not match",
+                stacklevel=1,
+            )
+
         last_date_full_data = add_days(
             self.start_date, self.num_dates_enrollment + self.analysis_length - 1
         )
@@ -226,9 +249,20 @@ class HistoricalTarget:
             )
         )
 
-        return bq_context.run_query(
+        output = bq_context.run_query(
             self._metrics_sql, full_res_table_name, replace_tables
         ).to_dataframe()
+
+        for metric_obj in metric_list:
+            if all(output[metric_obj.name] == 0):
+                warnings.warn(
+                    (
+                        f"Metric {metric_obj.name} is all 0, which may indicate"
+                        + " segments and metric do not have a common app"
+                    ),
+                    stacklevel=1,
+                )
+        return output
 
     def get_time_series_data(
         self,
@@ -356,7 +390,6 @@ class HistoricalTarget:
         target_list: Segment | None = None,
         custom_targets_query: str | None = None,
     ) -> str:
-
         return """
         {targets_query}
         """.format(
@@ -449,7 +482,6 @@ class HistoricalTarget:
     def _build_targets_query(
         self, target_list: list[Segment], time_limits: TimeLimits
     ) -> str:
-
         target_queries = []
         target_columns = []
         dates_columns = []
@@ -506,9 +538,7 @@ class HistoricalTarget:
                 SELECT * FROM joined
                 UNPIVOT(min_dates for target_date in ({target_first_dates}))
             )
-        """.format(
-            target_first_dates=", ".join(c for c in dates_columns)
-        )
+        """.format(target_first_dates=", ".join(c for c in dates_columns))
 
         return f"""
         {target_def}
@@ -548,9 +578,7 @@ class HistoricalTarget:
             )
 
             for m in ds_metrics[ds]:
-                metrics_columns.append(
-                    f"ds_{i}.{m.name}"
-                )
+                metrics_columns.append(f"ds_{i}.{m.name}")
 
         return metrics_columns, metrics_joins
 

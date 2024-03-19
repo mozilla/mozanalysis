@@ -58,6 +58,8 @@ class SegmentDataSource:
             `{dataset}` in from_expr if a value is not provided
             at runtime. Mandatory if from_expr contains a
             `{dataset}` parameter.
+        app_name: (str, optional): app_name used with metric-hub,
+            used for validation
     """
 
     name = attr.ib(validator=attr.validators.instance_of(str))
@@ -67,6 +69,7 @@ class SegmentDataSource:
     client_id_column = attr.ib(default="client_id", type=str)
     submission_date_column = attr.ib(default="submission_date", type=str)
     default_dataset = attr.ib(default=None, type=str | None)
+    app_name = attr.ib(default=None, type=str | None)
 
     @default_dataset.validator
     def _check_default_dataset_provided_if_needed(self, attribute, value):
@@ -188,6 +191,8 @@ class Segment:
         friendly_name (str): A human-readable dashboard title for this segment
         description (str): A paragraph of Markdown-formatted text describing
             the segment in more detail, to be shown on dashboards
+        app_name: (str, optional): app_name used with metric-hub,
+            used for validation
     """
 
     name = attr.ib(type=str)
@@ -195,3 +200,4 @@ class Segment:
     select_expr = attr.ib(type=str)
     friendly_name = attr.ib(type=str | None, default=None)
     description = attr.ib(type=str | None, default=None)
+    app_name = attr.ib(type=str | None, default=None)
