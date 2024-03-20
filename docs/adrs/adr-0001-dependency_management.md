@@ -51,6 +51,7 @@ Jetstream currently uses this process to manage dependencies.  It involves uses 
 * -: low established use of mamba/conda tooling in existing workflows
 * -: potential increase in storage size of a mozanalysis environment since each isolated enivornment enscapsulates its packages
 * -: the isolated virtual environment comes with potential for confusion over system libraries vs conda libraries as developers move between projects
+* -: the need to reconfigure scripts and learn new tooling could make the cost of switching high
 
 
 ## Decision Outcome
