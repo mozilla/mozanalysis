@@ -53,12 +53,12 @@ class ResultsHolder(UserDict):
 
     @property
     def metrics(self):
-        """the metrics property"""
+        """List of metrics used to generate the results. Defaults to None"""
         return self._metrics
 
     @property
     def params(self):
-        """the self property"""
+        """Parameters used to generated the results.  Defaults to None"""
         return self._params
 
     @staticmethod
@@ -208,11 +208,7 @@ class EmpiricalEffectSizeResultsHolder(ResultsHolder):
 
 class SampleSizeCurveResultHolder(ResultsHolder):
     def __init__(self, *args, **kwargs):
-        """
-        Args:
-            metrics (dict, optional): _description_. Defaults to None.
-            params (dict, optional): _description_. Defaults to None.
-        """
+        # uses the __init__ method for ResultsHolder
         super().__init__(*args, **kwargs)
         # need to modify results so it matches the old format
         sim_var = self._params["sim_var"]
@@ -311,9 +307,6 @@ class SampleSizeCurveResultHolder(ResultsHolder):
                 raise ValueError("append_stats is true but no raw data was provided")
             self.set_raw_data_stats(input_data)
             pretty_df = pd.concat([pretty_df, self._raw_data_stats], axis="columns")
-
-        if simulated_values is None:
-            simulated_values = self._params["simulated_values"]
 
         disp = (
             pretty_df.style.format(
