@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import pytest
-
 from cheap_lint import sql_lint
 from mozanalysis.config import ConfigLoader
 from mozanalysis.metrics import DataSource, Metric
@@ -21,7 +20,9 @@ def test_get_metric():
 
 
 def test_unknown_metric_fails():
-    with pytest.raises(Exception):
+    with pytest.raises(
+        Exception, match="Could not find definition for metric fake_metric"
+    ):
         ConfigLoader.get_metric("fake_metric", "firefox_desktop")
 
 
@@ -35,7 +36,9 @@ def test_get_data_source():
 
 
 def test_unknown_data_source_fails():
-    with pytest.raises(Exception):
+    with pytest.raises(
+        Exception, match="Could not find definition for data source fake_data_source"
+    ):
         ConfigLoader.get_data_source("fake_data_source", "firefox_desktop")
 
 
@@ -48,7 +51,9 @@ def test_get_segment():
 
 
 def test_unknown_segment_fails():
-    with pytest.raises(Exception):
+    with pytest.raises(
+        Exception, match="Could not find definition for segment fake_segment"
+    ):
         ConfigLoader.get_segment("fake_segment", "firefox_desktop")
 
 
@@ -64,7 +69,13 @@ def test_get_segment_data_source():
 
 
 def test_unknown_segment_data_source_fails():
-    with pytest.raises(Exception):
+    with pytest.raises(
+        Exception,
+        match=(
+            "Could not find definition for segment "
+            + "data source fake_segment_data_source"
+        ),
+    ):
         ConfigLoader.get_segment_data_source(
             "fake_segment_data_source", "firefox_desktop"
         )
@@ -106,12 +117,17 @@ def test_get_parametrized_outcome_metric_fails():
 
 
 def test_outcome_unknown_metric_fails():
-    with pytest.raises(Exception):
+    with pytest.raises(
+        Exception,
+        match="Could not find definition for metric fake_metric in outcome networking",
+    ):
         ConfigLoader.get_outcome_metric("fake_metric", "networking", "firefox_desktop")
 
 
 def test_unknown_outcome_metric_fails():
-    with pytest.raises(Exception):
+    with pytest.raises(
+        Exception, match="Could not find definition for outcome fake_outcome"
+    ):
         ConfigLoader.get_outcome_metric(
             "fake_metric", "fake_outcome", "firefox_desktop"
         )
@@ -128,14 +144,22 @@ def test_get_outcome_data_source():
 
 
 def test_outcome_unknown_data_source():
-    with pytest.raises(Exception):
+    with pytest.raises(
+        Exception,
+        match=(
+            "Could not find definition for data source fake_data_source"
+            + " in outcome networking"
+        ),
+    ):
         ConfigLoader.get_outcome_data_source(
             "fake_data_source", "networking", "firefox_desktop"
         )
 
 
 def test_unknown_outcome_data_source():
-    with pytest.raises(Exception):
+    with pytest.raises(
+        Exception, match="Could not find definition for outcome fake_outcome"
+    ):
         ConfigLoader.get_outcome_data_source(
             "fake_data_source", "fake_outcome", "firefox_desktop"
         )

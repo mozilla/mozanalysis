@@ -162,9 +162,7 @@ def compare_branches(
 
     if ref_branch_label not in branch_list:
         raise ValueError(
-            "Branch label '{b}' not in branch list '{bl}".format(
-                b=ref_branch_label, bl=branch_list
-            )
+            f"Branch label '{ref_branch_label}' not in branch list '{branch_list}"
         )
 
     samples = {
@@ -309,9 +307,9 @@ def get_bootstrap_samples(
     return summary_df
 
 
-def _resample_and_agg_once(
-    data_values, data_counts, stat_fn, random_state=np.random.RandomState(None)
-):
+def _resample_and_agg_once(data_values, data_counts, stat_fn, random_state=None):
+    if random_state is None:
+        random_state = np.random.RandomState(None)
     prob_weights = random_state.dirichlet(data_counts)
 
     return stat_fn(data_values, prob_weights)

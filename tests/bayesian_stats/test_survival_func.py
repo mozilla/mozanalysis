@@ -1,11 +1,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import mozanalysis.bayesian_stats.survival_func as mabssf
 import pandas as pd
 import pytest
 import scipy.stats as st
-
-import mozanalysis.bayesian_stats.survival_func as mabssf
 
 
 def test_get_thresholds():
@@ -17,7 +16,7 @@ def test_get_thresholds():
     assert len(data) - 1 == 101
     assert len(res) == 101
 
-    for d, r in zip(data.sort_values()[:-1], res):
+    for d, r in zip(data.sort_values()[:-1], res, strict=False):
         assert r == pytest.approx(d)
 
 
@@ -89,7 +88,7 @@ def test_compare_branches():
     df.iloc[1::2, 0] = "test"
     df.iloc[:300, 1] = range(300)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="'df' contains null values for 'val'"):
         mabssf.compare_branches(df, "val", thresholds=[0.0, 15.9])
 
     df.iloc[300:, 1] = 0

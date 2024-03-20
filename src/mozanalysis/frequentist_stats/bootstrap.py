@@ -76,9 +76,7 @@ def compare_branches(
 
     if ref_branch_label not in branch_list:
         raise ValueError(
-            "Branch label '{b}' not in branch list '{bl}".format(
-                b=ref_branch_label, bl=branch_list
-            )
+            f"Branch label '{ref_branch_label}' not in branch list '{branch_list}"
         )
 
     samples = {
@@ -221,7 +219,7 @@ def compare_branches_quantiles(
     df,
     col_label,
     ref_branch_label="control",
-    quantiles_of_interest=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+    quantiles_of_interest=None,
     num_samples=10000,
     threshold_quantile=None,
     individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
@@ -239,13 +237,13 @@ def compare_branches_quantiles(
         Ex: 0.2 is the 20th percentile, 0.5 is the median, etc.
     """
 
+    if quantiles_of_interest is None:
+        quantiles_of_interest = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     branch_list = df.branch.unique()
 
     if ref_branch_label not in branch_list:
         raise ValueError(
-            "Branch label '{b}' not in branch list '{bl}".format(
-                b=ref_branch_label, bl=branch_list
-            )
+            f"Branch label '{ref_branch_label}' not in branch list '{branch_list}"
         )
 
     samples = {

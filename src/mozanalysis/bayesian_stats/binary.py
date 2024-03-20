@@ -80,7 +80,7 @@ def aggregate_col(df, col_label):
     """
     # I would have used `isin` but it seems to be ~100x slower?
     if not ((df[col_label] == 0) | (df[col_label] == 1)).all():
-        raise ValueError("All values in column '{}' must be 0 or 1.".format(col_label))
+        raise ValueError(f"All values in column '{col_label}' must be 0 or 1.")
 
     return (
         df.groupby("branch")[col_label]

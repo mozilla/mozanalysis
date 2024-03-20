@@ -2,18 +2,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import annotations
-import attr
+
 import logging
-from pandas import DataFrame
-from typing import Dict, Tuple, Optional, List, Union
 from enum import Enum
+from typing import TYPE_CHECKING
+
+import attr
 
 from mozanalysis import APPS
 from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
-from mozanalysis.metrics import DataSource, Metric, AnalysisBasis
-from mozanalysis.segments import Segment, SegmentDataSource
+from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.utils import add_days, date_sub, hash_ish
+
+if TYPE_CHECKING:
+    from pandas import DataFrame
+
+    from mozanalysis.segments import Segment, SegmentDataSource
 
 logger = logging.getLogger(__name__)
 
@@ -152,8 +157,8 @@ class Experiment:
         analysis_start_days: int,
         analysis_length_days: int,
         enrollments_query_type: EnrollmentsQueryType = EnrollmentsQueryType.NORMANDY,
-        custom_enrollments_query: Optional[str] = None,
-        custom_exposure_query: Optional[str] = None,
+        custom_enrollments_query: str | None = None,
+        custom_exposure_query: str | None = None,
         exposure_signal=None,
         segment_list=None,
     ) -> DataFrame:
@@ -181,20 +186,19 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            custom_enrollments_query (str): A full SQL query to be used
-                in the main query::
+            custom_enrollments_query (str): A full SQL query that
+                will generate the `enrollments` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
 
-                    WITH raw_enrollments AS ({custom_enrollments_query})
-
-                N.B. this query's results must be uniquely keyed by
+                WARNING: this query's results must be uniquely keyed by
                 (client_id, branch), or else your results will be subtly
                 wrong.
 
-            custom_exposure_query (str): A full SQL query to be used in the main
-                query::
-
-                    WITH ...
-                    exposures AS ({custom_exposure_query})
+            custom_exposure_query (str):  A full SQL query that
+                will generate the `exposures` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
 
                 If not provided, the exposure will be determined based on
                 `exposure_signal`, if provided, or Normandy and Nimbus exposure events.
@@ -285,8 +289,8 @@ class Experiment:
         last_date_full_data: str,
         time_series_period: str = "weekly",
         enrollments_query_type: EnrollmentsQueryType = EnrollmentsQueryType.NORMANDY,
-        custom_enrollments_query: Optional[str] = None,
-        custom_exposure_query: Optional[str] = None,
+        custom_enrollments_query: str | None = None,
+        custom_exposure_query: str | None = None,
         exposure_signal=None,
         segment_list=None,
     ) -> TimeSeriesResult:
@@ -310,20 +314,19 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            custom_enrollments_query (str): A full SQL query to be used
-                in the main query::
+            custom_enrollments_query (str): A full SQL query that
+                will generate the `enrollments` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
 
-                    WITH raw_enrollments AS ({custom_enrollments_query})
-
-                N.B. this query's results must be uniquely keyed by
+                WARNING: this query's results must be uniquely keyed by
                 (client_id, branch), or else your results will be subtly
                 wrong.
 
-            custom_exposure_query (str): A full SQL query to be used in the main
-                query::
-
-                    WITH ...
-                    exposures AS ({custom_exposure_query})
+            custom_exposure_query (str): A full SQL query that
+                will generate the `exposures` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
 
                 If not provided, the exposure will be determined based on
                 `exposure_signal`, if provided, or Normandy and Nimbus exposure events.
@@ -415,8 +418,8 @@ class Experiment:
         self,
         time_limits: TimeLimits,
         enrollments_query_type: EnrollmentsQueryType = EnrollmentsQueryType.NORMANDY,
-        custom_enrollments_query: Optional[str] = None,
-        custom_exposure_query: Optional[str] = None,
+        custom_enrollments_query: str | None = None,
+        custom_exposure_query: str | None = None,
         exposure_signal=None,
         segment_list=None,
         sample_size: int = 100,
@@ -431,15 +434,18 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            custom_enrollments_query (str): A full SQL query to be used
-                in the main query::
+            custom_enrollments_query (str): A full SQL query that
+                will generate the `enrollments` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
 
-                    WITH raw_enrollments AS ({custom_enrollments_query})
-            custom_exposure_query (str): A full SQL query to be used in the main
-                query::
-
-                    WITH ...
-                    exposures AS ({custom_exposure_query})
+                WARNING: this query's results must be uniquely keyed by
+                (client_id, branch), or else your results will be subtly
+                wrong.
+            custom_exposure_query (str): A full SQL query that
+                will generate the `exposures` common table expression
+                used in the main query. The query must produce the columns
+                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
 
             exposure_signal (ExposureSignal): Optional signal definition of when a
                 client has been exposed to the experiment
@@ -470,7 +476,7 @@ class Experiment:
 
         segments_query = self._build_segments_query(segment_list, time_limits)
 
-        return """
+        return f"""
             WITH raw_enrollments AS ({enrollments_query}),
             segmented_enrollments AS ({segments_query}),
             exposures AS ({exposure_query})
@@ -481,11 +487,7 @@ class Experiment:
             FROM segmented_enrollments se
             LEFT JOIN exposures e
             USING (client_id, branch)
-        """.format(
-            enrollments_query=enrollments_query,
-            segments_query=segments_query,
-            exposure_query=exposure_query,
-        )
+        """
 
     def build_metrics_query(
         self,
@@ -594,10 +596,7 @@ class Experiment:
         This method writes the SQL to define the analysis window table.
         """
         return "\n        UNION ALL\n        ".join(
-            "(SELECT {aws} AS analysis_window_start, {awe} AS analysis_window_end)".format(  # noqa:E501
-                aws=aw.start,
-                awe=aw.end,
-            )
+            f"(SELECT {aw.start} AS analysis_window_start, {aw.end} AS analysis_window_end)"  # noqa:E501
             for aw in analysis_windows
         )
 
@@ -665,7 +664,7 @@ class Experiment:
         self, time_limits: TimeLimits, sample_size: int = 100
     ) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
-        return """
+        return f"""
         SELECT
             e.client_id,
             `mozfun.map.get_key`(e.event_map_values, 'branch')
@@ -678,16 +677,11 @@ class Experiment:
             e.event_category = 'normandy'
             AND e.event_method = 'enroll'
             AND e.submission_date
-                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
-            AND e.event_string_value = '{experiment_slug}'
+                BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+            AND e.event_string_value = '{self.experiment_slug}'
             AND e.sample_id < {sample_size}
         GROUP BY e.client_id, branch
-            """.format(
-            experiment_slug=self.experiment_slug,
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-            sample_size=sample_size,
-        )
+            """  # noqa:E501
 
     def _build_enrollments_query_fenix_baseline(
         self, time_limits: TimeLimits, sample_size: int = 100
@@ -744,7 +738,7 @@ class Experiment:
         ``ping_info.experiments`` to get a list of who is in what branch
         and when they enrolled.
         """
-        return """
+        return f"""
             SELECT events.client_info.client_id AS client_id,
                 mozfun.map.get_key(
                     e.extra,
@@ -752,24 +746,18 @@ class Experiment:
                 ) AS branch,
                 DATE(MIN(events.submission_timestamp)) AS enrollment_date,
                 COUNT(events.submission_timestamp) AS num_enrollment_events
-            FROM `moz-fx-data-shared-prod.{dataset}.events` events,
+            FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.events` events,
             UNNEST(events.events) AS e
             WHERE
                 events.client_info.client_id IS NOT NULL AND
                 DATE(events.submission_timestamp)
-                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+                BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                 AND e.category = "nimbus_events"
-                AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
+                AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND sample_id < {sample_size}
             GROUP BY client_id, branch
-            """.format(
-            experiment_slug=self.experiment_slug,
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-            dataset=self.app_id or dataset,
-            sample_size=sample_size,
-        )
+            """  # noqa:E501
 
     def _build_enrollments_query_cirrus(
         self, time_limits: TimeLimits, dataset: str
@@ -783,7 +771,7 @@ class Experiment:
         ``ping_info.experiments`` to get a list of who is in what branch
         and when they enrolled.
         """
-        return """
+        return f"""
             SELECT
                 mozfun.map.get_key(e.extra, "user_id") AS client_id,
                 mozfun.map.get_key(
@@ -792,27 +780,22 @@ class Experiment:
                 ) AS branch,
                 DATE(MIN(events.submission_timestamp)) AS enrollment_date,
                 COUNT(events.submission_timestamp) AS num_enrollment_events
-            FROM `moz-fx-data-shared-prod.{dataset}.enrollment` events,
+            FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.enrollment` events,
             UNNEST(events.events) AS e
             WHERE
                 mozfun.map.get_key(e.extra, "user_id") IS NOT NULL AND
                 DATE(events.submission_timestamp)
-                BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+                BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                 AND e.category = "cirrus_events"
-                AND mozfun.map.get_key(e.extra, "experiment") = '{experiment_slug}'
+                AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND client_info.app_channel = 'production'
             GROUP BY client_id, branch
-            """.format(
-            experiment_slug=self.experiment_slug,
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-            dataset=self.app_id or dataset,
-        )
+            """  # noqa:E501
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query exposures for a normandy experiment"""
-        return """
+        return f"""
         SELECT
             e.client_id,
             e.branch,
@@ -830,18 +813,14 @@ class Experiment:
                 event_category = 'normandy'
                 AND (event_method = 'exposure' OR event_method = 'expose')
                 AND submission_date
-                    BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
-                AND event_string_value = '{experiment_slug}'
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                AND event_string_value = '{self.experiment_slug}'
         ) e
         ON re.client_id = e.client_id AND
             re.branch = e.branch AND
             e.submission_date >= re.enrollment_date
         GROUP BY e.client_id, e.branch
-            """.format(
-            experiment_slug=self.experiment_slug,
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-        )
+            """  # noqa: E501
 
     def _build_exposure_query_glean_event(
         self,
@@ -851,7 +830,7 @@ class Experiment:
         event_category: str = "nimbus_events",
     ) -> str:
         """Return SQL to query exposures for a Glean no-event experiment"""
-        return """
+        return f"""
             SELECT
                 exposures.client_id,
                 exposures.branch,
@@ -864,37 +843,30 @@ class Experiment:
                     mozfun.map.get_key(event.extra, 'branch') AS branch,
                     DATE(events.submission_timestamp) AS submission_date
                 FROM
-                    `moz-fx-data-shared-prod.{dataset}.events` events,
+                    `moz-fx-data-shared-prod.{self.app_id or dataset}.events` events,
                     UNNEST(events.events) AS event
                 WHERE
                     DATE(events.submission_timestamp)
-                    BETWEEN '{first_enrollment_date}' AND '{last_enrollment_date}'
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                     AND event.category = '{event_category}'
                     AND mozfun.map.get_key(
                         event.extra,
-                        "experiment") = '{experiment_slug}'
+                        "experiment") = '{self.experiment_slug}'
                     AND (event.name = 'expose' OR event.name = 'exposure')
             ) exposures
             ON re.client_id = exposures.client_id AND
                 re.branch = exposures.branch AND
                 exposures.submission_date >= re.enrollment_date
             GROUP BY client_id, branch
-            """.format(
-            client_id_field=client_id_field,
-            experiment_slug=self.experiment_slug,
-            first_enrollment_date=time_limits.first_enrollment_date,
-            last_enrollment_date=time_limits.last_enrollment_date,
-            dataset=self.app_id or dataset,
-            event_category=event_category,
-        )
+            """  # noqa: E501
 
     def _build_metrics_query_bits(
         self,
-        metric_list: List[Metric],
+        metric_list: list[Metric],
         time_limits: TimeLimits,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal=None,
-    ) -> Tuple[List[str], List[str]]:
+    ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
         metrics = []
         for metric in metric_list:
@@ -922,24 +894,20 @@ class Experiment:
                 exposure_signal,
             )
             metrics_joins.append(
-                """    LEFT JOIN (
-        {query}
+                f"""    LEFT JOIN (
+        {query_for_metrics}
         ) ds_{i} USING (client_id, branch, analysis_window_start, analysis_window_end)
-                """.format(
-                    query=query_for_metrics, i=i
-                )
+                """
             )
 
             for m in ds_metrics[ds]:
-                metrics_columns.append(
-                    "ds_{i}.{metric_name}".format(i=i, metric_name=m.name)
-                )
+                metrics_columns.append(f"ds_{i}.{m.name}")
 
         return metrics_columns, metrics_joins
 
     def _partition_by_data_source(
-        self, metric_or_segment_list: Union[List[Metric], List[Segment]]
-    ) -> Dict[Union[DataSource, SegmentDataSource], List[Union[Metric, Segment]]]:
+        self, metric_or_segment_list: list[Metric] | list[Segment]
+    ) -> dict[DataSource | SegmentDataSource, list[Metric | Segment]]:
         """Return a dict mapping data sources to metric/segment lists."""
         data_sources = {m.data_source for m in metric_or_segment_list}
 
@@ -949,7 +917,7 @@ class Experiment:
         }
 
     def _build_segments_query(
-        self, segment_list: List[Segment], time_limits: TimeLimits
+        self, segment_list: list[Segment], time_limits: TimeLimits
     ) -> str:
         """Build a query adding segment columns to the enrollments view.
 
@@ -979,8 +947,8 @@ class Experiment:
         )
 
     def _build_segments_query_bits(
-        self, segment_list: List[Segment], time_limits: TimeLimits
-    ) -> Tuple[List[str], List[str]]:
+        self, segment_list: list[Segment], time_limits: TimeLimits
+    ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to segments."""
 
         # resolve segment slugs
@@ -1001,18 +969,14 @@ class Experiment:
                 ds_segments[ds], time_limits, self.experiment_slug, self.app_id
             )
             segments_joins.append(
-                """    LEFT JOIN (
-        {query}
+                f"""    LEFT JOIN (
+        {query_for_segments}
         ) ds_{i} USING (client_id, branch)
-                """.format(
-                    query=query_for_segments, i=i
-                )
+                """
             )
 
             for m in ds_segments[ds]:
-                segments_columns.append(
-                    "ds_{i}.{segment_name}".format(i=i, segment_name=m.name)
-                )
+                segments_columns.append(f"ds_{i}.{m.name}")
 
         return segments_columns, segments_joins
 
@@ -1069,7 +1033,7 @@ class TimeLimits:
         last_date_full_data: str,
         analysis_start_days: int,
         analysis_length_dates: int,
-        num_dates_enrollment: Optional[int] = None,
+        num_dates_enrollment: int | None = None,
     ) -> TimeLimits:
         """Return a ``TimeLimits`` instance with the following parameters
 
@@ -1111,15 +1075,9 @@ class TimeLimits:
 
         if last_date_data_required > last_date_full_data:
             raise ValueError(
-                "You said you wanted {} dates of enrollment, ".format(
-                    num_dates_enrollment
-                )
-                + "and need data from the {}th day after enrollment. ".format(
-                    analysis_window.end
-                )
-                + "For that, you need to wait until we have data for {}.".format(
-                    last_date_data_required
-                )
+                f"You said you wanted {num_dates_enrollment} dates of enrollment, "
+                + f"and need data from the {analysis_window.end}th day after enrollment. "  # noqa: E501
+                + f"For that, you need to wait until we have data for {last_date_data_required}."  # noqa:E501
             )
 
         tl = cls(
@@ -1156,9 +1114,7 @@ class TimeLimits:
         period_duration = {"daily": 1, "weekly": 7, "28_day": 28}
 
         if time_series_period not in period_duration:
-            raise ValueError(
-                "Unsupported time series period {}".format(time_series_period)
-            )
+            raise ValueError(f"Unsupported time series period {time_series_period}")
 
         if num_dates_enrollment <= 0:
             raise ValueError("Number of enrollment dates must be a positive number")
@@ -1196,22 +1152,36 @@ class TimeLimits:
 
     @first_enrollment_date.validator
     def _validate_first_enrollment_date(self, attribute, value):
-        assert self.first_enrollment_date <= self.last_enrollment_date
+        assert self.first_enrollment_date <= self.last_enrollment_date, (
+            f"first enrollment date of {self.first_enrollment_date} ",
+            f"was not on or before last enrollment date of {self.last_enrollment_date}",
+        )
 
     @first_date_data_required.validator
     def _validate_first_date_data_required(self, attribute, value):
-        assert self.first_date_data_required <= self.last_date_data_required
+        assert self.first_date_data_required <= self.last_date_data_required, (
+            f"first date data required of {self.first_date_data_required} was not on ",
+            f"or before last date data required of {self.last_date_data_required}",
+        )
 
         min_analysis_window_start = min(aw.start for aw in self.analysis_windows)
-        assert self.first_date_data_required == add_days(
+        observation_period_start = add_days(
             self.first_enrollment_date, min_analysis_window_start
+        )
+        assert self.first_date_data_required == observation_period_start, (
+            f"first date data required of {self.first_date_data_required} ",
+            f"did not match computed start of observation {observation_period_start}",
         )
 
     @last_date_data_required.validator
     def _validate_last_date_data_required(self, attribute, value):
         max_analysis_window_end = max(aw.end for aw in self.analysis_windows)
-        assert self.last_date_data_required == add_days(
+        observation_period_end = add_days(
             self.last_enrollment_date, max_analysis_window_end
+        )
+        assert self.last_date_data_required == observation_period_end, (
+            f"last date data required of {self.last_date_data_required} ",
+            f"did not match computed end of observation {observation_period_end}",
         )
 
 
@@ -1244,9 +1214,8 @@ class AnalysisWindow:
 
     @end.validator
     def _validate_end(self, attribute, value):
-        assert (value >= self.start) and (
-            (value >= 0 and self.start >= 0) or (value < 0 and self.start < 0)
-        )
+        assert value >= self.start
+        assert (value >= 0 and self.start >= 0) or (value < 0 and self.start < 0)
 
 
 @attr.s(frozen=True, slots=True)
@@ -1290,10 +1259,10 @@ class TimeSeriesResult:
                 analysis_window = next(
                     aw for aw in self.analysis_windows if aw.start == analysis_window
                 )
-            except StopIteration:
+            except StopIteration as err:
                 raise KeyError(
-                    "AnalysisWindow not found with start of {}".format(analysis_window)
-                )
+                    f"AnalysisWindow not found with start of {analysis_window}"
+                ) from err
 
         return bq_context.run_query(
             self._build_analysis_window_subset_query(analysis_window)
@@ -1311,11 +1280,7 @@ class TimeSeriesResult:
         """
         size = self._get_table_size(bq_context)
 
-        print(
-            "Downloading {full_table_name} ({size} GB)".format(
-                full_table_name=self.fully_qualified_table_name, size=size
-            )
-        )
+        print(f"Downloading {self.fully_qualified_table_name} ({size} GB)")
 
         table = bq_context.client.get_table(self.fully_qualified_table_name)
         return bq_context.client.list_rows(table).to_dataframe()
@@ -1325,7 +1290,7 @@ class TimeSeriesResult:
         bq_context: BigQueryContext,
         metric_list: list,
         aggregate_function: str = "AVG",
-    ) -> Tuple[DataFrame, int]:
+    ) -> tuple[DataFrame, int]:
         """Results from a time series query, aggregated over analysis windows
         by a SQL aggregate function.
 
@@ -1361,16 +1326,14 @@ class TimeSeriesResult:
 
         table_info = self.fully_qualified_table_name.split(".")
 
-        query = """
+        query = f"""
                 SELECT
                     SUM(size_bytes)/pow(10,9) AS size
                 FROM
-                    `{project_id}.{dataset_id}`.__TABLES__
+                    `{table_info[0]}.{table_info[1]}`.__TABLES__
                 WHERE
-                  table_id = '{table_id}'
-                """.format(
-            project_id=table_info[0], dataset_id=table_info[1], table_id=table_info[2]
-        )
+                  table_id = '{table_info[2]}'
+                """
 
         size = bq_context.run_query(query).to_dataframe()
 
@@ -1387,19 +1350,15 @@ class TimeSeriesResult:
         This method returns SQL to query this table to obtain results
         in "the standard format" for a single analysis window.
         """
-        return """
+        return f"""
             SELECT * EXCEPT (client_id, analysis_window_start, analysis_window_end)
-            FROM {full_table_name}
-            WHERE analysis_window_start = {aws}
-            AND analysis_window_end = {awe}
-        """.format(
-            full_table_name=self.fully_qualified_table_name,
-            aws=analysis_window.start,
-            awe=analysis_window.end,
-        )
+            FROM {self.fully_qualified_table_name}
+            WHERE analysis_window_start = {analysis_window.start}
+            AND analysis_window_end = {analysis_window.end}
+        """
 
     def _build_aggregated_data_query(
-        self, metric_list: List[Metric], aggregate_function: str
+        self, metric_list: list[Metric], aggregate_function: str
     ) -> str:
         return """
         SELECT
@@ -1414,25 +1373,21 @@ class TimeSeriesResult:
             analysis_window_start
         """.format(
             agg_metrics=",\n            ".join(
-                "{agg}({n}) AS {n}".format(agg=aggregate_function, n=m.name)
-                for m in metric_list
+                f"{aggregate_function}({m.name}) AS {m.name}" for m in metric_list
             ),
             full_table_name=self.fully_qualified_table_name,
         )
 
     def _table_sample_size_query(self, client_id_column: str = "client_id") -> str:
-        return """
+        return f"""
         SELECT
             COUNT(*) as population_size
         FROM
             (SELECT DISTINCT
-                {client_column}
+                {client_id_column}
             FROM
-                {full_table_name})
-        """.format(
-            client_column=client_id_column,
-            full_table_name=self.fully_qualified_table_name,
-        )
+                {self.fully_qualified_table_name})
+        """
 
     @analysis_windows.validator
     def _check_analysis_windows(self, attribute, value):

@@ -123,7 +123,7 @@ def get_thresholds(col, max_num_thresholds=101):
 def _one_thresh(threshold, df, col_label, ref_branch_label):
     """Run stats on the fraction of clients above ``threshold``."""
     if df[col_label].isnull().any():
-        raise ValueError("'df' contains null values for '{}'".format(col_label))
+        raise ValueError(f"'df' contains null values for '{col_label}'")
 
     if "_tmp_threshold_val" in df.columns:
         raise ValueError(
