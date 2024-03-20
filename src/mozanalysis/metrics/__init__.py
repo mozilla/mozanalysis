@@ -77,6 +77,8 @@ class DataSource:
             `{dataset}` in from_expr if a value is not provided
             at runtime. Mandatory if from_expr contains a
             `{dataset}` parameter.
+        app_name: (str, optional): app_name used with metric-hub,
+            used for validation
     """
 
     name = attr.ib(validator=attr.validators.instance_of(str))
@@ -85,6 +87,7 @@ class DataSource:
     client_id_column = attr.ib(default="client_id", type=str)
     submission_date_column = attr.ib(default="submission_date", type=str)
     default_dataset = attr.ib(default=None, type=str | None)
+    app_name = attr.ib(default=None, type=str | None)
 
     EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean")
 
@@ -353,6 +356,8 @@ class Metric:
         friendly_name (str): A human-readable dashboard title for this metric
         description (str): A paragraph of Markdown-formatted text describing
             what the metric measures, to be shown on dashboards
+        app_name: (str, optional): app_name used with metric-hub,
+            used for validation
     """
 
     name = attr.ib(type=str)
@@ -361,6 +366,7 @@ class Metric:
     friendly_name = attr.ib(type=str | None, default=None)
     description = attr.ib(type=str | None, default=None)
     bigger_is_better = attr.ib(type=bool, default=True)
+    app_name = attr.ib(type=str | None, default=None)
 
 
 def agg_sum(select_expr: str) -> str:
