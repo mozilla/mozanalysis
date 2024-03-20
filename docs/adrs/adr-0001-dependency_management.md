@@ -42,11 +42,16 @@ Jetstream currently uses this process to manage dependencies.  It involves uses 
 ### 3. mamba/conda
 (mamba)[https://mamba.readthedocs.io/en/latest/] is a fast, robust, and cross-platform package manager. It is fully compatible with conda, which is a common package manager in Python, and can be a drop-in replacement for conda. Mamba creates a virtual environment that is isolated from each other.
 
-* Creates isolated virtual environment that encapsulates all the packages in its own designated space
-* Can assign a specific Python version to the given virtual environment
-* Dependency resoluion is fast and optimized for parallelism
-* Uses an `environment.yml` to specify dependencies
-* Can consume `pyproject.toml` when specifying packages
+* +: Creates isolated virtual environment that encapsulates all the packages in its own designated space
+* +: Can assign a specific Python version to the given virtual environment
+* +: Dependency resoluion is fast and optimized for parallelism
+* +: Uses an `environment.yml` to specify dependencies
+* +: Can consume `pyproject.toml` when specifying packages
+
+* -: low established use of mamba/conda tooling in existing workflows
+* -: potential increase in storage size of a mozanalysis environment since each isolated enivornment enscapsulates its packages
+* -: the isolated virtual environment comes with potential for confusion over system libraries vs conda libraries as developers move between projects
+
 
 ## Decision Outcome
 
