@@ -77,13 +77,16 @@
 <span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="sd">&quot;&quot;&quot;module for sample size calculations&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">UserDict</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
 
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">pandas.io.formats.style</span> <span class="kn">import</span> <span class="n">Styler</span>
 <span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">norm</span>
 <span class="kn">from</span> <span class="nn">statsmodels.stats.power</span> <span class="kn">import</span> <span class="n">tt_ind_solve_power</span><span class="p">,</span> <span class="n">zt_ind_solve_power</span>
 <span class="kn">from</span> <span class="nn">statsmodels.stats.proportion</span> <span class="kn">import</span> <span class="n">samplesize_proportions_2indep_onetail</span>
@@ -96,6 +99,364 @@
 <span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="kn">import</span> <span class="n">get_time_intervals</span>
 
 
+<div class="viewcode-block" id="ResultsHolder">
+<a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.ResultsHolder">[docs]</a>
+<span class="k">class</span> <span class="nc">ResultsHolder</span><span class="p">(</span><span class="n">UserDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Object to hold results from different methods.  It extends</span>
+<span class="sd">    the dictionary objects so that users can interact with it</span>
+<span class="sd">    like a dictionary with the same keys/values as before, making</span>
+<span class="sd">    it backward compatible.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            metrics (list, optional): List of metrics used to generate the results.</span>
+<span class="sd">                                     Defaults to None.</span>
+<span class="sd">            params (dict, optional): Parameters used to generated the results.</span>
+<span class="sd">                                    Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span> <span class="o">=</span> <span class="n">metrics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="c1"># create this attribute to hold only the results data</span>
+        <span class="c1"># this dict is what was returned from the sample size</span>
+        <span class="c1"># methods historically</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;metrics&quot;</span><span class="p">,</span> <span class="s2">&quot;params&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List of metrics used to generate the results. Defaults to None&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parameters used to generated the results.  Defaults to None&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span>
+
+<div class="viewcode-block" id="ResultsHolder.make_friendly_name">
+<a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.ResultsHolder.make_friendly_name">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">make_friendly_name</span><span class="p">(</span><span class="n">ugly_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turns a name into a friendly name</span>
+<span class="sd">        by replacing underscores with spaces and</span>
+<span class="sd">        capitlizing words other than ones like &quot;per&quot;, &quot;of&quot;, etc</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ugly_name (str): name to make pretty</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pretty_name (str): reformatted name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">keep_all_lowercase</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;per&quot;</span><span class="p">,</span> <span class="s2">&quot;of&quot;</span><span class="p">]</span>
+        <span class="n">split_name</span> <span class="o">=</span> <span class="n">ugly_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+        <span class="n">split_name</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">el</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span> <span class="n">el</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">el</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">keep_all_lowercase</span> <span class="k">else</span> <span class="n">el</span>
+            <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">split_name</span>
+        <span class="p">]</span>
+        <span class="n">pretty_name</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">split_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pretty_name</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SampleSizeResultsHolder">
+<a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.SampleSizeResultsHolder">[docs]</a>
+<span class="k">class</span> <span class="nc">SampleSizeResultsHolder</span><span class="p">(</span><span class="n">ResultsHolder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Object to hold results from different methods.  It extends</span>
+<span class="sd">    the dictionary objects so that users can interact with it</span>
+<span class="sd">    with a dictionary with the same keys/values as before, making</span>
+<span class="sd">    it backward compatible.  The dictionary functionality is extended to include</span>
+<span class="sd">    additional attributes to hold metadata, a method for plotting results and</span>
+<span class="sd">    a method for returning results as a dataframe</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;dataframe property</span>
+
+<span class="sd">        returns data as a dataframe rather than a dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SampleSizeResultsHolder.plot_results">
+<a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.SampleSizeResultsHolder.plot_results">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sample_size_per_branch&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;plots the outputs of the sampling methods</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            result_name (str): sample size method output to plot.</span>
+<span class="sd">            Defaults to sample_size_per_branch</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nice_metric_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">el</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">el</span><span class="o">.</span><span class="n">friendly_name</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="s2">&quot;friendly_name&quot;</span><span class="p">)</span>
+                <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_friendly_name</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span>
+        <span class="p">}</span>
+        <span class="n">nice_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_friendly_name</span><span class="p">(</span><span class="n">result_name</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">nice_metric_map</span><span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">result_name</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">nice_result</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Metric&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="EmpiricalEffectSizeResultsHolder">
+<a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.EmpiricalEffectSizeResultsHolder">[docs]</a>
+<span class="k">class</span> <span class="nc">EmpiricalEffectSizeResultsHolder</span><span class="p">(</span><span class="n">ResultsHolder</span><span class="p">):</span>
+    <span class="s2">&quot;ResultsHolder for empirical_effect_size_sample_size_calc&quot;</span>
+
+<div class="viewcode-block" id="EmpiricalEffectSizeResultsHolder.style_empirical_sizing_result">
+<a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.EmpiricalEffectSizeResultsHolder.style_empirical_sizing_result">[docs]</a>
+    <span class="k">def</span> <span class="nf">style_empirical_sizing_result</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">empirical_sizing_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Styler</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pretty-print the DF returned by `empirical_sizing()`.</span>
+
+<span class="sd">        Returns a pandas Styler object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">empirical_sizing_df</span><span class="p">[</span>
+                <span class="p">[</span>
+                    <span class="s2">&quot;relative_effect_size&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;population_percent_per_branch&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;sample_size_per_branch&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;effect_size_value&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;mean_value&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;std_dev_value&quot;</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">]</span>
+            <span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+                <span class="n">columns</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;relative_effect_size&quot;</span><span class="p">:</span> <span class="s2">&quot;rel_effect_size&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;population_percent_per_branch&quot;</span><span class="p">:</span> <span class="s2">&quot;branch_pop_pct&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;sample_size_per_branch&quot;</span><span class="p">:</span> <span class="s2">&quot;branch_sample_size&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">thousands</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s2">&quot;branch_sample_size&quot;</span><span class="p">,</span> <span class="n">thousands</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">%&quot;</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="s2">&quot;branch_pop_pct&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.2%}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="s2">&quot;rel_effect_size&quot;</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;dataframe property</span>
+
+<span class="sd">        returns results consolidated into a dataframe&quot;&quot;&quot;</span>
+
+        <span class="n">formatted_results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">metric_result</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">vk</span><span class="p">,</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">vk</span> <span class="o">==</span> <span class="s2">&quot;period_start_day&quot;</span><span class="p">:</span>
+                            <span class="n">vk</span> <span class="o">=</span> <span class="s2">&quot;period&quot;</span>
+                        <span class="n">metric_result</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">vk</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vv</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">metric_result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="n">formatted_results</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">metric_result</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">formatted_results</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span><span class="p">[</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;relative_effect_size&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;effect_size_value&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mean_value&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;std_dev_value&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sample_size_per_branch&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;population_percent_per_branch&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;effect_size_period&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mean_period&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;std_dev_period&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">]</span>
+
+<div class="viewcode-block" id="EmpiricalEffectSizeResultsHolder.get_styled_dataframe">
+<a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.EmpiricalEffectSizeResultsHolder.get_styled_dataframe">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_styled_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Styler</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;returns styled dataframe for results from</span>
+<span class="sd">        empirical_effect_size_sample_size_calc</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            style (bool): If true, return a cleaned up and formatted pandas Styler.</span>
+<span class="sd">            Otherwise return a dataframe</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Styler: styled dataframe for visualization</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_empirical_sizing_result</span><span class="p">(</span><span class="n">df</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SampleSizeCurveResultHolder">
+<a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.SampleSizeCurveResultHolder">[docs]</a>
+<span class="k">class</span> <span class="nc">SampleSizeCurveResultHolder</span><span class="p">(</span><span class="n">ResultsHolder</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># uses the __init__ method for ResultsHolder</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># need to modify results so it matches the old format</span>
+        <span class="n">sim_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="s2">&quot;sim_var&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">el</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">sim_var</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="p">)</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">el</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">]</span>
+        <span class="n">results_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+            <span class="n">results_dict</span><span class="p">[</span><span class="n">el</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">el</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">results_dict</span>
+
+    <span class="k">def</span> <span class="nf">set_raw_data_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="n">outlier_percentile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="s2">&quot;outlier_percentile&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">100</span>
+        <span class="n">overall_stats</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">input_data</span><span class="p">[[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">]]</span>
+            <span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;std&quot;</span><span class="p">,</span>
+                    <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="n">d</span> <span class="o">&lt;=</span> <span class="n">d</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">outlier_percentile</span><span class="p">)]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+                    <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="n">d</span> <span class="o">&lt;=</span> <span class="n">d</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">outlier_percentile</span><span class="p">)]</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">overall_stats</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="s2">&quot;mean_trimmed&quot;</span><span class="p">,</span> <span class="s2">&quot;std_trimmed&quot;</span><span class="p">]</span>
+        <span class="n">overall_stats</span><span class="p">[</span><span class="s2">&quot;trim_change_mean&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">overall_stats</span><span class="p">[</span><span class="s2">&quot;mean_trimmed&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">overall_stats</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">/</span> <span class="n">overall_stats</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+        <span class="n">overall_stats</span><span class="p">[</span><span class="s2">&quot;trim_change_std&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">overall_stats</span><span class="p">[</span><span class="s2">&quot;std_trimmed&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">overall_stats</span><span class="p">[</span><span class="s2">&quot;std&quot;</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">/</span> <span class="n">overall_stats</span><span class="p">[</span><span class="s2">&quot;std&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_data_stats</span> <span class="o">=</span> <span class="n">overall_stats</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;dataframe property&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_df</span>
+
+<div class="viewcode-block" id="SampleSizeCurveResultHolder.get_styled_dataframe">
+<a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.SampleSizeCurveResultHolder.get_styled_dataframe">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_styled_dataframe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_population_pct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">simulated_values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">append_stats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">highlight_lessthan</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">trim_highlight_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.15</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Styler</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns styled dataframe useful for visualization</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input_data (pd.DataFrame, optional): Metric data used for summary stats.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            show_population_pct (bool, optional): Controls whether output is a percent</span>
+<span class="sd">                of population or a count. Defaults to True.</span>
+<span class="sd">            simulated_values (List[float], optional): List of values that were varied</span>
+<span class="sd">                to create curves. Defaults to None.</span>
+<span class="sd">            append_stats (bool, optional): Controls whether or not to append summary</span>
+<span class="sd">                stats to output dataframe. Defaults to False.</span>
+<span class="sd">            highlight_lessthan (List[float], optional): list of sample size thresholds</span>
+<span class="sd">                to highlight in the results. For each threshold, sample sizes lower than</span>
+<span class="sd">                it (but higher than any other thresholds) are highlighted in a</span>
+<span class="sd">                predefined colour. When `show_population_pct` is `True`, thresholds</span>
+<span class="sd">                should be expressed as a percentage between 0 and 100, not a decimal</span>
+<span class="sd">                between 0 and 1 (for example, to set a threshold for 5%, supply `[5]`).</span>
+<span class="sd">                At most 3 different thresholds are supported: only the 3 lowest</span>
+<span class="sd">                thresholds supplied will be used, and any others are silently ignored.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            trim_highlight_threshold (float, optional): if summary stats are shown,</span>
+<span class="sd">                cases for which the trimmed mean differs from the raw mean by more</span>
+<span class="sd">                than this threshold are highlighted. These metrics are strongly affected</span>
+<span class="sd">                by outliers. The threshold should be a relative difference value between</span>
+<span class="sd">                0 and 1.. Defaults to 0.15.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Styler: styled output</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># choose which column to output</span>
+        <span class="k">if</span> <span class="n">show_population_pct</span><span class="p">:</span>
+            <span class="n">subset_col</span> <span class="o">=</span> <span class="s2">&quot;population_percent_per_branch&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">subset_col</span> <span class="o">=</span> <span class="s2">&quot;sample_size_per_branch&quot;</span>
+
+        <span class="c1"># reformate raw_df to make different simulatd values into columns</span>
+        <span class="k">if</span> <span class="n">simulated_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">simulated_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="s2">&quot;simulated_values&quot;</span><span class="p">]</span>
+            <span class="n">pretty_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_df</span><span class="p">[</span><span class="n">subset_col</span><span class="p">]</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pretty_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_df</span><span class="p">[</span><span class="n">subset_col</span><span class="p">]</span><span class="o">.</span><span class="n">unstack</span><span class="p">()[</span><span class="n">simulated_values</span><span class="p">]</span>
+
+        <span class="c1"># get stats if input_data is non-null and append_stats is True</span>
+        <span class="k">if</span> <span class="n">append_stats</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">input_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;append_stats is true but no raw data was provided&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_raw_data_stats</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+            <span class="n">pretty_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pretty_df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_data_stats</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">)</span>
+
+        <span class="n">disp</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">pretty_df</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">%&quot;</span> <span class="k">if</span> <span class="n">show_population_pct</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{:,.0f}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="n">simulated_values</span>
+            <span class="p">)</span>
+            <span class="c1"># Round displayed effect size values to smallest precision for readability</span>
+            <span class="o">.</span><span class="n">format_index</span><span class="p">(</span>
+                <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">,</span>
+                <span class="n">precision</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">simulated_values</span><span class="p">))</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">append_stats</span><span class="p">:</span>
+            <span class="n">large_change_format_str</span> <span class="o">=</span> <span class="s2">&quot;color:maroon; font-weight:bold&quot;</span>
+            <span class="n">disp</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">disp</span><span class="o">.</span><span class="n">set_properties</span><span class="p">(</span>
+                    <span class="n">subset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_data_stats</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+                    <span class="o">**</span><span class="p">{</span><span class="s2">&quot;background-color&quot;</span><span class="p">:</span> <span class="s2">&quot;tan&quot;</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">},</span>
+                <span class="p">)</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.2%}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;trim_change_mean&quot;</span><span class="p">,</span> <span class="s2">&quot;trim_change_std&quot;</span><span class="p">])</span>
+                <span class="c1"># highlight large changes in mean because of trimming</span>
+                <span class="o">.</span><span class="n">applymap</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="n">large_change_format_str</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">trim_highlight_threshold</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                    <span class="p">),</span>
+                    <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;trim_change_mean&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Colours chosen to work reasonably well in either light or dark mode</span>
+        <span class="c1"># Ordered from highest to lowest cutoff</span>
+        <span class="n">highlight_colours</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;lightgreen&quot;</span><span class="p">,</span> <span class="s2">&quot;skyblue&quot;</span><span class="p">,</span> <span class="s2">&quot;gold&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">highlight_lessthan</span><span class="p">:</span>
+            <span class="c1"># Only 3 cutoffs suported. Any others are silently dropped</span>
+            <span class="n">highlight_lessthan</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">highlight_lessthan</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
+            <span class="c1"># Apply from highest to lowest cutoff so that lower cutoffs overwrite higher</span>
+            <span class="k">for</span> <span class="n">lim</span><span class="p">,</span> <span class="n">colour</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="nb">zip</span><span class="p">(</span><span class="n">highlight_lessthan</span><span class="p">,</span> <span class="n">highlight_colours</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">disp</span> <span class="o">=</span> <span class="n">disp</span><span class="o">.</span><span class="n">highlight_between</span><span class="p">(</span>
+                    <span class="n">subset</span><span class="o">=</span><span class="n">simulated_values</span><span class="p">,</span>
+                    <span class="n">right</span><span class="o">=</span><span class="n">lim</span><span class="p">,</span>
+                    <span class="n">props</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;background-color:</span><span class="si">{</span><span class="n">colour</span><span class="si">}</span><span class="s2">;color:black&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">disp</span></div>
+</div>
+
+
+
 <div class="viewcode-block" id="sample_size_curves">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.sample_size_curves">[docs]</a>
 <span class="k">def</span> <span class="nf">sample_size_curves</span><span class="p">(</span>
@@ -106,7 +467,7 @@
     <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.80</span><span class="p">,</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
     <span class="o">**</span><span class="n">solver_kwargs</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SampleSizeCurveResultHolder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loop over a list of different parameters to produce sample size estimates given</span>
 <span class="sd">    those parameters. A single parameter in [effect_size, power, alpha] should</span>
@@ -131,12 +492,13 @@
 <span class="sd">        **solver_kwargs (dict): Arguments necessary for the provided solver.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A dictionary of pd.DataFrame objects. An item in the dictionary is</span>
+<span class="sd">        SampleSizeCurveResultHolder: The data attribute contains a dictionary</span>
+<span class="sd">        of pd.DataFrame objects. An item in the dictionary is</span>
 <span class="sd">        created for each metric in metric_list, containing a DataFrame of sample</span>
 <span class="sd">        size per branch, number of clients that satisfied targeting, and population</span>
 <span class="sd">        proportion per branch at each value of the iterable parameter.</span>
+<span class="sd">        Additional methods for ease of use are documented in the class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;effect_size&quot;</span><span class="p">:</span> <span class="n">effect_size</span><span class="p">,</span> <span class="s2">&quot;power&quot;</span><span class="p">:</span> <span class="n">power</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">}</span>
     <span class="n">sim_var</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]]</span>
 
@@ -148,22 +510,21 @@
     <span class="n">sim_var</span> <span class="o">=</span> <span class="n">sim_var</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">test_vals</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">sim_var</span><span class="p">]</span>
     <span class="k">del</span> <span class="n">params</span><span class="p">[</span><span class="n">sim_var</span><span class="p">]</span>
-
     <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics_list</span><span class="p">:</span>
-        <span class="n">sample_sizes</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">test_vals</span><span class="p">:</span>
-            <span class="n">sample_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="o">**</span><span class="p">{</span><span class="n">sim_var</span><span class="p">:</span> <span class="n">v</span><span class="p">},</span>
-                    <span class="o">**</span><span class="n">solver</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="p">[</span><span class="n">metric</span><span class="p">],</span> <span class="o">**</span><span class="p">{</span><span class="n">sim_var</span><span class="p">:</span> <span class="n">v</span><span class="p">},</span> <span class="o">**</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_kwargs</span><span class="p">)[</span>
-                        <span class="n">metric</span><span class="o">.</span><span class="n">name</span>
-                    <span class="p">],</span>
-                <span class="p">}</span>
-            <span class="p">)</span>
-        <span class="n">results</span><span class="p">[</span><span class="n">metric</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sample_sizes</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">test_vals</span><span class="p">:</span>
+        <span class="n">sample_sizes</span> <span class="o">=</span> <span class="n">solver</span><span class="p">(</span>
+            <span class="n">df</span><span class="p">,</span> <span class="n">metrics_list</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">sim_var</span><span class="p">:</span> <span class="n">v</span><span class="p">},</span> <span class="o">**</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_kwargs</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">dataframe</span>
+        <span class="n">sample_sizes</span><span class="p">[</span><span class="n">sim_var</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
 
-    <span class="k">return</span> <span class="n">results</span></div>
+        <span class="n">results</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_sizes</span>
+
+    <span class="c1"># add sim_var to metadata</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sim_var&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sim_var</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;simulated_values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">test_vals</span>
+    <span class="k">return</span> <span class="n">SampleSizeCurveResultHolder</span><span class="p">(</span>
+        <span class="n">results</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics_list</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_kwargs</span><span class="p">}</span>
+    <span class="p">)</span></div>
 
 
 
@@ -176,7 +537,7 @@
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
     <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.90</span><span class="p">,</span>
     <span class="n">outlier_percentile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">99.5</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SampleSizeResultsHolder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform sample size calculation for an experiment to test for a</span>
 <span class="sd">    difference in proportions.</span>
@@ -197,9 +558,11 @@
 <span class="sd">            each columns.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A dictionary. Keys in the dictionary are the metrics column names from</span>
+<span class="sd">        SampleSizeResultsHolder: The data attribute contains a dictionary.</span>
+<span class="sd">        Keys in the dictionary are the metrics column names from</span>
 <span class="sd">        the DataFrame; values are the required sample size per branch to achieve</span>
-<span class="sd">        the desired power for that metric.</span>
+<span class="sd">        the desired power for that metric. Additional methods for ease of use</span>
+<span class="sd">        are documented in the class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
@@ -221,7 +584,14 @@
             <span class="s2">&quot;population_percent_per_branch&quot;</span><span class="p">:</span> <span class="n">pop_percent</span><span class="p">,</span>
             <span class="s2">&quot;number_of_clients_targeted&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
         <span class="p">}</span>
-    <span class="k">return</span> <span class="n">results</span></div>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;effect_size&quot;</span><span class="p">:</span> <span class="n">effect_size</span><span class="p">,</span>
+        <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+        <span class="s2">&quot;power&quot;</span><span class="p">:</span> <span class="n">power</span><span class="p">,</span>
+        <span class="s2">&quot;outlier_percentile&quot;</span><span class="p">:</span> <span class="n">outlier_percentile</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">SampleSizeResultsHolder</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics_list</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
 
 
 
@@ -235,7 +605,7 @@
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
     <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.90</span><span class="p">,</span>
     <span class="n">outlier_percentile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">99.5</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SampleSizeResultsHolder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform sample size calculation for an experiment based on independent</span>
 <span class="sd">    samples t or z tests.</span>
@@ -256,9 +626,11 @@
 <span class="sd">            each columns.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A dictionary. Keys in the dictionary are the metrics column names from</span>
+<span class="sd">        SampleSizeResultsHolder: The data attribute contains a dictionary.</span>
+<span class="sd">        Keys in the dictionary are the metrics column names from</span>
 <span class="sd">        the DataFrame; values are the required sample size per branch to achieve</span>
-<span class="sd">        the desired power for that metric.</span>
+<span class="sd">        the desired power for that metric. Additional methods for ease of use</span>
+<span class="sd">        are documented in the class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">tests</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">zt_ind_solve_power</span><span class="p">,</span>
@@ -285,7 +657,16 @@
             <span class="s2">&quot;population_percent_per_branch&quot;</span><span class="p">:</span> <span class="n">pop_percent</span><span class="p">,</span>
             <span class="s2">&quot;number_of_clients_targeted&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
         <span class="p">}</span>
-    <span class="k">return</span> <span class="n">results</span></div>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;effect_size&quot;</span><span class="p">:</span> <span class="n">effect_size</span><span class="p">,</span>
+        <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+        <span class="s2">&quot;power&quot;</span><span class="p">:</span> <span class="n">power</span><span class="p">,</span>
+        <span class="s2">&quot;outlier_percentile&quot;</span><span class="p">:</span> <span class="n">outlier_percentile</span><span class="p">,</span>
+        <span class="s2">&quot;solver&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="p">,</span>
+        <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">test</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">SampleSizeResultsHolder</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics_list</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
 
 
 
@@ -300,7 +681,7 @@
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
     <span class="n">parent_distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
     <span class="n">plot_effect_sizes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EmpiricalEffectSizeResultsHolder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform sample size calculation with empirical effect size and</span>
 <span class="sd">    asymptotic approximation of Wilcoxen-Mann-Whitney U Test. Empirical effect size</span>
@@ -333,10 +714,12 @@
 <span class="sd">            distribution of effect sizes observed in historical data.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A dictionary. Keys in the dictionary are the metrics column names from</span>
+<span class="sd">        EmpiricalEffectSizeResultsHolder: The data attribute contains a dictionary.</span>
+<span class="sd">        Keys in the dictionary are the metrics column names from</span>
 <span class="sd">        the DataFrame; values are dictionaries containing the required sample size</span>
 <span class="sd">        per branch to achieve the desired power for that metric, along with</span>
-<span class="sd">        additional information.</span>
+<span class="sd">        additional information. Additional methods for ease of use</span>
+<span class="sd">        are documented in the class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_mann_whitney_solve_sample_size_approximation</span><span class="p">(</span>
@@ -422,7 +805,16 @@
             <span class="s2">&quot;population_percent_per_branch&quot;</span><span class="p">:</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">sample_size</span> <span class="o">/</span> <span class="n">pop_size</span><span class="p">),</span>
         <span class="p">}</span>
 
-    <span class="k">return</span> <span class="n">size_dict</span>  <span class="c1"># TODO: add option to return a DataFrame</span></div>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;quantile&quot;</span><span class="p">:</span> <span class="n">quantile</span><span class="p">,</span>
+        <span class="s2">&quot;power&quot;</span><span class="p">:</span> <span class="n">power</span><span class="p">,</span>
+        <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+        <span class="s2">&quot;parent_distribution&quot;</span><span class="p">:</span> <span class="n">parent_distribution</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">EmpiricalEffectSizeResultsHolder</span><span class="p">(</span>
+        <span class="n">size_dict</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
+    <span class="p">)</span></div>
 
 
 
@@ -435,7 +827,7 @@
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
     <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.90</span><span class="p">,</span>
     <span class="n">outlier_percentile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">99.5</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SampleSizeResultsHolder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sample size for test of difference of Poisson rates,</span>
 <span class="sd">    based on Poisson rate&#39;s asymptotic normality.</span>
@@ -456,9 +848,11 @@
 <span class="sd">            each columns.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A dictionary. Keys in the dictionary are the metrics column names from</span>
+<span class="sd">        SampleSizeResultsHolder: The data attribute contains a dictionary.</span>
+<span class="sd">        Keys in the dictionary are the metrics column names from</span>
 <span class="sd">        the DataFrame; values are the required sample size per branch to achieve</span>
-<span class="sd">        the desired power for that metric.</span>
+<span class="sd">        the desired power for that metric.  Additional methods for ease of use</span>
+<span class="sd">        are documented in the class</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
@@ -484,7 +878,14 @@
             <span class="s2">&quot;population_percent_per_branch&quot;</span><span class="p">:</span> <span class="n">pop_percent</span><span class="p">,</span>
             <span class="s2">&quot;number_of_clients_targeted&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
         <span class="p">}</span>
-    <span class="k">return</span> <span class="n">results</span></div>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;effect_size&quot;</span><span class="p">:</span> <span class="n">effect_size</span><span class="p">,</span>
+        <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+        <span class="s2">&quot;power&quot;</span><span class="p">:</span> <span class="n">power</span><span class="p">,</span>
+        <span class="s2">&quot;outlier_percentile&quot;</span><span class="p">:</span> <span class="n">outlier_percentile</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">SampleSizeResultsHolder</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics_list</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
 
 
 
