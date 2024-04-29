@@ -38,7 +38,7 @@ def cli():
     pass
 
 
-@click.command()
+@cli.command()
 @experiment_slug_option
 def generate(experiment_slug):
     api_data = APIData(experiment_slug)
