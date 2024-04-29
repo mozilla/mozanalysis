@@ -126,4 +126,4 @@ def render(experiment_slug):
 
     notebook_out = ep.preprocess(notebook_in)
 
-    write(notebook_out, f"{experiment_slug}.toml")
+    write(notebook_out, f"{experiment_slug}.toml", version=current_nbformat)
