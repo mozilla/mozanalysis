@@ -37,7 +37,6 @@ colab_check = new_code_cell(
 imports = new_code_cell(
     dedent(
         """\
-        import attr
         import matplotlib.pyplot as plt
         import matplotlib.ticker as mtick
         import pandas as pd
