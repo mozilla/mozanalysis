@@ -8,29 +8,22 @@ from mozilla_nimbus_schemas.jetstream import AnalysisBasis
 
 from mozanalysis.visualization.StatisticsData import StatisticsData, ViewNotFound
 
-
-def make_download_mozanalysis() -> NotebookNode:
-    string = dedent(
+download_mozanalysis = new_code_cell(
+    dedent(
         """\
         pip install git+https://github.com/mozilla/mozanalysis.git@analysis-visualizer --quiet"""
     )
+)
 
-    cell = new_code_cell(string)
-    return cell
-
-
-def make_import_plotters() -> NotebookNode:
-    string = dedent(
+import_plotters = new_code_cell(
+    dedent(
         """\
         from mozanalysis.visualization.statistics import * """
     )
+)
 
-    cell = new_code_cell(string)
-    return cell
-
-
-def make_colab_check() -> NotebookNode:
-    string = dedent(
+colab_check = new_code_cell(
+    dedent(
         """\
         try:
             import google.colab
@@ -39,12 +32,10 @@ def make_colab_check() -> NotebookNode:
         except:
             pass"""
     )
-    cell = new_code_cell(string)
-    return cell
+)
 
-
-def make_imports() -> NotebookNode:
-    string = dedent(
+imports = new_code_cell(
+    dedent(
         """\
         import attr
         import matplotlib.pyplot as plt
@@ -53,19 +44,7 @@ def make_imports() -> NotebookNode:
         from pandas_gbq import read_gbq
         from typing import List"""
     )
-
-    cell = new_code_cell(string)
-    return cell
-
-
-def make_define_plotters_header() -> NotebookNode:
-    string = dedent(
-        """\
-        # Define plotting functions"""
-    )
-
-    cell = new_markdown_cell(string)
-    return cell
+)
 
 
 def make_analysis_basis_header(basis: AnalysisBasis) -> NotebookNode:
