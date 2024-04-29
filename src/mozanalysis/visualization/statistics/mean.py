@@ -249,9 +249,9 @@ Dispatch.register(
     StatisticType.mean,
     PlotType.TimeSeries,
     [
-        "timeseries_mean_individual",
-        "timeseries_mean_difference",
-        "timeseries_mean_relative",
+        timeseries_mean_individual,
+        timeseries_mean_difference,
+        timeseries_mean_relative,
     ],
 )
 
@@ -259,8 +259,8 @@ Dispatch.register(
     StatisticType.mean,
     PlotType.OneTime,
     [
-        "onetime_mean_individual",
-        "onetime_mean_difference",
-        "onetime_mean_relative",
+        onetime_mean_individual,
+        onetime_mean_difference,
+        onetime_mean_relative,
     ],
 )

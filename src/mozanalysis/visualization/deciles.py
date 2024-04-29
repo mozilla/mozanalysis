@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-def onetime_empricalcdf_individual(
+def onetime_deciles_individual(
     period_df: pd.DataFrame,
     metric: str,
     analysis_period: str,
@@ -19,7 +19,7 @@ def onetime_empricalcdf_individual(
     individual_df = period_df.loc[
         (
             (period_df.metric == metric)
-            & (period_df.statistic == "empirical_cdf")
+            & (period_df.statistic == "deciles")
             & (period_df.analysis_basis == analysis_basis)
             & (period_df.comparison.isna())
         )
@@ -46,6 +46,4 @@ def onetime_empricalcdf_individual(
     plt.show()
 
 
-Dispatch.register(
-    StatisticType.empirical_cdf, PlotType.OneTime, [onetime_empricalcdf_individual]
-)
+Dispatch.register(StatisticType.deciles, PlotType.OneTime, [onetime_deciles_individual])

@@ -1,11 +1,6 @@
 from nbformat import NotebookNode
 from typing import List, Any
-from mozanalysis.visualization.plotters import (
-    make_call_plotter,
-    Dispatch,
-    PlotterParametersType,
-    CellsType,
-)
+from mozanalysis.visualization.plotters import Dispatch
 from mozanalysis.visualization.StatisticsData import StatisticType
 from mozanalysis.visualization.PlotType import PlotType
 import matplotlib.pyplot as plt
@@ -255,9 +250,9 @@ Dispatch.register(
     StatisticType.binomial,
     PlotType.TimeSeries,
     [
-        "timeseries_binomial_individual",
-        "timeseries_binomial_difference",
-        "timeseries_binomial_relative",
+        timeseries_binomial_individual,
+        timeseries_binomial_difference,
+        timeseries_binomial_relative,
     ],
 )
 
@@ -266,8 +261,8 @@ Dispatch.register(
     StatisticType.binomial,
     PlotType.OneTime,
     [
-        "onetime_binomial_individual",
-        "onetime_binomial_difference",
-        "onetime_binomial_relative",
+        onetime_binomial_individual,
+        onetime_binomial_difference,
+        onetime_binomial_relative,
     ],
 )

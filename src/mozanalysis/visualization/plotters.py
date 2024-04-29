@@ -41,20 +41,10 @@ class _Dispatch:
     def register(
         self, statistic: StatisticType, plot_type: PlotType, plotters
     ) -> Callable[[PlotterFunctionType], None]:
-        # def wrap(dispatch_function: DispatchFunctionType):
         if self._registry.get(statistic) is None:
-            # first registration for statistic
             self._registry[statistic] = {plot_type: plotters}
         else:
             self._registry[statistic][plot_type] = plotters
-        #     if self._registry.get(statistic) is None:
-        #         # first registration for statistic
-        #         self._registry[statistic] = {plot_type: dispatch_function}
-        #     else:
-        #         self._registry[statistic][plot_type] = dispatch_function
-        #     return dispatch_function
-
-        # return wrap
 
     def dispatch(
         self,
@@ -73,7 +63,7 @@ class _Dispatch:
 
         cells = []
         for plotter in plotters:
-            cells.append(make_call_plotter(plotter, call_plotter_params))
+            cells.append(make_call_plotter(plotter.__name__, call_plotter_params))
         return cells
 
 
