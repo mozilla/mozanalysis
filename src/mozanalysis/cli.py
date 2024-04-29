@@ -33,14 +33,14 @@ experiment_slug_option = click.option(
 )
 
 
-@click.group
+@click.group()
 def cli():
     pass
 
 
 @click.command()
 @experiment_slug_option
-def generate_notebook(experiment_slug):
+def generate(experiment_slug):
     api_data = APIData(experiment_slug)
     statistics = StatisticsData(experiment_slug)
 
