@@ -1,0 +1,121 @@
+from nbformat import write, NotebookNode
+from nbformat.v4 import new_notebook
+import click
+
+from metric_config_parser.metric import AnalysisPeriod
+from mozilla_nimbus_schemas.jetstream import AnalysisBasis
+
+from mozanalysis.visualization.StatisticsData import StatisticsData, ViewNotFound
+
+# empty import that triggers registry of all plotting functions
+import mozanalysis.visualization.statistics
+from mozanalysis.visualization.plotters import PlotterRegistry, Dispatch
+from mozanalysis.visualization.PlotType import PlotType
+from mozanalysis.visualization.preamble import (
+    # make_download_mozanalysis,
+    make_colab_check,
+    make_imports,
+    make_define_plotters_header,
+    make_analysis_basis_header,
+    make_period_header,
+    make_period_not_found_header,
+    make_metric_header,
+    make_download_data_headers,
+)
+from mozanalysis.visualization.experimenter_api import APIData
+from typing import List
+
+experiment_slug_option = click.option(
+    "--experiment_slug",
+    "--experiment-slug",
+    help="Experimenter slug of the experiment to visualize analysis for",
+    required=True,
+)
+
+
+@click.command()
+@experiment_slug_option
+def generate_notebook(experiment_slug):
+    api_data = APIData(experiment_slug)
+    branches = api_data.branch_labels()
+    reference_branch = api_data.reference_branch()
+    statistics = StatisticsData(experiment_slug)
+
+    notebook = new_notebook()
+
+    cells = []
+    # imports
+    # cells.append(make_download_mozanalysis())
+    cells.append(make_imports())
+    cells.append(make_colab_check())
+
+    # define plotting functions
+    cells.append(make_define_plotters_header())
+    cells.append(PlotterRegistry.generate_plotting_cell())
+
+    # downloading data
+    download_data_cells = make_download_data_headers(statistics)
+    cells.extend(download_data_cells)
+
+    # calling plotters
+    for basis in [AnalysisBasis.EXPOSURES, AnalysisBasis.ENROLLMENTS]:
+        cells.append(make_analysis_basis_header(basis))
+        for period in [
+            AnalysisPeriod.OVERALL,
+            AnalysisPeriod.WEEK,
+            AnalysisPeriod.DAY,
+            AnalysisPeriod.PREENROLLMENT_DAYS_28,
+            AnalysisPeriod.WEEK,
+        ]:
+            cells.extend(handle_period(period, basis, statistics, api_data))
+
+    notebook["cells"] = cells
+
+    write(notebook, "test.ipynb")
+
+
+def handle_period(
+    period: AnalysisPeriod,
+    basis: AnalysisBasis,
+    statistics: StatisticsData,
+    api_data: APIData,
+) -> List[NotebookNode]:
+    cells = []
+
+    try:
+        results = statistics.result_types_for_period_and_basis(period, basis)
+        cells.append(make_period_header(period))
+        for result_type in results:
+            metric = result_type.metric
+            cells.append(make_metric_header(metric))
+            call_plotter_params = [
+                period.value,
+                metric,
+                period,
+                basis,
+                api_data.reference_branch(),
+                api_data.branch_labels(),
+            ]
+            if period in [AnalysisPeriod.WEEK, AnalysisPeriod.DAY]:
+                plot_type = PlotType.TimeSeries
+            else:
+                plot_type = PlotType.OneTime
+
+            for statistic in result_type.statistics:
+                new_cells = Dispatch.dispatch(statistic, plot_type, call_plotter_params)
+                cells.extend(new_cells)
+    except ViewNotFound:
+        cells.append(make_period_not_found_header(period))
+        pass
+
+    return cells
+
+
+@click.command()
+@experiment_slug_option
+def execute_notebook():
+    pass
+
+
+if __name__ == "__main__":
+    generate_notebook()

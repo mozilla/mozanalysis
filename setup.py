@@ -16,6 +16,8 @@ tests_require = [
 
 docs_require = ["Sphinx", "sphinx-autobuild", "sphinx-rtd-theme"]
 
+viz_require = ["pandas-gbq", "mozilla-nimbus-schemas", "nbformat", "requests", "Click"]
+
 setup(
     name="mozanalysis",
     use_scm_version=True,
@@ -42,6 +44,10 @@ setup(
     extras_require={
         "testing": tests_require,
         "docs": docs_require,
+        "vizualization": viz_require,
     },
     tests_require=tests_require,
+    entry_points={
+        "console_scripts": ["mozanalysis = mozanalysis.cli:generate_notebook"]
+    },
 )
