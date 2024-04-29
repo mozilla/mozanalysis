@@ -12,7 +12,17 @@ from mozanalysis.visualization.StatisticsData import StatisticsData, ViewNotFoun
 def make_download_mozanalysis() -> NotebookNode:
     string = dedent(
         """\
-        pip install mozanalysis --quiet"""
+        pip install git+https://github.com/mozilla/mozanalysis.git@analysis-visualizer --quiet"""
+    )
+
+    cell = new_code_cell(string)
+    return cell
+
+
+def make_import_plotters() -> NotebookNode:
+    string = dedent(
+        """\
+        from mozanalysis.visualization.statistics import * """
     )
 
     cell = new_code_cell(string)

@@ -12,7 +12,8 @@ import mozanalysis.visualization.statistics
 from mozanalysis.visualization.plotters import PlotterRegistry, Dispatch
 from mozanalysis.visualization.PlotType import PlotType
 from mozanalysis.visualization.preamble import (
-    # make_download_mozanalysis,
+    make_download_mozanalysis,
+    make_import_plotters,
     make_colab_check,
     make_imports,
     make_define_plotters_header,
@@ -45,7 +46,8 @@ def generate_notebook(experiment_slug):
 
     cells = []
     # imports
-    # cells.append(make_download_mozanalysis())
+    cells.append(make_download_mozanalysis())
+    cells.append(make_import_plotters())
     cells.append(make_imports())
     cells.append(make_colab_check())
 
