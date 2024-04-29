@@ -9,7 +9,7 @@ from mozanalysis.visualization.StatisticsData import StatisticsData, ViewNotFoun
 
 # empty import that triggers registry of all plotting functions
 import mozanalysis.visualization.statistics
-from mozanalysis.visualization.plotters import PlotterRegistry, Dispatch
+from mozanalysis.visualization.plotters import Dispatch
 from mozanalysis.visualization.PlotType import PlotType
 from mozanalysis.visualization.preamble import (
     make_download_mozanalysis,
