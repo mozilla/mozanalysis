@@ -3,6 +3,8 @@ from typing import List, Any
 from mozanalysis.visualization.plotters import (
     make_call_plotter,
     Dispatch,
+    PlotterParametersType,
+    CellsType,
 )
 from mozanalysis.visualization.StatisticsData import StatisticType
 from mozanalysis.visualization.PlotType import PlotType
@@ -250,24 +252,24 @@ def onetime_mean_relative(
 
 
 @Dispatch.register(StatisticType.mean, PlotType.TimeSeries)
-def dispatch_mean_timeseries(call_plotter_params: List[Any]) -> List[NotebookNode]:
+def dispatch_mean_timeseries(call_plotter_params: PlotterParametersType) -> CellsType:
     cells = []
     for plotter in [
         "timeseries_mean_individual",
         "timeseries_mean_difference",
         "timeseries_mean_relative",
     ]:
-        cells.append(make_call_plotter(plotter, *call_plotter_params))
+        cells.append(make_call_plotter(plotter, call_plotter_params))
     return cells
 
 
 @Dispatch.register(StatisticType.mean, PlotType.OneTime)
-def dispatch_mean_onetime(call_plotter_params: List[Any]) -> List[NotebookNode]:
+def dispatch_mean_onetime(call_plotter_params: PlotterParametersType) -> CellsType:
     cells = []
     for plotter in [
         "onetime_mean_individual",
         "onetime_mean_difference",
         "onetime_mean_relative",
     ]:
-        cells.append(make_call_plotter(plotter, *call_plotter_params))
+        cells.append(make_call_plotter(plotter, call_plotter_params))
     return cells

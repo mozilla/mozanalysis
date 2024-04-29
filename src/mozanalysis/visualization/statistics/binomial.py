@@ -3,6 +3,8 @@ from typing import List, Any
 from mozanalysis.visualization.plotters import (
     make_call_plotter,
     Dispatch,
+    PlotterParametersType,
+    CellsType,
 )
 from mozanalysis.visualization.StatisticsData import StatisticType
 from mozanalysis.visualization.PlotType import PlotType
@@ -250,24 +252,26 @@ def onetime_binomial_relative(
 
 
 @Dispatch.register(StatisticType.binomial, PlotType.TimeSeries)
-def dispatch_binomial_timeseries(call_plotter_params: List[Any]) -> List[NotebookNode]:
+def dispatch_binomial_timeseries(
+    call_plotter_params: PlotterParametersType,
+) -> CellsType:
     cells = []
     for plotter in [
         "timeseries_binomial_individual",
         "timeseries_binomial_difference",
         "timeseries_binomial_relative",
     ]:
-        cells.append(make_call_plotter(plotter, *call_plotter_params))
+        cells.append(make_call_plotter(plotter, call_plotter_params))
     return cells
 
 
 @Dispatch.register(StatisticType.binomial, PlotType.OneTime)
-def dispatch_binomial_onetime(call_plotter_params: List[Any]) -> List[NotebookNode]:
+def dispatch_binomial_onetime(call_plotter_params: PlotterParametersType) -> CellsType:
     cells = []
     for plotter in [
         "onetime_binomial_individual",
         "onetime_binomial_difference",
         "onetime_binomial_relative",
     ]:
-        cells.append(make_call_plotter(plotter, *call_plotter_params))
+        cells.append(make_call_plotter(plotter, call_plotter_params))
     return cells

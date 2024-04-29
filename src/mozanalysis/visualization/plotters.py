@@ -9,26 +9,6 @@ from mozanalysis.visualization.PlotType import PlotType
 from typing import Dict, Callable, Any, Optional
 
 
-class _PlotterRegistry:
-    def __init__(self):
-        self._registry: List[str] = []
-
-    def register_plotter(self, plotter: str):
-        self._registry.append(plotter)
-
-    def generate_plotting_cell(self) -> NotebookNode:
-        cell_content = ""
-        for plotter in self._registry:
-            cell_content += plotter
-            cell_content += "\n\n"
-        cell = new_code_cell(cell_content)
-        cell.metadata = {"jupyter": {"source_hidden": True}}
-        return cell
-
-
-PlotterRegistry = _PlotterRegistry()
-
-
 def make_statistic_not_supported_header(
     statistic: StatisticType, plot_type: Optional[PlotType] = None
 ) -> List[NotebookNode]:
@@ -46,32 +26,22 @@ def make_statistic_not_supported_header(
     return [cell]
 
 
-plotter_params_type = List[Any]
-plotter_function_type = Callable[[plotter_params_type], List[NotebookNode]]
-dispatch_function_type = Callable[[plotter_function_type], None]
+PlotterParametersType = List[Any]
+CellsType = List[NotebookNode]
+PlotterFunctionType = Callable[[PlotterParametersType], List[NotebookNode]]
+DispatchFunctionType = Callable[[PlotterFunctionType], None]
 
 
 class _Dispatch:
     def __init__(self):
-        self._registry: Dict[StatisticType, Dict[PlotType, plotter_function_type]] = (
+        self._registry: Dict[StatisticType, Dict[PlotType, PlotterFunctionType]] = (
             dict()
         )
 
-    # def register_dispatch(
-    #     self,
-    #     statistic: StatisticType,
-    #     plot_type: PlotType,
-    #     dispatch_function: Callable[[List[Any]], List[NotebookNode]],
-    # ) -> None:
-    #     if self._registry.get(statistic) is None:
-    #         # first registration for statistic
-    #         self._registry[statistic] = {plot_type: dispatch_function}
-    #     else:
-    #         self._registry[statistic][plot_type] = dispatch_function
     def register(
         self, statistic: StatisticType, plot_type: PlotType
-    ) -> Callable[[plotter_function_type], None]:
-        def wrap(dispatch_function: dispatch_function_type):
+    ) -> Callable[[PlotterFunctionType], None]:
+        def wrap(dispatch_function: DispatchFunctionType):
             if self._registry.get(statistic) is None:
                 # first registration for statistic
                 self._registry[statistic] = {plot_type: dispatch_function}
@@ -103,14 +73,9 @@ Dispatch = _Dispatch()
 
 
 def make_call_plotter(
-    plotter_name: str,
-    df_name: str,
-    metric: str,
-    period: AnalysisPeriod,
-    basis: AnalysisBasis,
-    reference_branch: str,
-    branches: List[str],
+    plotter_name: str, plotter_parameters: PlotterParametersType
 ) -> NotebookNode:
+    df_name, metric, period, basis, reference_branch, branches = plotter_parameters
     string = dedent(
         f"""\
             {plotter_name}({df_name}, '{metric}', '{period.value}', '{basis.value}', '{reference_branch}', {branches})"""

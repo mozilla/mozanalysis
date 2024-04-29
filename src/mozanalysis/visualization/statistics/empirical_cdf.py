@@ -54,5 +54,5 @@ def onetime_empricalcdf_individual(
 def dispatch_empiricalcdf_onetime(call_plotter_params: List[Any]) -> List[NotebookNode]:
     cells = []
     for plotter in ["onetime_empricalcdf_individual"]:
-        cells.append(make_call_plotter(plotter, *call_plotter_params))
+        cells.append(make_call_plotter(plotter, call_plotter_params))
     return cells

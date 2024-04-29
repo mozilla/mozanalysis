@@ -51,10 +51,6 @@ def generate_notebook(experiment_slug):
     cells.append(make_imports())
     cells.append(make_colab_check())
 
-    # define plotting functions
-    cells.append(make_define_plotters_header())
-    cells.append(PlotterRegistry.generate_plotting_cell())
-
     # downloading data
     download_data_cells = make_download_data_headers(statistics)
     cells.extend(download_data_cells)
