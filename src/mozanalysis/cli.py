@@ -74,7 +74,7 @@ def generate(experiment_slug):
 
     validate(notebook)
 
-    write(notebook, f"{experiment_slug}_raw.ipynb", version=current_nbformat)
+    write(notebook, f"{experiment_slug}_raw.ipynb")
 
 
 def handle_period(
@@ -126,4 +126,4 @@ def render(experiment_slug):
 
     notebook_out = ep.preprocess(notebook_in)
 
-    write(notebook_out, f"{experiment_slug}.toml", version=current_nbformat)
+    write(notebook_out, f"{experiment_slug}.toml")
