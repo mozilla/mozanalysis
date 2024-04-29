@@ -10,7 +10,7 @@ from mozanalysis.visualization.StatisticsData import StatisticsData, ViewNotFoun
 # empty import that triggers registry of all plotting functions
 import mozanalysis.visualization.statistics
 from mozanalysis.visualization.plotters import Dispatch
-from mozanalysis.visualization.PlotType import PlotType
+from mozanalysis.visualization.types import TimeRange
 from mozanalysis.visualization.preamble import (
     make_download_mozanalysis,
     make_import_plotters,
@@ -95,9 +95,9 @@ def handle_period(
                 api_data.branch_labels(),
             ]
             if period in [AnalysisPeriod.WEEK, AnalysisPeriod.DAY]:
-                plot_type = PlotType.TimeSeries
+                plot_type = TimeRange.TimeSeries
             else:
-                plot_type = PlotType.OneTime
+                plot_type = TimeRange.OneTime
 
             for statistic in result_type.statistics:
                 new_cells = Dispatch.dispatch(statistic, plot_type, call_plotter_params)
