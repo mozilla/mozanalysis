@@ -249,6 +249,7 @@ def onetime_mean_relative(
     plt.show()
 
 
+@Dispatch.register(StatisticType.mean, PlotType.TimeSeries)
 def dispatch_mean_timeseries(call_plotter_params: List[Any]) -> List[NotebookNode]:
     cells = []
     for plotter in [
@@ -260,11 +261,7 @@ def dispatch_mean_timeseries(call_plotter_params: List[Any]) -> List[NotebookNod
     return cells
 
 
-Dispatch.register_dispatch(
-    StatisticType.mean, PlotType.TimeSeries, dispatch_mean_timeseries
-)
-
-
+@Dispatch.register(StatisticType.mean, PlotType.OneTime)
 def dispatch_mean_onetime(call_plotter_params: List[Any]) -> List[NotebookNode]:
     cells = []
     for plotter in [
@@ -274,6 +271,3 @@ def dispatch_mean_onetime(call_plotter_params: List[Any]) -> List[NotebookNode]:
     ]:
         cells.append(make_call_plotter(plotter, *call_plotter_params))
     return cells
-
-
-Dispatch.register_dispatch(StatisticType.mean, PlotType.OneTime, dispatch_mean_onetime)

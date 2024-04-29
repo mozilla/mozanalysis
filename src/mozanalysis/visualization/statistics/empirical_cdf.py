@@ -56,8 +56,3 @@ def dispatch_empiricalcdf_onetime(call_plotter_params: List[Any]) -> List[Notebo
     for plotter in ["onetime_empricalcdf_individual"]:
         cells.append(make_call_plotter(plotter, *call_plotter_params))
     return cells
-
-
-# Dispatch.register_dispatch(
-#     StatisticType.empirical_cdf, PlotType.OneTime, dispatch_empiricalcdf_onetime
-# )

@@ -249,6 +249,7 @@ def onetime_binomial_relative(
     plt.show()
 
 
+@Dispatch.register(StatisticType.binomial, PlotType.TimeSeries)
 def dispatch_binomial_timeseries(call_plotter_params: List[Any]) -> List[NotebookNode]:
     cells = []
     for plotter in [
@@ -260,11 +261,7 @@ def dispatch_binomial_timeseries(call_plotter_params: List[Any]) -> List[Noteboo
     return cells
 
 
-Dispatch.register_dispatch(
-    StatisticType.binomial, PlotType.TimeSeries, dispatch_binomial_timeseries
-)
-
-
+@Dispatch.register(StatisticType.binomial, PlotType.OneTime)
 def dispatch_binomial_onetime(call_plotter_params: List[Any]) -> List[NotebookNode]:
     cells = []
     for plotter in [
@@ -274,8 +271,3 @@ def dispatch_binomial_onetime(call_plotter_params: List[Any]) -> List[NotebookNo
     ]:
         cells.append(make_call_plotter(plotter, *call_plotter_params))
     return cells
-
-
-Dispatch.register_dispatch(
-    StatisticType.binomial, PlotType.OneTime, dispatch_binomial_onetime
-)
