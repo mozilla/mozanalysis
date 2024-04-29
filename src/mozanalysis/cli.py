@@ -1,4 +1,4 @@
-from nbformat import write, NotebookNode, validate
+from nbformat import read, write, NotebookNode, validate, current_nbformat
 from nbformat.v4 import new_notebook
 from nbconvert.preprocessors import ExecutePreprocessor
 import click
@@ -74,7 +74,7 @@ def generate(experiment_slug):
 
     validate(notebook)
 
-    write(notebook, f"{experiment_slug}.ipynb")
+    write(notebook, f"{experiment_slug}_raw.ipynb", version=current_nbformat)
 
 
 def handle_period(
@@ -117,4 +117,13 @@ def handle_period(
 @cli.command()
 @experiment_slug_option
 def render(experiment_slug):
-    pass
+
+    filename = f"{experiment_slug}_raw.ipynb"
+    with open(filename) as ff:
+        notebook_in = read(ff, current_nbformat)
+
+    ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
+
+    notebook_out = ep.preprocess(notebook_in)
+
+    write(notebook_out, f"{experiment_slug}.toml")
