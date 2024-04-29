@@ -122,7 +122,7 @@ def render(experiment_slug):
     with open(filename) as ff:
         notebook_in = read(ff, current_nbformat)
 
-    ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
+    ep = ExecutePreprocessor(timeout=600, kernel_name="mozanalysis")
 
     notebook_out = ep.preprocess(notebook_in)
 

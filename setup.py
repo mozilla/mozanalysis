@@ -23,6 +23,7 @@ viz_require = [
     "nbconvert",
     "requests",
     "Click",
+    "ipykernel",
 ]
 
 setup(
