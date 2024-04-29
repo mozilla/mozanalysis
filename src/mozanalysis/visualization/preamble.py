@@ -67,8 +67,8 @@ def make_period_header(period: AnalysisPeriod) -> NotebookNode:
 def make_period_not_found_header(period: AnalysisPeriod) -> NotebookNode:
     string = dedent(
         f"""\
-            ## Analysis Period: {period.value} not found
-            Is the analysis ongoing or was there an error? """
+            ## Analysis Period: {period.value} 
+            Not found: is the analysis ongoing or was there an error? """
     )
     cell = new_markdown_cell(string)
     return cell
@@ -77,7 +77,7 @@ def make_period_not_found_header(period: AnalysisPeriod) -> NotebookNode:
 def make_metric_header(metric: str) -> NotebookNode:
     string = dedent(
         f"""\
-            ### Metric: {metric}"""
+            ### {metric}"""
     )
     cell = new_markdown_cell(string)
     return cell

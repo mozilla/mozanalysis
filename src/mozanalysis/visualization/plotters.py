@@ -12,12 +12,12 @@ def make_statistic_not_supported_header(
     if plot_type is not None:
         string = dedent(
             f"""\
-                ### Statistic: {statistic.name} has no plotting function defined for plot_type {plot_type.name}"""
+                #### Statistic: {statistic.name} has no plotting function defined for plot_type {plot_type.name}"""
         )
     else:
         string = dedent(
             f"""\
-                ### Statistic: {statistic.name} has no plotting functions defined"""
+                #### Statistic: {statistic.name} has no plotting functions defined"""
         )
     cell = new_markdown_cell(string)
     return [cell]
