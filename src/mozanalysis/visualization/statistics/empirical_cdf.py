@@ -52,10 +52,6 @@ def onetime_empricalcdf_individual(
     plt.show()
 
 
-# for plotter in (onetime_empricalcdf_individual,):
-#     PlotterRegistry.register_plotter(plotter)
-
-
 def dispatch_empiricalcdf_onetime(call_plotter_params: List[Any]) -> List[NotebookNode]:
     cells = []
     for plotter in ["onetime_empricalcdf_individual"]:
