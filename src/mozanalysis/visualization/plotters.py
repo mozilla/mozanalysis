@@ -39,17 +39,22 @@ class _Dispatch:
         )
 
     def register(
-        self, statistic: StatisticType, plot_type: PlotType
+        self, statistic: StatisticType, plot_type: PlotType, plotters
     ) -> Callable[[PlotterFunctionType], None]:
-        def wrap(dispatch_function: DispatchFunctionType):
-            if self._registry.get(statistic) is None:
-                # first registration for statistic
-                self._registry[statistic] = {plot_type: dispatch_function}
-            else:
-                self._registry[statistic][plot_type] = dispatch_function
-            return dispatch_function
+        # def wrap(dispatch_function: DispatchFunctionType):
+        if self._registry.get(statistic) is None:
+            # first registration for statistic
+            self._registry[statistic] = {plot_type: plotters}
+        else:
+            self._registry[statistic][plot_type] = plotters
+        #     if self._registry.get(statistic) is None:
+        #         # first registration for statistic
+        #         self._registry[statistic] = {plot_type: dispatch_function}
+        #     else:
+        #         self._registry[statistic][plot_type] = dispatch_function
+        #     return dispatch_function
 
-        return wrap
+        # return wrap
 
     def dispatch(
         self,
@@ -62,11 +67,14 @@ class _Dispatch:
         if stat_registry is None:
             return make_statistic_not_supported_header(statistic)
 
-        plotter = stat_registry.get(plot_type, None)
-        if plotter is None:
+        plotters = stat_registry.get(plot_type, None)
+        if plotters is None:
             return make_statistic_not_supported_header(statistic, plot_type)
 
-        return plotter(call_plotter_params)
+        cells = []
+        for plotter in plotters:
+            cells.append(make_call_plotter(plotter, call_plotter_params))
+        return cells
 
 
 Dispatch = _Dispatch()
