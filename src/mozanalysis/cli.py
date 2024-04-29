@@ -120,7 +120,7 @@ def render(experiment_slug):
 
     filename = f"{experiment_slug}_raw.ipynb"
     with open(filename) as ff:
-        notebook_in = read(ff)
+        notebook_in = read(ff, NO_CONVERT)
 
     ep = ExecutePreprocessor(timeout=600, kernel_name="mozanalysis")
 
