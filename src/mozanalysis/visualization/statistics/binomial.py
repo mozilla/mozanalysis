@@ -30,7 +30,7 @@ def timeseries_binomial_individual(
         branch_df = individual_df.loc[(individual_df.branch == branch)]
         plt.plot(branch_df.window_index, branch_df.point)
         plt.fill_between(
-            branch_df.window_index,
+            branch_df.window_index.astype(int),
             branch_df.lower,
             branch_df.upper,
             alpha=0.2,
@@ -73,7 +73,7 @@ def timeseries_binomial_difference(
         branch_df = individual_df.loc[(individual_df.branch == branch)]
         plt.plot(branch_df.window_index, branch_df.point)
         plt.fill_between(
-            branch_df.window_index,
+            branch_df.window_index.astype(int),
             branch_df.lower,
             branch_df.upper,
             alpha=0.2,
@@ -117,7 +117,7 @@ def timeseries_binomial_relative(
         branch_df = individual_df.loc[(individual_df.branch == branch)]
         plt.plot(branch_df.window_index, branch_df.point)
         plt.fill_between(
-            branch_df.window_index,
+            branch_df.window_index.astype(int),
             branch_df.lower,
             branch_df.upper,
             alpha=0.2,
