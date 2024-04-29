@@ -1,9 +1,7 @@
 from nbformat import NotebookNode
-from textwrap import dedent
 from typing import List, Any
 from mozanalysis.visualization.plotters import (
     make_call_plotter,
-    PlotterRegistry,
     Dispatch,
 )
 from mozanalysis.visualization.StatisticsData import StatisticType
