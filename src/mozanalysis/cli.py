@@ -1,5 +1,6 @@
-from nbformat import write, NotebookNode
+from nbformat import write, NotebookNode, validate
 from nbformat.v4 import new_notebook
+from nbconvert.preprocessors import ExecutePreprocessor
 import click
 
 from metric_config_parser.metric import AnalysisPeriod
@@ -71,6 +72,8 @@ def generate(experiment_slug):
 
     notebook["cells"] = cells
 
+    validate(notebook)
+
     write(notebook, f"{experiment_slug}.ipynb")
 
 
@@ -111,11 +114,7 @@ def handle_period(
     return cells
 
 
-@click.command()
+@cli.command()
 @experiment_slug_option
-def execute_notebook():
+def render(experiment_slug):
     pass
-
-
-if __name__ == "__main__":
-    generate_notebook()

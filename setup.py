@@ -16,7 +16,14 @@ tests_require = [
 
 docs_require = ["Sphinx", "sphinx-autobuild", "sphinx-rtd-theme"]
 
-viz_require = ["pandas-gbq", "mozilla-nimbus-schemas", "nbformat", "requests", "Click"]
+viz_require = [
+    "pandas-gbq",
+    "mozilla-nimbus-schemas",
+    "nbformat",
+    "nbconvert",
+    "requests",
+    "Click",
+]
 
 setup(
     name="mozanalysis",
