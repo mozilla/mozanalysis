@@ -7,6 +7,7 @@ from mozanalysis.visualization.plotters import (
 from mozanalysis.visualization.StatisticsData import StatisticType
 from mozanalysis.visualization.PlotType import PlotType
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 import pandas as pd
 
 
