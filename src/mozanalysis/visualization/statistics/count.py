@@ -1,9 +1,9 @@
 from typing import List
 from mozanalysis.visualization.plotters import Dispatch
-from mozanalysis.visualization.StatisticsData import StatisticType
-from mozanalysis.visualization.PlotType import PlotType
+from mozanalysis.visualization.types import Statistic, TimeRange
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
+
+# import matplotlib.ticker as mtick
 import pandas as pd
 
 
@@ -29,7 +29,7 @@ def timeseries_count_individual(
     observed_windows = set()
     for branch in branches:
         branch_df = individual_df.loc[(individual_df.branch == branch)]
-        plt.plot(branch_df.window_index, branch_df.point)
+        plt.plot(branch_df.window_index, branch_df.point, label=branch)
         for window in branch_df.window_index:
             observed_windows.add(window)
 
@@ -42,8 +42,8 @@ def timeseries_count_individual(
 
 
 Dispatch.register(
-    StatisticType.count,
-    PlotType.TimeSeries,
+    Statistic.count,
+    TimeRange.TimeSeries,
     [timeseries_count_individual],
 )
 
@@ -84,7 +84,7 @@ def onetime_count_individual(
 
 
 Dispatch.register(
-    StatisticType.count,
-    PlotType.OneTime,
+    Statistic.count,
+    TimeRange.OneTime,
     [onetime_count_individual],
 )

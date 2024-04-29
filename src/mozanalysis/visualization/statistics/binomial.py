@@ -1,8 +1,6 @@
-from nbformat import NotebookNode
-from typing import List, Any
+from typing import List
 from mozanalysis.visualization.plotters import Dispatch
-from mozanalysis.visualization.StatisticsData import StatisticType
-from mozanalysis.visualization.PlotType import PlotType
+from mozanalysis.visualization.types import Statistic, TimeRange
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
@@ -247,8 +245,8 @@ def onetime_binomial_relative(
 
 
 Dispatch.register(
-    StatisticType.binomial,
-    PlotType.TimeSeries,
+    Statistic.binomial,
+    TimeRange.TimeSeries,
     [
         timeseries_binomial_individual,
         timeseries_binomial_difference,
@@ -258,8 +256,8 @@ Dispatch.register(
 
 
 Dispatch.register(
-    StatisticType.binomial,
-    PlotType.OneTime,
+    Statistic.binomial,
+    TimeRange.OneTime,
     [
         onetime_binomial_individual,
         onetime_binomial_difference,

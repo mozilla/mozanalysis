@@ -2,15 +2,12 @@ from nbformat import NotebookNode
 from nbformat.v4 import new_code_cell, new_markdown_cell
 from textwrap import dedent
 from typing import List
-from metric_config_parser.metric import AnalysisPeriod
-from mozilla_nimbus_schemas.jetstream import AnalysisBasis
-from mozanalysis.visualization.StatisticsData import StatisticType
-from mozanalysis.visualization.PlotType import PlotType
+from mozanalysis.visualization.types import Statistic, TimeRange
 from typing import Dict, Callable, Any, Optional
 
 
 def make_statistic_not_supported_header(
-    statistic: StatisticType, plot_type: Optional[PlotType] = None
+    statistic: Statistic, plot_type: Optional[TimeRange] = None
 ) -> List[NotebookNode]:
     if plot_type is not None:
         string = dedent(
@@ -34,12 +31,10 @@ DispatchFunctionType = Callable[[PlotterFunctionType], None]
 
 class _Dispatch:
     def __init__(self):
-        self._registry: Dict[StatisticType, Dict[PlotType, PlotterFunctionType]] = (
-            dict()
-        )
+        self._registry: Dict[Statistic, Dict[TimeRange, PlotterFunctionType]] = dict()
 
     def register(
-        self, statistic: StatisticType, plot_type: PlotType, plotters
+        self, statistic: Statistic, plot_type: TimeRange, plotters
     ) -> Callable[[PlotterFunctionType], None]:
         if self._registry.get(statistic) is None:
             self._registry[statistic] = {plot_type: plotters}
@@ -48,8 +43,8 @@ class _Dispatch:
 
     def dispatch(
         self,
-        statistic: StatisticType,
-        plot_type: PlotType,
+        statistic: Statistic,
+        plot_type: TimeRange,
         call_plotter_params: List[Any],
     ) -> List[NotebookNode]:
 

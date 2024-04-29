@@ -4,27 +4,15 @@ from pandas_gbq.exceptions import GenericGBQException
 from metric_config_parser.metric import AnalysisPeriod
 from mozilla_nimbus_schemas.jetstream import AnalysisBasis
 from typing import Dict, List
-from enum import Enum
 from dataclasses import dataclass
 import re
-
-# from textwrap import dedent
-
-
-class StatisticType(Enum):
-    mean = 1
-    binomial = 2
-    deciles = 3
-    count = 4
-    empirical_cdf = 5
-    per_client_dau_impact = 6
-    UNKNOWN = 7
+from mozanalysis.visualization.types import Statistic
 
 
 @dataclass
 class ResultType:
     metric: str
-    statistics: List[StatisticType]
+    statistics: List[Statistic]
 
 
 class ViewNotFound(Exception):
@@ -96,10 +84,10 @@ class StatisticsData:
             stats = []
             for stat_str in stats_df.statistic:
                 try:
-                    stat = StatisticType[stat_str]
+                    stat = Statistic[stat_str]
                     stats.append(stat)
                 except:
-                    stat = StatisticType.UNKNOWN
+                    stat = Statistic.UNKNOWN
                     stats.append(stat)
             if len(stats) > 0:
                 stats.sort(key=lambda s: s.value)

@@ -1,7 +1,6 @@
 from typing import List
 from mozanalysis.visualization.plotters import Dispatch
-from mozanalysis.visualization.StatisticsData import StatisticType
-from mozanalysis.visualization.PlotType import PlotType
+from mozanalysis.visualization.types import Statistic, TimeRange
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
@@ -246,8 +245,8 @@ def onetime_mean_relative(
 
 
 Dispatch.register(
-    StatisticType.mean,
-    PlotType.TimeSeries,
+    Statistic.mean,
+    TimeRange.TimeSeries,
     [
         timeseries_mean_individual,
         timeseries_mean_difference,
@@ -256,8 +255,8 @@ Dispatch.register(
 )
 
 Dispatch.register(
-    StatisticType.mean,
-    PlotType.OneTime,
+    Statistic.mean,
+    TimeRange.OneTime,
     [
         onetime_mean_individual,
         onetime_mean_difference,

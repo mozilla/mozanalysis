@@ -1,7 +1,6 @@
 from typing import List
 from mozanalysis.visualization.plotters import Dispatch
-from mozanalysis.visualization.StatisticsData import StatisticType
-from mozanalysis.visualization.PlotType import PlotType
+from mozanalysis.visualization.types import Statistic, TimeRange
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -47,5 +46,5 @@ def onetime_empricalcdf_individual(
 
 
 Dispatch.register(
-    StatisticType.empirical_cdf, PlotType.OneTime, [onetime_empricalcdf_individual]
+    Statistic.empirical_cdf, TimeRange.OneTime, [onetime_empricalcdf_individual]
 )

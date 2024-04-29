@@ -1,7 +1,6 @@
 from typing import List
 from mozanalysis.visualization.plotters import Dispatch
-from mozanalysis.visualization.StatisticsData import StatisticType
-from mozanalysis.visualization.PlotType import PlotType
+from mozanalysis.visualization.types import Statistic, TimeRange
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -46,4 +45,4 @@ def onetime_deciles_individual(
     plt.show()
 
 
-Dispatch.register(StatisticType.deciles, PlotType.OneTime, [onetime_deciles_individual])
+Dispatch.register(Statistic.deciles, TimeRange.OneTime, [onetime_deciles_individual])
