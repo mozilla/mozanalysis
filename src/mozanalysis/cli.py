@@ -1,6 +1,8 @@
 from nbformat import read, write, NotebookNode, validate, NO_CONVERT
 from nbformat.v4 import new_notebook
 from nbconvert.preprocessors import ExecutePreprocessor
+
+# from nbconvert import export, NotebookExporter
 import click
 
 from metric_config_parser.metric import AnalysisPeriod
@@ -120,10 +122,10 @@ def render(experiment_slug):
 
     filename = f"{experiment_slug}_raw.ipynb"
     with open(filename) as ff:
-        notebook_in = read(ff, NO_CONVERT)
+        notebook = read(ff, NO_CONVERT)
 
     ep = ExecutePreprocessor(timeout=600, kernel_name="mozanalysis")
 
-    notebook_out = ep.preprocess(notebook_in)
+    ep.preprocess(notebook)
 
-    write(notebook_out, f"{experiment_slug}.toml", NO_CONVERT)
+    write(notebook, f"{experiment_slug}.toml", NO_CONVERT)
