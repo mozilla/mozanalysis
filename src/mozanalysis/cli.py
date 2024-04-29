@@ -33,6 +33,11 @@ experiment_slug_option = click.option(
 )
 
 
+@click.group
+def cli():
+    pass
+
+
 @click.command()
 @experiment_slug_option
 def generate_notebook(experiment_slug):

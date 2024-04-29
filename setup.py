@@ -47,7 +47,5 @@ setup(
         "vizualization": viz_require,
     },
     tests_require=tests_require,
-    entry_points={
-        "console_scripts": ["mozanalysis = mozanalysis.cli:generate_notebook"]
-    },
+    entry_points={"console_scripts": ["mozanalysis = mozanalysis.cli:cli"]},
 )
