@@ -42,7 +42,7 @@ def onetime_empricalcdf_individual(
         )
         for parameter in branch_df.parameter:
             observed_parameters.add(parameter)
-    plt.xticks(sorted(list(observed_parameters)))
+    # plt.xticks(sorted(list(observed_parameters)))
     plt.legend()
     plt.xlabel(analysis_period)
 
@@ -50,6 +50,7 @@ def onetime_empricalcdf_individual(
     plt.show()
 
 
+@Dispatch.register(StatisticType.empirical_cdf, PlotType.OneTime)
 def dispatch_empiricalcdf_onetime(call_plotter_params: List[Any]) -> List[NotebookNode]:
     cells = []
     for plotter in ["onetime_empricalcdf_individual"]:
@@ -57,6 +58,6 @@ def dispatch_empiricalcdf_onetime(call_plotter_params: List[Any]) -> List[Notebo
     return cells
 
 
-Dispatch.register_dispatch(
-    StatisticType.empirical_cdf, PlotType.OneTime, dispatch_empiricalcdf_onetime
-)
+# Dispatch.register_dispatch(
+#     StatisticType.empirical_cdf, PlotType.OneTime, dispatch_empiricalcdf_onetime
+# )

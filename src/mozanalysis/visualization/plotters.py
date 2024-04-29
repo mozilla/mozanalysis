@@ -46,23 +46,40 @@ def make_statistic_not_supported_header(
     return [cell]
 
 
+plotter_params_type = List[Any]
+plotter_function_type = Callable[[plotter_params_type], List[NotebookNode]]
+dispatch_function_type = Callable[[plotter_function_type], None]
+
+
 class _Dispatch:
     def __init__(self):
-        self._registry: Dict[
-            StatisticType, Dict[PlotType, Callable[[List[Any]], List[NotebookNode]]]
-        ] = dict()
+        self._registry: Dict[StatisticType, Dict[PlotType, plotter_function_type]] = (
+            dict()
+        )
 
-    def register_dispatch(
-        self,
-        statistic: StatisticType,
-        plot_type: PlotType,
-        dispatch_function: Callable[[List[Any]], List[NotebookNode]],
-    ):
-        if self._registry.get(statistic) is None:
-            # first registration for statistic
-            self._registry[statistic] = {plot_type: dispatch_function}
-        else:
-            self._registry[statistic][plot_type] = dispatch_function
+    # def register_dispatch(
+    #     self,
+    #     statistic: StatisticType,
+    #     plot_type: PlotType,
+    #     dispatch_function: Callable[[List[Any]], List[NotebookNode]],
+    # ) -> None:
+    #     if self._registry.get(statistic) is None:
+    #         # first registration for statistic
+    #         self._registry[statistic] = {plot_type: dispatch_function}
+    #     else:
+    #         self._registry[statistic][plot_type] = dispatch_function
+    def register(
+        self, statistic: StatisticType, plot_type: PlotType
+    ) -> Callable[[plotter_function_type], None]:
+        def wrap(dispatch_function: dispatch_function_type):
+            if self._registry.get(statistic) is None:
+                # first registration for statistic
+                self._registry[statistic] = {plot_type: dispatch_function}
+            else:
+                self._registry[statistic][plot_type] = dispatch_function
+            return dispatch_function
+
+        return wrap
 
     def dispatch(
         self,
