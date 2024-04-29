@@ -1,11 +1,5 @@
-from nbformat import NotebookNode
-from typing import List, Any
-from mozanalysis.visualization.plotters import (
-    make_call_plotter,
-    Dispatch,
-    PlotterParametersType,
-    CellsType,
-)
+from typing import List
+from mozanalysis.visualization.plotters import Dispatch
 from mozanalysis.visualization.StatisticsData import StatisticType
 from mozanalysis.visualization.PlotType import PlotType
 import matplotlib.pyplot as plt
@@ -251,25 +245,22 @@ def onetime_mean_relative(
     plt.show()
 
 
-@Dispatch.register(StatisticType.mean, PlotType.TimeSeries)
-def dispatch_mean_timeseries(call_plotter_params: PlotterParametersType) -> CellsType:
-    cells = []
-    for plotter in [
+Dispatch.register(
+    StatisticType.mean,
+    PlotType.TimeSeries,
+    [
         "timeseries_mean_individual",
         "timeseries_mean_difference",
         "timeseries_mean_relative",
-    ]:
-        cells.append(make_call_plotter(plotter, call_plotter_params))
-    return cells
+    ],
+)
 
-
-@Dispatch.register(StatisticType.mean, PlotType.OneTime)
-def dispatch_mean_onetime(call_plotter_params: PlotterParametersType) -> CellsType:
-    cells = []
-    for plotter in [
+Dispatch.register(
+    StatisticType.mean,
+    PlotType.OneTime,
+    [
         "onetime_mean_individual",
         "onetime_mean_difference",
         "onetime_mean_relative",
-    ]:
-        cells.append(make_call_plotter(plotter, call_plotter_params))
-    return cells
+    ],
+)

@@ -251,27 +251,23 @@ def onetime_binomial_relative(
     plt.show()
 
 
-@Dispatch.register(StatisticType.binomial, PlotType.TimeSeries)
-def dispatch_binomial_timeseries(
-    call_plotter_params: PlotterParametersType,
-) -> CellsType:
-    cells = []
-    for plotter in [
+Dispatch.register(
+    StatisticType.binomial,
+    PlotType.TimeSeries,
+    [
         "timeseries_binomial_individual",
         "timeseries_binomial_difference",
         "timeseries_binomial_relative",
-    ]:
-        cells.append(make_call_plotter(plotter, call_plotter_params))
-    return cells
+    ],
+)
 
 
-@Dispatch.register(StatisticType.binomial, PlotType.OneTime)
-def dispatch_binomial_onetime(call_plotter_params: PlotterParametersType) -> CellsType:
-    cells = []
-    for plotter in [
+Dispatch.register(
+    StatisticType.binomial,
+    PlotType.OneTime,
+    [
         "onetime_binomial_individual",
         "onetime_binomial_difference",
         "onetime_binomial_relative",
-    ]:
-        cells.append(make_call_plotter(plotter, call_plotter_params))
-    return cells
+    ],
+)
