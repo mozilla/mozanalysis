@@ -128,4 +128,4 @@ def render(experiment_slug):
 
     ep.preprocess(notebook)
 
-    write(notebook, f"{experiment_slug}.toml", NO_CONVERT)
+    write(notebook, f"{experiment_slug}.ipynb", NO_CONVERT)
