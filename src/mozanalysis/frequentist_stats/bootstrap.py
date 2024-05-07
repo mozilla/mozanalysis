@@ -3,9 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import numpy as np
 import pandas as pd
+import statsmodels.formula.api as smf
+from statsmodels.stats.weightstats import DescrStatsW
+from marginaleffects import avg_comparisons
+from scipy.stats import norm
 
 import mozanalysis.bayesian_stats as mabs
 from mozanalysis.utils import filter_outliers
+from typing import List
 
 
 def compare_branches(
@@ -289,3 +294,75 @@ def get_quantile_bootstrap_samples(
     df = pd.DataFrame.from_dict(samples)
 
     return df
+
+
+def summarize_one_branch(branch_data: pd.Series, alphas: List[float]):
+    dsw = DescrStatsW(branch_data)
+    mean = dsw.mean
+    se_mean = dsw.std_mean
+    out = {"0.5": mean}
+    for alpha in alphas:
+        zstat = norm.isf(1 - (1 - alpha / 2))
+        out[f"{alpha}:0.4f"] = mean - se_mean * zstat
+        out[f"{1-alpha}:0.4f"] = mean + se_mean * zstat
+    return out
+
+
+def summarize_univariate(data: pd.Series, branches: pd.Series, alphas: List[float]):
+    branch_list = branches.unique()
+    return {b: summarize_one_branch(data[branches == b], alphas) for b in branch_list}
+
+
+def summarize_joint(
+    df: pd.DataFrame,
+    col_label: str,
+    ref_branch_label="control",
+    pretreatment_col_label: str = None,
+    alphas: List[float] = None,
+):
+    formula = f"{col_label} ~ C(branch, Treatment(reference='{ref_branch_label}'))"
+    if pretreatment_col_label is not None:
+        formula += f" + {pretreatment_col_label}"
+
+    model = smf.ols(formula, df).fit()
+
+    lower, upper = model.conf_int().loc["treated"]
+
+
+def compare_branches_lm(
+    df: pd.DataFrame,
+    col_label: str,
+    ref_branch_label="control",
+    pretreatment_col_label: str = None,
+    threshold_quantile=None,
+    alphas: List[float] = None,
+):
+    if alphas is None:
+        alphas = [0.01, 0.05]
+    indexer = ~df[col_label].isna()
+    if pretreatment_col_label is not None:
+        indexer &= ~df[pretreatment_col_label].isna()
+    if threshold_quantile is not None:
+        x = filter_outliers(df.loc[indexer, col_label], threshold_quantile)
+    else:
+        x = df.loc[indexer, col_label]
+
+    model_df = pd.DataFrame({"branch": df.loc[indexer, "branch"], col_label: x})
+
+    if pretreatment_col_label is not None:
+        if threshold_quantile is not None:
+            x_pre = filter_outliers(
+                df.loc[indexer, pretreatment_col_label], threshold_quantile
+            )
+        else:
+            x_pre = df.loc[indexer, pretreatment_col_label]
+        model_df.loc[:, pretreatment_col_label] = x_pre
+
+    return {
+        "individual": summarize_univariate(
+            model_df[col_label], model_df.branch, alphas
+        ),
+        "comparative": summarize_joint(
+            model_df, col_label, ref_branch_label, pretreatment_col_label, alphas
+        ),
+    }
