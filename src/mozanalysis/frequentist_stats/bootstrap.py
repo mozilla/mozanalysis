@@ -296,37 +296,95 @@ def get_quantile_bootstrap_samples(
     return df
 
 
+def stringify_alpha(alpha: float) -> Tuple[str, str]:
+    return f"{alpha/2:0.3f}", f"{1-alpha/2:0.3f}"
+
+
 def summarize_one_branch(branch_data: pd.Series, alphas: List[float]):
+    str_quantiles = ["0.5"]
+    for alpha in alphas:
+        str_quantiles.extend(stringify_alpha(alpha))
+    res = pd.Series(index=sorted(str_quantiles) + ["mean"], dtype="float")
     dsw = DescrStatsW(branch_data)
     mean = dsw.mean
     se_mean = dsw.std_mean
-    out = {"0.5": mean}
+    res["0.5"] = mean  # backwards compatibility
+    res["mean"] = mean
     for alpha in alphas:
         zstat = norm.isf(1 - (1 - alpha / 2))
-        out[f"{alpha}:0.4f"] = mean - se_mean * zstat
-        out[f"{1-alpha}:0.4f"] = mean + se_mean * zstat
-    return out
+        low_str, high_str = stringify_alpha(alpha)
+        res[low_str] = mean - se_mean * zstat
+        res[high_str] = mean + se_mean * zstat
+    return res
 
 
-def summarize_univariate(data: pd.Series, branches: pd.Series, alphas: List[float]):
-    branch_list = branches.unique()
+def summarize_univariate(
+    data: pd.Series, branches: pd.Series, branch_list: List[str], alphas: List[float]
+):
     return {b: summarize_one_branch(data[branches == b], alphas) for b in branch_list}
 
 
 def summarize_joint(
     df: pd.DataFrame,
     col_label: str,
+    branch_list: List[str],
+    alphas: List[float],
     ref_branch_label="control",
     pretreatment_col_label: str = None,
-    alphas: List[float] = None,
 ):
+    treatment_branches = [b for b in branch_list if b != ref_branch_label]
     formula = f"{col_label} ~ C(branch, Treatment(reference='{ref_branch_label}'))"
     if pretreatment_col_label is not None:
         formula += f" + {pretreatment_col_label}"
 
     model = smf.ols(formula, df).fit()
+    branch_parameters = {
+        branch: f"C(branch, Treatment(reference='control'))[T.{branch}]"
+        for branch in treatment_branches
+    }
+    str_quantiles = ["0.5"]
+    for alpha in alphas:
+        str_quantiles.extend(stringify_alpha(alpha))
+    str_quantiles.sort()
+    index = pd.MultiIndex.from_tuples(
+        [("rel_uplift", q) for q in str_quantiles + ["exp"]]
+        + [("abs_uplift", q) for q in str_quantiles + ["exp"]]
+        # + [("max_abs_diff", "0.95"), ("prob_win",)]
+    )
+    res = pd.Series(index=index, dtype="float")
 
-    lower, upper = model.conf_int().loc["treated"]
+    output = {branch: res.copy() for branch in treatment_branches}
+    for branch, parameter_name in branch_parameters.items():
+        output[branch].loc[("abs_uplift", "0.5")] = model.params[parameter_name]
+        output[branch].loc[("abs_uplift", "exp")] = model.params[parameter_name]
+
+    for alpha in alphas:
+        for branch, parameter_name in branch_parameters.items():
+            lower, upper = model.conf_int(alpha=alpha).loc[parameter_name]
+            low_str, high_str = stringify_alpha(alpha)
+            output[branch].loc[("abs_uplift", low_str)] = lower
+            output[branch].loc[("abs_uplift", high_str)] = upper
+
+    for alpha in alphas:
+        ac = avg_comparisons(
+            model,
+            variables="branch",
+            comparison="lnratioavg",
+            transform=np.exp,
+            conf_level=1 - alpha,
+        )
+        for branch in treatment_branches:
+            condition = (
+                pl.col("contrast") == f"ln(mean({branch}) / mean({ref_branch_label}))"
+            )
+            row = ac.row(by_predicate=condition, named=True)
+            low_str, high_str = stringify_alpha(alpha)
+            output[branch].loc[("rel_uplift", low_str)] = row["conf_low"] - 1
+            output[branch].loc[("rel_uplift", high_str)] = row["conf_high"] - 1
+            output[branch].loc[("rel_uplift", "0.5")] = row["estimate"] - 1
+            output[branch].loc[("rel_uplift", "exp")] = row["estimate"] - 1
+
+    return output
 
 
 def compare_branches_lm(
@@ -337,6 +395,7 @@ def compare_branches_lm(
     threshold_quantile=None,
     alphas: List[float] = None,
 ):
+
     if alphas is None:
         alphas = [0.01, 0.05]
     indexer = ~df[col_label].isna()
@@ -347,7 +406,10 @@ def compare_branches_lm(
     else:
         x = df.loc[indexer, col_label]
 
-    model_df = pd.DataFrame({"branch": df.loc[indexer, "branch"], col_label: x})
+    model_df = pd.DataFrame(
+        {"branch": df.loc[indexer, "branch"], col_label: x.astype(float)}
+    )
+    branch_list = df.branch.unique()
 
     if pretreatment_col_label is not None:
         if threshold_quantile is not None:
@@ -356,13 +418,18 @@ def compare_branches_lm(
             )
         else:
             x_pre = df.loc[indexer, pretreatment_col_label]
-        model_df.loc[:, pretreatment_col_label] = x_pre
+        model_df.loc[:, pretreatment_col_label] = x_pre.astype(float)
 
     return {
         "individual": summarize_univariate(
-            model_df[col_label], model_df.branch, alphas
+            model_df[col_label], model_df.branch, branch_list, alphas
         ),
         "comparative": summarize_joint(
-            model_df, col_label, ref_branch_label, pretreatment_col_label, alphas
+            model_df,
+            col_label,
+            branch_list,
+            alphas,
+            ref_branch_label,
+            pretreatment_col_label,
         ),
     }
