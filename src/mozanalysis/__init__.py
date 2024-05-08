@@ -27,7 +27,7 @@ for root, subdirs, files in os.walk(basedir):
     if os.path.basename(root) in __all__:
         module_files = [os.path.basename(root) + "." + f for f in module_files]
     __all__ += module_files
-
+print(__all__)
 # lookup app_name via app_id
 # used for backwards compatibility
 APPS = {
