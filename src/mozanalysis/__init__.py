@@ -17,6 +17,7 @@ except PackageNotFoundError:
 __all__ = []
 basedir = os.path.dirname(__file__)
 for root, subdirs, files in os.walk(basedir):
+    print(root, subdirs, files)
     __all__ += [module for module in subdirs if not module.startswith("_")]
     module_files = [
         file.replace(".py", "")
