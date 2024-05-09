@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import numpy as np
 import pandas as pd
+import polars as pl
 import statsmodels.formula.api as smf
 from statsmodels.stats.weightstats import DescrStatsW
 from marginaleffects import avg_comparisons
@@ -10,7 +11,7 @@ from scipy.stats import norm
 
 import mozanalysis.bayesian_stats as mabs
 from mozanalysis.utils import filter_outliers
-from typing import List
+from typing import List, Tuple
 
 
 def compare_branches(
@@ -339,7 +340,7 @@ def summarize_joint(
 
     model = smf.ols(formula, df).fit()
     branch_parameters = {
-        branch: f"C(branch, Treatment(reference='control'))[T.{branch}]"
+        branch: f"C(branch, Treatment(reference='{ref_branch_label}'))[T.{branch}]"
         for branch in treatment_branches
     }
     str_quantiles = ["0.5"]
@@ -357,6 +358,7 @@ def summarize_joint(
     for branch, parameter_name in branch_parameters.items():
         output[branch].loc[("abs_uplift", "0.5")] = model.params[parameter_name]
         output[branch].loc[("abs_uplift", "exp")] = model.params[parameter_name]
+        #raise Exception(treatment_branches, ref_branch_label, branch_list, model.params)
 
     for alpha in alphas:
         for branch, parameter_name in branch_parameters.items():
@@ -366,23 +368,20 @@ def summarize_joint(
             output[branch].loc[("abs_uplift", high_str)] = upper
 
     for alpha in alphas:
-        ac = avg_comparisons(
-            model,
-            variables="branch",
-            comparison="lnratioavg",
-            transform=np.exp,
-            conf_level=1 - alpha,
-        )
         for branch in treatment_branches:
-            condition = (
-                pl.col("contrast") == f"ln(mean({branch}) / mean({ref_branch_label}))"
+            ac = avg_comparisons(
+                model,
+                variables={'branch':[ref_branch_label, branch]},
+                comparison="lnratioavg",
+                transform=np.exp,
+                conf_level=1 - alpha,
             )
-            row = ac.row(by_predicate=condition, named=True)
+            assert ac.shape == (1,7), 'avg_comparisons result object not shaped as expected'
             low_str, high_str = stringify_alpha(alpha)
-            output[branch].loc[("rel_uplift", low_str)] = row["conf_low"] - 1
-            output[branch].loc[("rel_uplift", high_str)] = row["conf_high"] - 1
-            output[branch].loc[("rel_uplift", "0.5")] = row["estimate"] - 1
-            output[branch].loc[("rel_uplift", "exp")] = row["estimate"] - 1
+            output[branch].loc[("rel_uplift", low_str)] = ac["conf_low"][0] - 1
+            output[branch].loc[("rel_uplift", high_str)] = ac["conf_high"][0] - 1
+            output[branch].loc[("rel_uplift", "0.5")] = ac["estimate"][0] - 1
+            output[branch].loc[("rel_uplift", "exp")] = ac["estimate"][0] - 1
 
     return output
 
