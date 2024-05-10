@@ -20,7 +20,7 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]):
     str_quantiles = ["0.5"]
     for alpha in alphas:
         str_quantiles.extend(stringify_alpha(alpha))
-    res = pd.Series(index=sorted(str_quantiles) + ["mean"], dtype="float")
+    res = pd.Series(index=sorted(str_quantiles) + ["exp"], dtype="float")
     dsw = DescrStatsW(branch_data)
     mean = dsw.mean
     res["0.5"] = mean  # backwards compatibility
@@ -36,8 +36,7 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]):
 def summarize_univariate(
     data: pd.Series, branches: pd.Series, branch_list: list[str], alphas: list[float]
 ):
-    return {b: summarize_one_branch(data[branches == b], alphas) for b in branch_list}
-
+    return {b: summarize_one_branch(data.loc[(branches == b).values], alphas) for b in branch_list}
 
 def summarize_joint(
     df: pd.DataFrame,

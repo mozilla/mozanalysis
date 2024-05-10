@@ -2,7 +2,6 @@ import mozanalysis.frequentist_stats.linear_models as mafslm
 import numpy as np
 import pandas as pd
 import pytest
-from scipy.stats import ttest_1samp
 
 
 def test_stringify_alpha():
@@ -30,16 +29,37 @@ def test_summarize_one_branch():
     alphas = [0.05]
     actuals = mafslm.summarize_one_branch(test_data, alphas)
 
-    mean = np.mean(test_data)
+    mean = 49.5
+    low, high = 43.74349, 55.25650
 
     assert np.isclose(actuals["exp"], mean)
     assert np.isclose(actuals["0.5"], mean)
-
-    ttest_result = ttest_1samp(test_data, mean)
-    low, high = ttest_result.confidence_interval(1-alphas[0])
     assert np.isclose(actuals["0.025"], low)
     assert np.isclose(actuals["0.975"], high)
 
     index_values = actuals.index.values
     index_values.sort()
-    assert list(index_values) == ["0.025", "0.5", "0.975", "exp", "mean"]
+    assert list(index_values) == ["0.025", "0.5", "0.975", "exp"]
+
+def test_summarize_univariate():
+    one_branch_data = pd.Series(range(100))
+    test_data = pd.concat([one_branch_data, one_branch_data])
+    branches = pd.Series([*(["control"]*100), *(["treatment"]*100)])
+    branch_list = ["control", "treatment"]
+
+    result = mafslm.summarize_univariate(test_data, branches, branch_list, [0.05])
+
+    assert sorted(result.keys()) == branch_list
+
+    mean = 49.5
+    low, high = 43.74349, 55.25650
+
+    for branch in branch_list:
+        assert np.isclose(result[branch]["exp"], mean)
+        assert np.isclose(result[branch]["0.5"], mean)
+        assert np.isclose(result[branch]["0.025"], low)
+        assert np.isclose(result[branch]["0.975"], high)
+
+        index_values = result[branch].index.values
+        index_values.sort()
+        assert list(index_values) == ["0.025", "0.5", "0.975", "exp"]
