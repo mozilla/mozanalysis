@@ -39,3 +39,7 @@ def test_summarize_one_branch():
     low, high = ttest_result.confidence_interval(1-alphas[0])
     assert np.isclose(actuals["0.025"], low)
     assert np.isclose(actuals["0.975"], high)
+
+    index_values = actuals.index.values
+    index_values.sort()
+    assert list(index_values) == ["0.025", "0.5", "0.975", "exp", "mean"]
