@@ -1,17 +1,16 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import numpy as np
 import pandas as pd
-import polars as pl
 import statsmodels.formula.api as smf
-from statsmodels.stats.weightstats import DescrStatsW
 from marginaleffects import avg_comparisons
 from scipy.stats import norm
+from statsmodels.stats.weightstats import DescrStatsW
 
 import mozanalysis.bayesian_stats as mabs
 from mozanalysis.utils import filter_outliers
-from typing import List, Tuple
 
 
 def compare_branches(
@@ -297,11 +296,11 @@ def get_quantile_bootstrap_samples(
     return df
 
 
-def stringify_alpha(alpha: float) -> Tuple[str, str]:
+def stringify_alpha(alpha: float) -> tuple[str, str]:
     return f"{alpha/2:0.3f}", f"{1-alpha/2:0.3f}"
 
 
-def summarize_one_branch(branch_data: pd.Series, alphas: List[float]):
+def summarize_one_branch(branch_data: pd.Series, alphas: list[float]):
     str_quantiles = ["0.5"]
     for alpha in alphas:
         str_quantiles.extend(stringify_alpha(alpha))
@@ -320,7 +319,7 @@ def summarize_one_branch(branch_data: pd.Series, alphas: List[float]):
 
 
 def summarize_univariate(
-    data: pd.Series, branches: pd.Series, branch_list: List[str], alphas: List[float]
+    data: pd.Series, branches: pd.Series, branch_list: list[str], alphas: list[float]
 ):
     return {b: summarize_one_branch(data[branches == b], alphas) for b in branch_list}
 
@@ -328,8 +327,8 @@ def summarize_univariate(
 def summarize_joint(
     df: pd.DataFrame,
     col_label: str,
-    branch_list: List[str],
-    alphas: List[float],
+    branch_list: list[str],
+    alphas: list[float],
     ref_branch_label="control",
     pretreatment_col_label: str = None,
 ):
@@ -371,12 +370,12 @@ def summarize_joint(
         for branch in treatment_branches:
             ac = avg_comparisons(
                 model,
-                variables={'branch':[ref_branch_label, branch]},
+                variables={"branch":[ref_branch_label, branch]},
                 comparison="lnratioavg",
                 transform=np.exp,
                 conf_level=1 - alpha,
             )
-            assert ac.shape == (1,7), 'avg_comparisons result object not shaped as expected'
+            assert ac.shape == (1,7), "avg_comparisons result object not shaped as expected"
             low_str, high_str = stringify_alpha(alpha)
             output[branch].loc[("rel_uplift", low_str)] = ac["conf_low"][0] - 1
             output[branch].loc[("rel_uplift", high_str)] = ac["conf_high"][0] - 1
@@ -392,7 +391,7 @@ def compare_branches_lm(
     ref_branch_label="control",
     pretreatment_col_label: str = None,
     threshold_quantile=None,
-    alphas: List[float] = None,
+    alphas: list[float] = None,
 ):
 
     if alphas is None:
