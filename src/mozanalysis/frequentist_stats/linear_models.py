@@ -4,6 +4,7 @@
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
+from statsmodels.regression.linear_model import RegressionResults
 from marginaleffects import avg_comparisons
 from statsmodels.stats.weightstats import DescrStatsW
 
@@ -16,7 +17,7 @@ def stringify_alpha(alpha: float) -> tuple[str, str]:
     return f"{alpha/2:0.3f}", f"{1-alpha/2:0.3f}"
 
 
-def summarize_one_branch(branch_data: pd.Series, alphas: list[float]):
+def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> pd.Series:
     str_quantiles = ["0.5"]
     for alpha in alphas:
         str_quantiles.extend(stringify_alpha(alpha))
@@ -35,8 +36,80 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]):
 
 def summarize_univariate(
     data: pd.Series, branches: pd.Series, branch_list: list[str], alphas: list[float]
-):
-    return {b: summarize_one_branch(data.loc[(branches == b).values], alphas) for b in branch_list}
+) -> dict[str, pd.Series]:
+    return {
+        b: summarize_one_branch(data.loc[(branches == b).values], alphas)
+        for b in branch_list
+    }
+
+
+def _make_formula(target: str, ref_branch: str, covariate: str | None) -> str:
+    formula = f"{target} ~ C(branch, Treatment(reference='{ref_branch}'))"
+    if covariate is not None:
+        formula += f" + {covariate}"
+
+    return formula
+
+
+def _make_joint_output(alphas: list[float], uplift_type: str) -> pd.Series:
+    str_quantiles = ["0.5"]
+    for alpha in alphas:
+        str_quantiles.extend(stringify_alpha(alpha))
+    str_quantiles.sort()
+    index = pd.MultiIndex.from_tuples(
+        [(uplift_type, q) for q in str_quantiles + ["exp"]]
+    )
+    series = pd.Series(index=index, dtype="float")
+
+    return series
+
+
+def _extract_absolute_uplifts(
+    results: RegressionResults, branch: str, ref_branch: str, alphas: list[float]
+) -> pd.Series:
+    output = _make_joint_output(alphas, "abs_uplift")
+
+    parameter_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
+
+    output.loc[("abs_uplift", "0.5")] = results.params[parameter_name]
+    output.loc[("abs_uplift", "exp")] = results.params[parameter_name]
+
+    for alpha in alphas:
+        lower, upper = results.conf_int(alpha=alpha).loc[parameter_name]
+        low_str, high_str = stringify_alpha(alpha)
+        output.loc[("abs_uplift", low_str)] = lower
+        output.loc[("abs_uplift", high_str)] = upper
+
+    return output
+
+
+def _extract_relative_uplifts(
+    results: RegressionResults, branch: str, ref_branch: str, alphas: list[str]
+) -> pd.Series:
+    output = _make_joint_output(alphas, "rel_uplift")
+
+    for alpha in alphas:
+        ac = avg_comparisons(
+            results,
+            variables={"branch": [ref_branch, branch]},
+            comparison="lnratioavg",
+            transform=np.exp,
+            conf_level=1 - alpha,
+        )
+
+        assert ac.shape == (
+            1,
+            7,
+        ), "avg_comparisons result object not shaped as expected"
+
+        low_str, high_str = stringify_alpha(alpha)
+        output.loc[("rel_uplift", low_str)] = ac["conf_low"][0] - 1
+        output.loc[("rel_uplift", high_str)] = ac["conf_high"][0] - 1
+        output.loc[("rel_uplift", "0.5")] = ac["estimate"][0] - 1
+        output.loc[("rel_uplift", "exp")] = ac["estimate"][0] - 1
+
+    return output
+
 
 def summarize_joint(
     df: pd.DataFrame,
@@ -47,55 +120,23 @@ def summarize_joint(
     pretreatment_col_label: str | None = None,
 ):
     treatment_branches = [b for b in branch_list if b != ref_branch_label]
-    formula = f"{col_label} ~ C(branch, Treatment(reference='{ref_branch_label}'))"
-    if pretreatment_col_label is not None:
-        formula += f" + {pretreatment_col_label}"
 
-    model = smf.ols(formula, df).fit()
-    branch_parameters = {
-        branch: f"C(branch, Treatment(reference='{ref_branch_label}'))[T.{branch}]"
-        for branch in treatment_branches
-    }
-    str_quantiles = ["0.5"]
-    for alpha in alphas:
-        str_quantiles.extend(stringify_alpha(alpha))
-    str_quantiles.sort()
-    index = pd.MultiIndex.from_tuples(
-        [("rel_uplift", q) for q in str_quantiles + ["exp"]]
-        + [("abs_uplift", q) for q in str_quantiles + ["exp"]]
-        # + [("max_abs_diff", "0.95"), ("prob_win",)]
-    )
-    res = pd.Series(index=index, dtype="float")
+    formula = _make_formula(col_label, ref_branch_label, pretreatment_col_label)
 
-    output = {branch: res.copy() for branch in treatment_branches}
-    for branch, parameter_name in branch_parameters.items():
-        output[branch].loc[("abs_uplift", "0.5")] = model.params[parameter_name]
-        output[branch].loc[("abs_uplift", "exp")] = model.params[parameter_name]
+    results = smf.ols(formula, df).fit()
 
-    for alpha in alphas:
-        for branch, parameter_name in branch_parameters.items():
-            lower, upper = model.conf_int(alpha=alpha).loc[parameter_name]
-            low_str, high_str = stringify_alpha(alpha)
-            output[branch].loc[("abs_uplift", low_str)] = lower
-            output[branch].loc[("abs_uplift", high_str)] = upper
+    output = {}
 
-    for alpha in alphas:
-        for branch in treatment_branches:
-            ac = avg_comparisons(
-                model,
-                variables={"branch": [ref_branch_label, branch]},
-                comparison="lnratioavg",
-                transform=np.exp,
-                conf_level=1 - alpha,
-            )
-            assert ac.shape == (1, 7), (
-                "avg_comparisons result object not shaped" " as expected"
-            )
-            low_str, high_str = stringify_alpha(alpha)
-            output[branch].loc[("rel_uplift", low_str)] = ac["conf_low"][0] - 1
-            output[branch].loc[("rel_uplift", high_str)] = ac["conf_high"][0] - 1
-            output[branch].loc[("rel_uplift", "0.5")] = ac["estimate"][0] - 1
-            output[branch].loc[("rel_uplift", "exp")] = ac["estimate"][0] - 1
+    for branch in treatment_branches:
+        rel_uplifts = _extract_absolute_uplifts(
+            results, branch, ref_branch_label, alphas
+        )
+
+        abs_uplifts = _extract_relative_uplifts(
+            results, branch, ref_branch_label, alphas
+        )
+
+        output[branch] = pd.concat([rel_uplifts, abs_uplifts])
 
     return output
 
