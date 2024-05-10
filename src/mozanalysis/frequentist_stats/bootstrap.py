@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
@@ -330,7 +331,7 @@ def summarize_joint(
     branch_list: list[str],
     alphas: list[float],
     ref_branch_label="control",
-    pretreatment_col_label: str = None,
+    pretreatment_col_label: str | None = None,
 ):
     treatment_branches = [b for b in branch_list if b != ref_branch_label]
     formula = f"{col_label} ~ C(branch, Treatment(reference='{ref_branch_label}'))"
@@ -357,7 +358,6 @@ def summarize_joint(
     for branch, parameter_name in branch_parameters.items():
         output[branch].loc[("abs_uplift", "0.5")] = model.params[parameter_name]
         output[branch].loc[("abs_uplift", "exp")] = model.params[parameter_name]
-        #raise Exception(treatment_branches, ref_branch_label, branch_list, model.params)
 
     for alpha in alphas:
         for branch, parameter_name in branch_parameters.items():
@@ -375,7 +375,8 @@ def summarize_joint(
                 transform=np.exp,
                 conf_level=1 - alpha,
             )
-            assert ac.shape == (1,7), "avg_comparisons result object not shaped as expected"
+            assert ac.shape == (1,7), ("avg_comparisons result object not shaped"
+            " as expected")
             low_str, high_str = stringify_alpha(alpha)
             output[branch].loc[("rel_uplift", low_str)] = ac["conf_low"][0] - 1
             output[branch].loc[("rel_uplift", high_str)] = ac["conf_high"][0] - 1
@@ -389,9 +390,9 @@ def compare_branches_lm(
     df: pd.DataFrame,
     col_label: str,
     ref_branch_label="control",
-    pretreatment_col_label: str = None,
-    threshold_quantile=None,
-    alphas: list[float] = None,
+    pretreatment_col_label: str | None = None,
+    threshold_quantile: float | None = None,
+    alphas: list[float] | None = None,
 ):
 
     if alphas is None:
