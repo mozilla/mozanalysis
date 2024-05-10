@@ -12,6 +12,8 @@ from mozanalysis.utils import filter_outliers
 
 
 def stringify_alpha(alpha: float) -> tuple[str, str]:
+    if alpha <= 0 or alpha >= 1:
+        raise ValueError("alpha must be in (0,1)")
     return f"{alpha/2:0.3f}", f"{1-alpha/2:0.3f}"
 
 
