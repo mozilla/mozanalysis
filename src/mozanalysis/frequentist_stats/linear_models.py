@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
 from marginaleffects import avg_comparisons
-from scipy.stats import norm
 from statsmodels.stats.weightstats import DescrStatsW
 
 from mozanalysis.utils import filter_outliers
@@ -24,14 +23,13 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]):
     res = pd.Series(index=sorted(str_quantiles) + ["mean"], dtype="float")
     dsw = DescrStatsW(branch_data)
     mean = dsw.mean
-    se_mean = dsw.std_mean
     res["0.5"] = mean  # backwards compatibility
-    res["mean"] = mean
+    res["exp"] = mean
     for alpha in alphas:
-        zstat = norm.isf(1 - (1 - alpha / 2))
+        low, high = dsw.tconfint_mean(alpha)
         low_str, high_str = stringify_alpha(alpha)
-        res[low_str] = mean - se_mean * zstat
-        res[high_str] = mean + se_mean * zstat
+        res[low_str] = low
+        res[high_str] = high
     return res
 
 

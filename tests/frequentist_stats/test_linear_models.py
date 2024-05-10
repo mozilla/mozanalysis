@@ -1,5 +1,8 @@
 import mozanalysis.frequentist_stats.linear_models as mafslm
+import numpy as np
+import pandas as pd
 import pytest
+from scipy.stats import ttest_1samp
 
 
 def test_stringify_alpha():
@@ -21,3 +24,18 @@ def test_stringify_alpha():
     low, high = mafslm.stringify_alpha(alpha)
     assert low == "0.005"
     assert high == "0.995"
+
+def test_summarize_one_branch():
+    test_data = pd.Series(range(100))
+    alphas = [0.05]
+    actuals = mafslm.summarize_one_branch(test_data, alphas)
+
+    mean = np.mean(test_data)
+
+    assert np.isclose(actuals["exp"], mean)
+    assert np.isclose(actuals["0.5"], mean)
+
+    ttest_result = ttest_1samp(test_data, mean)
+    low, high = ttest_result.confidence_interval(1-alphas[0])
+    assert np.isclose(actuals["0.025"], low)
+    assert np.isclose(actuals["0.975"], high)
