@@ -4,8 +4,8 @@
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
-from statsmodels.regression.linear_model import RegressionResults
 from marginaleffects import avg_comparisons
+from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
 
 from mozanalysis.utils import filter_outliers
