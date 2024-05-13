@@ -43,7 +43,7 @@ def summarize_univariate(
     }
 
 
-def _make_formula(target: str, ref_branch: str, covariate: str | None) -> str:
+def _make_formula(target: str, ref_branch: str, covariate: str | None = None) -> str:
     formula = f"{target} ~ C(branch, Treatment(reference='{ref_branch}'))"
     if covariate is not None:
         formula += f" + {covariate}"
