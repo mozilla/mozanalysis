@@ -9,13 +9,14 @@ from statsmodels.stats.weightstats import CompareMeans
 def _make_test_model():
     ref_branch = "treatment-a"
     alphas = [0.01, 0.05]
-    branches = ["control"]*100 + ["treatment-a"]*100 + ["treatment-b"]*100
-    searches = list(range(100)) + list(range(100,200)) + list(range(200,300))
-    model_df = pd.DataFrame({"search_count":searches, "branch":branches})
+    branches = ["control"] * 100 + ["treatment-a"] * 100 + ["treatment-b"] * 100
+    searches = list(range(100)) + list(range(100, 200)) + list(range(200, 300))
+    model_df = pd.DataFrame({"search_count": searches, "branch": branches})
     formula = mafslm._make_formula("search_count", ref_branch)
     results = smf.ols(formula, model_df).fit()
 
     return results, alphas, ref_branch, model_df
+
 
 def test_stringify_alpha():
     for bad_alphas in [-1, 0, 1, 2]:
@@ -37,6 +38,7 @@ def test_stringify_alpha():
     assert low == "0.005"
     assert high == "0.995"
 
+
 def test_summarize_one_branch():
     test_data = pd.Series(range(100))
     alphas = [0.05]
@@ -54,10 +56,11 @@ def test_summarize_one_branch():
     index_values.sort()
     assert list(index_values) == ["0.025", "0.5", "0.975", "exp"]
 
+
 def test_summarize_univariate():
     one_branch_data = pd.Series(range(100))
     test_data = pd.concat([one_branch_data, one_branch_data])
-    branches = pd.Series([*(["control"]*100), *(["treatment"]*100)])
+    branches = pd.Series([*(["control"] * 100), *(["treatment"] * 100)])
     branch_list = ["control", "treatment"]
 
     result = mafslm.summarize_univariate(test_data, branches, branch_list, [0.05])
@@ -89,7 +92,10 @@ def test__make_formula():
 
     assert expected == actual
 
-    expected = "active_hours ~ C(branch, Treatment(reference='treatment-a')) + active_hours_pre"
+    expected = (
+        "active_hours ~ C(branch, Treatment(reference='treatment-a'))"
+        " + active_hours_pre"
+    )
     actual = mafslm._make_formula("active_hours", "treatment-a", "active_hours_pre")
 
     assert expected == actual
@@ -124,14 +130,10 @@ def test__extract_absolute_uplifts():
 
     for alpha in alphas:
         a_str_low, a_str_high = mafslm.stringify_alpha(alpha)
-        low, high = (
-            CompareMeans
-            .from_data(
-                model_df.loc[model_df.branch == "control", "search_count"],
-                model_df.loc[model_df.branch == ref_branch, "search_count"],
-            )
-            .zconfint_diff(alpha)
-        )
+        low, high = CompareMeans.from_data(
+            model_df.loc[model_df.branch == "control", "search_count"],
+            model_df.loc[model_df.branch == ref_branch, "search_count"],
+        ).zconfint_diff(alpha)
         assert np.isclose(out[("abs_uplift", a_str_low)], low, atol=0.1)
         assert np.isclose(out[("abs_uplift", a_str_high)], high, atol=0.1)
 
@@ -143,13 +145,9 @@ def test__extract_absolute_uplifts():
 
     for alpha in alphas:
         a_str_low, a_str_high = mafslm.stringify_alpha(alpha)
-        low, high = (
-            CompareMeans
-            .from_data(
-                model_df.loc[model_df.branch == "treatment-b", "search_count"],
-                model_df.loc[model_df.branch == ref_branch, "search_count"],
-            )
-            .zconfint_diff(alpha)
-        )
+        low, high = CompareMeans.from_data(
+            model_df.loc[model_df.branch == "treatment-b", "search_count"],
+            model_df.loc[model_df.branch == ref_branch, "search_count"],
+        ).zconfint_diff(alpha)
         assert np.isclose(out[("abs_uplift", a_str_low)], low, atol=0.1)
         assert np.isclose(out[("abs_uplift", a_str_high)], high, atol=0.1)
