@@ -21,11 +21,11 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> pd.Seri
     str_quantiles = ["0.5"]
     for alpha in alphas:
         str_quantiles.extend(stringify_alpha(alpha))
-    res = pd.Series(index=sorted(str_quantiles) + ["exp"], dtype="float")
+    res = pd.Series(index=sorted(str_quantiles) + ["mean"], dtype="float")
     dsw = DescrStatsW(branch_data)
     mean = dsw.mean
     res["0.5"] = mean  # backwards compatibility
-    res["exp"] = mean
+    res["mean"] = mean
     for alpha in alphas:
         low, high = dsw.tconfint_mean(alpha)
         low_str, high_str = stringify_alpha(alpha)
@@ -117,11 +117,11 @@ def summarize_joint(
     branch_list: list[str],
     alphas: list[float],
     ref_branch_label="control",
-    pretreatment_col_label: str | None = None,
+    covariate_col_label: str | None = None,
 ):
     treatment_branches = [b for b in branch_list if b != ref_branch_label]
 
-    formula = _make_formula(col_label, ref_branch_label, pretreatment_col_label)
+    formula = _make_formula(col_label, ref_branch_label, covariate_col_label)
 
     results = smf.ols(formula, df).fit()
 
@@ -144,13 +144,13 @@ def summarize_joint(
 def _make_model_df(
     df: pd.DataFrame,
     col_label: str,
-    pretreatment_col_label: str | None = None,
+    covariate_col_label: str | None = None,
     threshold_quantile: float | None = None,
 ) -> pd.DataFrame:
 
     indexer = ~df[col_label].isna()
-    if pretreatment_col_label is not None:
-        indexer &= ~df[pretreatment_col_label].isna()
+    if covariate_col_label is not None:
+        indexer &= ~df[covariate_col_label].isna()
     if threshold_quantile is not None:
         x = filter_outliers(df.loc[indexer, col_label], threshold_quantile)
     else:
@@ -160,14 +160,14 @@ def _make_model_df(
         {"branch": df.loc[indexer, "branch"], col_label: x.astype(float)}
     )
 
-    if pretreatment_col_label is not None:
+    if covariate_col_label is not None:
         if threshold_quantile is not None:
             x_pre = filter_outliers(
-                df.loc[indexer, pretreatment_col_label], threshold_quantile
+                df.loc[indexer, covariate_col_label], threshold_quantile
             )
         else:
-            x_pre = df.loc[indexer, pretreatment_col_label]
-        model_df.loc[:, pretreatment_col_label] = x_pre.astype(float)
+            x_pre = df.loc[indexer, covariate_col_label]
+        model_df.loc[:, covariate_col_label] = x_pre.astype(float)
 
     return model_df
 
@@ -176,7 +176,7 @@ def compare_branches_lm(
     df: pd.DataFrame,
     col_label: str,
     ref_branch_label="control",
-    pretreatment_col_label: str | None = None,
+    covariate_col_label: str | None = None,
     threshold_quantile: float | None = None,
     alphas: list[float] | None = None,
 ):
@@ -184,7 +184,7 @@ def compare_branches_lm(
     if alphas is None:
         alphas = [0.01, 0.05]
 
-    model_df = _make_model_df(df, col_label, pretreatment_col_label, threshold_quantile)
+    model_df = _make_model_df(df, col_label, covariate_col_label, threshold_quantile)
 
     branch_list = model_df.branch.unique()
 
@@ -198,6 +198,6 @@ def compare_branches_lm(
             branch_list,
             alphas,
             ref_branch_label,
-            pretreatment_col_label,
+            covariate_col_label,
         ),
     }

@@ -48,14 +48,14 @@ def test_summarize_one_branch():
     mean = 49.5
     low, high = 43.74349, 55.25650
 
-    assert np.isclose(actuals["exp"], mean)
     assert np.isclose(actuals["0.5"], mean)
+    assert np.isclose(actuals["mean"], mean)
     assert np.isclose(actuals["0.025"], low)
     assert np.isclose(actuals["0.975"], high)
 
     index_values = actuals.index.values
     index_values.sort()
-    assert list(index_values) == ["0.025", "0.5", "0.975", "exp"]
+    assert list(index_values) == ["0.025", "0.5", "0.975", "mean"]
 
 
 def test_summarize_univariate():
@@ -72,20 +72,20 @@ def test_summarize_univariate():
     mean = 49.5
     low, high = 43.74349, 55.25650
     for branch in branch_list:
-        assert np.isclose(result[branch]["exp"], mean)
+        assert np.isclose(result[branch]["mean"], mean)
         assert np.isclose(result[branch]["0.5"], mean)
         assert np.isclose(result[branch]["0.025"], low)
         assert np.isclose(result[branch]["0.975"], high)
 
         index_values = result[branch].index.values
         index_values.sort()
-        assert list(index_values) == ["0.025", "0.5", "0.975", "exp"]
+        assert list(index_values) == ["0.025", "0.5", "0.975", "mean"]
 
     # cross-validate against existing bootstrap implementation
     bootstrap_result = mafsb.bootstrap_one_branch(one_branch_data)
     for branch in branch_list:
-        assert np.isclose(result[branch]["exp"], bootstrap_result["mean"], atol=0.5)
-        assert np.isclose(result[branch]["0.5"], bootstrap_result["mean"], atol=0.5)
+        assert np.isclose(result[branch]["mean"], bootstrap_result["mean"], atol=0.5)
+        assert np.isclose(result[branch]["0.5"], bootstrap_result["0.5"], atol=0.5)
         assert np.isclose(result[branch]["0.025"], bootstrap_result["0.025"], atol=0.5)
         assert np.isclose(result[branch]["0.975"], bootstrap_result["0.975"], atol=0.5)
 
@@ -258,7 +258,7 @@ def test_summarize_joint():
         "treatment-a",
     )
 
-    expected_keys = [
+    expected_index = [
         ("abs_uplift", "0.5"),
         ("abs_uplift", "exp"),
         ("abs_uplift", "0.005"),
@@ -274,6 +274,84 @@ def test_summarize_joint():
     ]
 
     for branch in ["control", "treatment-b"]:
-        for key in expected_keys:
+        for key in expected_index:
             assert key in actual[branch].index
-        assert len(actual[branch].index) == len(expected_keys)
+        assert len(actual[branch].index) == len(expected_index)
+
+
+def test__make_model_df():
+    # test removal of nulls
+    y = [1,2,3,4,None, np.nan]
+    branch = ["control", "control", "treatment", "treatment", "control", "treatment"]
+    df_in = pd.DataFrame({"y":y, "branch":branch})
+    df_actual = mafslm._make_model_df(df_in, "y")
+    df_expected = pd.DataFrame({"branch":branch[:4],"y":[1.0,2.0,3.0,4.0]})
+    pd.testing.assert_frame_equal(df_actual, df_expected)
+
+    # test removal of nulls with covariate
+    y = [1,2,3,4,None, np.nan]
+    y2 = [1,2, None, np.nan,3,4]
+    branch = ["control", "control", "treatment", "treatment", "control", "treatment"]
+    df_in = pd.DataFrame({"y":y, "branch":branch, "y2":y2})
+    df_actual = mafslm._make_model_df(df_in, "y", covariate_col_label ="y2")
+    df_expected = pd.DataFrame({"branch":branch[:2],"y":[1.0,2.0], "y2":[1.0, 2.0]})
+    pd.testing.assert_frame_equal(df_actual, df_expected)
+
+    # test thresholding
+    y = list(range(100))
+    branch = ["control"]*100
+    df_in = pd.DataFrame({"y":y, "branch":branch})
+    df_actual = mafslm._make_model_df(df_in, "y", threshold_quantile = 0.95)
+    df_expected = pd.DataFrame({"branch":branch, "y":[float(_y) for _y in y[:-5] + [np.quantile(y, 0.95)]*5]})
+    pd.testing.assert_frame_equal(df_actual, df_expected)
+
+    # test covariate & thresholding
+    y2 = list(range(100,200))
+    branch = ["control"]*100
+    df_in = pd.DataFrame({"y":y, "branch":branch, "y2":y2})
+    df_actual = mafslm._make_model_df(df_in, "y", covariate_col_label="y2", threshold_quantile = 0.95)
+    df_expected = pd.DataFrame({
+        "branch":branch,
+        "y":[float(_y) for _y in y[:-5] + [np.quantile(y, 0.95)]*5],
+        "y2":[float(_y) for _y in y2[:-5]+[np.quantile(y2, 0.95)]*5]
+    })
+    pd.testing.assert_frame_equal(df_actual, df_expected)
+
+
+def test_compare_branches_lm():
+    """This is an integration type test, testing only that the 
+    format of the output object is correct. Functionality testing 
+    of specific elements of the object is covered by other tests"""
+    branches = ["control", "treatment-a", "treatment-b"]
+    _, alphas, _, model_df, column_label = _make_test_model()
+
+    out = mafslm.compare_branches_lm(model_df, column_label, "treatment-a", alphas=alphas)
+
+    assert list(out.keys()) == ["individual", "comparative"]
+
+    # assert sorted(list(out['individual'].keys())) == branches
+
+    for branch in branches:
+        assert sorted(out["individual"][branch].index) == ["0.005", "0.025", "0.5", "0.975", "0.995", "mean"]
+
+    comparative_branches = ["control", "treatment-b"]
+
+    assert sorted(out["comparative"].keys()) == comparative_branches
+
+    expected_index = [
+        ("abs_uplift", "0.005"),
+        ("abs_uplift", "0.025"),
+        ("abs_uplift", "0.5"),
+        ("abs_uplift", "0.975"),
+        ("abs_uplift", "0.995"),
+        ("abs_uplift", "exp"),
+        ("rel_uplift", "0.005"),
+        ("rel_uplift", "0.025"),
+        ("rel_uplift", "0.5"),
+        ("rel_uplift", "0.975"),
+        ("rel_uplift", "0.995"),
+        ("rel_uplift", "exp"),
+    ]
+
+    for branch in comparative_branches:
+        assert sorted(out["comparative"][branch].index) == expected_index
