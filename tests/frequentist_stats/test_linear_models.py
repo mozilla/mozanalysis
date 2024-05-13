@@ -131,12 +131,14 @@ def test__make_joint_output():
 def test__extract_absolute_uplifts():
     results, alphas, ref_branch, model_df, column_label = _make_test_model()
 
-    bootstrap_results = mafsb.compare_branches(model_df, column_label, ref_branch_label=ref_branch)
+    bootstrap_results = mafsb.compare_branches(
+        model_df, column_label, ref_branch_label=ref_branch
+    )
 
     # control vs treatment-a
     out = mafslm._extract_absolute_uplifts(results, "control", ref_branch, alphas)
 
-    expected_mean = 50-150
+    expected_mean = 50 - 150
     assert np.isclose(out[("abs_uplift", "exp")], expected_mean)
     assert np.isclose(out[("abs_uplift", "0.5")], expected_mean)
 
@@ -153,12 +155,18 @@ def test__extract_absolute_uplifts():
     boot_df = bootstrap_results["comparative"]["control"]
     for alpha in alphas:
         a_str_low, a_str_high = mafslm.stringify_alpha(alpha)
-        assert np.isclose(out[("abs_uplift", a_str_low)], boot_df[("abs_uplift", a_str_low)], atol=1.0)
-        assert np.isclose(out[("abs_uplift", a_str_high)], boot_df[("abs_uplift", a_str_high)], atol=1.0)
+        assert np.isclose(
+            out[("abs_uplift", a_str_low)], boot_df[("abs_uplift", a_str_low)], atol=1.0
+        )
+        assert np.isclose(
+            out[("abs_uplift", a_str_high)],
+            boot_df[("abs_uplift", a_str_high)],
+            atol=1.0,
+        )
     # treatment-a vs treatment-b
     out = mafslm._extract_absolute_uplifts(results, "treatment-b", ref_branch, alphas)
 
-    expected_mean = 250-150
+    expected_mean = 250 - 150
     assert np.isclose(out[("abs_uplift", "exp")], expected_mean)
     assert np.isclose(out[("abs_uplift", "0.5")], expected_mean)
 
@@ -175,18 +183,27 @@ def test__extract_absolute_uplifts():
     boot_df = bootstrap_results["comparative"]["treatment-b"]
     for alpha in alphas:
         a_str_low, a_str_high = mafslm.stringify_alpha(alpha)
-        assert np.isclose(out[("abs_uplift", a_str_low)], boot_df[("abs_uplift", a_str_low)], atol=1.0)
-        assert np.isclose(out[("abs_uplift", a_str_high)], boot_df[("abs_uplift", a_str_high)], atol=1.0)
+        assert np.isclose(
+            out[("abs_uplift", a_str_low)], boot_df[("abs_uplift", a_str_low)], atol=1.0
+        )
+        assert np.isclose(
+            out[("abs_uplift", a_str_high)],
+            boot_df[("abs_uplift", a_str_high)],
+            atol=1.0,
+        )
+
 
 def test__extract_relative_uplifts():
     results, alphas, ref_branch, model_df, column_label = _make_test_model()
 
-    bootstrap_results = mafsb.compare_branches(model_df, column_label, ref_branch_label=ref_branch)
+    bootstrap_results = mafsb.compare_branches(
+        model_df, column_label, ref_branch_label=ref_branch
+    )
 
     # control vs treatment-a
     out = mafslm._extract_relative_uplifts(results, "control", ref_branch, alphas)
 
-    expected_mean = (50-150)/150
+    expected_mean = (50 - 150) / 150
     assert np.isclose(out[("rel_uplift", "exp")], expected_mean, atol=0.01)
     assert np.isclose(out[("rel_uplift", "0.5")], expected_mean, atol=0.01)
 
@@ -194,13 +211,20 @@ def test__extract_relative_uplifts():
     boot_df = bootstrap_results["comparative"]["control"]
     for alpha in alphas:
         a_str_low, a_str_high = mafslm.stringify_alpha(alpha)
-        assert np.isclose(out[("rel_uplift", a_str_low)], boot_df[("rel_uplift", a_str_low)], atol=0.01)
-        assert np.isclose(out[("rel_uplift", a_str_high)], boot_df[("rel_uplift", a_str_high)], atol=0.01)
-
+        assert np.isclose(
+            out[("rel_uplift", a_str_low)],
+            boot_df[("rel_uplift", a_str_low)],
+            atol=0.01,
+        )
+        assert np.isclose(
+            out[("rel_uplift", a_str_high)],
+            boot_df[("rel_uplift", a_str_high)],
+            atol=0.01,
+        )
 
     out = mafslm._extract_relative_uplifts(results, "treatment-b", ref_branch, alphas)
 
-    expected_mean = (250-150)/150
+    expected_mean = (250 - 150) / 150
     assert np.isclose(out[("rel_uplift", "exp")], expected_mean, atol=0.01)
     assert np.isclose(out[("rel_uplift", "0.5")], expected_mean, atol=0.01)
 
@@ -208,5 +232,13 @@ def test__extract_relative_uplifts():
     boot_df = bootstrap_results["comparative"]["treatment-b"]
     for alpha in alphas:
         a_str_low, a_str_high = mafslm.stringify_alpha(alpha)
-        assert np.isclose(out[("rel_uplift", a_str_low)], boot_df[("rel_uplift", a_str_low)], atol=0.01)
-        assert np.isclose(out[("rel_uplift", a_str_high)], boot_df[("rel_uplift", a_str_high)], atol=0.01)
+        assert np.isclose(
+            out[("rel_uplift", a_str_low)],
+            boot_df[("rel_uplift", a_str_low)],
+            atol=0.01,
+        )
+        assert np.isclose(
+            out[("rel_uplift", a_str_high)],
+            boot_df[("rel_uplift", a_str_high)],
+            atol=0.01,
+        )
