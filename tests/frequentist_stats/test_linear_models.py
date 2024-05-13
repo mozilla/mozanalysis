@@ -242,3 +242,31 @@ def test__extract_relative_uplifts():
             boot_df[("rel_uplift", a_str_high)],
             atol=0.01,
         )
+
+def test_summarize_joint():
+    '''Validates the structure of the comparative results object,
+    tests for accuracy of reported values are found above, in the 
+    test__extract_<>_uplifts tests'''
+    _, alphas, ref_branch, model_df, column_label = _make_test_model()
+
+    actual = mafslm.summarize_joint(model_df, column_label, ["control", "treatment-a", "treatment-b"], alphas, "treatment-a")
+
+    expected_keys = [
+        ('abs_uplift', '0.5'),
+        ('abs_uplift', 'exp'),
+        ('abs_uplift', '0.005'),
+        ('abs_uplift', '0.995'),
+        ('abs_uplift', '0.025'),
+        ('abs_uplift', '0.975'),        
+        ('rel_uplift', '0.5'),
+        ('rel_uplift', 'exp'),
+        ('rel_uplift', '0.005'),
+        ('rel_uplift', '0.995'),
+        ('rel_uplift', '0.025'),
+        ('rel_uplift', '0.975'),        
+    ]
+    
+    for branch in ['control', 'treatment-b']:
+        for key in expected_keys:
+            assert key in actual[branch].index
+        assert len(actual[branch].index) == len(expected_keys)
