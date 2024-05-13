@@ -18,22 +18,27 @@ def _make_test_model():
 
     return results, alphas, ref_branch, model_df, "search_count"
 
+
 def _make_test_model_covariate():
     ref_branch = "treatment-a"
     alphas = [0.01, 0.05]
     branches = ["control"] * 100 + ["treatment-a"] * 100 + ["treatment-b"] * 100
-    y_base = np.random.normal(loc=2, scale=0.1, size = 300)
-    y_pre_adj = np.random.normal(loc=0, scale=0.05, size = 300)
-    te = np.concatenate([
-        np.random.normal(loc=0, scale = 0.1, size = 100),
-        np.random.normal(loc=0.1, scale = 0.1, size = 100),
-        np.random.normal(loc=0.2, scale = 0.1, size = 100),
-    ])
-    model_df = pd.DataFrame({
-        "search_count":y_base+te,
-        "branch":branches,
-        "search_count_pre":y_base+y_pre_adj
-    })
+    y_base = np.random.normal(loc=2, scale=0.1, size=300)
+    y_pre_adj = np.random.normal(loc=0, scale=0.05, size=300)
+    te = np.concatenate(
+        [
+            np.random.normal(loc=0, scale=0.1, size=100),
+            np.random.normal(loc=0.1, scale=0.1, size=100),
+            np.random.normal(loc=0.2, scale=0.1, size=100),
+        ]
+    )
+    model_df = pd.DataFrame(
+        {
+            "search_count": y_base + te,
+            "branch": branches,
+            "search_count_pre": y_base + y_pre_adj,
+        }
+    )
     formula = mafslm._make_formula("search_count", ref_branch, "search_count_pre")
     results = smf.ols(formula, model_df).fit()
 
@@ -213,8 +218,11 @@ def test__extract_absolute_uplifts():
             atol=1.0,
         )
 
+
 def test__extract_absolute_uplifts_covariate():
-    results, alphas, ref_branch, model_df, column_label, column_label_pre = _make_test_model_covariate()
+    results, alphas, ref_branch, model_df, column_label, column_label_pre = (
+        _make_test_model_covariate()
+    )
 
     bootstrap_results = mafsb.compare_branches(
         model_df, column_label, ref_branch_label=ref_branch
@@ -234,7 +242,9 @@ def test__extract_absolute_uplifts_covariate():
     ###validate the widths of confidence intervals are smaller with LM approach
     for alpha in alphas:
         a_str_low, a_str_high = mafslm.stringify_alpha(alpha)
-        ci_width_boot = boot_df[("abs_uplift", a_str_high)] - boot_df[("abs_uplift", a_str_low)]
+        ci_width_boot = (
+            boot_df[("abs_uplift", a_str_high)] - boot_df[("abs_uplift", a_str_low)]
+        )
         ci_width_lm = out[("abs_uplift", a_str_high)] - out[("abs_uplift", a_str_low)]
         assert ci_width_lm < ci_width_boot
 
@@ -248,7 +258,9 @@ def test__extract_absolute_uplifts_covariate():
     boot_df = bootstrap_results["comparative"]["treatment-b"]
     for alpha in alphas:
         a_str_low, a_str_high = mafslm.stringify_alpha(alpha)
-        ci_width_boot = boot_df[("abs_uplift", a_str_high)] - boot_df[("abs_uplift", a_str_low)]
+        ci_width_boot = (
+            boot_df[("abs_uplift", a_str_high)] - boot_df[("abs_uplift", a_str_low)]
+        )
         ci_width_lm = out[("abs_uplift", a_str_high)] - out[("abs_uplift", a_str_low)]
         assert ci_width_lm < ci_width_boot
 
@@ -303,8 +315,11 @@ def test__extract_relative_uplifts():
             atol=0.01,
         )
 
+
 def test__extract_relative_uplifts_covariate():
-    results, alphas, ref_branch, model_df, column_label, column_label_pre = _make_test_model_covariate()
+    results, alphas, ref_branch, model_df, column_label, column_label_pre = (
+        _make_test_model_covariate()
+    )
 
     bootstrap_results = mafsb.compare_branches(
         model_df, column_label, ref_branch_label=ref_branch
@@ -313,7 +328,7 @@ def test__extract_relative_uplifts_covariate():
     # control vs treatment-a
     out = mafslm._extract_relative_uplifts(results, "control", ref_branch, alphas)
 
-    expected_mean = -0.1/2
+    expected_mean = -0.1 / 2
     assert np.isclose(out[("rel_uplift", "exp")], expected_mean, atol=0.05)
     assert np.isclose(out[("rel_uplift", "0.5")], expected_mean, atol=0.05)
 
@@ -324,21 +339,25 @@ def test__extract_relative_uplifts_covariate():
     ###validate the widths of confidence intervals are smaller with LM approach
     for alpha in alphas:
         a_str_low, a_str_high = mafslm.stringify_alpha(alpha)
-        ci_width_boot = boot_df[("rel_uplift", a_str_high)] - boot_df[("rel_uplift", a_str_low)]
+        ci_width_boot = (
+            boot_df[("rel_uplift", a_str_high)] - boot_df[("rel_uplift", a_str_low)]
+        )
         ci_width_lm = out[("rel_uplift", a_str_high)] - out[("rel_uplift", a_str_low)]
         assert ci_width_lm < ci_width_boot
 
     # treatment-a vs treatment-b
     out = mafslm._extract_relative_uplifts(results, "treatment-b", ref_branch, alphas)
 
-    expected_mean = 0.1/2
+    expected_mean = 0.1 / 2
     assert np.isclose(out[("rel_uplift", "exp")], expected_mean, atol=0.05)
     assert np.isclose(out[("rel_uplift", "0.5")], expected_mean, atol=0.05)
 
     boot_df = bootstrap_results["comparative"]["treatment-b"]
     for alpha in alphas:
         a_str_low, a_str_high = mafslm.stringify_alpha(alpha)
-        ci_width_boot = boot_df[("rel_uplift", a_str_high)] - boot_df[("rel_uplift", a_str_low)]
+        ci_width_boot = (
+            boot_df[("rel_uplift", a_str_high)] - boot_df[("rel_uplift", a_str_low)]
+        )
         ci_width_lm = out[("rel_uplift", a_str_high)] - out[("rel_uplift", a_str_low)]
         assert ci_width_lm < ci_width_boot
 
