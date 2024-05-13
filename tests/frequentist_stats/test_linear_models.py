@@ -494,15 +494,17 @@ def test_compare_branches_lm():
     for branch in comparative_branches:
         assert sorted(out["comparative"][branch].index) == expected_index
 
-        
+
 def test_fit_model():
     expected_results, _, ref_branch, model_df, column_label = _make_test_model()
-    
+
     formula = f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}'))"
-    
+
     actual_results = mafslm.fit_model(formula, model_df)
-    
+
     pd.testing.assert_series_equal(actual_results.params, expected_results.params)
-    
+
     alpha = 0.05
-    pd.testing.assert_frame_equal(actual_results.conf_int(alpha), expected_results.conf_int(alpha))
+    pd.testing.assert_frame_equal(
+        actual_results.conf_int(alpha), expected_results.conf_int(alpha)
+    )
