@@ -141,17 +141,13 @@ def summarize_joint(
     return output
 
 
-def compare_branches_lm(
+def _make_model_df(
     df: pd.DataFrame,
     col_label: str,
-    ref_branch_label="control",
     pretreatment_col_label: str | None = None,
     threshold_quantile: float | None = None,
-    alphas: list[float] | None = None,
-):
+) -> pd.DataFrame:
 
-    if alphas is None:
-        alphas = [0.01, 0.05]
     indexer = ~df[col_label].isna()
     if pretreatment_col_label is not None:
         indexer &= ~df[pretreatment_col_label].isna()
@@ -163,7 +159,6 @@ def compare_branches_lm(
     model_df = pd.DataFrame(
         {"branch": df.loc[indexer, "branch"], col_label: x.astype(float)}
     )
-    branch_list = df.branch.unique()
 
     if pretreatment_col_label is not None:
         if threshold_quantile is not None:
@@ -173,6 +168,25 @@ def compare_branches_lm(
         else:
             x_pre = df.loc[indexer, pretreatment_col_label]
         model_df.loc[:, pretreatment_col_label] = x_pre.astype(float)
+
+    return model_df
+
+
+def compare_branches_lm(
+    df: pd.DataFrame,
+    col_label: str,
+    ref_branch_label="control",
+    pretreatment_col_label: str | None = None,
+    threshold_quantile: float | None = None,
+    alphas: list[float] | None = None,
+):
+
+    if alphas is None:
+        alphas = [0.01, 0.05]
+
+    model_df = _make_model_df(df, col_label, pretreatment_col_label, threshold_quantile)
+
+    branch_list = model_df.branch.unique()
 
     return {
         "individual": summarize_univariate(
