@@ -111,6 +111,11 @@ def _extract_relative_uplifts(
     return output
 
 
+def fit_model(formula: str, df: pd.DataFrame) -> RegressionResults:
+    results = smf.ols(formula, df).fit()
+    return results
+
+
 def summarize_joint(
     df: pd.DataFrame,
     col_label: str,
@@ -123,7 +128,7 @@ def summarize_joint(
 
     formula = _make_formula(col_label, ref_branch_label, covariate_col_label)
 
-    results = smf.ols(formula, df).fit()
+    results = fit_model(formula, df)
 
     output = {}
 
