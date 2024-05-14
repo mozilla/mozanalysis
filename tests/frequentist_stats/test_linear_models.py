@@ -48,7 +48,7 @@ def _make_test_model_covariate():
 
 def test_stringify_alpha():
     for bad_alphas in [-1, 0, 1, 2]:
-        with pytest.raises(ValueError, match=r"alpha must be in \(0,1\)"):
+        with pytest.raises(ValueError, match=r"alpha must be in \(0.002,1\)"):
             mafslm.stringify_alpha(bad_alphas)
 
     alpha = 0.1
