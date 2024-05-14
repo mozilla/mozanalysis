@@ -346,7 +346,7 @@ def test__extract_relative_uplifts_covariate():
     # treatment-a vs treatment-b
     out = mafslm._extract_relative_uplifts(results, "treatment-b", ref_branch, alphas)
 
-    expected_mean = 0.1 / 2
+    expected_mean = 0.1 / 2.1
     assert np.isclose(out[("rel_uplift", "exp")], expected_mean, atol=0.05)
     assert np.isclose(out[("rel_uplift", "0.5")], expected_mean, atol=0.05)
 
