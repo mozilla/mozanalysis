@@ -398,7 +398,7 @@ def test_make_model_df():
     y = [1, 2, 3, 4, None, np.nan]
     branch = ["control", "control", "treatment", "treatment", "control", "treatment"]
     df_in = pd.DataFrame({"y": y, "branch": branch})
-    df_actual = mafslm._make_model_df(df_in, "y")
+    df_actual = mafslm.make_model_df(df_in, "y")
     df_expected = pd.DataFrame({"branch": branch[:4], "y": [1.0, 2.0, 3.0, 4.0]})
     pd.testing.assert_frame_equal(df_actual, df_expected)
 
@@ -407,7 +407,7 @@ def test_make_model_df():
     y2 = [1, 2, None, np.nan, 3, 4]
     branch = ["control", "control", "treatment", "treatment", "control", "treatment"]
     df_in = pd.DataFrame({"y": y, "branch": branch, "y2": y2})
-    df_actual = mafslm._make_model_df(df_in, "y", covariate_col_label="y2")
+    df_actual = mafslm.make_model_df(df_in, "y", covariate_col_label="y2")
     df_expected = pd.DataFrame(
         {"branch": branch[:2], "y": [1.0, 2.0], "y2": [1.0, 2.0]}
     )
@@ -417,7 +417,7 @@ def test_make_model_df():
     y = list(range(100))
     branch = ["control"] * 100
     df_in = pd.DataFrame({"y": y, "branch": branch})
-    df_actual = mafslm._make_model_df(df_in, "y", threshold_quantile=0.95)
+    df_actual = mafslm.make_model_df(df_in, "y", threshold_quantile=0.95)
     df_expected = pd.DataFrame(
         {
             "branch": branch,
@@ -430,7 +430,7 @@ def test_make_model_df():
     y2 = list(range(100, 200))
     branch = ["control"] * 100
     df_in = pd.DataFrame({"y": y, "branch": branch, "y2": y2})
-    df_actual = mafslm._make_model_df(
+    df_actual = mafslm.make_model_df(
         df_in, "y", covariate_col_label="y2", threshold_quantile=0.95
     )
     df_expected = pd.DataFrame(
