@@ -100,7 +100,6 @@ def test_summarize_univariate():
         index_values.sort()
         assert list(index_values) == ["0.025", "0.5", "0.975", "mean"]
 
-
     # control
     ## validate against theoretical values
     mean = 49.5
@@ -134,8 +133,6 @@ def test_summarize_univariate():
     assert np.isclose(result["treatment"]["0.975"], bootstrap_result["0.975"], atol=0.5)
 
 
-
-
 def test__make_formula():
     expected = "search_count ~ C(branch, Treatment(reference='control'))"
     actual = mafslm._make_formula("search_count", "control")
@@ -152,17 +149,27 @@ def test__make_formula():
 
     assert expected == actual
 
-
     for bad_target in ["search~count", "search(count", "search)count", "search_count'"]:
-        with pytest.raises(ValueError, match=r"Target variable .* contains invalid character"):
+        with pytest.raises(
+            ValueError, match=r"Target variable .* contains invalid character"
+        ):
             mafslm._make_formula(bad_target, "control")
 
     for bad_branch in ["search~count", "search(count", "search)count", "search_count'"]:
-        with pytest.raises(ValueError, match=r"Reference branch .* contains invalid character"):
+        with pytest.raises(
+            ValueError, match=r"Reference branch .* contains invalid character"
+        ):
             mafslm._make_formula("search_count", bad_branch)
 
-    for bad_covariate in ["search~count", "search(count", "search)count", "search_count'"]:
-        with pytest.raises(ValueError, match=r"Covariate .* contains invalid character"):
+    for bad_covariate in [
+        "search~count",
+        "search(count",
+        "search)count",
+        "search_count'",
+    ]:
+        with pytest.raises(
+            ValueError, match=r"Covariate .* contains invalid character"
+        ):
             mafslm._make_formula("search_count", "control", bad_covariate)
 
 
