@@ -13,7 +13,7 @@ def _make_test_model():
     branches = ["control"] * 100 + ["treatment-a"] * 100 + ["treatment-b"] * 100
     searches = list(range(100)) + list(range(100, 200)) + list(range(200, 300))
     model_df = pd.DataFrame({"search_count": searches, "branch": branches})
-    formula = mafslm._make_formula("search_count", ref_branch)
+    formula = "search_count ~ C(branch, Treatment(reference='treatment-a'))"
     results = smf.ols(formula, model_df).fit()
 
     return results, alphas, ref_branch, model_df, "search_count"
@@ -39,7 +39,8 @@ def _make_test_model_covariate():
             "search_count_pre": y_base + y_pre_adj,
         }
     )
-    formula = mafslm._make_formula("search_count", ref_branch, "search_count_pre")
+    formula = "search_count ~ C(branch, Treatment(reference='treatment-a')) + search_count_pre"  # noqa: E501
+
     results = smf.ols(formula, model_df).fit()
 
     return results, alphas, ref_branch, model_df, "search_count", "search_count_pre"
