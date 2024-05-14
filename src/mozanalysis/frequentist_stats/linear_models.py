@@ -92,19 +92,20 @@ def _make_formula(target: str, ref_branch: str, covariate: str | None = None) ->
     reference level of `'control'`.
 
     This builds the following linear model (assuming 2 other treatment branches, t1
-    and t2): `Y_i = \beta_0 + \beta_t1*I(branch == 't1') + \beta_t2*I(branch == 't2')`
+    and t2): `Y_i = \beta_0 + \beta_1*I(branch == 't1') + \beta_2*I(branch == 't2')`
     where `I` is the indicator function.
 
-    Inferences on `\beta_t1` are inferences of the average treatment effect (ATE) of
-    branch t1. That is, the confidence interval for `\beta_t1` is the confidence
-    interval for the ATE of branch t1. Similarly for t2 and `\beta_t2`.
+    Inferences on `\beta_1` are inferences of the average treatment effect (ATE) of
+    branch t1. That is, the confidence interval for `\beta_1` is the confidence
+    interval for the ATE of branch t1. Similarly for t2 and `\beta_2`.
 
     We can incorporate a single (generally pre-experiment) covariate. Adding a covariate
     of `Ypre` to the above, we'll build the following formula:
     `Y ~ C(branch, Treatment(reference='control')) + Ypre`
     which will fit the following linear model:
 
-    `Y_i = \beta_0 + \beta_t1*I(branch == 't1') + \beta_t2*I(branch == 't2') + Ypre_i`
+    `Y_i = \beta_0 + \beta_1*I(branch == 't1') + \beta_2*I(branch == 't2')
+    + \beta_3* Ypre_i`
 
     For now, we elect to not include branch by covariate interaction terms and instead
     to perform inferences only on the population-level ATE.
