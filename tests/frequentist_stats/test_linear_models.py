@@ -127,10 +127,7 @@ def test__make_formula():
 
     assert expected == actual
 
-    expected = (
-        "active_hours ~ C(branch, Treatment(reference='treatment-a'))"
-        " + active_hours_pre"
-    )
+    expected = "active_hours ~ C(branch, Treatment(reference='treatment-a')) + active_hours_pre"  # noqa: E501
     actual = mafslm._make_formula("active_hours", "treatment-a", "active_hours_pre")
 
     assert expected == actual
@@ -372,7 +369,7 @@ def test_summarize_joint():
         model_df,
         column_label,
         alphas,
-        ref_branch_label = "treatment-a",
+        ref_branch_label="treatment-a",
     )
 
     expected_index = [
