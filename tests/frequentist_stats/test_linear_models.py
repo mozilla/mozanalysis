@@ -218,7 +218,7 @@ def test__extract_absolute_uplifts():
 
 
 def test__extract_absolute_uplifts_covariate():
-    results, alphas, ref_branch, model_df, column_label, column_label_pre = (
+    results, alphas, ref_branch, model_df, column_label, _ = (
         _make_test_model_covariate()
     )
 
@@ -315,7 +315,7 @@ def test__extract_relative_uplifts():
 
 
 def test__extract_relative_uplifts_covariate():
-    results, alphas, ref_branch, model_df, column_label, column_label_pre = (
+    results, alphas, ref_branch, model_df, column_label, _ = (
         _make_test_model_covariate()
     )
 
@@ -496,6 +496,23 @@ def test_fit_model():
     expected_results, _, ref_branch, model_df, column_label = _make_test_model()
 
     formula = f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}'))"
+
+    actual_results = mafslm.fit_model(formula, model_df)
+
+    pd.testing.assert_series_equal(actual_results.params, expected_results.params)
+
+    alpha = 0.05
+    pd.testing.assert_frame_equal(
+        actual_results.conf_int(alpha), expected_results.conf_int(alpha)
+    )
+
+
+def test_fit_model_covariate():
+    expected_results, _, ref_branch, model_df, column_label, column_label_pre = (
+        _make_test_model_covariate()
+    )
+
+    formula = f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}')) + {column_label_pre}"  # noqa: E501
 
     actual_results = mafslm.fit_model(formula, model_df)
 
