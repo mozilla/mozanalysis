@@ -86,35 +86,54 @@ def test_summarize_one_branch():
 
 
 def test_summarize_univariate():
-    one_branch_data = pd.Series(range(100))
-    test_data = pd.concat([one_branch_data, one_branch_data])
+    control_branch_data = pd.Series(range(100))
+    treatment_branch_data = pd.Series(range(100, 200))    
+    test_data = pd.concat([control_branch_data, treatment_branch_data])
     branches = pd.Series([*(["control"] * 100), *(["treatment"] * 100)])
     branch_list = ["control", "treatment"]
 
     result = mafslm.summarize_univariate(test_data, branches, [0.05])
 
     assert sorted(result.keys()) == branch_list
-
-    # validate against theoretical values
-    mean = 49.5
-    low, high = 43.74349, 55.25650
     for branch in branch_list:
-        assert np.isclose(result[branch]["mean"], mean)
-        assert np.isclose(result[branch]["0.5"], mean)
-        assert np.isclose(result[branch]["0.025"], low)
-        assert np.isclose(result[branch]["0.975"], high)
-
         index_values = result[branch].index.values
         index_values.sort()
-        assert list(index_values) == ["0.025", "0.5", "0.975", "mean"]
+        assert list(index_values) == ["0.025", "0.5", "0.975", "mean"]    
 
-    # cross-validate against existing bootstrap implementation
-    bootstrap_result = mafsb.bootstrap_one_branch(one_branch_data)
-    for branch in branch_list:
-        assert np.isclose(result[branch]["mean"], bootstrap_result["mean"], atol=0.5)
-        assert np.isclose(result[branch]["0.5"], bootstrap_result["0.5"], atol=0.5)
-        assert np.isclose(result[branch]["0.025"], bootstrap_result["0.025"], atol=0.5)
-        assert np.isclose(result[branch]["0.975"], bootstrap_result["0.975"], atol=0.5)
+   
+    # control
+    ## validate against theoretical values    
+    mean = 49.5
+    low, high = 43.74349, 55.25650
+    assert np.isclose(result['control']["mean"], mean)
+    assert np.isclose(result['control']["0.5"], mean)
+    assert np.isclose(result['control']["0.025"], low)
+    assert np.isclose(result['control']["0.975"], high)
+
+    ## cross-validate against existing bootstrap implementation
+    bootstrap_result = mafsb.bootstrap_one_branch(control_branch_data)
+    assert np.isclose(result['control']["mean"], bootstrap_result["mean"], atol=0.5)
+    assert np.isclose(result['control']["0.5"], bootstrap_result["0.5"], atol=0.5)
+    assert np.isclose(result['control']["0.025"], bootstrap_result["0.025"], atol=0.5)
+    assert np.isclose(result['control']["0.975"], bootstrap_result["0.975"], atol=0.5)    
+    
+    # treatment
+    ## validate against theoretical values   
+    mean = 149.5
+    low, high = 143.74349, 155.25650
+    assert np.isclose(result['treatment']["mean"], mean)
+    assert np.isclose(result['treatment']["0.5"], mean)
+    assert np.isclose(result['treatment']["0.025"], low)
+    assert np.isclose(result['treatment']["0.975"], high)    
+    
+    ## cross-validate against existing bootstrap implementation
+    bootstrap_result = mafsb.bootstrap_one_branch(treatment_branch_data)
+    assert np.isclose(result['treatment']["mean"], bootstrap_result["mean"], atol=0.5)
+    assert np.isclose(result['treatment']["0.5"], bootstrap_result["0.5"], atol=0.5)
+    assert np.isclose(result['treatment']["0.025"], bootstrap_result["0.025"], atol=0.5)
+    assert np.isclose(result['treatment']["0.975"], bootstrap_result["0.975"], atol=0.5)     
+    
+
 
 
 def test__make_formula():
