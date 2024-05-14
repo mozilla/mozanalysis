@@ -57,8 +57,20 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> pd.Seri
     return res
 
 
+def _infer_branch_list(branches: pd.Series, branch_list: list[str] | None) -> list[str]:
+    """Determine the list of distinct branches. Used so that `summarize_univariate`
+    and `summarize_joint` can take an optional `branch_list` parameter."""
+    if branch_list:
+        return branch_list
+
+    return list(branches.unique())
+
+
 def summarize_univariate(
-    data: pd.Series, branches: pd.Series, branch_list: list[str], alphas: list[float]
+    data: pd.Series,
+    branches: pd.Series,
+    alphas: list[float],
+    branch_list: list[str] | None,
 ) -> dict[str, pd.Series]:
     """Univariate inferences (point estimates and confidence intervals) for the
     mean of each branch's data.
@@ -75,6 +87,9 @@ def summarize_univariate(
     series as value. The format of the series is described above in
     `summarize_one_branch`
     """
+
+    branch_list = _infer_branch_list(branches, branch_list)
+
     return {
         b: summarize_one_branch(data.loc[(branches == b).values], alphas)
         for b in branch_list
@@ -251,8 +266,8 @@ def fit_model(formula: str, df: pd.DataFrame) -> RegressionResults:
 def summarize_joint(
     df: pd.DataFrame,
     col_label: str,
-    branch_list: list[str],
     alphas: list[float],
+    branch_list: list[str] | None,
     ref_branch_label="control",
     covariate_col_label: str | None = None,
 ) -> dict[str, pd.Series]:
@@ -288,6 +303,9 @@ def summarize_joint(
     containing the comparative results of that branch against the reference branch.
 
     """
+
+    branch_list = _infer_branch_list(df.branch, branch_list)
+
     treatment_branches = [b for b in branch_list if b != ref_branch_label]
 
     formula = _make_formula(col_label, ref_branch_label, covariate_col_label)
@@ -396,17 +414,17 @@ def compare_branches_lm(
 
     model_df = _make_model_df(df, col_label, covariate_col_label, threshold_quantile)
 
-    branch_list = model_df.branch.unique()
+    branch_list = _infer_branch_list(model_df.branch, None)
 
     return {
         "individual": summarize_univariate(
-            model_df[col_label], model_df.branch, branch_list, alphas
+            model_df[col_label], model_df.branch, alphas, branch_list
         ),
         "comparative": summarize_joint(
             model_df,
             col_label,
-            branch_list,
             alphas,
+            branch_list,
             ref_branch_label,
             covariate_col_label,
         ),
