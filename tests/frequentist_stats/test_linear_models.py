@@ -393,7 +393,7 @@ def test_summarize_joint():
         assert len(actual[branch].index) == len(expected_index)
 
 
-def test__make_model_df():
+def test_make_model_df():
     # test removal of nulls
     y = [1, 2, 3, 4, None, np.nan]
     branch = ["control", "control", "treatment", "treatment", "control", "treatment"]
