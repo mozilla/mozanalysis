@@ -153,6 +153,19 @@ def test__make_formula():
     assert expected == actual
 
 
+    for bad_target in ["search~count", "search(count", "search)count", "search_count'"]:
+        with pytest.raises(ValueError, match=r"Target variable .* contains invalid character"):
+            mafslm._make_formula(bad_target, "control")
+
+    for bad_branch in ["search~count", "search(count", "search)count", "search_count'"]:
+        with pytest.raises(ValueError, match=r"Reference branch .* contains invalid character"):
+            mafslm._make_formula("search_count", bad_branch)
+
+    for bad_covariate in ["search~count", "search(count", "search)count", "search_count'"]:
+        with pytest.raises(ValueError, match=r"Covariate .* contains invalid character"):
+            mafslm._make_formula("search_count", "control", bad_covariate)
+
+
 def test__make_joint_output():
     out = mafslm._make_joint_output([0.01, 0.05], "rel_uplift")
 

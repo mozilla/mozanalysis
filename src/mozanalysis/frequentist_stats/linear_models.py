@@ -1,6 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import re
+
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
@@ -134,6 +136,15 @@ def _make_formula(target: str, ref_branch: str, covariate: str | None = None) ->
     - formula (str): the R-style formula, to be passed to statsmodels's formula API.
 
     """
+    pattern = re.compile(r"(\(|\)|\~|\')")
+    if pattern.findall(target):
+        raise ValueError(f"Target variable {target} contains invalid character")
+    if pattern.findall(ref_branch):
+        raise ValueError(f"Reference branch {ref_branch} contains invalid character")
+    if covariate is not None and pattern.findall(covariate):
+        raise ValueError(f"Covariate {covariate} contains invalid character")
+
+
     formula = f"{target} ~ C(branch, Treatment(reference='{ref_branch}'))"
     if covariate is not None:
         formula += f" + {covariate}"
