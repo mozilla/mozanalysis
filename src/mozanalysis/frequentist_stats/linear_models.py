@@ -254,7 +254,7 @@ def fit_model(formula: str, df: pd.DataFrame) -> RegressionResults:
 
     Parameters:
     - formula (str): the model formula (such as the output of `_make_formula`)
-    - df (pd.DataFrame): the model data (such as the output of `_make_model_df`)
+    - df (pd.DataFrame): the model data (such as the output of `make_model_df`)
 
     Returns:
     - results (RegressionResults): the fitted model results object.
@@ -289,7 +289,7 @@ def summarize_joint(
 
     Parameters:
     - df (pd.DataFrame): a cleaned set of data, ready for modeling (such as the output
-    of `_make_model_df`)
+    of `make_model_df`)
     - col_label (str): the target variable for which inferences are desired.
     - branch_list (list[str]): the set of all branches (treatments and controls) in the
     experiment.
@@ -328,7 +328,7 @@ def summarize_joint(
     return output
 
 
-def _make_model_df(
+def make_model_df(
     df: pd.DataFrame,
     col_label: str,
     covariate_col_label: str | None = None,
@@ -412,20 +412,20 @@ def compare_branches_lm(
     if alphas is None:
         alphas = [0.01, 0.05]
 
-    model_df = _make_model_df(df, col_label, covariate_col_label, threshold_quantile)
+    model_df = make_model_df(df, col_label, covariate_col_label, threshold_quantile)
 
     branch_list = _infer_branch_list(model_df.branch, None)
 
     return {
         "individual": summarize_univariate(
-            model_df[col_label], model_df.branch, alphas, branch_list = branch_list
+            model_df[col_label], model_df.branch, alphas, branch_list=branch_list
         ),
         "comparative": summarize_joint(
             model_df,
             col_label,
             alphas,
-            ref_branch_label = ref_branch_label,
-            branch_list = branch_list,
-            covariate_col_label = covariate_col_label,
+            ref_branch_label=ref_branch_label,
+            branch_list=branch_list,
+            covariate_col_label=covariate_col_label,
         ),
     }
