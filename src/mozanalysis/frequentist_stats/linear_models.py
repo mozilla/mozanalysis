@@ -15,8 +15,8 @@ def stringify_alpha(alpha: float) -> tuple[str, str]:
     """Converts a floating point alpha-level to the string
     labels of the endpoint of a confidence interval.
     E.g., 0.05 -> '0.025', '0.975'"""
-    if alpha <= 0 or alpha >= 1:
-        raise ValueError("alpha must be in (0,1)")
+    if alpha < 0.002 or alpha >= 1:
+        raise ValueError("alpha must be in (0.002,1)")
     return f"{alpha/2:0.3f}", f"{1-alpha/2:0.3f}"
 
 
