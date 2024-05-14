@@ -90,7 +90,7 @@ def test_summarize_univariate():
     branches = pd.Series([*(["control"] * 100), *(["treatment"] * 100)])
     branch_list = ["control", "treatment"]
 
-    result = mafslm.summarize_univariate(test_data, branches, branch_list, [0.05])
+    result = mafslm.summarize_univariate(test_data, branches, [0.05])
 
     assert sorted(result.keys()) == branch_list
 
@@ -371,9 +371,8 @@ def test_summarize_joint():
     actual = mafslm.summarize_joint(
         model_df,
         column_label,
-        ["control", "treatment-a", "treatment-b"],
         alphas,
-        "treatment-a",
+        ref_branch_label = "treatment-a",
     )
 
     expected_index = [

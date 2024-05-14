@@ -70,7 +70,7 @@ def summarize_univariate(
     data: pd.Series,
     branches: pd.Series,
     alphas: list[float],
-    branch_list: list[str] | None,
+    branch_list: list[str] | None = None,
 ) -> dict[str, pd.Series]:
     """Univariate inferences (point estimates and confidence intervals) for the
     mean of each branch's data.
@@ -267,8 +267,8 @@ def summarize_joint(
     df: pd.DataFrame,
     col_label: str,
     alphas: list[float],
-    branch_list: list[str] | None,
-    ref_branch_label="control",
+    branch_list: list[str] | None = None,
+    ref_branch_label: str = "control",
     covariate_col_label: str | None = None,
 ) -> dict[str, pd.Series]:
     """The primary entrypoint for linear model based inferences on comparisons
@@ -418,14 +418,14 @@ def compare_branches_lm(
 
     return {
         "individual": summarize_univariate(
-            model_df[col_label], model_df.branch, alphas, branch_list
+            model_df[col_label], model_df.branch, alphas, branch_list = branch_list
         ),
         "comparative": summarize_joint(
             model_df,
             col_label,
             alphas,
-            branch_list,
-            ref_branch_label,
-            covariate_col_label,
+            ref_branch_label = ref_branch_label,
+            branch_list = branch_list,
+            covariate_col_label = covariate_col_label,
         ),
     }
