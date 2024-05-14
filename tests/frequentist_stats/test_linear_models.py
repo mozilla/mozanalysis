@@ -20,16 +20,17 @@ def _make_test_model():
 
 
 def _make_test_model_covariate():
+    np.random.seed(42)
     ref_branch = "treatment-a"
     alphas = [0.01, 0.05]
     branches = ["control"] * 100 + ["treatment-a"] * 100 + ["treatment-b"] * 100
     y_base = np.random.normal(loc=2, scale=0.1, size=300)
-    y_pre_adj = np.random.normal(loc=0, scale=0.05, size=300)
+    y_pre_adj = np.random.normal(loc=0, scale=0.02, size=300)
     te = np.concatenate(
         [
-            np.random.normal(loc=0, scale=0.1, size=100),
-            np.random.normal(loc=0.1, scale=0.1, size=100),
-            np.random.normal(loc=0.2, scale=0.1, size=100),
+            np.random.normal(loc=0, scale=0.05, size=100),
+            np.random.normal(loc=0.1, scale=0.05, size=100),
+            np.random.normal(loc=0.2, scale=0.05, size=100),
         ]
     )
     model_df = pd.DataFrame(
