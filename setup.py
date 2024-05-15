@@ -28,7 +28,7 @@ setup(
     python_requires=">=3.10,<=3.11",
     install_requires=[
         "attrs",
-        "mozilla-metric-config-parser",
+        "mozilla-metric-config-parser==2024.4.1",
         "numpy",
         "pandas",
         "pyarrow",
