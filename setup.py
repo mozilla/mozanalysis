@@ -36,7 +36,7 @@ setup(
         "google-cloud-bigquery",
         "google-cloud-bigquery-storage",
         "statsmodels",
-        "marginaleffects",
+        "marginaleffects==0.0.11",
         "matplotlib",
     ],
     setup_requires=["pytest-runner", "setuptools_scm"],
