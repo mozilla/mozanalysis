@@ -11,12 +11,19 @@ attrs==23.2.0 \
     #   -r requirements.in
     #   cattrs
     #   mozilla-metric-config-parser
+build==1.2.1 \
+    --hash=sha256:526263f4870c26f26c433545579475377b2b7588b6f1eac76a001e873ae3e19d \
+    --hash=sha256:75e10f767a433d9a86e50d83f418e83efc18ede923ee5ff7df93b6cb0306c5d4
+    # via
+    #   -r requirements.in
+    #   pip-tools
 cachetools==5.3.3 \
     --hash=sha256:0abad1021d3f8325b2fc1d2e9c8b9c9d57b04c3932657a72465447332c24d945 \
     --hash=sha256:ba29e2dfa0b8b556606f097407ed1aa62080ee108ab0dc5ec9d6a723a007d105
     # via
     #   -r requirements.in
     #   google-auth
+    #   tox
 cattrs==23.2.3 \
     --hash=sha256:0341994d94971052e9ee70662542699a3162ea1e0c62f7ce1b4a57f563685108 \
     --hash=sha256:a934090d95abaa9e911dac357e3a8699e0b4b14f8529bcc7d2b1ad9d51672b9f
@@ -29,6 +36,12 @@ certifi==2024.2.2 \
     # via
     #   -r requirements.in
     #   requests
+chardet==5.2.0 \
+    --hash=sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7 \
+    --hash=sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970
+    # via
+    #   -r requirements.in
+    #   tox
 charset-normalizer==3.3.2 \
     --hash=sha256:06435b539f889b1f6f4ac1758871aae42dc3a8c0e24ac9e60c2384973ad73027 \
     --hash=sha256:06a81e93cd441c56a9b65d8e1d043daeb97a3d0856d177d5c90ba85acb3db087 \
@@ -129,6 +142,13 @@ click==8.1.7 \
     # via
     #   -r requirements.in
     #   mozilla-metric-config-parser
+    #   pip-tools
+colorama==0.4.6 \
+    --hash=sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44 \
+    --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
+    # via
+    #   -r requirements.in
+    #   tox
 contourpy==1.2.1 \
     --hash=sha256:00e5388f71c1a0610e6fe56b5c44ab7ba14165cdd6d695429c5cd94021e390b2 \
     --hash=sha256:10a37ae557aabf2509c79715cd20b62e4c7c28b8cd62dd7d99e5ed3ce28c3fd9 \
@@ -239,6 +259,12 @@ cycler==0.12.1 \
     # via
     #   -r requirements.in
     #   matplotlib
+distlib==0.3.8 \
+    --hash=sha256:034db59a0b96f8ca18035f36290806a9a6e6bd9d1ff91e45a7f172eb17e51784 \
+    --hash=sha256:1530ea13e350031b6312d8580ddb6b27a104275a31106523b8f123787f494f64
+    # via
+    #   -r requirements.in
+    #   virtualenv
 exceptiongroup==1.2.1 \
     --hash=sha256:5258b9ed329c5bbdd31a309f53cbfb0b155341807f6ff7606a1e801a891b29ad \
     --hash=sha256:a4785e48b045528f5bfe627b6ad554ff32def154f42372786903b7abcfe1aa16
@@ -252,6 +278,13 @@ faker==25.2.0 \
     # via
     #   -r requirements.in
     #   polyfactory
+filelock==3.14.0 \
+    --hash=sha256:43339835842f110ca7ae60f1e1c160714c5a6afd15a2873419ab185334975c0f \
+    --hash=sha256:6ea72da3be9b8c82afd3edcf99f2fffbb5076335a5ae4d03248bb5b6c3eae78a
+    # via
+    #   -r requirements.in
+    #   tox
+    #   virtualenv
 fonttools==4.51.0 \
     --hash=sha256:0118ef998a0699a96c7b28457f15546815015a2710a1b23a7bf6c1be60c01636 \
     --hash=sha256:0d145976194a5242fdd22df18a1b451481a88071feadf251221af110ca8f00ce \
@@ -784,10 +817,13 @@ packaging==24.0 \
     --hash=sha256:eb82c5e3e56209074766e6885bb04b8c38a0c015d0a30036ebe7ece34c9989e9
     # via
     #   -r requirements.in
+    #   build
     #   google-cloud-bigquery
     #   matplotlib
+    #   pyproject-api
     #   pytest
     #   statsmodels
+    #   tox
 pandas==2.2.2 \
     --hash=sha256:001910ad31abc7bf06f49dcc903755d2f7f3a9186c0c040b827e522e9cef0863 \
     --hash=sha256:0ca6377b8fca51815f382bd0b697a0814c8bda55115678cbc94c30aacbb6eff2 \
@@ -903,6 +939,17 @@ pillow==10.3.0 \
     # via
     #   -r requirements.in
     #   matplotlib
+pip-tools==7.4.1 \
+    --hash=sha256:4c690e5fbae2f21e87843e89c26191f0d9454f362d8acdbd695716493ec8b3a9 \
+    --hash=sha256:864826f5073864450e24dbeeb85ce3920cdfb09848a3d69ebf537b521f14bcc9
+    # via -r requirements.in
+platformdirs==4.2.2 \
+    --hash=sha256:2d7a1657e36a80ea911db832a8a6ece5ee53d8de21edd5cc5879af6530b1bfee \
+    --hash=sha256:38b7b51f512eed9e84a22788b4bce1de17c0adb134d6becb09836e37d8654cd3
+    # via
+    #   -r requirements.in
+    #   tox
+    #   virtualenv
 plotnine==0.13.6 \
     --hash=sha256:3c8c8f958c295345140230ea29803488f83aba9b5a8d0b1b2eb3eaefbf0a06b8 \
     --hash=sha256:4acc1af29fa4e91e726b67d49277e8368f62e1c817f01bf14ecd8ca5e83bfaea
@@ -915,6 +962,7 @@ pluggy==1.5.0 \
     # via
     #   -r requirements.in
     #   pytest
+    #   tox
 polars==0.20.26 \
     --hash=sha256:25b00bd5cf44929722aa6389706559c5e8cedd6db2cfc38b27b706ed37e1b2af \
     --hash=sha256:97d0e4b6ab6b47fa07798b447189ee9505d2085ec1a64a6aa8a65fdd429cd49f \
@@ -1056,6 +1104,19 @@ pyparsing==3.1.2 \
     # via
     #   -r requirements.in
     #   matplotlib
+pyproject-api==1.6.1 \
+    --hash=sha256:1817dc018adc0d1ff9ca1ed8c60e1623d5aaca40814b953af14a9cf9a5cae538 \
+    --hash=sha256:4c0116d60476b0786c88692cf4e325a9814965e2469c5998b830bba16b183675
+    # via
+    #   -r requirements.in
+    #   tox
+pyproject-hooks==1.1.0 \
+    --hash=sha256:4b37730834edbd6bd37f26ece6b44802fb1c1ee2ece0e54ddff8bfc06db86965 \
+    --hash=sha256:7ceeefe9aec63a1064c18d939bdc3adf2d8aa1988a510afec15151578b232aa2
+    # via
+    #   -r requirements.in
+    #   build
+    #   pip-tools
 pytest==8.2.0 \
     --hash=sha256:1733f0620f6cda4095bbf0d9ff8022486e91892245bb9e7d5542c018f612f233 \
     --hash=sha256:d507d4482197eac0ba2bae2e9babf0672eb333017bcedaa5fb1a3d42c1174b3f
@@ -1211,8 +1272,16 @@ tomli==2.0.1 \
     --hash=sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f
     # via
     #   -r requirements.in
+    #   build
     #   coverage
+    #   pip-tools
+    #   pyproject-api
     #   pytest
+    #   tox
+tox==4.15.0 \
+    --hash=sha256:300055f335d855b2ab1b12c5802de7f62a36d4fd53f30bd2835f6a201dda46ea \
+    --hash=sha256:7a0beeef166fbe566f54f795b4906c31b428eddafc0102ac00d20998dd1933f6
+    # via -r requirements.in
 typing-extensions==4.11.0 \
     --hash=sha256:83f085bd5ca59c80295fc2a82ab5dac679cbe02b9f33f7d83af68e241bea51b0 \
     --hash=sha256:c1f94d72897edaf4ce775bb7558d5b79d8126906a14ea5ed1635921406c0387a
@@ -1233,3 +1302,21 @@ urllib3==2.2.1 \
     # via
     #   -r requirements.in
     #   requests
+virtualenv==20.26.2 \
+    --hash=sha256:82bf0f4eebbb78d36ddaee0283d43fe5736b53880b8a8cdcd37390a07ac3741c \
+    --hash=sha256:a624db5e94f01ad993d476b9ee5346fdf7b9de43ccaee0e0197012dc838a0e9b
+    # via
+    #   -r requirements.in
+    #   tox
+wheel==0.43.0 \
+    --hash=sha256:465ef92c69fa5c5da2d1cf8ac40559a8c940886afcef87dcf14b9470862f1d85 \
+    --hash=sha256:55c570405f142630c6b9f72fe09d9b67cf1477fcf543ae5b8dcb1f5b7377da81
+    # via
+    #   -r requirements.in
+    #   pip-tools
+
+# WARNING: The following packages were not pinned, but pip requires them to be
+# pinned when the requirements file includes hashes and the requirement is not
+# satisfied by a package already installed. Consider using the --allow-unsafe flag.
+# pip
+# setuptools

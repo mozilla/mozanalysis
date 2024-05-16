@@ -36,6 +36,7 @@ testing = [
     "pytest-timeout",
     "ruff==0.3.1",
 ]
+dev = ['pip-tools', 'tox', "mozanalysis[testing]"]
 
 [tool.setuptools_scm]
 

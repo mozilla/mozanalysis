@@ -24,6 +24,7 @@ pip install -e .
 ```
 
 ## Development
+After installing the dependencies as described above, install the package and additional development dependencies with `pip install -e ".[dev]"`
 Linting and Formatting are done with Ruff.
 
 When adding new dependencies, add them to the `pyproject.toml` `dependencies` list.  Then update the `requirements.txt` file using the script `script/update_deps`.  [`pip-compile` is called](https://pypi.org/project/pip-tools/) in this script, which uses the specified dependencies to create the `requirements.txt` file.
