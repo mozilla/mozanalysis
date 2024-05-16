@@ -20,12 +20,13 @@ pip install mozanalysis
 python3 -m venv venv/
 source venv/bin/activate
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Development
 Linting and Formatting are done with Ruff.
 
-Update the `requirements.txt` file using the script `script/update_deps`
+When adding new dependencies, add them to the `pyproject.toml` `dependencies` list.  Then update the `requirements.txt` file using the script `script/update_deps`.  [`pip-compile` is called](https://pypi.org/project/pip-tools/) in this script, which uses the specified dependencies to create the `requirements.txt` file.
 
 ## Testing locally
 
