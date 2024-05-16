@@ -14,8 +14,18 @@ Online documentation is available at https://mozilla.github.io/mozanalysis/
 pip install mozanalysis
 ```
 
+## Local Installation
+```bash
+# Create and activate a python virtual environment.
+python3 -m venv venv/
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
 ## Development
 Linting and Formatting are done with Ruff.
+
+Update the `requirements.txt` file using the script `script/update_deps`
 
 ## Testing locally
 
