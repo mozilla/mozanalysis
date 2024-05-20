@@ -287,6 +287,9 @@ def fit_model(
             results = smf.ols(formula, df).fit(method="qr")
             warnings.warn("Fell back to unadjusted inferences")
 
+    if not np.isfinite(results.llf):
+        raise Exception("Error fitting model")
+
     return results
 
 
@@ -353,16 +356,13 @@ def summarize_joint(
     return output
 
 
-quality_check_return_type = tuple[pd.DataFrame, str]
-
-
 def make_model_df(
     df: pd.DataFrame,
     col_label: str,
     covariate_col_label: str | None = None,
     threshold_quantile: float | None = None,
     return_quality_checks: bool = False,
-) -> pd.DataFrame | quality_check_return_type:
+) -> pd.DataFrame:
     """Prepares a dataset for modeling. Removes nulls from the response variable
     (col_label). Optionally, adds a similarly cleaned covariate column.
     Optionally, applies outlier filtering (to both the response variable and
@@ -398,17 +398,13 @@ def make_model_df(
     )
 
     if covariate_col_label is not None:
-        is_good, msg = _covariate_quality_check(df[covariate_col_label])
-        if is_good:
-            if threshold_quantile is not None:
-                x_pre = filter_outliers(
-                    df.loc[indexer, covariate_col_label], threshold_quantile
-                )
-            else:
-                x_pre = df.loc[indexer, covariate_col_label]
-            model_df.loc[:, covariate_col_label] = x_pre.astype(float)
+        if threshold_quantile is not None:
+            x_pre = filter_outliers(
+                df.loc[indexer, covariate_col_label], threshold_quantile
+            )
         else:
-            warnings.warn(msg)
+            x_pre = df.loc[indexer, covariate_col_label]
+        model_df.loc[:, covariate_col_label] = x_pre.astype(float)
 
     return model_df
 

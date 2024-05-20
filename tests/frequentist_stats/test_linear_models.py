@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import statsmodels.formula.api as smf
+import warnings
 from statsmodels.stats.weightstats import CompareMeans
 
 
@@ -537,7 +538,7 @@ def test_fit_model():
 
     formula = f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}'))"
 
-    actual_results = mafslm.fit_model(formula, model_df)
+    actual_results = mafslm.fit_model(model_df, column_label, ref_branch)
 
     pd.testing.assert_series_equal(actual_results.params, expected_results.params)
 
@@ -554,7 +555,9 @@ def test_fit_model_covariate():
 
     formula = f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}')) + {column_label_pre}"  # noqa: E501
 
-    actual_results = mafslm.fit_model(formula, model_df)
+    actual_results = mafslm.fit_model(
+        model_df, column_label, ref_branch, column_label_pre
+    )
 
     pd.testing.assert_series_equal(actual_results.params, expected_results.params)
 
@@ -562,3 +565,41 @@ def test_fit_model_covariate():
     pd.testing.assert_frame_equal(
         actual_results.conf_int(alpha), expected_results.conf_int(alpha)
     )
+
+
+def test_fit_model_covariate_robust_to_bad_covariate():
+    _, _, ref_branch, model_df, column_label, column_label_pre = (
+        _make_test_model_covariate()
+    )
+
+    model_df.loc[:, column_label_pre] = [0] * model_df.shape[0]
+
+    expected_formula = (
+        f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}'))"
+    )
+    expected_results = smf.ols(expected_formula, model_df).fit()
+
+    with pytest.warns(Warning, match="Fell back to unadjusted inferences"):
+        actual_results = mafslm.fit_model(
+            model_df, column_label, ref_branch, column_label_pre
+        )
+
+    pd.testing.assert_series_equal(actual_results.params, expected_results.params)
+
+    alpha = 0.05
+    pd.testing.assert_frame_equal(
+        actual_results.conf_int(alpha), expected_results.conf_int(alpha)
+    )
+
+
+def test_fit_model_covariate_fails_on_bad_data():
+    _, _, ref_branch, model_df, column_label, column_label_pre = (
+        _make_test_model_covariate()
+    )
+
+    model_df.loc[:, column_label] = [0] * model_df.shape[0]
+
+    with pytest.raises(Exception, match="Error fitting model"):
+        actual_results = mafslm.fit_model(
+            model_df, column_label, ref_branch, column_label_pre
+        )
