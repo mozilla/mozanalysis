@@ -24,10 +24,11 @@ pip install -e .
 ```
 
 ## Development
-After installing the dependencies as described above, install the package and additional development dependencies with `pip install -e ".[dev]"`
+Follow the steps above, substituting `requirements-dev.txt` for the requirements file. Install the package and additional development dependencies with `pip install -e ".[dev]"`
+
 Linting and Formatting are done with Ruff.
 
-When adding new dependencies, add them to the `pyproject.toml` `dependencies` list.  Then update the `requirements.txt` file using the script `script/update_deps`.  [`pip-compile` is called](https://pypi.org/project/pip-tools/) in this script, which uses the specified dependencies to create the `requirements.txt` file.
+When adding new dependencies, add them to the `pyproject.toml` `dependencies` list.  Then update the `requirements.txt` file using the script `script/update_deps`.  [`pip-compile` is called](https://pypi.org/project/pip-tools/) in this script, which uses the specified dependencies to create the `requirements.txt` file.  Finally, you'll want to update the requirements in your virtual env by running `pip install -r requirements.txt`
 
 ## Testing locally
 
