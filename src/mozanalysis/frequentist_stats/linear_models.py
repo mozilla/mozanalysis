@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import re
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -144,7 +145,6 @@ def _make_formula(target: str, ref_branch: str, covariate: str | None = None) ->
     if covariate is not None and pattern.findall(covariate):
         raise ValueError(f"Covariate {covariate} contains invalid character")
 
-
     formula = f"{target} ~ C(branch, Treatment(reference='{ref_branch}'))"
     if covariate is not None:
         formula += f" + {covariate}"
@@ -259,7 +259,13 @@ def _extract_relative_uplifts(
     return output
 
 
-def fit_model(formula: str, df: pd.DataFrame) -> RegressionResults:
+def fit_model(
+    df: pd.DataFrame,
+    target: str,
+    ref_branch: str,
+    treatment_branches: list[str],
+    covariate: str | None = None,
+) -> RegressionResults | None:
     """Fits a linear regression model to `df` using the provided formula. See
     `_make_formula` for a more in-depth discussion on the model structure.
 
@@ -270,7 +276,30 @@ def fit_model(formula: str, df: pd.DataFrame) -> RegressionResults:
     Returns:
     - results (RegressionResults): the fitted model results object.
     """
-    results = smf.ols(formula, df).fit()
+    formula = _make_formula(target, ref_branch, covariate)
+    try:
+        results = smf.ols(formula, df).fit(method="qr")
+    except np.linalg.LinAlgError as lae:
+        if covariate is None:
+            # nothing we can do about this
+            raise lae
+        else:
+            # maybe covariate is bad (e.g., pre-treatment covariate in
+            # onboarding experiment is always zero), try falling back to
+            # unadjusted inferences
+            formula = _make_formula(target, ref_branch, None)
+            results = smf.ols(formula, df).fit(method="qr")
+            warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
+
+    if not np.isfinite(results.llf):
+        raise Exception("Error fitting model")
+
+    for branch in treatment_branches:
+        param_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
+        if param_name not in results.params:
+            # this can occur if a branch does not have any non-null data
+            raise Exception(f"Effect for branch {branch} not found in model!")
+
     return results
 
 
@@ -319,9 +348,9 @@ def summarize_joint(
 
     treatment_branches = [b for b in branch_list if b != ref_branch_label]
 
-    formula = _make_formula(col_label, ref_branch_label, covariate_col_label)
-
-    results = fit_model(formula, df)
+    results = fit_model(
+        df, col_label, ref_branch_label, treatment_branches, covariate_col_label
+    )
 
     output = {}
 

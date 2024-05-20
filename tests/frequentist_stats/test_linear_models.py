@@ -15,14 +15,15 @@ def _make_test_model():
     model_df = pd.DataFrame({"search_count": searches, "branch": branches})
     formula = "search_count ~ C(branch, Treatment(reference='treatment-a'))"
     results = smf.ols(formula, model_df).fit()
-
-    return results, alphas, ref_branch, model_df, "search_count"
+    treatment_branches = ["control", "treatment-b"]
+    return results, alphas, ref_branch, model_df, "search_count", treatment_branches
 
 
 def _make_test_model_covariate():
     np.random.seed(42)
     ref_branch = "treatment-a"
     alphas = [0.01, 0.05]
+    treatment_branches = ["control", "treatment-b"]
     branches = ["control"] * 100 + ["treatment-a"] * 100 + ["treatment-b"] * 100
     y_base = np.random.normal(loc=2, scale=0.1, size=300)
     y_pre_adj = np.random.normal(loc=0, scale=0.02, size=300)
@@ -44,7 +45,15 @@ def _make_test_model_covariate():
 
     results = smf.ols(formula, model_df).fit()
 
-    return results, alphas, ref_branch, model_df, "search_count", "search_count_pre"
+    return (
+        results,
+        alphas,
+        ref_branch,
+        model_df,
+        "search_count",
+        "search_count_pre",
+        treatment_branches,
+    )
 
 
 def test_stringify_alpha():
@@ -193,7 +202,7 @@ def test__make_joint_output():
 
 
 def test__extract_absolute_uplifts():
-    results, alphas, ref_branch, model_df, column_label = _make_test_model()
+    results, alphas, ref_branch, model_df, column_label, _ = _make_test_model()
 
     bootstrap_results = mafsb.compare_branches(
         model_df, column_label, ref_branch_label=ref_branch
@@ -258,7 +267,7 @@ def test__extract_absolute_uplifts():
 
 
 def test__extract_absolute_uplifts_covariate():
-    results, alphas, ref_branch, model_df, column_label, _ = (
+    results, alphas, ref_branch, model_df, column_label, _, _ = (
         _make_test_model_covariate()
     )
 
@@ -304,7 +313,7 @@ def test__extract_absolute_uplifts_covariate():
 
 
 def test__extract_relative_uplifts():
-    results, alphas, ref_branch, model_df, column_label = _make_test_model()
+    results, alphas, ref_branch, model_df, column_label, _ = _make_test_model()
 
     bootstrap_results = mafsb.compare_branches(
         model_df, column_label, ref_branch_label=ref_branch
@@ -355,7 +364,7 @@ def test__extract_relative_uplifts():
 
 
 def test__extract_relative_uplifts_covariate():
-    results, alphas, ref_branch, model_df, column_label, _ = (
+    results, alphas, ref_branch, model_df, column_label, _, _ = (
         _make_test_model_covariate()
     )
 
@@ -404,7 +413,7 @@ def test_summarize_joint():
     """Validates the structure of the comparative results object,
     tests for accuracy of reported values are found above, in the
     test__extract_<>_uplifts tests"""
-    _, alphas, _, model_df, column_label = _make_test_model()
+    _, alphas, _, model_df, column_label, _ = _make_test_model()
 
     actual = mafslm.summarize_joint(
         model_df,
@@ -489,7 +498,7 @@ def test_compare_branches_lm():
     format of the output object is correct. Functionality testing
     of specific elements of the object is covered by other tests"""
     branches = ["control", "treatment-a", "treatment-b"]
-    _, alphas, _, model_df, column_label = _make_test_model()
+    _, alphas, _, model_df, column_label, _ = _make_test_model()
 
     out = mafslm.compare_branches_lm(
         model_df, column_label, "treatment-a", alphas=alphas
@@ -533,11 +542,13 @@ def test_compare_branches_lm():
 
 
 def test_fit_model():
-    expected_results, _, ref_branch, model_df, column_label = _make_test_model()
+    expected_results, _, ref_branch, model_df, column_label, treatment_branches = (
+        _make_test_model()
+    )
 
-    formula = f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}'))"
-
-    actual_results = mafslm.fit_model(formula, model_df)
+    actual_results = mafslm.fit_model(
+        model_df, column_label, ref_branch, treatment_branches
+    )
 
     pd.testing.assert_series_equal(actual_results.params, expected_results.params)
 
@@ -548,13 +559,19 @@ def test_fit_model():
 
 
 def test_fit_model_covariate():
-    expected_results, _, ref_branch, model_df, column_label, column_label_pre = (
-        _make_test_model_covariate()
+    (
+        expected_results,
+        _,
+        ref_branch,
+        model_df,
+        column_label,
+        column_label_pre,
+        treatment_branches,
+    ) = _make_test_model_covariate()
+
+    actual_results = mafslm.fit_model(
+        model_df, column_label, ref_branch, treatment_branches, column_label_pre
     )
-
-    formula = f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}')) + {column_label_pre}"  # noqa: E501
-
-    actual_results = mafslm.fit_model(formula, model_df)
 
     pd.testing.assert_series_equal(actual_results.params, expected_results.params)
 
@@ -562,3 +579,56 @@ def test_fit_model_covariate():
     pd.testing.assert_frame_equal(
         actual_results.conf_int(alpha), expected_results.conf_int(alpha)
     )
+
+
+def test_fit_model_covariate_robust_to_bad_covariate():
+    _, _, ref_branch, model_df, column_label, column_label_pre, treatment_branches = (
+        _make_test_model_covariate()
+    )
+
+    model_df.loc[:, column_label_pre] = [0] * model_df.shape[0]
+
+    expected_formula = (
+        f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}'))"
+    )
+    expected_results = smf.ols(expected_formula, model_df).fit()
+
+    with pytest.warns(Warning, match="Fell back to unadjusted inferences"):
+        actual_results = mafslm.fit_model(
+            model_df, column_label, ref_branch, treatment_branches, column_label_pre
+        )
+
+    pd.testing.assert_series_equal(actual_results.params, expected_results.params)
+
+    alpha = 0.05
+    pd.testing.assert_frame_equal(
+        actual_results.conf_int(alpha), expected_results.conf_int(alpha)
+    )
+
+
+def test_fit_model_covariate_fails_on_bad_data():
+    _, _, ref_branch, model_df, column_label, column_label_pre, treatment_branches = (
+        _make_test_model_covariate()
+    )
+
+    model_df.loc[:, column_label] = [0] * model_df.shape[0]
+
+    with pytest.raises(Exception, match="Error fitting model"):
+        mafslm.fit_model(
+            model_df, column_label, ref_branch, treatment_branches, column_label_pre
+        )
+
+
+def test_fit_model_covariate_fails_on_bad_branch():
+    _, _, ref_branch, model_df, column_label, column_label_pre, treatment_branches = (
+        _make_test_model_covariate()
+    )
+
+    model_df.loc[:, "branch"] = ["treatment-a"] * model_df.shape[0]
+
+    with pytest.raises(
+        Exception, match="Effect for branch control not found in model!"
+    ):
+        mafslm.fit_model(
+            model_df, column_label, ref_branch, treatment_branches, column_label_pre
+        )
