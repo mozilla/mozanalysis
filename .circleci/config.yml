@@ -73,7 +73,7 @@ jobs:
             #   https://circleci.com/gh/mozilla/mozanalysis/edit#env-vars
             # For more on twine, see:
             #   https://twine.readthedocs.io/en/latest/
-            twine check dist/*
+            twine upload dist/*
 
   docs: &docs_settings
     docker:
@@ -130,11 +130,10 @@ workflows:
               only: main
   tagged-deploy:
     jobs:
-      - deploy
-          # TEMP FOR TESTING
-          # filters:
-          #   tags:
-          #     only: /[0-9]{4}.[0-9]{1,2}.[0-9]+/  # Calver: YYYY.M.MINOR
-          #   branches:
-          #     # Ignore all branches; this workflow should only run for tags.
-          #     ignore: /.*/
+      - deploy:
+          filters:
+            tags:
+              only: /[0-9]{4}.[0-9]{1,2}.[0-9]+/  # Calver: YYYY.M.MINOR
+            branches:
+              # Ignore all branches; this workflow should only run for tags.
+              ignore: /.*/
