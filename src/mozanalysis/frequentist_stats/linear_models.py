@@ -6,6 +6,7 @@ import re
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
+import warnings
 from marginaleffects import avg_comparisons
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
@@ -144,7 +145,6 @@ def _make_formula(target: str, ref_branch: str, covariate: str | None = None) ->
     if covariate is not None and pattern.findall(covariate):
         raise ValueError(f"Covariate {covariate} contains invalid character")
 
-
     formula = f"{target} ~ C(branch, Treatment(reference='{ref_branch}'))"
     if covariate is not None:
         formula += f" + {covariate}"
@@ -259,7 +259,9 @@ def _extract_relative_uplifts(
     return output
 
 
-def fit_model(formula: str, df: pd.DataFrame) -> RegressionResults:
+def fit_model(
+    df: pd.DataFrame, target: str, ref_branch: str, covariate: str | None = None
+) -> RegressionResults | None:
     """Fits a linear regression model to `df` using the provided formula. See
     `_make_formula` for a more in-depth discussion on the model structure.
 
@@ -270,7 +272,21 @@ def fit_model(formula: str, df: pd.DataFrame) -> RegressionResults:
     Returns:
     - results (RegressionResults): the fitted model results object.
     """
-    results = smf.ols(formula, df).fit()
+    formula = _make_formula(target, ref_branch, covariate)
+    try:
+        results = smf.ols(formula, df).fit(method="qr")
+    except np.linalg.LinAlgError as lae:
+        if covariate is None:
+            # nothing we can do about this
+            raise lae
+        else:
+            # maybe covariate is bad (e.g., pre-treatment covariate in
+            # onboarding experiment is always zero), try falling back to
+            # unadjusted inferences
+            formula = _make_formula(target, ref_branch, None)
+            results = smf.ols(formula, df).fit(method="qr")
+            warnings.warn("Fell back to unadjusted inferences")
+
     return results
 
 
@@ -319,9 +335,7 @@ def summarize_joint(
 
     treatment_branches = [b for b in branch_list if b != ref_branch_label]
 
-    formula = _make_formula(col_label, ref_branch_label, covariate_col_label)
-
-    results = fit_model(formula, df)
+    results = fit_model(df, col_label, ref_branch_label, covariate_col_label)
 
     output = {}
 
@@ -339,12 +353,16 @@ def summarize_joint(
     return output
 
 
+quality_check_return_type = tuple[pd.DataFrame, str]
+
+
 def make_model_df(
     df: pd.DataFrame,
     col_label: str,
     covariate_col_label: str | None = None,
     threshold_quantile: float | None = None,
-) -> pd.DataFrame:
+    return_quality_checks: bool = False,
+) -> pd.DataFrame | quality_check_return_type:
     """Prepares a dataset for modeling. Removes nulls from the response variable
     (col_label). Optionally, adds a similarly cleaned covariate column.
     Optionally, applies outlier filtering (to both the response variable and
@@ -359,8 +377,11 @@ def make_model_df(
     - threshold_quantile (Optional[float]): the outlier threshold. See
     `filter_outliers`.
 
-    Returns:
+    If `return_quality_checks` is `False` (default), returns:
     - model_df (pd.DataFrame): the cleaned data, ready for modeling.
+
+    Else, returns a tuple (pd.DataFrame, str) where the first value is the model_df
+    and the 2nd value is a message indicating why
     """
 
     indexer = ~df[col_label].isna()
@@ -377,15 +398,23 @@ def make_model_df(
     )
 
     if covariate_col_label is not None:
-        if threshold_quantile is not None:
-            x_pre = filter_outliers(
-                df.loc[indexer, covariate_col_label], threshold_quantile
-            )
+        is_good, msg = _covariate_quality_check(df[covariate_col_label])
+        if is_good:
+            if threshold_quantile is not None:
+                x_pre = filter_outliers(
+                    df.loc[indexer, covariate_col_label], threshold_quantile
+                )
+            else:
+                x_pre = df.loc[indexer, covariate_col_label]
+            model_df.loc[:, covariate_col_label] = x_pre.astype(float)
         else:
-            x_pre = df.loc[indexer, covariate_col_label]
-        model_df.loc[:, covariate_col_label] = x_pre.astype(float)
+            warnings.warn(msg)
 
     return model_df
+
+
+def _covariate_quality_check(data: pd.Series) -> bool:
+    return True
 
 
 def compare_branches_lm(
