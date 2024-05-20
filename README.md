@@ -29,7 +29,7 @@ pip install -e . --no-dependencies
 ## Development
 Linting and Formatting are done with Ruff.
 
-When adding new dependencies, add them to the `pyproject.toml` `dependencies` list.  Then update the requirmenets files using the script `script/update_deps`.  [`pip-compile` is called](https://pypi.org/project/pip-tools/) in this script, which uses the specified dependencies to create the `requirements.txt` and `requirements-dev.txt` files.  Finally, you'll want to update the requirements in your virtual env by running `pip install -r requirements-dev.txt`
+When adding new dependencies, add them to the `pyproject.toml` `dependencies` list.  Then generate updated requirmenets files using the script `script/update_deps`.  [`pip-compile` is called](https://pypi.org/project/pip-tools/) in this script, which uses the specified dependencies to create the `requirements.txt` and `requirements-dev.txt` files.  Finally, you'll want to update the requirements in your virtual env by running `pip install -r requirements-dev.txt`
 
 ## Testing locally
 
