@@ -130,7 +130,7 @@ workflows:
               only: main
   tagged-deploy:
     jobs:
-      - deploy:
+      - deploy
           # TEMP FOR TESTING
           # filters:
           #   tags:
