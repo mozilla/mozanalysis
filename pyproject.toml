@@ -20,6 +20,7 @@ dependencies=[
     "statsmodels",
     "marginaleffects==0.0.11",
     "matplotlib",
+    "SecretStorage"
 ]
 
 [project.urls]

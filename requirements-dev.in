@@ -23,6 +23,8 @@ cattrs==23.2.3
     # via mozilla-metric-config-parser
 certifi==2024.2.2
     # via requests
+cffi==1.16.0
+    # via cryptography
 chardet==5.2.0
     # via tox
 charset-normalizer==3.3.2
@@ -37,6 +39,8 @@ contourpy==1.2.1
     # via matplotlib
 coverage[toml]==7.5.1
     # via pytest-cov
+cryptography==42.0.7
+    # via secretstorage
 cycler==0.12.1
     # via matplotlib
 distlib==0.3.8
@@ -104,6 +108,8 @@ jaraco-context==5.3.0
     # via keyring
 jaraco-functools==4.0.1
     # via keyring
+jeepney==0.8.0
+    # via secretstorage
 jinja2==3.1.4
     # via mozilla-metric-config-parser
 keyring==25.2.1
@@ -130,7 +136,6 @@ more-itertools==10.2.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-    # via -r -
 mozilla-metric-config-parser==2024.4.1
     # via mozanalysis
 mozilla-nimbus-schemas==2023.10.3
@@ -210,6 +215,8 @@ pyasn1==0.6.0
     #   rsa
 pyasn1-modules==0.4.0
     # via google-auth
+pycparser==2.22
+    # via cffi
 pydantic==1.10.15
     # via mozilla-nimbus-schemas
 pygments==2.18.0
@@ -274,6 +281,8 @@ scipy==1.13.0
     #   mozanalysis
     #   plotnine
     #   statsmodels
+secretstorage==3.3.3
+    # via mozanalysis
 six==1.16.0
     # via
     #   patsy
