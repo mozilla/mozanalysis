@@ -22,6 +22,7 @@ dependencies=[
     "matplotlib",
     "SecretStorage"
 ]
+readme = "README.md"
 
 [project.urls]
 Repository = "https://github.com/mozilla/mozanalysis"
