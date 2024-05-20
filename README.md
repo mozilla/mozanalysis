@@ -15,34 +15,30 @@ pip install mozanalysis
 ```
 
 ## Local Installation
+### Dependencies
+Dependencies are specified in the `requirements.txt` and `requirements-dev.txt` files, which are used for testing and development respecitvely.
+To create a virtualenv and set up the package execute the following, replacing `requirements.txt` with `requirements-dev.txt` if you plan on contributing to the package.
 ```bash
 # Create and activate a python virtual environment.
 python3 -m venv venv/
 source venv/bin/activate
 pip install -r requirements.txt
-pip install -e .
+pip install -e . --no-dependencies
 ```
 
 ## Development
-Follow the steps above, substituting `requirements-dev.txt` for the requirements file. Install the package and additional development dependencies with `pip install -e ".[dev]"`
-
 Linting and Formatting are done with Ruff.
 
-When adding new dependencies, add them to the `pyproject.toml` `dependencies` list.  Then update the `requirements.txt` file using the script `script/update_deps`.  [`pip-compile` is called](https://pypi.org/project/pip-tools/) in this script, which uses the specified dependencies to create the `requirements.txt` file.  Finally, you'll want to update the requirements in your virtual env by running `pip install -r requirements.txt`
+When adding new dependencies, add them to the `pyproject.toml` `dependencies` list.  Then update the requirmenets files using the script `script/update_deps`.  [`pip-compile` is called](https://pypi.org/project/pip-tools/) in this script, which uses the specified dependencies to create the `requirements.txt` and `requirements-dev.txt` files.  Finally, you'll want to update the requirements in your virtual env by running `pip install -r requirements-dev.txt`
 
 ## Testing locally
 
 ### With pytest
-First one must ensure that all the test dependencies are installed.  To do so, navigate to the root of the repo and run
-```
-pip install -e ".[testing]"
-```
-
-Then run `pytest` on the commandline
+Run `pytest` on the commandline from the root of the package file structure.
 
 ### with Tox
 
-Install tox into your global Python environment and run `tox`.
+Tox is included in the dev dependencies.  If you want to run with tox, install the dev dependencies in the `requirements-dev.txt` as detailed above.
 
 You can pass flags to tox to limit the different environments you test in
 or the tests you run. Options after `--` or positional arguments are forwarded to pytest.
