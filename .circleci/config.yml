@@ -61,11 +61,11 @@ jobs:
       - run:
           name: Install deployment tools
           command: |
-            pip install --upgrade setuptools wheel twine
+            pip install -r requirements.txt
       - run:
           name: Create the distribution files
           command: |
-            python setup.py sdist bdist_wheel
+            python3 -m build --sdist
       - run:
           name: Upload to PyPI
           command: |
@@ -73,7 +73,7 @@ jobs:
             #   https://circleci.com/gh/mozilla/mozanalysis/edit#env-vars
             # For more on twine, see:
             #   https://twine.readthedocs.io/en/latest/
-            twine upload dist/*
+            twine check dist/*
 
   docs: &docs_settings
     docker:
@@ -131,9 +131,10 @@ workflows:
   tagged-deploy:
     jobs:
       - deploy:
-          filters:
-            tags:
-              only: /[0-9]{4}.[0-9]{1,2}.[0-9]+/  # Calver: YYYY.M.MINOR
-            branches:
-              # Ignore all branches; this workflow should only run for tags.
-              ignore: /.*/
+          # TEMP FOR TESTING
+          # filters:
+          #   tags:
+          #     only: /[0-9]{4}.[0-9]{1,2}.[0-9]+/  # Calver: YYYY.M.MINOR
+          #   branches:
+          #     # Ignore all branches; this workflow should only run for tags.
+          #     ignore: /.*/
