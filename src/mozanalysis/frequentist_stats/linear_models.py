@@ -361,7 +361,6 @@ def make_model_df(
     col_label: str,
     covariate_col_label: str | None = None,
     threshold_quantile: float | None = None,
-    return_quality_checks: bool = False,
 ) -> pd.DataFrame:
     """Prepares a dataset for modeling. Removes nulls from the response variable
     (col_label). Optionally, adds a similarly cleaned covariate column.
@@ -377,11 +376,8 @@ def make_model_df(
     - threshold_quantile (Optional[float]): the outlier threshold. See
     `filter_outliers`.
 
-    If `return_quality_checks` is `False` (default), returns:
+    Returns:
     - model_df (pd.DataFrame): the cleaned data, ready for modeling.
-
-    Else, returns a tuple (pd.DataFrame, str) where the first value is the model_df
-    and the 2nd value is a message indicating why
     """
 
     indexer = ~df[col_label].isna()
@@ -407,10 +403,6 @@ def make_model_df(
         model_df.loc[:, covariate_col_label] = x_pre.astype(float)
 
     return model_df
-
-
-def _covariate_quality_check(data: pd.Series) -> bool:
-    return True
 
 
 def compare_branches_lm(
