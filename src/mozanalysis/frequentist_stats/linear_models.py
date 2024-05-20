@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import re
+import warnings
 
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
-import warnings
 from marginaleffects import avg_comparisons
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
@@ -285,7 +285,7 @@ def fit_model(
             # unadjusted inferences
             formula = _make_formula(target, ref_branch, None)
             results = smf.ols(formula, df).fit(method="qr")
-            warnings.warn("Fell back to unadjusted inferences")
+            warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
 
     if not np.isfinite(results.llf):
         raise Exception("Error fitting model")
