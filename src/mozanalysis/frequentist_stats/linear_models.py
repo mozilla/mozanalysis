@@ -347,7 +347,9 @@ def summarize_joint(
 
     treatment_branches = [b for b in branch_list if b != ref_branch_label]
 
-    results = fit_model(df, col_label, ref_branch_label, treatment_branches, covariate_col_label)
+    results = fit_model(
+        df, col_label, ref_branch_label, treatment_branches, covariate_col_label
+    )
 
     output = {}
 

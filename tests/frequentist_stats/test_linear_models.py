@@ -626,11 +626,6 @@ def test_fit_model_covariate_fails_on_bad_branch():
 
     model_df.loc[:, "branch"] = ["treatment-a"] * model_df.shape[0]
 
-    expected_formula = (
-        f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}'))"
-    )
-    expected_results = smf.ols(expected_formula, model_df).fit()
-
     with pytest.raises(
         Exception, match="Effect for branch control not found in model!"
     ):
