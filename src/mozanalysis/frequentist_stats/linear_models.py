@@ -297,6 +297,7 @@ def fit_model(
     for branch in treatment_branches:
         param_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
         if param_name not in results.params:
+            # this can occur if a branch does not have any non-null data
             raise Exception(f"Effect for branch {branch} not found in model!")
 
     return results
