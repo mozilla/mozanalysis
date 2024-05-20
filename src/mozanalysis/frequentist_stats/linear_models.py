@@ -260,7 +260,11 @@ def _extract_relative_uplifts(
 
 
 def fit_model(
-    df: pd.DataFrame, target: str, ref_branch: str, covariate: str | None = None
+    df: pd.DataFrame,
+    target: str,
+    ref_branch: str,
+    treatment_branches: list[str],
+    covariate: str | None = None,
 ) -> RegressionResults | None:
     """Fits a linear regression model to `df` using the provided formula. See
     `_make_formula` for a more in-depth discussion on the model structure.
@@ -289,6 +293,11 @@ def fit_model(
 
     if not np.isfinite(results.llf):
         raise Exception("Error fitting model")
+
+    for branch in treatment_branches:
+        param_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
+        if param_name not in results.params:
+            raise Exception(f"Effect for branch {branch} not found in model!")
 
     return results
 
