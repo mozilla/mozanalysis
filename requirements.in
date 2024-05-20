@@ -10,7 +10,9 @@ attrs==23.2.0
     #   mozanalysis
     #   mozilla-metric-config-parser
 build==1.2.1
-    # via pip-tools
+    # via
+    #   mozanalysis
+    #   pip-tools
 cachetools==5.3.3
     # via
     #   google-auth
@@ -64,7 +66,7 @@ google-auth==2.29.0
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-cloud-bigquery==3.22.0
+google-cloud-bigquery==3.23.0
     # via mozanalysis
 google-cloud-bigquery-storage==2.25.0
     # via mozanalysis
@@ -78,7 +80,7 @@ googleapis-common-protos==1.63.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio==1.63.0
+grpcio==1.64.0
     # via
     #   google-api-core
     #   grpcio-status
@@ -190,7 +192,7 @@ pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
-pytest==8.2.0
+pytest==8.2.1
     # via
     #   mozanalysis
     #   pytest-cov
@@ -212,7 +214,7 @@ pytz==2024.1
     # via
     #   mozilla-metric-config-parser
     #   pandas
-requests==2.31.0
+requests==2.32.0
     # via
     #   google-api-core
     #   google-cloud-bigquery
