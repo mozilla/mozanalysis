@@ -12,23 +12,35 @@ attrs==23.2.0
 backports-tarfile==1.1.1
     # via jaraco-context
 build==1.2.1
-    # via mozanalysis
+    # via
+    #   mozanalysis
+    #   pip-tools
 cachetools==5.3.3
-    # via google-auth
+    # via
+    #   google-auth
+    #   tox
 cattrs==23.2.3
     # via mozilla-metric-config-parser
 certifi==2024.2.2
     # via requests
+chardet==5.2.0
+    # via tox
 charset-normalizer==3.3.2
     # via requests
 click==8.1.7
-    # via mozilla-metric-config-parser
+    # via
+    #   mozilla-metric-config-parser
+    #   pip-tools
+colorama==0.4.6
+    # via tox
 contourpy==1.2.1
     # via matplotlib
 coverage[toml]==7.5.1
     # via pytest-cov
 cycler==0.12.1
     # via matplotlib
+distlib==0.3.8
+    # via virtualenv
 docutils==0.21.2
     # via readme-renderer
 exceptiongroup==1.2.1
@@ -37,6 +49,10 @@ exceptiongroup==1.2.1
     #   pytest
 faker==25.2.0
     # via polyfactory
+filelock==3.14.0
+    # via
+    #   tox
+    #   virtualenv
 fonttools==4.51.0
     # via matplotlib
 gitdb==4.0.11
@@ -139,8 +155,10 @@ packaging==24.0
     #   build
     #   google-cloud-bigquery
     #   matplotlib
+    #   pyproject-api
     #   pytest
     #   statsmodels
+    #   tox
 pandas==2.2.2
     # via
     #   mizani
@@ -153,12 +171,20 @@ patsy==0.5.6
     #   statsmodels
 pillow==10.3.0
     # via matplotlib
+pip-tools==7.4.1
+    # via mozanalysis
 pkginfo==1.10.0
     # via twine
+platformdirs==4.2.2
+    # via
+    #   tox
+    #   virtualenv
 plotnine==0.13.6
     # via marginaleffects
 pluggy==1.5.0
-    # via pytest
+    # via
+    #   pytest
+    #   tox
 polars==0.20.26
     # via marginaleffects
 polyfactory==2.16.0
@@ -192,8 +218,12 @@ pygments==2.18.0
     #   rich
 pyparsing==3.1.2
     # via matplotlib
+pyproject-api==1.6.1
+    # via tox
 pyproject-hooks==1.1.0
-    # via build
+    # via
+    #   build
+    #   pip-tools
 pytest==8.2.1
     # via
     #   mozanalysis
@@ -260,7 +290,12 @@ tomli==2.0.1
     # via
     #   build
     #   coverage
+    #   pip-tools
+    #   pyproject-api
     #   pytest
+    #   tox
+tox==4.15.0
+    # via mozanalysis
 twine==5.1.0
     # via mozanalysis
 typing-extensions==4.11.0
@@ -274,5 +309,13 @@ urllib3==2.2.1
     # via
     #   requests
     #   twine
+virtualenv==20.26.2
+    # via tox
+wheel==0.43.0
+    # via pip-tools
 zipp==3.18.2
     # via importlib-metadata
+
+# The following packages are considered to be unsafe in a requirements file:
+# pip
+# setuptools
