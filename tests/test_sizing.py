@@ -6,7 +6,6 @@ from mozanalysis.experiment import TimeLimits
 from mozanalysis.metrics import DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
 from mozanalysis.sizing import HistoricalTarget
-from mozanalysis.config import ConfigLoader
 
 
 class DumbResponse:

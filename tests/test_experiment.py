@@ -1,5 +1,6 @@
 import pytest
 from cheap_lint import sql_lint
+from mozanalysis.config import ConfigLoader
 from mozanalysis.experiment import (
     AnalysisWindow,
     EnrollmentsQueryType,
@@ -9,7 +10,6 @@ from mozanalysis.experiment import (
 from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
-from mozanalysis.config import ConfigLoader
 
 
 @pytest.fixture()

@@ -6,12 +6,12 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import pytest
+from mozanalysis.config import ConfigLoader
 from mozanalysis.frequentist_stats.sample_size import (
     empirical_effect_size_sample_size_calc,
     sample_size_curves,
     z_or_t_ind_sample_size_calc,
 )
-from mozanalysis.config import ConfigLoader
 
 search_clients_daily = ConfigLoader.get_data_source(
     "search_clients_engines_sources_daily", "firefox_desktop"

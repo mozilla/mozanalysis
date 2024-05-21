@@ -1,6 +1,5 @@
 import pytest
 from cheap_lint import sql_lint
-from mozanalysis.metrics import DataSource, Metric
 from mozanalysis.config import ConfigLoader
 
 
