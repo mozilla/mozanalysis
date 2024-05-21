@@ -1,0 +1,12 @@
+#!/bin/bash
+pip-compile -o - - <<< '.[testing]' |
+    grep -v 'file://' |
+    sed 's/pip-compile.*/update_deps/' > requirements.in
+
+pip-compile --generate-hashes -o requirements.txt requirements.in
+
+pip-compile -c requirements.txt -o - - <<< '.[dev]' |
+    grep -v 'file://' |
+    sed 's/pip-compile.*/update_deps/' > requirements-dev.in
+
+pip-compile --generate-hashes -o requirements-dev.txt requirements-dev.in

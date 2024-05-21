@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8", "pytest-runner", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name= "mozanalysis"
+dynamic = ["version"]
+authors=[{name = "Mozilla Corporation", email="fx-data-dev@mozilla.org"}]
+description="A library for Mozilla experiments analysis"
+requires-python=">=3.10,<=3.11"
+dependencies=[
+    "attrs",
+    "mozilla-metric-config-parser>=2024.4.1",
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "scipy",
+    "google-cloud-bigquery",
+    "google-cloud-bigquery-storage",
+    "statsmodels",
+    "marginaleffects==0.0.11",
+    "matplotlib",
+    "SecretStorage"
+]
+readme = "README.md"
+
+[project.urls]
+Repository = "https://github.com/mozilla/mozanalysis"
+Documentation = "https://mozilla.github.io/mozanalysis/"
+
+[project.optional-dependencies]
+docs = ["Sphinx", "sphinx-autobuild", "sphinx-rtd-theme"]
+testing = [
+    "mock",
+    "pytest",
+    "pytest-ruff",
+    "pytest-cov",
+    "pytest-timeout",
+    "ruff==0.3.1",
+    'build',
+    'twine'
+]
+dev = ['pip-tools', 'tox', "mozanalysis[testing]"]
+
+[tool.setuptools_scm]
+
+[tool.ruff]
+line-length=88
+exclude = [".git","__pycache__"]
+target-version = "py310"
+
+[tool.ruff.lint]
+ignore= ["E741", "RUF005"]
+select = [
+    "E", # pycodestyle
+    "W", # pycodestyle
+    "F", # Pyflakes
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "I", # isort
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "TID", # flake8-tidy-imports
+    "Q", # flake8-quotes
+    "UP", # pyupgrade
+    "PT", # flake8-pytest-style
+    "RUF", # Ruff-specific rules
+]
+
+[tool.pytest.ini_options]
+norecursedirs = "tests/helpers"
