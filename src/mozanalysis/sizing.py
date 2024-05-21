@@ -40,10 +40,6 @@ class HistoricalTarget:
 
         from mozanalysis.config import ConfigLoader
 
-
-        from mozanalysis.segments.desktop import allweek_regular_v1, \
-            new_or_resurrected_v3
-
         active_hours = ConfigLoader.get_metric("active_hours", "firefox_desktop")
         uri_count = ConfigLoader.get_metric("uri_count", "firefox_desktop")
 
