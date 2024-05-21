@@ -1,9 +1,3 @@
-import mozanalysis.metrics.desktop as mad
-import mozanalysis.metrics.fenix
-import mozanalysis.metrics.firefox_ios
-import mozanalysis.metrics.klar_android
-import mozanalysis.metrics.klar_ios
-import mozanalysis.segments.desktop as msd
 import pytest
 from cheap_lint import sql_lint
 from mozanalysis.experiment import (
@@ -15,6 +9,45 @@ from mozanalysis.experiment import (
 from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
+from mozanalysis.config import ConfigLoader
+
+
+@pytest.fixture()
+def desktop_metrics():
+    desktop_metrics = [
+        ConfigLoader.get_metric("active_hours", "firefox_desktop"),
+        ConfigLoader.get_metric("uri_count", "firefox_desktop"),
+        ConfigLoader.get_metric("search_count", "firefox_desktop"),
+        ConfigLoader.get_metric("tagged_search_count", "firefox_desktop"),
+        ConfigLoader.get_metric("tagged_follow_on_search_count", "firefox_desktop"),
+        ConfigLoader.get_metric("ad_clicks", "firefox_desktop"),
+        ConfigLoader.get_metric("searches_with_ads", "firefox_desktop"),
+        ConfigLoader.get_metric("organic_search_count", "firefox_desktop"),
+        ConfigLoader.get_metric("unenroll", "firefox_desktop"),
+        ConfigLoader.get_metric("view_about_logins", "firefox_desktop"),
+        ConfigLoader.get_metric("view_about_protections", "firefox_desktop"),
+        ConfigLoader.get_metric("connect_fxa", "firefox_desktop"),
+        ConfigLoader.get_metric("pocket_rec_clicks", "firefox_desktop"),
+        ConfigLoader.get_metric("pocket_spoc_clicks", "firefox_desktop"),
+        ConfigLoader.get_metric("days_of_use", "firefox_desktop"),
+        ConfigLoader.get_metric("qualified_cumulative_days_of_use", "firefox_desktop"),
+        ConfigLoader.get_metric("disable_pocket_clicks", "firefox_desktop"),
+        ConfigLoader.get_metric("disable_pocket_spocs_clicks", "firefox_desktop"),
+    ]
+    return desktop_metrics
+
+
+@pytest.fixture()
+def fenix_metrics():
+    fenix_metrics = [
+        ConfigLoader.get_metric("uri_count", "fenix"),
+        ConfigLoader.get_metric("user_reports_site_issue_count", "fenix"),
+        ConfigLoader.get_metric("user_reload_count", "fenix"),
+        ConfigLoader.get_metric("baseline_ping_count", "fenix"),
+        ConfigLoader.get_metric("metric_ping_count", "fenix"),
+        ConfigLoader.get_metric("first_run_date", "fenix"),
+    ]
+    return fenix_metrics
 
 
 def test_time_limits_validates():
@@ -302,7 +335,7 @@ def test_query_not_detectably_malformed():
     sql_lint(metrics_sql)
 
 
-def test_megaquery_not_detectably_malformed():
+def test_megaquery_not_detectably_malformed(desktop_metrics):
     exp = Experiment("slug", "2019-01-01", 8)
 
     tl = TimeLimits.for_ts(
@@ -319,7 +352,7 @@ def test_megaquery_not_detectably_malformed():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[m for m in mad.__dict__.values() if isinstance(m, Metric)],
+        metric_list=desktop_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -327,7 +360,14 @@ def test_megaquery_not_detectably_malformed():
     sql_lint(metrics_sql)
 
 
-def test_segments_megaquery_not_detectably_malformed():
+def test_segments_megaquery_not_detectably_malformed(desktop_metrics):
+    desktop_segments = [
+        ConfigLoader.get_segment("regular_users_v3", "firefox_desktop"),
+        ConfigLoader.get_segment("new_or_resurrected_v3", "firefox_desktop"),
+        ConfigLoader.get_segment("weekday_regular_v1", "firefox_desktop"),
+        ConfigLoader.get_segment("allweek_regular_v1", "firefox_desktop"),
+        ConfigLoader.get_segment("new_unique_profiles", "firefox_desktop"),
+    ]
     exp = Experiment("slug", "2019-01-01", 8)
 
     tl = TimeLimits.for_ts(
@@ -339,14 +379,14 @@ def test_segments_megaquery_not_detectably_malformed():
 
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
-        segment_list=[s for s in msd.__dict__.values() if isinstance(s, Segment)],
+        segment_list=desktop_segments,
         enrollments_query_type=EnrollmentsQueryType.NORMANDY,
     )
 
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[m for m in mad.__dict__.values() if isinstance(m, Metric)],
+        metric_list=desktop_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -354,7 +394,7 @@ def test_segments_megaquery_not_detectably_malformed():
     sql_lint(metrics_sql)
 
 
-def test_app_id_propagates():
+def test_app_id_propagates(fenix_metrics):
     exp = Experiment("slug", "2019-01-01", 8, app_id="my_cool_app")
 
     tl = TimeLimits.for_ts(
@@ -385,11 +425,7 @@ def test_app_id_propagates():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.fenix.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=fenix_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -459,12 +495,13 @@ def test_firefox_ios_app_id_propagation():
 
     sql_lint(enrollments_sql)
 
+    firefox_ios_metrics = [
+        ConfigLoader.get_metric("baseline_ping_count", "firefox_ios"),
+        ConfigLoader.get_metric("metric_ping_count", "firefox_ios"),
+        ConfigLoader.get_metric("first_run_date", "firefox_ios"),
+    ]
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.firefox_ios.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=firefox_ios_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -507,12 +544,13 @@ def test_firefox_klar_app_id_propagation():
 
     sql_lint(enrollments_sql)
 
+    klar_android_metrics = [
+        ConfigLoader.get_metric("baseline_ping_count", "klar_android"),
+        ConfigLoader.get_metric("metric_ping_count", "klar_android"),
+        ConfigLoader.get_metric("first_run_date", "klar_android"),
+    ]
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.klar_android.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=klar_android_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -555,12 +593,14 @@ def test_firefox_ios_klar_app_id_propagation():
 
     sql_lint(enrollments_sql)
 
+    klar_ios_metrics = [
+        ConfigLoader.get_metric("baseline_ping_count", "klar_ios"),
+        ConfigLoader.get_metric("metric_ping_count", "klar_ios"),
+        ConfigLoader.get_metric("first_run_date", "klar_ios"),
+    ]
+
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.klar_ios.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=klar_ios_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -631,7 +671,7 @@ def test_exposure_signal_query():
         enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
         exposure_signal=ExposureSignal(
             name="exposures",
-            data_source=mozanalysis.metrics.fenix.baseline,
+            data_source=ConfigLoader.get_data_source("baseline", "fenix"),
             select_expr="metrics.counter.events_total_uri_count > 0",
             friendly_name="URI visited exposure",
             description="Exposed when URI visited",
@@ -659,7 +699,7 @@ def test_exposure_signal_query_custom_windows():
         enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
         exposure_signal=ExposureSignal(
             name="exposures",
-            data_source=mozanalysis.metrics.fenix.baseline,
+            data_source=ConfigLoader.get_data_source("baseline", "fenix"),
             select_expr="metrics.counter.events_total_uri_count > 0",
             friendly_name="URI visited exposure",
             description="Exposed when URI visited",
@@ -676,7 +716,7 @@ def test_exposure_signal_query_custom_windows():
     assert "DATE_ADD('2019-01-01', INTERVAL 3 DAY)" in enrollment_sql
 
 
-def test_metrics_query_based_on_exposure():
+def test_metrics_query_based_on_exposure(fenix_metrics):
     exp = Experiment("slug", "2019-01-01", 8)
 
     tl = TimeLimits.for_ts(
@@ -693,11 +733,7 @@ def test_metrics_query_based_on_exposure():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.fenix.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=fenix_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
         analysis_basis=AnalysisBasis.EXPOSURES,
@@ -708,7 +744,7 @@ def test_metrics_query_based_on_exposure():
     assert "e.exposure_date" in metrics_sql
 
 
-def test_metrics_query_with_exposure_signal_custom_windows():
+def test_metrics_query_with_exposure_signal_custom_windows(fenix_metrics):
     exp = Experiment("slug", "2019-01-01", 8)
 
     tl = TimeLimits.for_ts(
@@ -725,17 +761,13 @@ def test_metrics_query_with_exposure_signal_custom_windows():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.fenix.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=fenix_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
         analysis_basis=AnalysisBasis.EXPOSURES,
         exposure_signal=ExposureSignal(
             name="exposures",
-            data_source=mozanalysis.metrics.fenix.baseline,
+            data_source=ConfigLoader.get_data_source("baseline", "fenix"),
             select_expr="metrics.counter.events_total_uri_count > 0",
             friendly_name="URI visited exposure",
             description="Exposed when URI visited",
@@ -750,7 +782,7 @@ def test_metrics_query_with_exposure_signal_custom_windows():
     assert "DATE_ADD('2019-01-01', INTERVAL 3 DAY)" in metrics_sql
 
 
-def test_metrics_query_with_exposure_signal():
+def test_metrics_query_with_exposure_signal(fenix_metrics):
     exp = Experiment("slug", "2019-01-01", 8)
 
     tl = TimeLimits.for_ts(
@@ -767,17 +799,13 @@ def test_metrics_query_with_exposure_signal():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.fenix.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=fenix_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
         analysis_basis=AnalysisBasis.EXPOSURES,
         exposure_signal=ExposureSignal(
             name="exposures",
-            data_source=mozanalysis.metrics.fenix.baseline,
+            data_source=ConfigLoader.get_data_source("baseline", "fenix"),
             select_expr="metrics.counter.events_total_uri_count > 0",
             friendly_name="URI visited exposure",
             description="Exposed when URI visited",

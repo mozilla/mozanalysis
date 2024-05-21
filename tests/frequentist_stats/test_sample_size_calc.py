@@ -11,7 +11,12 @@ from mozanalysis.frequentist_stats.sample_size import (
     sample_size_curves,
     z_or_t_ind_sample_size_calc,
 )
-from mozanalysis.metrics.desktop import search_clients_daily, uri_count
+from mozanalysis.config import ConfigLoader
+
+search_clients_daily = ConfigLoader.get_data_source(
+    "search_clients_engines_sources_daily", "firefox_desktop"
+)
+uri_count = ConfigLoader.get_metric("uri_count", "firefox_desktop")
 
 
 @pytest.fixture()
