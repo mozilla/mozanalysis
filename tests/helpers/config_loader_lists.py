@@ -28,3 +28,31 @@ desktop_metrics = [
     ConfigLoader.get_metric("disable_pocket_clicks", "firefox_desktop"),
     ConfigLoader.get_metric("disable_pocket_spocs_clicks", "firefox_desktop"),
 ]
+
+fenix_metrics = [
+    ConfigLoader.get_metric("uri_count", "fenix"),
+    ConfigLoader.get_metric("user_reports_site_issue_count", "fenix"),
+    ConfigLoader.get_metric("user_reload_count", "fenix"),
+    ConfigLoader.get_metric("baseline_ping_count", "fenix"),
+    ConfigLoader.get_metric("metric_ping_count", "fenix"),
+    ConfigLoader.get_metric("first_run_date", "fenix"),
+]
+
+
+firefox_ios_metrics = [
+    ConfigLoader.get_metric("baseline_ping_count", "firefox_ios"),
+    ConfigLoader.get_metric("metric_ping_count", "firefox_ios"),
+    ConfigLoader.get_metric("first_run_date", "firefox_ios"),
+]
+
+klar_android_metrics = [
+    ConfigLoader.get_metric("baseline_ping_count", "klar_android"),
+    ConfigLoader.get_metric("metric_ping_count", "klar_android"),
+    ConfigLoader.get_metric("first_run_date", "klar_android"),
+]
+
+klar_ios_metrics = [
+    ConfigLoader.get_metric("baseline_ping_count", "klar_ios"),
+    ConfigLoader.get_metric("metric_ping_count", "klar_ios"),
+    ConfigLoader.get_metric("first_run_date", "klar_ios"),
+]

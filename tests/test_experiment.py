@@ -1,6 +1,13 @@
 import pytest
 from helpers.cheap_lint import sql_lint  # local helper file
-from helpers.config_loader_lists import desktop_metrics, desktop_segments
+from helpers.config_loader_lists import (
+    desktop_metrics,
+    desktop_segments,
+    fenix_metrics,
+    firefox_ios_metrics,
+    klar_android_metrics,
+    klar_ios_metrics,
+)
 from mozanalysis.config import ConfigLoader
 from mozanalysis.experiment import (
     AnalysisWindow,
@@ -11,19 +18,6 @@ from mozanalysis.experiment import (
 from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
-
-
-@pytest.fixture()
-def fenix_metrics():
-    fenix_metrics = [
-        ConfigLoader.get_metric("uri_count", "fenix"),
-        ConfigLoader.get_metric("user_reports_site_issue_count", "fenix"),
-        ConfigLoader.get_metric("user_reload_count", "fenix"),
-        ConfigLoader.get_metric("baseline_ping_count", "fenix"),
-        ConfigLoader.get_metric("metric_ping_count", "fenix"),
-        ConfigLoader.get_metric("first_run_date", "fenix"),
-    ]
-    return fenix_metrics
 
 
 def test_time_limits_validates():
@@ -363,7 +357,7 @@ def test_segments_megaquery_not_detectably_malformed():
     sql_lint(metrics_sql)
 
 
-def test_app_id_propagates(fenix_metrics):
+def test_app_id_propagates():
     exp = Experiment("slug", "2019-01-01", 8, app_id="my_cool_app")
 
     tl = TimeLimits.for_ts(
@@ -464,11 +458,6 @@ def test_firefox_ios_app_id_propagation():
 
     sql_lint(enrollments_sql)
 
-    firefox_ios_metrics = [
-        ConfigLoader.get_metric("baseline_ping_count", "firefox_ios"),
-        ConfigLoader.get_metric("metric_ping_count", "firefox_ios"),
-        ConfigLoader.get_metric("first_run_date", "firefox_ios"),
-    ]
     metrics_sql = exp.build_metrics_query(
         metric_list=firefox_ios_metrics,
         time_limits=tl,
@@ -513,11 +502,6 @@ def test_firefox_klar_app_id_propagation():
 
     sql_lint(enrollments_sql)
 
-    klar_android_metrics = [
-        ConfigLoader.get_metric("baseline_ping_count", "klar_android"),
-        ConfigLoader.get_metric("metric_ping_count", "klar_android"),
-        ConfigLoader.get_metric("first_run_date", "klar_android"),
-    ]
     metrics_sql = exp.build_metrics_query(
         metric_list=klar_android_metrics,
         time_limits=tl,
@@ -561,12 +545,6 @@ def test_firefox_ios_klar_app_id_propagation():
     )
 
     sql_lint(enrollments_sql)
-
-    klar_ios_metrics = [
-        ConfigLoader.get_metric("baseline_ping_count", "klar_ios"),
-        ConfigLoader.get_metric("metric_ping_count", "klar_ios"),
-        ConfigLoader.get_metric("first_run_date", "klar_ios"),
-    ]
 
     metrics_sql = exp.build_metrics_query(
         metric_list=klar_ios_metrics,
@@ -685,7 +663,7 @@ def test_exposure_signal_query_custom_windows():
     assert "DATE_ADD('2019-01-01', INTERVAL 3 DAY)" in enrollment_sql
 
 
-def test_metrics_query_based_on_exposure(fenix_metrics):
+def test_metrics_query_based_on_exposure():
     exp = Experiment("slug", "2019-01-01", 8)
 
     tl = TimeLimits.for_ts(
@@ -713,7 +691,7 @@ def test_metrics_query_based_on_exposure(fenix_metrics):
     assert "e.exposure_date" in metrics_sql
 
 
-def test_metrics_query_with_exposure_signal_custom_windows(fenix_metrics):
+def test_metrics_query_with_exposure_signal_custom_windows():
     exp = Experiment("slug", "2019-01-01", 8)
 
     tl = TimeLimits.for_ts(
@@ -751,7 +729,7 @@ def test_metrics_query_with_exposure_signal_custom_windows(fenix_metrics):
     assert "DATE_ADD('2019-01-01', INTERVAL 3 DAY)" in metrics_sql
 
 
-def test_metrics_query_with_exposure_signal(fenix_metrics):
+def test_metrics_query_with_exposure_signal():
     exp = Experiment("slug", "2019-01-01", 8)
 
     tl = TimeLimits.for_ts(
