@@ -225,7 +225,7 @@ pytz==2024.1
     #   pandas
 readme-renderer==43.0
     # via twine
-requests==2.32.0
+requests==2.32.1
     # via
     #   google-api-core
     #   google-cloud-bigquery
