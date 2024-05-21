@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from cheap_lint import sql_lint
+from helpers.cheap_lint import sql_lint
 from mozanalysis.config import ConfigLoader
 from mozanalysis.experiment import TimeLimits
 from mozanalysis.metrics import DataSource, Metric

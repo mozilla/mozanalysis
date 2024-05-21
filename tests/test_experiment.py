@@ -1,5 +1,6 @@
 import pytest
-from cheap_lint import sql_lint
+from helpers.cheap_lint import sql_lint  # local helper file
+from helpers.config_loader_lists import desktop_metrics, desktop_segments
 from mozanalysis.config import ConfigLoader
 from mozanalysis.experiment import (
     AnalysisWindow,
@@ -10,31 +11,6 @@ from mozanalysis.experiment import (
 from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
-
-
-@pytest.fixture()
-def desktop_metrics():
-    desktop_metrics = [
-        ConfigLoader.get_metric("active_hours", "firefox_desktop"),
-        ConfigLoader.get_metric("uri_count", "firefox_desktop"),
-        ConfigLoader.get_metric("search_count", "firefox_desktop"),
-        ConfigLoader.get_metric("tagged_search_count", "firefox_desktop"),
-        ConfigLoader.get_metric("tagged_follow_on_search_count", "firefox_desktop"),
-        ConfigLoader.get_metric("ad_clicks", "firefox_desktop"),
-        ConfigLoader.get_metric("searches_with_ads", "firefox_desktop"),
-        ConfigLoader.get_metric("organic_search_count", "firefox_desktop"),
-        ConfigLoader.get_metric("unenroll", "firefox_desktop"),
-        ConfigLoader.get_metric("view_about_logins", "firefox_desktop"),
-        ConfigLoader.get_metric("view_about_protections", "firefox_desktop"),
-        ConfigLoader.get_metric("connect_fxa", "firefox_desktop"),
-        ConfigLoader.get_metric("pocket_rec_clicks", "firefox_desktop"),
-        ConfigLoader.get_metric("pocket_spoc_clicks", "firefox_desktop"),
-        ConfigLoader.get_metric("days_of_use", "firefox_desktop"),
-        ConfigLoader.get_metric("qualified_cumulative_days_of_use", "firefox_desktop"),
-        ConfigLoader.get_metric("disable_pocket_clicks", "firefox_desktop"),
-        ConfigLoader.get_metric("disable_pocket_spocs_clicks", "firefox_desktop"),
-    ]
-    return desktop_metrics
 
 
 @pytest.fixture()
@@ -335,7 +311,7 @@ def test_query_not_detectably_malformed():
     sql_lint(metrics_sql)
 
 
-def test_megaquery_not_detectably_malformed(desktop_metrics):
+def test_megaquery_not_detectably_malformed():
     exp = Experiment("slug", "2019-01-01", 8)
 
     tl = TimeLimits.for_ts(
@@ -360,14 +336,7 @@ def test_megaquery_not_detectably_malformed(desktop_metrics):
     sql_lint(metrics_sql)
 
 
-def test_segments_megaquery_not_detectably_malformed(desktop_metrics):
-    desktop_segments = [
-        ConfigLoader.get_segment("regular_users_v3", "firefox_desktop"),
-        ConfigLoader.get_segment("new_or_resurrected_v3", "firefox_desktop"),
-        ConfigLoader.get_segment("weekday_regular_v1", "firefox_desktop"),
-        ConfigLoader.get_segment("allweek_regular_v1", "firefox_desktop"),
-        ConfigLoader.get_segment("new_unique_profiles", "firefox_desktop"),
-    ]
+def test_segments_megaquery_not_detectably_malformed():
     exp = Experiment("slug", "2019-01-01", 8)
 
     tl = TimeLimits.for_ts(

@@ -5,8 +5,6 @@ import logging
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
-
 
 def pytest_configure():
     logger = logging.getLogger("py4j")
