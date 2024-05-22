@@ -22,7 +22,7 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="mozanalysis.segments.desktop" href="segments/desktop.html" /> 
+    <link rel="prev" title="mozanalysis.segments" href="segments.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -60,11 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/sample_size.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="metrics/fenix.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.fenix</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="metrics/firefox_ios.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firefox_ios</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="segments.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="segments/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments.desktop</span></code></a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.sizing</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#mozanalysis.sizing.HistoricalTarget"><code class="docutils literal notranslate"><span class="pre">HistoricalTarget</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#mozanalysis.sizing.HistoricalTarget.experiment_name"><code class="docutils literal notranslate"><span class="pre">HistoricalTarget.experiment_name</span></code></a></li>
@@ -124,8 +120,15 @@ principles, which are important for experiment analysis:</p>
 <span class="n">auth</span><span class="o">.</span><span class="n">authenticate_user</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Authenticated&#39;</span><span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">mozanalysis.metrics.desktop</span> <span class="kn">import</span> <span class="n">active_hours</span><span class="p">,</span> <span class="n">uri_count</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.segments.desktop</span> <span class="kn">import</span> <span class="n">allweek_regular_v1</span><span class="p">,</span>             <span class="n">new_or_resurrected_v3</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.config</span> <span class="kn">import</span> <span class="n">ConfigLoader</span>
+
+<span class="n">active_hours</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="s2">&quot;active_hours&quot;</span><span class="p">,</span> <span class="s2">&quot;firefox_desktop&quot;</span><span class="p">)</span>
+<span class="n">uri_count</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="s2">&quot;uri_count&quot;</span><span class="p">,</span> <span class="s2">&quot;firefox_desktop&quot;</span><span class="p">)</span>
+
+<span class="n">new_or_resurrected_v3</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_segment</span><span class="p">(</span><span class="s2">&quot;new_or_resurrected_v3&quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot;firefox_desktop&quot;</span><span class="p">)</span>
+<span class="n">allweek_regular_v1</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_segment</span><span class="p">(</span><span class="s2">&quot;allweek_regular_v1&quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot;firefox_desktop&quot;</span><span class="p">)</span>
 
 <span class="n">bq_context</span> <span class="o">=</span> <span class="n">BigQueryContext</span><span class="p">(</span>
     <span class="n">dataset_id</span><span class="o">=</span><span class="s1">&#39;mbowerman&#39;</span><span class="p">,</span>  <span class="c1"># e.g. mine&#39;s mbowerman</span>
@@ -436,7 +439,7 @@ hours before UTC midnight.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="segments/desktop.html" class="btn btn-neutral float-left" title="mozanalysis.segments.desktop" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="segments.html" class="btn btn-neutral float-left" title="mozanalysis.segments" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

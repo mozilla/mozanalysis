@@ -152,7 +152,10 @@
 
 <span class="sd">        from mozanalysis.experiment import Experiment</span>
 <span class="sd">        from mozanalysis.bq import BigQueryContext</span>
-<span class="sd">        from mozanalysis.metrics.desktop import active_hours, uri_count</span>
+<span class="sd">        from mozanalysis.config import ConfigLoader</span>
+
+<span class="sd">        active_hours = ConfigLoader.get_metric(&quot;active_hours&quot;, &quot;firefox_desktop&quot;)</span>
+<span class="sd">        uri_count = ConfigLoader.get_metric(&quot;uri_count&quot;, &quot;firefox_desktop&quot;)</span>
 
 <span class="sd">        bq_context = BigQueryContext(</span>
 <span class="sd">            dataset_id=&#39;your-dataset-id&#39;,  # e.g. mine&#39;s flawrence</span>

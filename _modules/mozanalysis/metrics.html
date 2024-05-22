@@ -86,29 +86,10 @@
     <span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">TimeLimits</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">import</span> <span class="nn">attr</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    metrics and data sources created in mozanalysis are deprecated</span>
-<span class="sd">    please create directly from metric-hub with ConfigLoader like</span>
-
-<span class="sd">    from mozanalysis.config import ConfigLoader</span>
-<span class="sd">    metric=ConfigLoader.get_metric(metric_slug=&quot;active_hours&quot;,app_name=&quot;firefox_desktop&quot;)</span>
-
-<span class="sd">    and data sources like</span>
-<span class="sd">    data_source=ConfigLoader.get_data_source(data_source_slug=&quot;active_hours&quot;,</span>
-<span class="sd">                                                app_name=&quot;firefox_desktop&quot;)</span>
-
-<span class="sd">    &quot;&quot;&quot;</span><span class="p">,</span>
-    <span class="ne">DeprecationWarning</span><span class="p">,</span>
-    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-<span class="p">)</span>
 
 
 <div class="viewcode-block" id="AnalysisBasis">

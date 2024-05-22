@@ -87,11 +87,7 @@
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/bootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.bootstrap</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="frequentist_stats/sample_size.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats.sample_size</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="metrics.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="metrics/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.desktop</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="metrics/fenix.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.fenix</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="metrics/firefox_ios.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.metrics.firefox_ios</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="segments.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="segments/desktop.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.segments.desktop</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="sizing.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.sizing</span></code></a></li>
 </ul>
 </li>
@@ -169,7 +165,10 @@ if we have data covering their entire analysis window.</p></li>
 
 <span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">Experiment</span>
 <span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">BigQueryContext</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.metrics.desktop</span> <span class="kn">import</span> <span class="n">active_hours</span><span class="p">,</span> <span class="n">uri_count</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.config</span> <span class="kn">import</span> <span class="n">ConfigLoader</span>
+
+<span class="n">active_hours</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="s2">&quot;active_hours&quot;</span><span class="p">,</span> <span class="s2">&quot;firefox_desktop&quot;</span><span class="p">)</span>
+<span class="n">uri_count</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="s2">&quot;uri_count&quot;</span><span class="p">,</span> <span class="s2">&quot;firefox_desktop&quot;</span><span class="p">)</span>
 
 <span class="n">bq_context</span> <span class="o">=</span> <span class="n">BigQueryContext</span><span class="p">(</span>
     <span class="n">dataset_id</span><span class="o">=</span><span class="s1">&#39;your-dataset-id&#39;</span><span class="p">,</span>  <span class="c1"># e.g. mine&#39;s flawrence</span>

@@ -116,9 +116,15 @@
 <span class="sd">        auth.authenticate_user()</span>
 <span class="sd">        print(&#39;Authenticated&#39;)</span>
 
-<span class="sd">        from mozanalysis.metrics.desktop import active_hours, uri_count</span>
-<span class="sd">        from mozanalysis.segments.desktop import allweek_regular_v1, \</span>
-<span class="sd">            new_or_resurrected_v3</span>
+<span class="sd">        from mozanalysis.config import ConfigLoader</span>
+
+<span class="sd">        active_hours = ConfigLoader.get_metric(&quot;active_hours&quot;, &quot;firefox_desktop&quot;)</span>
+<span class="sd">        uri_count = ConfigLoader.get_metric(&quot;uri_count&quot;, &quot;firefox_desktop&quot;)</span>
+
+<span class="sd">        new_or_resurrected_v3 = ConfigLoader.get_segment(&quot;new_or_resurrected_v3&quot;,</span>
+<span class="sd">                                                            &quot;firefox_desktop&quot;)</span>
+<span class="sd">        allweek_regular_v1 = ConfigLoader.get_segment(&quot;allweek_regular_v1&quot;,</span>
+<span class="sd">                                                            &quot;firefox_desktop&quot;)</span>
 
 <span class="sd">        bq_context = BigQueryContext(</span>
 <span class="sd">            dataset_id=&#39;mbowerman&#39;,  # e.g. mine&#39;s mbowerman</span>
