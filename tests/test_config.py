@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import pytest
-from cheap_lint import sql_lint
+from helpers.cheap_lint import sql_lint  # local helper file
 from mozanalysis.config import ConfigLoader
 from mozanalysis.metrics import DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource

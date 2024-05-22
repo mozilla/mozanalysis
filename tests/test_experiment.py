@@ -1,11 +1,14 @@
-import mozanalysis.metrics.desktop as mad
-import mozanalysis.metrics.fenix
-import mozanalysis.metrics.firefox_ios
-import mozanalysis.metrics.klar_android
-import mozanalysis.metrics.klar_ios
-import mozanalysis.segments.desktop as msd
 import pytest
-from cheap_lint import sql_lint
+from helpers.cheap_lint import sql_lint  # local helper file
+from helpers.config_loader_lists import (
+    desktop_metrics,
+    desktop_segments,
+    fenix_metrics,
+    firefox_ios_metrics,
+    klar_android_metrics,
+    klar_ios_metrics,
+)
+from mozanalysis.config import ConfigLoader
 from mozanalysis.experiment import (
     AnalysisWindow,
     EnrollmentsQueryType,
@@ -319,7 +322,7 @@ def test_megaquery_not_detectably_malformed():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[m for m in mad.__dict__.values() if isinstance(m, Metric)],
+        metric_list=desktop_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -339,14 +342,14 @@ def test_segments_megaquery_not_detectably_malformed():
 
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
-        segment_list=[s for s in msd.__dict__.values() if isinstance(s, Segment)],
+        segment_list=desktop_segments,
         enrollments_query_type=EnrollmentsQueryType.NORMANDY,
     )
 
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[m for m in mad.__dict__.values() if isinstance(m, Metric)],
+        metric_list=desktop_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -385,11 +388,7 @@ def test_app_id_propagates():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.fenix.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=fenix_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -460,11 +459,7 @@ def test_firefox_ios_app_id_propagation():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.firefox_ios.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=firefox_ios_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -508,11 +503,7 @@ def test_firefox_klar_app_id_propagation():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.klar_android.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=klar_android_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -556,11 +547,7 @@ def test_firefox_ios_klar_app_id_propagation():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.klar_ios.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=klar_ios_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
     )
@@ -631,7 +618,7 @@ def test_exposure_signal_query():
         enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
         exposure_signal=ExposureSignal(
             name="exposures",
-            data_source=mozanalysis.metrics.fenix.baseline,
+            data_source=ConfigLoader.get_data_source("baseline", "fenix"),
             select_expr="metrics.counter.events_total_uri_count > 0",
             friendly_name="URI visited exposure",
             description="Exposed when URI visited",
@@ -659,7 +646,7 @@ def test_exposure_signal_query_custom_windows():
         enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT,
         exposure_signal=ExposureSignal(
             name="exposures",
-            data_source=mozanalysis.metrics.fenix.baseline,
+            data_source=ConfigLoader.get_data_source("baseline", "fenix"),
             select_expr="metrics.counter.events_total_uri_count > 0",
             friendly_name="URI visited exposure",
             description="Exposed when URI visited",
@@ -693,11 +680,7 @@ def test_metrics_query_based_on_exposure():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.fenix.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=fenix_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
         analysis_basis=AnalysisBasis.EXPOSURES,
@@ -725,17 +708,13 @@ def test_metrics_query_with_exposure_signal_custom_windows():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.fenix.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=fenix_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
         analysis_basis=AnalysisBasis.EXPOSURES,
         exposure_signal=ExposureSignal(
             name="exposures",
-            data_source=mozanalysis.metrics.fenix.baseline,
+            data_source=ConfigLoader.get_data_source("baseline", "fenix"),
             select_expr="metrics.counter.events_total_uri_count > 0",
             friendly_name="URI visited exposure",
             description="Exposed when URI visited",
@@ -767,17 +746,13 @@ def test_metrics_query_with_exposure_signal():
     sql_lint(enrollments_sql)
 
     metrics_sql = exp.build_metrics_query(
-        metric_list=[
-            m
-            for m in mozanalysis.metrics.fenix.__dict__.values()
-            if isinstance(m, Metric)
-        ],
+        metric_list=fenix_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
         analysis_basis=AnalysisBasis.EXPOSURES,
         exposure_signal=ExposureSignal(
             name="exposures",
-            data_source=mozanalysis.metrics.fenix.baseline,
+            data_source=ConfigLoader.get_data_source("baseline", "fenix"),
             select_expr="metrics.counter.events_total_uri_count > 0",
             friendly_name="URI visited exposure",
             description="Exposed when URI visited",

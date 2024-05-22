@@ -2,28 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import warnings
-
 import attr
-
-warnings.simplefilter("default")
-warnings.warn(
-    """
-    segments and segment data source objects created in mozanalysis are deprecated
-    please create directly from metric-hub with ConfigLoader like
-
-    from mozanalysis.config import ConfigLoader
-    segment=ConfigLoader.get_segment(segment_slug="regular_users_v3",
-                                        app_name="firefox_desktop")
-
-    and data sources like
-    segment_data_source=ConfigLoader.get_segment_data_source("clients_last_seen",
-                                                                "firefox_desktop")
-
-    """,
-    DeprecationWarning,
-    stacklevel=1,
-)
 
 
 @attr.s(frozen=True, slots=True)

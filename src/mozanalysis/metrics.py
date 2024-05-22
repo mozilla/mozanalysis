@@ -10,29 +10,10 @@ if TYPE_CHECKING:
     from mozanalysis.experiment import TimeLimits
 
 import logging
-import warnings
 
 import attr
 
 logger = logging.getLogger(__name__)
-
-warnings.simplefilter("default")
-warnings.warn(
-    """
-    metrics and data sources created in mozanalysis are deprecated
-    please create directly from metric-hub with ConfigLoader like
-
-    from mozanalysis.config import ConfigLoader
-    metric=ConfigLoader.get_metric(metric_slug="active_hours",app_name="firefox_desktop")
-
-    and data sources like
-    data_source=ConfigLoader.get_data_source(data_source_slug="active_hours",
-                                                app_name="firefox_desktop")
-
-    """,
-    DeprecationWarning,
-    stacklevel=1,
-)
 
 
 class AnalysisBasis(Enum):

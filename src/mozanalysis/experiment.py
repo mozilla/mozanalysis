@@ -71,7 +71,10 @@ class Experiment:
 
         from mozanalysis.experiment import Experiment
         from mozanalysis.bq import BigQueryContext
-        from mozanalysis.metrics.desktop import active_hours, uri_count
+        from mozanalysis.config import ConfigLoader
+
+        active_hours = ConfigLoader.get_metric("active_hours", "firefox_desktop")
+        uri_count = ConfigLoader.get_metric("uri_count", "firefox_desktop")
 
         bq_context = BigQueryContext(
             dataset_id='your-dataset-id',  # e.g. mine's flawrence

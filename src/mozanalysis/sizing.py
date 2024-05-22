@@ -38,9 +38,15 @@ class HistoricalTarget:
         auth.authenticate_user()
         print('Authenticated')
 
-        from mozanalysis.metrics.desktop import active_hours, uri_count
-        from mozanalysis.segments.desktop import allweek_regular_v1, \
-            new_or_resurrected_v3
+        from mozanalysis.config import ConfigLoader
+
+        active_hours = ConfigLoader.get_metric("active_hours", "firefox_desktop")
+        uri_count = ConfigLoader.get_metric("uri_count", "firefox_desktop")
+
+        new_or_resurrected_v3 = ConfigLoader.get_segment("new_or_resurrected_v3",
+                                                            "firefox_desktop")
+        allweek_regular_v1 = ConfigLoader.get_segment("allweek_regular_v1",
+                                                            "firefox_desktop")
 
         bq_context = BigQueryContext(
             dataset_id='mbowerman',  # e.g. mine's mbowerman

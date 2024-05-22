@@ -1,8 +1,7 @@
-import mozanalysis.metrics.desktop as mad
-import mozanalysis.segments.desktop as msd
 import pandas as pd
 import pytest
-from cheap_lint import sql_lint
+from helpers.cheap_lint import sql_lint  # local helper file
+from helpers.config_loader_lists import desktop_metrics, desktop_segments
 from mozanalysis.config import ConfigLoader
 from mozanalysis.experiment import TimeLimits
 from mozanalysis.metrics import DataSource, Metric
@@ -139,7 +138,11 @@ def test_multiple_datasource():
     test_seg = Segment("test_seg", test_sds, "TEST AGG SELECT STATEMENT", "", "")
 
     target_sql = test_target.build_targets_query(
-        time_limits=tl, target_list=[msd.new_unique_profiles, test_seg]
+        time_limits=tl,
+        target_list=[
+            ConfigLoader.get_segment("new_unique_profiles", "firefox_desktop"),
+            test_seg,
+        ],
     )
 
     sql_lint(target_sql)
@@ -158,7 +161,10 @@ def test_query_not_detectably_malformed():
     )
 
     target_sql = test_target.build_targets_query(
-        time_limits=tl, target_list=[msd.new_unique_profiles]
+        time_limits=tl,
+        target_list=[
+            ConfigLoader.get_segment("new_unique_profiles", "firefox_desktop")
+        ],
     )
 
     sql_lint(target_sql)
@@ -182,18 +188,18 @@ def test_megaquery_not_detectably_malformed():
 
     target_sql = test_target.build_targets_query(
         time_limits=tl,
-        target_list=[s for s in msd.__dict__.values() if isinstance(s, Segment)],
+        target_list=desktop_segments,
     )
 
     sql_lint(target_sql)
 
+    desktop_metrics_no_experiment_slug = [
+        m for m in desktop_metrics if "experiment_slug" not in m.select_expr
+    ]
+
     metrics_sql = test_target.build_metrics_query(
         time_limits=tl,
-        metric_list=[
-            m
-            for m in mad.__dict__.values()
-            if isinstance(m, Metric) and "experiment_slug" not in m.select_expr
-        ],
+        metric_list=desktop_metrics_no_experiment_slug,
         targets_table="targets",
     )
 
