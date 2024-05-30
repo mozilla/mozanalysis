@@ -300,6 +300,8 @@ def fit_model(
             # this can occur if a branch does not have any non-null data
             raise Exception(f"Effect for branch {branch} not found in model!")
 
+    results.bse
+    results.remove_data()
     return results
 
 
