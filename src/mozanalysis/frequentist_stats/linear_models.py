@@ -9,7 +9,7 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from marginaleffects import avg_comparisons
-from statsmodels.regression.linear_model import RegressionResults
+from statsmodels.regression.linear_model import OLSResults
 from statsmodels.stats.weightstats import DescrStatsW
 
 from mozanalysis.utils import filter_outliers
@@ -147,14 +147,14 @@ def _make_formula(target: str, ref_branch: str, covariate: str | None = None) ->
 
     """
     pattern = re.compile(r"(\(|\)|\~|\')")
-    if pattern.findall(target):
-        raise ValueError(f"Target variable {target} contains invalid character")
+    # if pattern.findall(target):
+    #     raise ValueError(f"Target variable {target} contains invalid character")
     if pattern.findall(ref_branch):
         raise ValueError(f"Reference branch {ref_branch} contains invalid character")
     if covariate is not None and pattern.findall(covariate):
         raise ValueError(f"Covariate {covariate} contains invalid character")
 
-    formula = f"{target} ~ C(branch, Treatment(reference='{ref_branch}'))"
+    formula = f"C(branch, Treatment(reference='{ref_branch}'))"
     if covariate is not None:
         formula += f" + {covariate}"
 
@@ -186,14 +186,14 @@ def _make_joint_output(alphas: list[float], uplift_type: str) -> pd.Series:
 
 
 def _extract_absolute_uplifts(
-    results: RegressionResults, branch: str, ref_branch: str, alphas: list[float]
+    results: OLSResults, branch: str, ref_branch: str, alphas: list[float]
 ) -> pd.Series:
     """Extracts inferences on absolute differences between branches from a fitted
     linear model. These are simply the point estimates and confidence intervals of the
     appropriate term in the model.
 
     Parameters:
-    - results (RegressionResults): the fitted model.
+    - results (OLSResults): the fitted model.
     - branch (str): the name of the branch inferences are desired on. Must have been
     present in the training data when the model was fit.
     - ref_branch (str): the name of the reference branch.
@@ -219,7 +219,7 @@ def _extract_absolute_uplifts(
 
 
 def _extract_relative_uplifts(
-    results: RegressionResults, branch: str, ref_branch: str, alphas: list[str]
+    results: OLSResults, branch: str, ref_branch: str, alphas: list[str]
 ) -> pd.Series:
     """Extracts inferences on relative differences between branches from a fitted
     linear model. Unlike absolute differences, these are not simply existing parameters.
@@ -232,7 +232,7 @@ def _extract_relative_uplifts(
     answer for more information.
 
     Parameters:
-    - results (RegressionResults): the fitted model.
+    - results (OLSResults): the fitted model.
     - branch (str): the name of the branch inferences are desired on. Must have been
     present in the training data when the model was fit.
     - ref_branch (str): the name of the reference branch.
@@ -243,12 +243,12 @@ def _extract_relative_uplifts(
     """
 
     output = _make_joint_output(alphas, "rel_uplift")
-    
+
     if covariate_col_label is None:
         nd = datagrid_shim(grid_type="balanced")
     else:
         q = covariate.quantile(np.arange(0, 1, 0.0001)).values
-        nd = datagrid_shim(grid_type="balanced", **{covariate_col_label:q})
+        nd = datagrid_shim(grid_type="balanced", **{covariate_col_label: q})
 
     for alpha in alphas:
         # inferences on branch/ref_branch
@@ -258,7 +258,7 @@ def _extract_relative_uplifts(
             comparison="lnratioavg",
             transform=np.exp,
             conf_level=1 - alpha,
-            newdata = nd
+            newdata=nd,
         )
         assert ac.shape == (
             1,
@@ -281,7 +281,7 @@ def fit_model(
     ref_branch: str,
     treatment_branches: list[str],
     covariate: str | None = None,
-) -> RegressionResults | None:
+) -> OLSResults:
     """Fits a linear regression model to `df` using the provided formula. See
     `_make_formula` for a more in-depth discussion on the model structure.
 
@@ -290,12 +290,12 @@ def fit_model(
     - df (pd.DataFrame): the model data (such as the output of `make_model_df`)
 
     Returns:
-    - results (RegressionResults): the fitted model results object.
+    - results (OLSResults): the fitted model results object.
     """
     formula = _make_formula(target, ref_branch, covariate)
-    y, X = patsy.dmatrices(formula, df, return_type="dataframe")
+    X = patsy.dmatrix(formula, df, return_type="dataframe")
     try:
-        results = sm.OLS(y,X, hasconst=True).fit(method="qr")
+        results = sm.OLS(df[target], X, missing="none", hasconst=True).fit(method="qr")
     except np.linalg.LinAlgError as lae:
         if covariate is None:
             # nothing we can do about this
@@ -305,12 +305,10 @@ def fit_model(
             # onboarding experiment is always zero), try falling back to
             # unadjusted inferences
             formula = _make_formula(target, ref_branch, None)
-            y, X = patsy.dmatrices(formula, df, return_type="dataframe")            
-            results = sm.OLS(y, X, hasconst=True).fit(method="qr")
+            X = patsy.dmatrix(formula, df[target], return_type="dataframe")
+            results = sm.OLS(y, X, missing="none", hasconst=True).fit(method="qr")
             warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
 
-    del y, X
-    
     if not np.isfinite(results.llf):
         raise Exception("Error fitting model")
 
@@ -419,10 +417,12 @@ def make_model_df(
         indexer &= ~df[covariate_col_label].isna()
 
     if threshold_quantile is not None:
-        df[col_label].clip(upper = df[col_label].quantile(threshold_quantile), inplace = True)
-        #x = filter_outliers(df.loc[indexer, col_label], threshold_quantile)
-    #else:
-        #x = df.loc[indexer, col_label]
+        df[col_label].clip(
+            upper=df[col_label].quantile(threshold_quantile), inplace=True
+        )
+        # x = filter_outliers(df.loc[indexer, col_label], threshold_quantile)
+    # else:
+    # x = df.loc[indexer, col_label]
 
     # model_df = pd.DataFrame(
     #     {"branch": df.loc[indexer, "branch"], col_label: x.astype(float)}
@@ -430,14 +430,16 @@ def make_model_df(
 
     if covariate_col_label is not None:
         if threshold_quantile is not None:
-            df[covariate_col_label].clip(upper = df[covariate_col_label].quantile(threshold_quantile), inplace = True)
+            df[covariate_col_label].clip(
+                upper=df[covariate_col_label].quantile(threshold_quantile), inplace=True
+            )
             # x_pre = filter_outliers(
             #     df.loc[indexer, covariate_col_label], threshold_quantile
             # )
-        #else:
-            #x_pre = df.loc[indexer, covariate_col_label]
-        #model_df.loc[:, covariate_col_label] = x_pre.astype(float)
-    
+        # else:
+        # x_pre = df.loc[indexer, covariate_col_label]
+        # model_df.loc[:, covariate_col_label] = x_pre.astype(float)
+
     return df.loc[indexer]
 
 
@@ -476,17 +478,19 @@ def compare_branches_lm(
     if alphas is None:
         alphas = [0.01, 0.05]
 
-    #model_df = make_model_df(df, col_label, covariate_col_label, threshold_quantile)
+    # model_df = make_model_df(df, col_label, covariate_col_label, threshold_quantile)
 
     indexer = ~df[col_label].isna()
     if covariate_col_label is not None:
         indexer &= ~df[covariate_col_label].isna()
 
     if threshold_quantile is not None:
-        df[col_label].clip(upper = df[col_label].quantile(threshold_quantile), inplace = True)
-        #x = filter_outliers(df.loc[indexer, col_label], threshold_quantile)
-    #else:
-        #x = df.loc[indexer, col_label]
+        df[col_label].clip(
+            upper=df[col_label].quantile(threshold_quantile), inplace=True
+        )
+        # x = filter_outliers(df.loc[indexer, col_label], threshold_quantile)
+    # else:
+    # x = df.loc[indexer, col_label]
 
     # model_df = pd.DataFrame(
     #     {"branch": df.loc[indexer, "branch"], col_label: x.astype(float)}
@@ -494,15 +498,17 @@ def compare_branches_lm(
 
     if covariate_col_label is not None:
         if threshold_quantile is not None:
-            df[covariate_col_label].clip(upper = df[covariate_col_label].quantile(threshold_quantile), inplace = True)
+            df[covariate_col_label].clip(
+                upper=df[covariate_col_label].quantile(threshold_quantile), inplace=True
+            )
             # x_pre = filter_outliers(
             #     df.loc[indexer, covariate_col_label], threshold_quantile
             # )
-        #else:
-            #x_pre = df.loc[indexer, covariate_col_label]
-        #model_df.loc[:, covariate_col_label] = x_pre.astype(float)
-    
-    model_df = df.loc[indexer]    
+        # else:
+        # x_pre = df.loc[indexer, covariate_col_label]
+        # model_df.loc[:, covariate_col_label] = x_pre.astype(float)
+
+    model_df = df.loc[indexer]
 
     branch_list = _infer_branch_list(model_df.branch, None)
 
