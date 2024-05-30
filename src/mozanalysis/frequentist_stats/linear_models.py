@@ -6,12 +6,15 @@ import warnings
 
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from marginaleffects import avg_comparisons
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
 
 from mozanalysis.utils import filter_outliers
+
+import patsy
 
 
 def stringify_alpha(alpha: float) -> tuple[str, str]:
@@ -277,8 +280,9 @@ def fit_model(
     - results (RegressionResults): the fitted model results object.
     """
     formula = _make_formula(target, ref_branch, covariate)
+    y, X = patsy.dmatrices(formula, df)
     try:
-        results = smf.ols(formula, df).fit(method="qr")
+        results = sm.OLS(y,X, hasconst=True).fit(method="qr")
     except np.linalg.LinAlgError as lae:
         if covariate is None:
             # nothing we can do about this
@@ -288,9 +292,12 @@ def fit_model(
             # onboarding experiment is always zero), try falling back to
             # unadjusted inferences
             formula = _make_formula(target, ref_branch, None)
-            results = smf.ols(formula, df).fit(method="qr")
+            y, X = patsy.dmatrices(formula, df)            
+            results = sm.OLS(y, X, hasconst=True).fit(method="qr")
             warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
 
+    del y, X
+    
     if not np.isfinite(results.llf):
         raise Exception("Error fitting model")
 
