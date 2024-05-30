@@ -456,7 +456,33 @@ def compare_branches_lm(
     if alphas is None:
         alphas = [0.01, 0.05]
 
-    model_df = make_model_df(df, col_label, covariate_col_label, threshold_quantile)
+    #model_df = make_model_df(df, col_label, covariate_col_label, threshold_quantile)
+
+    indexer = ~df[col_label].isna()
+    if covariate_col_label is not None:
+        indexer &= ~df[covariate_col_label].isna()
+
+    if threshold_quantile is not None:
+        df[col_label].clip(upper = df[col_label].quantile(threshold_quantile), inplace = True)
+        #x = filter_outliers(df.loc[indexer, col_label], threshold_quantile)
+    #else:
+        #x = df.loc[indexer, col_label]
+
+    # model_df = pd.DataFrame(
+    #     {"branch": df.loc[indexer, "branch"], col_label: x.astype(float)}
+    # )
+
+    if covariate_col_label is not None:
+        if threshold_quantile is not None:
+            df[covariate_col_label].clip(upper = df[covariate_col_label].quantile(threshold_quantile), inplace = True)
+            # x_pre = filter_outliers(
+            #     df.loc[indexer, covariate_col_label], threshold_quantile
+            # )
+        #else:
+            #x_pre = df.loc[indexer, covariate_col_label]
+        #model_df.loc[:, covariate_col_label] = x_pre.astype(float)
+    
+    model_df = df.loc[indexer]    
 
     branch_list = _infer_branch_list(model_df.branch, None)
 
