@@ -401,7 +401,7 @@ def make_model_df(
     if threshold_quantile is not None:
         df[col_label].clip(upper = df[col_label].quantile(threshold_quantile), inplace = True)
         #x = filter_outliers(df.loc[indexer, col_label], threshold_quantile)
-    else:
+    #else:
         #x = df.loc[indexer, col_label]
 
     # model_df = pd.DataFrame(
@@ -414,7 +414,7 @@ def make_model_df(
             # x_pre = filter_outliers(
             #     df.loc[indexer, covariate_col_label], threshold_quantile
             # )
-        else:
+        #else:
             #x_pre = df.loc[indexer, covariate_col_label]
         #model_df.loc[:, covariate_col_label] = x_pre.astype(float)
     
