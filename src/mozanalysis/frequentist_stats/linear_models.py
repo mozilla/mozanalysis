@@ -280,7 +280,7 @@ def fit_model(
     - results (RegressionResults): the fitted model results object.
     """
     formula = _make_formula(target, ref_branch, covariate)
-    y, X = patsy.dmatrices(formula, df)
+    y, X = patsy.dmatrices(formula, df, return_type="dataframe")
     try:
         results = sm.OLS(y,X, hasconst=True).fit(method="qr")
     except np.linalg.LinAlgError as lae:
@@ -292,7 +292,7 @@ def fit_model(
             # onboarding experiment is always zero), try falling back to
             # unadjusted inferences
             formula = _make_formula(target, ref_branch, None)
-            y, X = patsy.dmatrices(formula, df)            
+            y, X = patsy.dmatrices(formula, df, return_type="dataframe")            
             results = sm.OLS(y, X, hasconst=True).fit(method="qr")
             warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
 
