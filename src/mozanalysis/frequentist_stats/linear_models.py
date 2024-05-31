@@ -293,9 +293,9 @@ def fit_model(
     - results (OLSResults): the fitted model results object.
     """
     formula = _make_formula(target, ref_branch, covariate)
-    X = patsy.dmatrix(formula, df, return_type="dataframe")
+    X = patsy.dmatrix(formula, df)
     try:
-        results = sm.OLS(df[target], X, missing="none", hasconst=True).fit(method="qr")
+        results = _fit_model(df[target].values, X) #sm.OLS(df[target], X).fit(method="qr")
     except np.linalg.LinAlgError as lae:
         if covariate is None:
             # nothing we can do about this
@@ -305,8 +305,9 @@ def fit_model(
             # onboarding experiment is always zero), try falling back to
             # unadjusted inferences
             formula = _make_formula(target, ref_branch, None)
-            X = patsy.dmatrix(formula, df[target], return_type="dataframe")
-            results = sm.OLS(y, X, missing="none", hasconst=True).fit(method="qr")
+            X = patsy.dmatrix(formula, df[target])
+            #results = sm.OLS(y, X, missing="none", hasconst=True).fit(method="qr")
+            results = _fit_model(df[target].values, X)
             warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
 
     if not np.isfinite(results.llf):
@@ -322,6 +323,23 @@ def fit_model(
     results.remove_data()
     return results
 
+
+def _fit_model(y: np.array, X: patsy.DesignMatrix) -> OLSResults: 
+    """fits the model using a more memory efficient form of least squares: 
+    \hat{beta} = (X'X)^-1 X'y 
+    var(\hat{beta}) = sigma^2 (X'X)^-1 
+    
+    """
+    logger.info("_fit_model")    
+    model = OLS(y,X, missing="none", hasconst=True)    
+    XtX_inv = np.linalg.pinv(np.dot(X.T, X))
+    _params = np.dot(np.dot(XtX_inv, X.T), y)
+    params = pd.Series(_params, index = X.design_info.column_names)
+    logger.info("params")        
+    
+    results = OLSResults(model, params, normalized_cov_params = XtX_inv)
+    logger.info("results")            
+    return results
 
 def summarize_joint(
     df: pd.DataFrame,
