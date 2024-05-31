@@ -331,12 +331,13 @@ def _fit_model(y: np.array, X: patsy.DesignMatrix) -> OLSResults:
     
     """
     logger.info("_fit_model")    
+    columns = X.design_info.column_names
     model = OLS(y,X, missing="none", hasconst=True)    
     XtX_inv = np.linalg.pinv(np.dot(X.T, X))
     _params = np.dot(np.dot(XtX_inv, X.T), y)
-    params = pd.Series(_params, index = X.design_info.column_names)
+    params = pd.Series(_params, index = columns)
     logger.info("params")        
-    
+    ncp = pd.DataFrame(XtX_inv, index = columns, columns = columns)
     results = OLSResults(model, params, normalized_cov_params = XtX_inv)
     logger.info("results")            
     return results
