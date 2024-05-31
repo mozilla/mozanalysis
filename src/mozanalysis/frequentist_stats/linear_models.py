@@ -293,9 +293,9 @@ def fit_model(
     - results (OLSResults): the fitted model results object.
     """
     formula = _make_formula(target, ref_branch, covariate)
-    X = patsy.dmatrix(formula, df)
+    X = patsy.dmatrix(formula, df, return_type = "dataframe")
     try:
-        results = _fit_model(df[target].values, X) #sm.OLS(df[target], X).fit(method="qr")
+        results = _fit_model(df[target], X) #sm.OLS(df[target], X).fit(method="qr")
     except np.linalg.LinAlgError as lae:
         if covariate is None:
             # nothing we can do about this
@@ -305,9 +305,9 @@ def fit_model(
             # onboarding experiment is always zero), try falling back to
             # unadjusted inferences
             formula = _make_formula(target, ref_branch, None)
-            X = patsy.dmatrix(formula, df[target])
+            X = patsy.dmatrix(formula, df[target], return_type = "dataframe")
             #results = sm.OLS(y, X, missing="none", hasconst=True).fit(method="qr")
-            results = _fit_model(df[target].values, X)
+            results = _fit_model(df[target], X)
             warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
 
     if not np.isfinite(results.llf):
@@ -324,18 +324,18 @@ def fit_model(
     return results
 
 
-def _fit_model(y: np.array, X: patsy.DesignMatrix) -> OLSResults: 
+def _fit_model(y: pd.Series, X: pd.DataFrame) -> OLSResults: 
     """fits the model using a more memory efficient form of least squares: 
     \hat{beta} = (X'X)^-1 X'y 
     var(\hat{beta}) = sigma^2 (X'X)^-1 
     
     """
-    columns = X.design_info.column_names
+
     model = sm.OLS(y,X, missing="none", hasconst=True)    
     XtX_inv = np.linalg.pinv(np.dot(X.T, X))
     _params = np.dot(XtX_inv, np.dot(X.T, y))
-    params = pd.Series(_params, index = columns)
-    ncp = pd.DataFrame(XtX_inv, index = columns, columns = columns)
+    params = pd.Series(_params, index = X.columns)
+    ncp = pd.DataFrame(XtX_inv, index = X.columns, columns = X.columns)
     results = OLSResults(model, params, normalized_cov_params = ncp)
     return results
 
