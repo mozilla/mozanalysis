@@ -6,10 +6,10 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
+#import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from marginaleffects import avg_comparisons
-from statsmodels.regression.linear_model import OLSResults
+from statsmodels.regression.linear_model import OLS, RegressionResults, RegressionResultsWrapper
 from statsmodels.stats.weightstats import DescrStatsW
 
 from mozanalysis.utils import filter_outliers
@@ -21,6 +21,10 @@ from functools import reduce, partial
 import polars as pl
 
 from marginaleffects.sanitize_model import sanitize_model
+
+import logging 
+
+logger = logging.getLogger(__name__)
 
 
 def stringify_alpha(alpha: float) -> tuple[str, str]:
@@ -147,14 +151,14 @@ def _make_formula(target: str, ref_branch: str, covariate: str | None = None) ->
 
     """
     pattern = re.compile(r"(\(|\)|\~|\')")
-    # if pattern.findall(target):
-    #     raise ValueError(f"Target variable {target} contains invalid character")
+    if pattern.findall(target):
+        raise ValueError(f"Target variable {target} contains invalid character")
     if pattern.findall(ref_branch):
         raise ValueError(f"Reference branch {ref_branch} contains invalid character")
     if covariate is not None and pattern.findall(covariate):
         raise ValueError(f"Covariate {covariate} contains invalid character")
 
-    formula = f"C(branch, Treatment(reference='{ref_branch}'))"
+    formula = f"{target} ~ C(branch, Treatment(reference='{ref_branch}'))"
     if covariate is not None:
         formula += f" + {covariate}"
 
@@ -186,14 +190,14 @@ def _make_joint_output(alphas: list[float], uplift_type: str) -> pd.Series:
 
 
 def _extract_absolute_uplifts(
-    results: OLSResults, branch: str, ref_branch: str, alphas: list[float]
+    results: RegressionResults, branch: str, ref_branch: str, alphas: list[float]
 ) -> pd.Series:
     """Extracts inferences on absolute differences between branches from a fitted
     linear model. These are simply the point estimates and confidence intervals of the
     appropriate term in the model.
 
     Parameters:
-    - results (OLSResults): the fitted model.
+    - results (RegressionResults): the fitted model.
     - branch (str): the name of the branch inferences are desired on. Must have been
     present in the training data when the model was fit.
     - ref_branch (str): the name of the reference branch.
@@ -203,25 +207,31 @@ def _extract_absolute_uplifts(
     - output (pd.Series): the set of inferences. See `_make_joint_output`.
     """
     output = _make_joint_output(alphas, "abs_uplift")
-
+    logger.info("_extract_absolute_uplifts enter")
     parameter_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
-
+    logger.info("_extract_absolute_uplifts get param")
     output.loc[("abs_uplift", "0.5")] = results.params[parameter_name]
     output.loc[("abs_uplift", "exp")] = results.params[parameter_name]
 
-    i = np.where(results.params == parameter_name)
-
+    i = np.where(results.params.index == parameter_name)[0][0]
+    logger.info(f"_extract_absolute_uplifts where i {i}")
     for alpha in alphas:
-        lower, upper = results.conf_int(alpha=alpha)[i]
+        logger.info("_extract_absolute_uplifts conf_int")        
+        ci = results.conf_int(alpha=alpha)
+        #ci = pd.DataFrame(ci_arr.values, index = results.params)
+        logger.info(f"ci: {ci}")
+        lower, upper = ci[i]
+        logger.info(f"_extract_absolute_uplifts lower {lower}")            
+        logger.info(f"_extract_absolute_uplifts upper {upper}")                    
         low_str, high_str = stringify_alpha(alpha)
         output.loc[("abs_uplift", low_str)] = lower
         output.loc[("abs_uplift", high_str)] = upper
-
+        logger.info("_extract_absolute_uplifts conf_int complete")    
     return output
 
 
 def _extract_relative_uplifts(
-    results: OLSResults, branch: str, ref_branch: str, alphas: list[str]
+    results: RegressionResults, target: str, branch: str, ref_branch: str, alphas: list[str], covariate_col_label: str | None = None, covariate: pd.Series | None = None
 ) -> pd.Series:
     """Extracts inferences on relative differences between branches from a fitted
     linear model. Unlike absolute differences, these are not simply existing parameters.
@@ -234,7 +244,7 @@ def _extract_relative_uplifts(
     answer for more information.
 
     Parameters:
-    - results (OLSResults): the fitted model.
+    - results (RegressionResults): the fitted model.
     - branch (str): the name of the branch inferences are desired on. Must have been
     present in the training data when the model was fit.
     - ref_branch (str): the name of the reference branch.
@@ -245,6 +255,7 @@ def _extract_relative_uplifts(
     """
 
     output = _make_joint_output(alphas, "rel_uplift")
+    logger.info("_extract_relative_uplifts")
 
     if covariate_col_label is None:
         nd = datagrid_shim(grid_type="balanced")
@@ -252,16 +263,30 @@ def _extract_relative_uplifts(
         q = covariate.quantile(np.arange(0, 1, 0.0001)).values
         nd = datagrid_shim(grid_type="balanced", **{covariate_col_label: q})
 
+    logger.info("made_datagrid")
     for alpha in alphas:
         # inferences on branch/ref_branch
+        logger.info("avg_comparisons")
+ 
+        
+        wrapped = RegressionResultsWrapper(results)
+        wrapped.params = results.params
+        wrapped.normalized_cov_params = results.normalized_cov_params
+
+        import statsmodels.base.wrapper as smw    
+        assert isinstance(wrapped, smw.ResultsWrapper)
+        #wrapped.model.data.frame = pd.DataFrame([], columns = wrapped.params)
+        #wrapped.model.formula = f'{target} ~' + _make_formula(target, ref_branch, covariate_col_label)
+        logger.info("avg_comparisons")          
         ac = avg_comparisons(
-            results,
+            wrapped,
             variables={"branch": [ref_branch, branch]},
             comparison="lnratioavg",
             transform=np.exp,
             conf_level=1 - alpha,
             newdata=nd,
         )
+        logger.info("avg_comparisons complete")        
         assert ac.shape == (
             1,
             7,
@@ -273,7 +298,7 @@ def _extract_relative_uplifts(
         output.loc[("rel_uplift", high_str)] = ac["conf_high"][0] - 1
         output.loc[("rel_uplift", "0.5")] = ac["estimate"][0] - 1
         output.loc[("rel_uplift", "exp")] = ac["estimate"][0] - 1
-
+    logger.info("_extract_relative_uplifts complete")
     return output
 
 
@@ -283,7 +308,8 @@ def fit_model(
     ref_branch: str,
     treatment_branches: list[str],
     covariate: str | None = None,
-) -> OLSResults:
+    remove_data_from_results: bool = False,
+) -> RegressionResults:
     """Fits a linear regression model to `df` using the provided formula. See
     `_make_formula` for a more in-depth discussion on the model structure.
 
@@ -292,12 +318,12 @@ def fit_model(
     - df (pd.DataFrame): the model data (such as the output of `make_model_df`)
 
     Returns:
-    - results (OLSResults): the fitted model results object.
+    - results (RegressionResults): the fitted model results object.
     """
     formula = _make_formula(target, ref_branch, covariate)
-    X = patsy.dmatrix(formula, df, return_type = "dataframe")
+    #X = patsy.dmatrix(formula, df)#, return_type = "dataframe")
     try:
-        results = _fit_model(df[target], X) #sm.OLS(df[target], X).fit(method="qr")
+        results = _fit_model(formula, df) #sm.OLS(df[target], X).fit(method="qr")
     except np.linalg.LinAlgError as lae:
         if covariate is None:
             # nothing we can do about this
@@ -307,39 +333,83 @@ def fit_model(
             # onboarding experiment is always zero), try falling back to
             # unadjusted inferences
             formula = _make_formula(target, ref_branch, None)
-            X = patsy.dmatrix(formula, df[target], return_type = "dataframe")
+            #X = patsy.dmatrix(formula, df[target])#, return_type = "dataframe")
             #results = sm.OLS(y, X, missing="none", hasconst=True).fit(method="qr")
-            results = _fit_model(df[target], X)
+            results = _fit_model(formula, df)
             warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
-
+    logger.info(results.params)
     if not np.isfinite(results.llf):
         raise Exception("Error fitting model")
-
+    logger.info(results.params)
     for branch in treatment_branches:
         param_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
         if param_name not in results.params:
             # this can occur if a branch does not have any non-null data
             raise Exception(f"Effect for branch {branch} not found in model!")
-
-    results.bse
-    results.remove_data()
+            
     return results
 
-
-def _fit_model(y: pd.Series, X: pd.DataFrame) -> OLSResults: 
+def _fit_model(formula, df) -> RegressionResults: 
     """fits the model using a more memory efficient form of least squares: 
     \hat{beta} = (X'X)^-1 X'y 
     var(\hat{beta}) = sigma^2 (X'X)^-1 
     
     """
-
-    model = sm.OLS(y,X, missing="none", hasconst=True)    
+    logger.info("_fit_model enter")
+    #columns = X.design_info.column_names
+    model = smf.ols(formula, df, missing="none", hasconst=True)    
+    columns = model.exog_names
+    logger.info("_fit_model inverse of gram matrix")  
+    y, X = model.endog, model.exog
     XtX_inv = np.linalg.pinv(np.dot(X.T, X))
+    logger.info("_fit_model dot product")    
     _params = np.dot(XtX_inv, np.dot(X.T, y))
-    params = pd.Series(_params, index = X.columns)
-    ncp = pd.DataFrame(XtX_inv, index = X.columns, columns = X.columns)
-    results = OLSResults(model, params, normalized_cov_params = ncp)
+    logger.info("_fit_model storing params")    
+    params = pd.Series(_params, index = columns)
+    logger.info(f"_fit_model params {params}")
+    ncp = pd.DataFrame(XtX_inv, index = columns, columns = columns)
+    logger.info("_fit_model constructing results object")    
+    results = RegressionResults(model, params, normalized_cov_params = ncp)
+    logger.info(f"_fit_model params {results.params}")
+    # wrapped = RegressionResultsWrapper(results)
+    # logger.info(f"_fit_model wrapped params1 {wrapped.params}")    
+    # wrapped.params = params
+    # wrapped.normalized_cov_params = ncp    
+    # logger.info(f"_fit_model wrapped params2 {wrapped.params}")    
+    # import statsmodels.base.wrapper as smw    
+    # assert isinstance(wrapped, smw.ResultsWrapper)
+    # logger.info("_fit_model exit")    
     return results
+
+# def _fit_model(y: pd.Series, X: patsy.DesignMatrix) -> RegressionResults: 
+#     """fits the model using a more memory efficient form of least squares: 
+#     \hat{beta} = (X'X)^-1 X'y 
+#     var(\hat{beta}) = sigma^2 (X'X)^-1 
+    
+#     """
+#     logger.info("_fit_model enter")
+#     columns = X.design_info.column_names
+#     model = OLS(y,X, missing="none", hasconst=True)    
+#     logger.info("_fit_model inverse of gram matrix")    
+#     XtX_inv = np.linalg.pinv(np.dot(X.T, X))
+#     logger.info("_fit_model dot product")    
+#     _params = np.dot(XtX_inv, np.dot(X.T, y))
+#     logger.info("_fit_model storing params")    
+#     params = pd.Series(_params, index = columns)
+#     logger.info(f"_fit_model params {params}")
+#     ncp = pd.DataFrame(XtX_inv, index = columns, columns = columns)
+#     logger.info("_fit_model constructing results object")    
+#     results = RegressionResults(model, params, normalized_cov_params = ncp)
+#     logger.info(f"_fit_model params {results.params}")
+#     # wrapped = RegressionResultsWrapper(results)
+#     # logger.info(f"_fit_model wrapped params1 {wrapped.params}")    
+#     # wrapped.params = params
+#     # wrapped.normalized_cov_params = ncp    
+#     # logger.info(f"_fit_model wrapped params2 {wrapped.params}")    
+#     # import statsmodels.base.wrapper as smw    
+#     # assert isinstance(wrapped, smw.ResultsWrapper)
+#     # logger.info("_fit_model exit")    
+#     return results
 
 def summarize_joint(
     df: pd.DataFrame,
@@ -396,11 +466,14 @@ def summarize_joint(
         rel_uplifts = _extract_absolute_uplifts(
             results, branch, ref_branch_label, alphas
         )
-
-        abs_uplifts = _extract_relative_uplifts(
-            results, branch, ref_branch_label, alphas
-        )
-
+        if covariate_col_label is None or covariate_col_label not in results.params.index:
+            abs_uplifts = _extract_relative_uplifts(
+                results, col_label, branch, ref_branch_label, alphas
+            )
+        else: 
+            abs_uplifts = _extract_relative_uplifts(
+                results, col_label, branch, ref_branch_label, alphas, covariate_col_label, df[covariate_col_label]
+            )
         output[branch] = pd.concat([rel_uplifts, abs_uplifts])
 
     return output
@@ -597,7 +670,7 @@ def datagrid_shim(
     dg = datagrid(newdata = mtcars, hp = [100, 110], grid_type = "counterfactual")
     print(dg.shape)
     """
-
+    logger.info("datagrid_shim")
     # allow preditions() to pass `model` argument automatically
     if model is None and newdata is None:
         out = partial(
@@ -615,14 +688,17 @@ def datagrid_shim(
         "balanced",
         "counterfactual",
     ], msg
-
+    logger.info("datagrid_shim sanatizing")
     if model is None and newdata is None:
         raise ValueError("One of model or newdata must be specified")
     else:
         model = sanitize_model(model)
 
     if newdata is None:
+        logger.info("datagrid_shim newdata is none")
         newdata = model.modeldata
+        logger.info("datagrid_shim newdata")        
+        logger.info(newdata)
 
     if grid_type == "counterfactual":
         return datagridcf(model=model, newdata=newdata, **kwargs)
@@ -639,6 +715,7 @@ def datagrid_shim(
                 x.mode()[0]
 
     elif grid_type == "balanced":
+        logger.info("datagrid_shim grid_type balanced")
         if FUN_numeric is None:
 
             def FUN_numeric(x):
@@ -648,7 +725,7 @@ def datagrid_shim(
             # mode can return multiple values
             def FUN_other(x):
                 x.unique()[0]
-
+    logger.info("datagrid_shim out 1")
     out = {}
     for key, value in kwargs.items():
         if value is not None:
@@ -666,25 +743,34 @@ def datagrid_shim(
         pl.Float32,
         pl.Float64,
     ]
-
+    logger.info("datagrid_shim iterating through columns")
+    logger.info(newdata.columns)
     for col in newdata.columns:
+        logger.info("datagrid_shim 1")        
         if col not in out.keys():
+            logger.info("datagrid_shim 2")
             # model classes include relevant information. use if available
             if model is not None:
+                logger.info("datagrid_shim 3")
+                logger.info(model.variables_type)
                 coltype = model.variables_type[col]
             else:
+                logger.info("datagrid_shim 4")
                 if newdata[col].dtype in numtypes:
                     coltype = "numeric"
                 else:
                     coltype = "other"
-
+            logger.info("datagrid_shim 5")
             if coltype == "numeric":
+                logger.info("datagrid_shim 6")                
                 out[col] = pl.DataFrame({col: FUN_numeric(newdata[col])})
             else:
+                logger.info("datagrid_shim 7")
                 out[col] = pl.DataFrame({col: FUN_other(newdata[col])})
-
+            logger.info("datagrid_shim 8")
+    logger.info("datagrid_shim reducing")
     out = reduce(lambda x, y: x.join(y, how="cross"), out.values())
-
+    logger.info(out)
     out.datagrid_explicit = list(kwargs.keys())
 
     return out
