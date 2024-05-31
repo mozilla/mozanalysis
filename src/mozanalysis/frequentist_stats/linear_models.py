@@ -331,9 +331,9 @@ def _fit_model(y: np.array, X: patsy.DesignMatrix) -> OLSResults:
     
     """
     columns = X.design_info.column_names
-    model = OLS(y,X, missing="none", hasconst=True)    
+    model = sm.OLS(y,X, missing="none", hasconst=True)    
     XtX_inv = np.linalg.pinv(np.dot(X.T, X))
-    _params = np.dot(np.dot(XtX_inv, X.T), y)
+    _params = np.dot(XtX_inv, np.dot(X.T, y))
     params = pd.Series(_params, index = columns)
     ncp = pd.DataFrame(XtX_inv, index = columns, columns = columns)
     results = OLSResults(model, params, normalized_cov_params = XtX_inv)
