@@ -336,7 +336,7 @@ def _fit_model(y: np.array, X: patsy.DesignMatrix) -> OLSResults:
     _params = np.dot(XtX_inv, np.dot(X.T, y))
     params = pd.Series(_params, index = columns)
     ncp = pd.DataFrame(XtX_inv, index = columns, columns = columns)
-    results = OLSResults(model, params, normalized_cov_params = XtX_inv)
+    results = OLSResults(model, params, normalized_cov_params = ncp)
     return results
 
 def summarize_joint(
