@@ -112,7 +112,7 @@ matplotlib==3.9.0
     #   plotnine
 mdurl==0.1.2
     # via markdown-it-py
-mizani==0.11.3
+mizani==0.11.4
     # via plotnine
 mock==5.1.0
     # via mozanalysis
