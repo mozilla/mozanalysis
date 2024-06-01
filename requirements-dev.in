@@ -383,7 +383,7 @@ readme-renderer==43.0
     # via
     #   -c requirements.txt
     #   twine
-requests==2.32.1
+requests==2.32.3
     # via
     #   -c requirements.txt
     #   google-api-core
