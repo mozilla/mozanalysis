@@ -6,7 +6,6 @@ import warnings
 
 import numpy as np
 import pandas as pd
-
 import statsmodels.formula.api as smf
 from marginaleffects import avg_comparisons, datagrid
 from statsmodels.regression.linear_model import (
@@ -484,6 +483,7 @@ def compare_branches_lm(
     if alphas is None:
         alphas = [0.01, 0.05]
 
+    # apply outlier filtering inplace to avoid allocating intermediate df
     indexer = ~df[col_label].isna()
     if covariate_col_label is not None:
         indexer &= ~df[covariate_col_label].isna()
@@ -493,11 +493,10 @@ def compare_branches_lm(
             upper=df[col_label].quantile(threshold_quantile)
         )
 
-    if covariate_col_label is not None:
-        if threshold_quantile is not None:
-            df[covariate_col_label] = df[covariate_col_label].clip(
-                upper=df[covariate_col_label].quantile(threshold_quantile)
-            )
+    if (covariate_col_label is not None) and (threshold_quantile is not None):
+        df[covariate_col_label] = df[covariate_col_label].clip(
+            upper=df[covariate_col_label].quantile(threshold_quantile)
+        )
 
     model_df = df.loc[indexer]
 
