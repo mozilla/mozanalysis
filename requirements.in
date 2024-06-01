@@ -9,7 +9,7 @@ attrs==23.2.0
     #   cattrs
     #   mozanalysis
     #   mozilla-metric-config-parser
-backports-tarfile==1.1.1
+backports-tarfile==1.2.0
     # via jaraco-context
 build==1.2.1
     # via mozanalysis
