@@ -15,6 +15,9 @@ from statsmodels.stats.weightstats import DescrStatsW
 
 from .NormalOLS import NormalOLS
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def stringify_alpha(alpha: float) -> tuple[str, str]:
     """Converts a floating point alpha-level to the string
@@ -200,11 +203,13 @@ def _extract_absolute_uplifts(
     output.loc[("abs_uplift", "0.5")] = results.params[parameter_name]
     output.loc[("abs_uplift", "exp")] = results.params[parameter_name]
 
-    i = np.where(results.params.index == parameter_name)[0][0]
+    #i = np.where(results.params.index == parameter_name)[0][0]
     for alpha in alphas:
         ci = results.conf_int(alpha=alpha)
+        logger.info(ci)
         # ci = pd.DataFrame(ci_arr.values, index = results.params)
-        lower, upper = ci[i]
+        lower, upper = ci.loc[parameter_name]
+        logger.info(lower, upper)
         low_str, high_str = stringify_alpha(alpha)
         output.loc[("abs_uplift", low_str)] = lower
         output.loc[("abs_uplift", high_str)] = upper
@@ -292,6 +297,7 @@ def fit_model(
     ref_branch: str,
     treatment_branches: list[str],
     covariate: str | None = None,
+    remove_data_from_results: bool = True,
 ) -> RegressionResults:
     """Fits a linear regression model to `df` using the provided formula. See
     `_make_formula` for a more in-depth discussion on the model structure.
@@ -329,6 +335,10 @@ def fit_model(
             # this can occur if a branch does not have any non-null data
             raise Exception(f"Effect for branch {branch} not found in model!")
 
+    if remove_data_from_results: 
+        results.bse # warm up the cache
+        results.remove_data()
+        
     return results
 
 
@@ -415,17 +425,19 @@ def summarize_joint(
     branch_list = _infer_branch_list(df.branch, branch_list)
 
     treatment_branches = [b for b in branch_list if b != ref_branch_label]
-
+    logger.info("fitting model")
     results = fit_model(
         df, col_label, ref_branch_label, treatment_branches, covariate_col_label
     )
 
     output = {}
-
+    logger.info("model fit")
     for branch in treatment_branches:
+        logger.info("extracting absolute")
         rel_uplifts = _extract_absolute_uplifts(
             results, branch, ref_branch_label, alphas
         )
+        logger.info("extracting relative")
         if (
             covariate_col_label is None
             or covariate_col_label not in results.params.index

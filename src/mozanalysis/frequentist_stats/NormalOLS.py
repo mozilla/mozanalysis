@@ -75,6 +75,8 @@ class NormalOLS(OLS):
         sol = np.linalg.solve(L, d)
         beta = np.linalg.solve(L.T, sol)
 
+        if self.rank is None: 
+            self.rank = np.linalg.matrix_rank(C) 
         if self._df_model is None:
             self._df_model = float(self.rank - self.k_constant)
         if self._df_resid is None:
