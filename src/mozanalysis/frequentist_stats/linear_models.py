@@ -3,27 +3,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import re
 import warnings
+from functools import partial, reduce
 
 import numpy as np
 import pandas as pd
-
-# import statsmodels.api as sm
+import polars as pl
 import statsmodels.formula.api as smf
+from marginaleffects import avg_comparisons
+from marginaleffects.sanitize_model import sanitize_model
 from statsmodels.regression.linear_model import (
+    OLS,
     RegressionResults,
     RegressionResultsWrapper,
 )
-from marginaleffects import avg_comparisons
-
 from statsmodels.stats.weightstats import DescrStatsW
-
-from mozanalysis.utils import filter_outliers
-
-from functools import reduce, partial
-
-import polars as pl
-
-from marginaleffects.sanitize_model import sanitize_model
 
 
 def stringify_alpha(alpha: float) -> tuple[str, str]:
@@ -276,9 +269,6 @@ def _extract_relative_uplifts(
 
     for alpha in alphas:
         # inferences on branch/ref_branch
-
-        # wrapped.model.data.frame = pd.DataFrame([], columns = wrapped.params)
-        # wrapped.model.formula = f'{target} ~' + _make_formula(target, ref_branch, covariate_col_label)
         ac = avg_comparisons(
             wrapped,
             variables={"branch": [ref_branch, branch]},
@@ -322,9 +312,9 @@ def fit_model(
     - results (RegressionResults): the fitted model results object.
     """
     formula = _make_formula(target, ref_branch, covariate)
-    # X = patsy.dmatrix(formula, df)#, return_type = "dataframe")
+    model = smf.ols(formula, df, missing="none", hasconst=True)
     try:
-        results = _fit_model(formula, df)  # sm.OLS(df[target], X).fit(method="qr")
+        results = _fit_model(model)
     except np.linalg.LinAlgError as lae:
         if covariate is None:
             # nothing we can do about this
@@ -334,9 +324,8 @@ def fit_model(
             # onboarding experiment is always zero), try falling back to
             # unadjusted inferences
             formula = _make_formula(target, ref_branch, None)
-            # X = patsy.dmatrix(formula, df[target])#, return_type = "dataframe")
-            # results = sm.OLS(y, X, missing="none", hasconst=True).fit(method="qr")
-            results = _fit_model(formula, df)
+            model = smf.ols(formula, df, missing="none", hasconst=True)
+            results = _fit_model(model)
             warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
 
     if not np.isfinite(results.llf):
@@ -351,68 +340,38 @@ def fit_model(
     return results
 
 
-def _fit_model(formula, df) -> RegressionResults:
-    """fits the model using a more memory efficient form of least squares:
-    \hat{beta} = (X'X)^-1 X'y
-    var(\hat{beta}) = sigma^2 (X'X)^-1
+def _fit_model(model: OLS) -> RegressionResults:
+    """
+    Fits the model by solving the normal equations. This is more memory efficient
+    than the pinv or QR methods available in statsmodels for our particular design
+    matrix structure: (n,m) with n >> m. In particular, n can be >= 1e7 while m is
+    either 2 or 3. When running in prod with the built in fitting algorithms,
+    Jetstream can run out of memory.
+
+    See section 4, specifically algorithm 4.1 from:
+    https://math.uchicago.edu/~may/REU2012/REUPapers/Lee.pdf
 
     """
 
-    # columns = X.design_info.column_names
-    model = smf.ols(formula, df, missing="none", hasconst=True)
     columns = model.exog_names
-
     y, X = model.endog, model.exog
-    XtX_inv = np.linalg.pinv(np.dot(X.T, X))
 
-    _params = np.dot(XtX_inv, np.dot(X.T, y))
+    C = np.dot(X.T, X)
+    C_inv = np.linalg.inv(C)
+    L = np.linalg.cholesky(C)
 
-    params = pd.Series(_params, index=columns)
+    d = np.dot(X.T, y)
 
-    ncp = pd.DataFrame(XtX_inv, index=columns, columns=columns)
+    sol = np.linalg.solve(L, d)
+    beta = np.linalg.solve(L.T, sol)
+
+    params = pd.Series(beta, index=columns)
+
+    ncp = pd.DataFrame(C_inv, index=columns, columns=columns)
 
     results = RegressionResults(model, params, normalized_cov_params=ncp)
 
-    # wrapped = RegressionResultsWrapper(results)
-    # logger.info(f"_fit_model wrapped params1 {wrapped.params}")
-    # wrapped.params = params
-    # wrapped.normalized_cov_params = ncp
-    # logger.info(f"_fit_model wrapped params2 {wrapped.params}")
-    # import statsmodels.base.wrapper as smw
-    # assert isinstance(wrapped, smw.ResultsWrapper)
-    # logger.info("_fit_model exit")
     return results
-
-
-# def _fit_model(y: pd.Series, X: patsy.DesignMatrix) -> RegressionResults:
-#     """fits the model using a more memory efficient form of least squares:
-#     \hat{beta} = (X'X)^-1 X'y
-#     var(\hat{beta}) = sigma^2 (X'X)^-1
-
-#     """
-#     logger.info("_fit_model enter")
-#     columns = X.design_info.column_names
-#     model = OLS(y,X, missing="none", hasconst=True)
-#     logger.info("_fit_model inverse of gram matrix")
-#     XtX_inv = np.linalg.pinv(np.dot(X.T, X))
-#     logger.info("_fit_model dot product")
-#     _params = np.dot(XtX_inv, np.dot(X.T, y))
-#     logger.info("_fit_model storing params")
-#     params = pd.Series(_params, index = columns)
-#     logger.info(f"_fit_model params {params}")
-#     ncp = pd.DataFrame(XtX_inv, index = columns, columns = columns)
-#     logger.info("_fit_model constructing results object")
-#     results = RegressionResults(model, params, normalized_cov_params = ncp)
-#     logger.info(f"_fit_model params {results.params}")
-#     # wrapped = RegressionResultsWrapper(results)
-#     # logger.info(f"_fit_model wrapped params1 {wrapped.params}")
-#     # wrapped.params = params
-#     # wrapped.normalized_cov_params = ncp
-#     # logger.info(f"_fit_model wrapped params2 {wrapped.params}")
-#     # import statsmodels.base.wrapper as smw
-#     # assert isinstance(wrapped, smw.ResultsWrapper)
-#     # logger.info("_fit_model exit")
-#     return results
 
 
 def summarize_joint(
