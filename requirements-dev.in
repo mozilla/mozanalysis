@@ -84,7 +84,7 @@ filelock==3.14.0
     # via
     #   tox
     #   virtualenv
-fonttools==4.51.0
+fonttools==4.53.0
     # via
     #   -c requirements.txt
     #   matplotlib
