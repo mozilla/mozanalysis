@@ -231,7 +231,7 @@ def _extract_absolute_uplifts(
 
 
 def _extract_relative_uplifts(
-    results: RegressionResults, target: str, branch: str, ref_branch: str, alphas: list[str], covariate_col_label: str | None = None, covariate: pd.Series | None = None
+    results: RegressionResults, target: str, branch: str, ref_branch: str, alphas: list[str], treatment_branches: list[str], covariate_col_label: str | None = None, covariate: pd.Series | None = None
 ) -> pd.Series:
     """Extracts inferences on relative differences between branches from a fitted
     linear model. Unlike absolute differences, these are not simply existing parameters.
@@ -256,12 +256,20 @@ def _extract_relative_uplifts(
 
     output = _make_joint_output(alphas, "rel_uplift")
     logger.info("_extract_relative_uplifts")
+    branches = treatment_branches + [ref_branch]
+    
+    wrapped = RegressionResultsWrapper(results)
+    wrapped.params = results.params
+    wrapped.normalized_cov_params = results.normalized_cov_params
 
+    import statsmodels.base.wrapper as smw    
+    assert isinstance(wrapped, smw.ResultsWrapper)
+    
     if covariate_col_label is None:
-        nd = datagrid_shim(grid_type="balanced")
+        nd = datagrid_shim(model = wrapped, grid_type="balanced", branch = branches)
     else:
         q = covariate.quantile(np.arange(0, 1, 0.0001)).values
-        nd = datagrid_shim(grid_type="balanced", **{covariate_col_label: q})
+        nd = datagrid_shim(model = wrapped, grid_type="balanced", **{covariate_col_label: q}, branch = branches)
 
     logger.info("made_datagrid")
     for alpha in alphas:
@@ -269,12 +277,7 @@ def _extract_relative_uplifts(
         logger.info("avg_comparisons")
  
         
-        wrapped = RegressionResultsWrapper(results)
-        wrapped.params = results.params
-        wrapped.normalized_cov_params = results.normalized_cov_params
 
-        import statsmodels.base.wrapper as smw    
-        assert isinstance(wrapped, smw.ResultsWrapper)
         #wrapped.model.data.frame = pd.DataFrame([], columns = wrapped.params)
         #wrapped.model.formula = f'{target} ~' + _make_formula(target, ref_branch, covariate_col_label)
         logger.info("avg_comparisons")          
@@ -468,11 +471,11 @@ def summarize_joint(
         )
         if covariate_col_label is None or covariate_col_label not in results.params.index:
             abs_uplifts = _extract_relative_uplifts(
-                results, col_label, branch, ref_branch_label, alphas
+                results, col_label, branch, ref_branch_label, alphas, treatment_branches
             )
         else: 
             abs_uplifts = _extract_relative_uplifts(
-                results, col_label, branch, ref_branch_label, alphas, covariate_col_label, df[covariate_col_label]
+                results, col_label, branch, ref_branch_label, alphas, treatment_branches, covariate_col_label, df[covariate_col_label]
             )
         output[branch] = pd.concat([rel_uplifts, abs_uplifts])
 
