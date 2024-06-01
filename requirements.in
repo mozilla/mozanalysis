@@ -244,7 +244,7 @@ ruff==0.4.4
     # via
     #   mozanalysis
     #   pytest-ruff
-scipy==1.13.0
+scipy==1.13.1
     # via
     #   marginaleffects
     #   mizani

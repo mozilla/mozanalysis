@@ -412,7 +412,7 @@ ruff==0.4.4
     #   -c requirements.txt
     #   mozanalysis
     #   pytest-ruff
-scipy==1.13.0
+scipy==1.13.1
     # via
     #   -c requirements.txt
     #   marginaleffects
