@@ -218,7 +218,7 @@ more-itertools==10.2.0
     #   -c requirements.txt
     #   jaraco-classes
     #   jaraco-functools
-mozilla-metric-config-parser==2024.4.1
+mozilla-metric-config-parser==2024.5.4
     # via
     #   -c requirements.txt
     #   mozanalysis
