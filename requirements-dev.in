@@ -272,7 +272,7 @@ pillow==10.3.0
     #   matplotlib
 pip-tools==7.4.1
     # via mozanalysis
-pkginfo==1.10.0
+pkginfo==1.11.0
     # via
     #   -c requirements.txt
     #   twine
