@@ -9,7 +9,7 @@ attrs==23.2.0
     #   cattrs
     #   mozanalysis
     #   mozilla-metric-config-parser
-backports-tarfile==1.1.1
+backports-tarfile==1.2.0
     # via jaraco-context
 build==1.2.1
     # via mozanalysis
@@ -27,7 +27,7 @@ click==8.1.7
     # via mozilla-metric-config-parser
 contourpy==1.2.1
     # via matplotlib
-coverage[toml]==7.5.1
+coverage[toml]==7.5.3
     # via pytest-cov
 cryptography==42.0.7
     # via secretstorage
@@ -39,9 +39,9 @@ exceptiongroup==1.2.1
     # via
     #   cattrs
     #   pytest
-faker==25.2.0
+faker==25.3.0
     # via polyfactory
-fonttools==4.51.0
+fonttools==4.53.0
     # via matplotlib
 gitdb==4.0.11
     # via gitpython
@@ -58,7 +58,7 @@ google-auth==2.29.0
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-cloud-bigquery==3.23.0
+google-cloud-bigquery==3.23.1
     # via mozanalysis
 google-cloud-bigquery-storage==2.25.0
     # via mozanalysis
@@ -100,7 +100,7 @@ keyring==25.2.1
     # via twine
 kiwisolver==1.4.5
     # via matplotlib
-marginaleffects==0.0.11
+marginaleffects==0.0.12
     # via mozanalysis
 markdown-it-py==3.0.0
     # via rich
@@ -112,7 +112,7 @@ matplotlib==3.9.0
     #   plotnine
 mdurl==0.1.2
     # via markdown-it-py
-mizani==0.11.3
+mizani==0.11.4
     # via plotnine
 mock==5.1.0
     # via mozanalysis
@@ -120,7 +120,8 @@ more-itertools==10.2.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-mozilla-metric-config-parser==2024.4.1
+    # via -r -
+mozilla-metric-config-parser==2024.5.4
     # via mozanalysis
 mozilla-nimbus-schemas==2023.10.3
     # via mozilla-metric-config-parser
@@ -158,13 +159,13 @@ patsy==0.5.6
     #   statsmodels
 pillow==10.3.0
     # via matplotlib
-pkginfo==1.10.0
+pkginfo==1.11.0
     # via twine
 plotnine==0.13.6
     # via marginaleffects
 pluggy==1.5.0
     # via pytest
-polars==0.20.26
+polars==0.20.31
     # via marginaleffects
 polyfactory==2.16.0
     # via mozilla-nimbus-schemas
@@ -225,7 +226,7 @@ pytz==2024.1
     #   pandas
 readme-renderer==43.0
     # via twine
-requests==2.32.1
+requests==2.32.3
     # via
     #   google-api-core
     #   google-cloud-bigquery
@@ -244,7 +245,7 @@ ruff==0.4.4
     # via
     #   mozanalysis
     #   pytest-ruff
-scipy==1.13.0
+scipy==1.13.1
     # via
     #   marginaleffects
     #   mizani
@@ -272,7 +273,7 @@ tomli==2.0.1
     #   pytest
 twine==5.1.0
     # via mozanalysis
-typing-extensions==4.11.0
+typing-extensions==4.12.0
     # via
     #   cattrs
     #   polyfactory
@@ -283,5 +284,5 @@ urllib3==2.2.1
     # via
     #   requests
     #   twine
-zipp==3.18.2
+zipp==3.19.1
     # via importlib-metadata
