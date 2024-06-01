@@ -3,11 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import re
 import warnings
-from functools import partial, reduce
 
 import numpy as np
 import pandas as pd
-import polars as pl
+
 import statsmodels.formula.api as smf
 from marginaleffects import avg_comparisons, datagrid
 from statsmodels.regression.linear_model import (
@@ -215,7 +214,6 @@ def _extract_absolute_uplifts(
 
 def _extract_relative_uplifts(
     results: RegressionResults,
-    target: str,
     branch: str,
     ref_branch: str,
     alphas: list[str],
@@ -251,10 +249,7 @@ def _extract_relative_uplifts(
     wrapped.params = results.params
     wrapped.normalized_cov_params = results.normalized_cov_params
 
-    import statsmodels.base.wrapper as smw
-
-    assert isinstance(wrapped, smw.ResultsWrapper)
-
+    # TODO: refactor into function for testing
     if covariate_col_label is None:
         nd = datagrid(model=wrapped, grid_type="balanced", branch=branches)
     else:
@@ -298,7 +293,6 @@ def fit_model(
     ref_branch: str,
     treatment_branches: list[str],
     covariate: str | None = None,
-    remove_data_from_results: bool = False,
 ) -> RegressionResults:
     """Fits a linear regression model to `df` using the provided formula. See
     `_make_formula` for a more in-depth discussion on the model structure.
@@ -344,25 +338,30 @@ def _fit_model(model: OLS) -> RegressionResults:
     Fits the model by solving the normal equations. This is more memory efficient
     than the pinv or QR methods available in statsmodels for our particular design
     matrix structure: (n,m) with n >> m. In particular, n can be >= 1e7 while m is
-    either 2 or 3. When running in prod with the built in fitting algorithms,
-    Jetstream can run out of memory.
+    either 1 + (n_branch - 1) + 1 (if covariate). When running in prod with the
+    built in fitting algorithms, Jetstream can run out of memory.
 
     See section 4, specifically algorithm 4.1 from:
     https://math.uchicago.edu/~may/REU2012/REUPapers/Lee.pdf
+
+    See also: https://xkcd.com/1838/
 
     """
 
     columns = model.exog_names
     y, X = model.endog, model.exog
 
-    C = np.dot(X.T, X)
-    C_inv = np.linalg.inv(C)
-    L = np.linalg.cholesky(C)
+    C = np.dot(X.T, X)  # m x m
 
-    d = np.dot(X.T, y)
+    # may throw np.linalg.LinAlgError if columns are collinear, caught above
+    C_inv = np.linalg.inv(C)  # m x m
 
-    sol = np.linalg.solve(L, d)
-    beta = np.linalg.solve(L.T, sol)
+    L = np.linalg.cholesky(C)  # m x m (lower triangular)
+
+    d = np.dot(X.T, y)  # m x 1
+
+    sol = np.linalg.solve(L, d)  # m x 1
+    beta = np.linalg.solve(L.T, sol)  # m x 1
 
     params = pd.Series(beta, index=columns)
 
@@ -433,12 +432,11 @@ def summarize_joint(
             or covariate_col_label not in results.params.index
         ):
             abs_uplifts = _extract_relative_uplifts(
-                results, col_label, branch, ref_branch_label, alphas, treatment_branches
+                results, branch, ref_branch_label, alphas, treatment_branches
             )
         else:
             abs_uplifts = _extract_relative_uplifts(
                 results,
-                col_label,
                 branch,
                 ref_branch_label,
                 alphas,
@@ -449,61 +447,6 @@ def summarize_joint(
         output[branch] = pd.concat([rel_uplifts, abs_uplifts])
 
     return output
-
-
-def make_model_df(
-    df: pd.DataFrame,
-    col_label: str,
-    covariate_col_label: str | None = None,
-    threshold_quantile: float | None = None,
-) -> pd.DataFrame:
-    """Prepares a dataset for modeling. Removes nulls from the response variable
-    (col_label). Optionally, adds a similarly cleaned covariate column.
-    Optionally, applies outlier filtering (to both the response variable and
-    the covariate, if one exists).
-
-    Parameters:
-    - df (pd.DataFrame): the raw, client-level data. Must have a column "branch".
-    - col_label (str): the label of the response variable. Must be a column in df. Only
-    non-null values are modeled.
-    - covariate_col_label (Optional[str]): the name of a covariate column to include.
-    Must be a column in df. If included, only non-null values are modeled.
-    - threshold_quantile (Optional[float]): the outlier threshold. See
-    `filter_outliers`.
-
-    Returns:
-    - model_df (pd.DataFrame): the cleaned data, ready for modeling.
-    """
-
-    indexer = ~df[col_label].isna()
-    if covariate_col_label is not None:
-        indexer &= ~df[covariate_col_label].isna()
-
-    if threshold_quantile is not None:
-        df[col_label].clip(
-            upper=df[col_label].quantile(threshold_quantile), inplace=True
-        )
-        # x = filter_outliers(df.loc[indexer, col_label], threshold_quantile)
-    # else:
-    # x = df.loc[indexer, col_label]
-
-    # model_df = pd.DataFrame(
-    #     {"branch": df.loc[indexer, "branch"], col_label: x.astype(float)}
-    # )
-
-    if covariate_col_label is not None:
-        if threshold_quantile is not None:
-            df[covariate_col_label].clip(
-                upper=df[covariate_col_label].quantile(threshold_quantile), inplace=True
-            )
-            # x_pre = filter_outliers(
-            #     df.loc[indexer, covariate_col_label], threshold_quantile
-            # )
-        # else:
-        # x_pre = df.loc[indexer, covariate_col_label]
-        # model_df.loc[:, covariate_col_label] = x_pre.astype(float)
-
-    return df.loc[indexer]
 
 
 def compare_branches_lm(
@@ -541,35 +484,20 @@ def compare_branches_lm(
     if alphas is None:
         alphas = [0.01, 0.05]
 
-    # model_df = make_model_df(df, col_label, covariate_col_label, threshold_quantile)
-
     indexer = ~df[col_label].isna()
     if covariate_col_label is not None:
         indexer &= ~df[covariate_col_label].isna()
 
     if threshold_quantile is not None:
-        df[col_label].clip(
-            upper=df[col_label].quantile(threshold_quantile), inplace=True
+        df[col_label] = df[col_label].clip(
+            upper=df[col_label].quantile(threshold_quantile)
         )
-        # x = filter_outliers(df.loc[indexer, col_label], threshold_quantile)
-    # else:
-    # x = df.loc[indexer, col_label]
-
-    # model_df = pd.DataFrame(
-    #     {"branch": df.loc[indexer, "branch"], col_label: x.astype(float)}
-    # )
 
     if covariate_col_label is not None:
         if threshold_quantile is not None:
-            df[covariate_col_label].clip(
-                upper=df[covariate_col_label].quantile(threshold_quantile), inplace=True
+            df[covariate_col_label] = df[covariate_col_label].clip(
+                upper=df[covariate_col_label].quantile(threshold_quantile)
             )
-            # x_pre = filter_outliers(
-            #     df.loc[indexer, covariate_col_label], threshold_quantile
-            # )
-        # else:
-        # x_pre = df.loc[indexer, covariate_col_label]
-        # model_df.loc[:, covariate_col_label] = x_pre.astype(float)
 
     model_df = df.loc[indexer]
 
