@@ -6,14 +6,14 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import statsmodels.formula.api as smf
 from marginaleffects import avg_comparisons, datagrid
 from statsmodels.regression.linear_model import (
     OLS,
     RegressionResults,
-    RegressionResultsWrapper,
 )
 from statsmodels.stats.weightstats import DescrStatsW
+
+from .NormalOLS import NormalOLS
 
 
 def stringify_alpha(alpha: float) -> tuple[str, str]:
@@ -244,17 +244,17 @@ def _extract_relative_uplifts(
     output = _make_joint_output(alphas, "rel_uplift")
     branches = treatment_branches + [ref_branch]
 
-    wrapped = RegressionResultsWrapper(results)
-    wrapped.params = results.params
-    wrapped.normalized_cov_params = results.normalized_cov_params
+    # wrapped = RegressionResultsWrapper(results)
+    # wrapped.params = results.params
+    # wrapped.normalized_cov_params = results.normalized_cov_params
 
     # TODO: refactor into function for testing
     if covariate_col_label is None:
-        nd = datagrid(model=wrapped, grid_type="balanced", branch=branches)
+        nd = datagrid(model=results, grid_type="balanced", branch=branches)
     else:
         q = covariate.quantile(np.arange(0, 1, 0.0001)).values
         nd = datagrid(
-            model=wrapped,
+            model=results,
             grid_type="balanced",
             **{covariate_col_label: q},
             branch=branches,
@@ -263,7 +263,7 @@ def _extract_relative_uplifts(
     for alpha in alphas:
         # inferences on branch/ref_branch
         ac = avg_comparisons(
-            wrapped,
+            results,
             variables={"branch": [ref_branch, branch]},
             comparison="lnratioavg",
             transform=np.exp,
@@ -304,9 +304,9 @@ def fit_model(
     - results (RegressionResults): the fitted model results object.
     """
     formula = _make_formula(target, ref_branch, covariate)
-    model = smf.ols(formula, df, missing="none", hasconst=True)
+    model = NormalOLS.from_formula(formula, df)
     try:
-        results = _fit_model(model)
+        results = model.fit()
     except np.linalg.LinAlgError as lae:
         if covariate is None:
             # nothing we can do about this
@@ -316,8 +316,8 @@ def fit_model(
             # onboarding experiment is always zero), try falling back to
             # unadjusted inferences
             formula = _make_formula(target, ref_branch, None)
-            model = smf.ols(formula, df, missing="none", hasconst=True)
-            results = _fit_model(model)
+            model = NormalOLS.from_formula(formula, df)
+            results = model.fit()
             warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
 
     if not np.isfinite(results.llf):
@@ -337,7 +337,7 @@ def _fit_model(model: OLS) -> RegressionResults:
     Fits the model by solving the normal equations. This is more memory efficient
     than the pinv or QR methods available in statsmodels for our particular design
     matrix structure: (n,m) with n >> m. In particular, n can be >= 1e7 while m is
-    either 1 + (n_branch - 1) + 1 (if covariate). When running in prod with the
+    1 + (n branches - 1) + 1 (if using covariate). When running in prod with the
     built in fitting algorithms, Jetstream can run out of memory.
 
     See section 4, specifically algorithm 4.1 from:
@@ -350,17 +350,17 @@ def _fit_model(model: OLS) -> RegressionResults:
     columns = model.exog_names
     y, X = model.endog, model.exog
 
-    C = np.dot(X.T, X)  # m x m
+    C = np.dot(X.T, X)
 
     # may throw np.linalg.LinAlgError if columns are collinear, caught above
-    C_inv = np.linalg.inv(C)  # m x m
+    C_inv = np.linalg.inv(C)
 
-    L = np.linalg.cholesky(C)  # m x m (lower triangular)
+    L = np.linalg.cholesky(C)
 
-    d = np.dot(X.T, y)  # m x 1
+    d = np.dot(X.T, y)
 
-    sol = np.linalg.solve(L, d)  # m x 1
-    beta = np.linalg.solve(L.T, sol)  # m x 1
+    sol = np.linalg.solve(L, d)
+    beta = np.linalg.solve(L.T, sol)
 
     params = pd.Series(beta, index=columns)
 
