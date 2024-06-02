@@ -18,6 +18,8 @@ from .NormalOLS import NormalOLS
 import logging
 logger = logging.getLogger(__name__)
 
+import gc
+
 
 def stringify_alpha(alpha: float) -> tuple[str, str]:
     """Converts a floating point alpha-level to the string
@@ -209,7 +211,6 @@ def _extract_absolute_uplifts(
         logger.info(ci)
         # ci = pd.DataFrame(ci_arr.values, index = results.params)
         lower, upper = ci.loc[parameter_name]
-        logger.info(lower, upper)
         low_str, high_str = stringify_alpha(alpha)
         output.loc[("abs_uplift", low_str)] = lower
         output.loc[("abs_uplift", high_str)] = upper
@@ -310,7 +311,9 @@ def fit_model(
     - results (RegressionResults): the fitted model results object.
     """
     formula = _make_formula(target, ref_branch, covariate)
+    logger.info("construcing model")
     model = NormalOLS.from_formula(formula, df)
+    logger.info("model constructed")
     try:
         results = model.fit()
     except np.linalg.LinAlgError as lae:
@@ -338,6 +341,7 @@ def fit_model(
     if remove_data_from_results: 
         results.bse # warm up the cache
         results.remove_data()
+        gc.collect()
         
     return results
 
@@ -457,6 +461,9 @@ def summarize_joint(
             )
         output[branch] = pd.concat([rel_uplifts, abs_uplifts])
 
+    del results
+    gc.collect()
+        
     return output
 
 
