@@ -28,7 +28,7 @@ cattrs==23.2.3
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-certifi==2024.2.2
+certifi==2024.6.2
     # via
     #   -c requirements.txt
     #   requests
@@ -88,6 +88,10 @@ fonttools==4.53.0
     # via
     #   -c requirements.txt
     #   matplotlib
+formulaic==1.0.1
+    # via
+    #   -c requirements.txt
+    #   mozanalysis
 gitdb==4.0.11
     # via
     #   -c requirements.txt
@@ -156,6 +160,10 @@ iniconfig==2.0.0
     # via
     #   -c requirements.txt
     #   pytest
+interface-meta==1.3.0
+    # via
+    #   -c requirements.txt
+    #   formulaic
 jaraco-classes==3.4.0
     # via
     #   -c requirements.txt
@@ -235,6 +243,7 @@ numpy==1.26.4
     # via
     #   -c requirements.txt
     #   contourpy
+    #   formulaic
     #   marginaleffects
     #   matplotlib
     #   mizani
@@ -258,6 +267,7 @@ packaging==24.0
 pandas==2.2.2
     # via
     #   -c requirements.txt
+    #   formulaic
     #   mizani
     #   mozanalysis
     #   plotnine
@@ -416,6 +426,7 @@ ruff==0.4.4
 scipy==1.13.1
     # via
     #   -c requirements.txt
+    #   formulaic
     #   marginaleffects
     #   mizani
     #   mozanalysis
@@ -458,10 +469,11 @@ twine==5.1.0
     # via
     #   -c requirements.txt
     #   mozanalysis
-typing-extensions==4.12.0
+typing-extensions==4.12.1
     # via
     #   -c requirements.txt
     #   cattrs
+    #   formulaic
     #   polyfactory
     #   pydantic
 tzdata==2024.1
@@ -477,6 +489,10 @@ virtualenv==20.26.2
     # via tox
 wheel==0.43.0
     # via pip-tools
+wrapt==1.16.0
+    # via
+    #   -c requirements.txt
+    #   formulaic
 zipp==3.19.1
     # via
     #   -c requirements.txt

@@ -15,6 +15,7 @@ description = "A library for Mozilla experiments analysis"
 requires-python = ">=3.10,<=3.11"
 dependencies = [
     "attrs",
+    "formulaic",
     "mozilla-metric-config-parser>=2024.4.1",
     "numpy",
     "pandas",

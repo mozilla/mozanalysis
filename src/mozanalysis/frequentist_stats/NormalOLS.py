@@ -1,6 +1,7 @@
 from typing import Literal
 
 import numpy as np
+import pandas as pd
 from statsmodels.regression.linear_model import (
     OLS,
     OLSResults,
@@ -8,8 +9,55 @@ from statsmodels.regression.linear_model import (
     RegressionResultsWrapper,
 )
 
+from formulaic import Formula, ModelMatrices
+from formulaic.materializers import PandasMaterializer
+
 
 class NormalOLS(OLS):
+    @classmethod
+    def from_formula(
+        cls, formula: str, data: pd.DataFrame, *args, **kwargs
+    ) -> "NormalOLS":
+        """
+        Create a Model from a formula and dataframe. This uses Formulaic instead
+        of Patsy to create sparse design matrices which can dramatically reduce
+        memory requirements (especially in experiments with many branches).
+
+        Parameters
+        ----------
+        formula : str
+            The formula specifying the model.
+        data : pd.DataFrame
+            The data for the model.
+        *args
+            Additional positional argument that are passed to the model.
+        **kwargs
+            Additional positional argument that are passed to the model.
+        """
+
+        mm = PandasMaterializer(data).get_model_matrix(
+            Formula(formula), output="sparse"
+        )
+
+        assert isinstance(
+            mm, ModelMatrices
+        ), "Expected to create multiple matrices, is the formula correct?"
+
+        y = pd.DataFrame.sparse.from_spmatrix(
+            mm.lhs, columns=mm.lhs.model_spec.column_names
+        )
+
+        X = pd.DataFrame.sparse.from_spmatrix(
+            mm.rhs, columns=mm.rhs.model_spec.column_names
+        )
+
+        kwargs.update({"formula": formula, "design_info": mm.rhs.model_spec})
+        mod = cls(y, X, *args, **kwargs)
+        mod.formula = formula
+        mod.data.frame = data
+
+        return mod
+
     def fit(
         self,
         cov_type: Literal[
@@ -75,8 +123,8 @@ class NormalOLS(OLS):
         sol = np.linalg.solve(L, d)
         beta = np.linalg.solve(L.T, sol)
 
-        if self.rank is None: 
-            self.rank = np.linalg.matrix_rank(C) 
+        if self.rank is None:
+            self.rank = np.linalg.matrix_rank(C)
         if self._df_model is None:
             self._df_model = float(self.rank - self.k_constant)
         if self._df_resid is None:
