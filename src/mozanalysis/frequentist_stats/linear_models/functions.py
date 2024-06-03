@@ -287,7 +287,7 @@ def fit_model(
     deallocate_aggressively: bool = False,
 ) -> RegressionResults:
     """Fits a linear regression model to `df` using the provided formula. See
-    `_make_formula` for a more in-depth discussion on the model structure.
+    `make_formula` for a more in-depth discussion on the model structure.
 
     Parameters:
     - df (pd.DataFrame): the model data
@@ -459,6 +459,42 @@ def prepare_df_for_modeling(
     return df.loc[indexer]
 
 
+def _validate_parameters(
+    df: pd.DataFrame,
+    col_label: str,
+    ref_branch_label="control",
+    covariate_col_label: str | None = None,
+    threshold_quantile: float | None = None,
+    alphas: list[float] | None = None,
+) -> None:
+
+    if col_label not in df.columns:
+        raise ValueError(f"Target metric {col_label} not found in data")
+
+    if np.isclose(df[col_label].std(), 0):
+        # only need to check target, if covariate has no variation, it will not be modeled
+        raise ValueError(f"Metric {col_label} has no variation!")
+
+    if ref_branch_label not in df.branch.unique():
+        raise ValueError(f"No data from reference branch {ref_branch_label} found")
+
+    if covariate_col_label:
+        if covariate_col_label not in df.columns:
+            raise ValueError(f"Covariate {covariate_col_label} not found in data")
+        if covariate_col_label == col_label:
+            raise ValueError(
+                f"Covariate {covariate_col_label} must be different than target {col_label}"
+            )
+    if threshold_quantile:
+        if threshold_quantile <= 0 or threshold_quantile > 1:
+            raise ValueError(f"Threshold quantile must be in (0,1]")
+
+    if alphas:
+        for alpha in alphas:
+            if alpha < 0.002 or alpha >= 1:
+                raise ValueError("alpha must be in (0.002,1)")
+
+
 def compare_branches_lm(
     df: pd.DataFrame,
     col_label: str,
@@ -494,26 +530,13 @@ def compare_branches_lm(
     and `summarize_joint` for more information on the output structure.
 
     """
+    _validate_parameters(
+        df, col_label, ref_branch_label, covariate_col_label, threshold_quantile, alphas
+    )
 
     if alphas is None:
         alphas = [0.01, 0.05]
 
-    # apply outlier filtering inplace to avoid allocating intermediate df
-    # indexer = ~df[col_label].isna()
-    # if covariate_col_label is not None:
-    #     indexer &= ~df[covariate_col_label].isna()
-
-    # if threshold_quantile is not None:
-    #     df[col_label] = df[col_label].clip(
-    #         upper=df[col_label].quantile(threshold_quantile)
-    #     )
-
-    # if (covariate_col_label is not None) and (threshold_quantile is not None):
-    #     df[covariate_col_label] = df[covariate_col_label].clip(
-    #         upper=df[covariate_col_label].quantile(threshold_quantile)
-    #     )
-
-    # model_df = df.loc[indexer]
     model_df = prepare_df_for_modeling(
         df, col_label, threshold_quantile, covariate_col_label
     )

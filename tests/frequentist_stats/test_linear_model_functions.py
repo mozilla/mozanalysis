@@ -6,55 +6,7 @@ import pandas as pd
 import pytest
 import statsmodels.formula.api as smf
 from statsmodels.stats.weightstats import CompareMeans
-
-
-def _make_test_model():
-    ref_branch = "treatment-a"
-    alphas = [0.01, 0.05]
-    branches = ["control"] * 100 + ["treatment-a"] * 100 + ["treatment-b"] * 100
-    searches = list(range(100)) + list(range(100, 200)) + list(range(200, 300))
-    model_df = pd.DataFrame({"search_count": searches, "branch": branches})
-    formula = "search_count ~ C(branch, Treatment(reference='treatment-a'))"
-    results = smf.ols(formula, model_df).fit()
-    treatment_branches = ["control", "treatment-b"]
-    return results, alphas, ref_branch, model_df, "search_count", treatment_branches
-
-
-def _make_test_model_covariate():
-    np.random.seed(42)
-    ref_branch = "treatment-a"
-    alphas = [0.01, 0.05]
-    treatment_branches = ["control", "treatment-b"]
-    branches = ["control"] * 100 + ["treatment-a"] * 100 + ["treatment-b"] * 100
-    y_base = np.random.normal(loc=2, scale=0.1, size=300)
-    y_pre_adj = np.random.normal(loc=0, scale=0.02, size=300)
-    te = np.concatenate(
-        [
-            np.random.normal(loc=0, scale=0.05, size=100),
-            np.random.normal(loc=0.1, scale=0.05, size=100),
-            np.random.normal(loc=0.2, scale=0.05, size=100),
-        ]
-    )
-    model_df = pd.DataFrame(
-        {
-            "search_count": y_base + te,
-            "branch": branches,
-            "search_count_pre": y_base + y_pre_adj,
-        }
-    )
-    formula = "search_count ~ C(branch, Treatment(reference='treatment-a')) + search_count_pre"  # noqa: E501
-
-    results = smf.ols(formula, model_df).fit()
-
-    return (
-        results,
-        alphas,
-        ref_branch,
-        model_df,
-        "search_count",
-        "search_count_pre",
-        treatment_branches,
-    )
+from .helpers import test_model, test_model_covariate
 
 
 def test__stringify_alpha():
@@ -203,31 +155,37 @@ def test__make_joint_output():
 
 
 def test__extract_absolute_uplifts():
-    results, alphas, ref_branch, model_df, column_label, _ = _make_test_model()
-
     bootstrap_results = mafsb.compare_branches(
-        model_df, column_label, ref_branch_label=ref_branch
+        test_model.model_df,
+        test_model.target,
+        ref_branch_label=test_model.ref_branch,
     )
 
     # control vs treatment-a
-    out = func._extract_absolute_uplifts(results, "control", ref_branch, alphas)
+    out = func._extract_absolute_uplifts(
+        test_model.results, "control", test_model.ref_branch, test_model.alphas
+    )
 
     expected_mean = 50 - 150
     assert np.isclose(out[("abs_uplift", "exp")], expected_mean)
     assert np.isclose(out[("abs_uplift", "0.5")], expected_mean)
 
-    for alpha in alphas:
+    for alpha in test_model.alphas:
         a_str_low, a_str_high = func._stringify_alpha(alpha)
         low, high = CompareMeans.from_data(
-            model_df.loc[model_df.branch == "control", column_label],
-            model_df.loc[model_df.branch == ref_branch, column_label],
+            test_model.model_df.loc[
+                test_model.model_df.branch == "control", test_model.target
+            ],
+            test_model.model_df.loc[
+                test_model.model_df.branch == test_model.ref_branch, test_model.target
+            ],
         ).zconfint_diff(alpha)
         assert np.isclose(out[("abs_uplift", a_str_low)], low, atol=0.1)
         assert np.isclose(out[("abs_uplift", a_str_high)], high, atol=0.1)
 
     ## cross-validate with existing bootstrap implementation
     boot_df = bootstrap_results["comparative"]["control"]
-    for alpha in alphas:
+    for alpha in test_model.alphas:
         a_str_low, a_str_high = func._stringify_alpha(alpha)
         assert np.isclose(
             out[("abs_uplift", a_str_low)], boot_df[("abs_uplift", a_str_low)], atol=1.0
@@ -238,24 +196,30 @@ def test__extract_absolute_uplifts():
             atol=1.0,
         )
     # treatment-a vs treatment-b
-    out = func._extract_absolute_uplifts(results, "treatment-b", ref_branch, alphas)
+    out = func._extract_absolute_uplifts(
+        test_model.results, "treatment-b", test_model.ref_branch, test_model.alphas
+    )
 
     expected_mean = 250 - 150
     assert np.isclose(out[("abs_uplift", "exp")], expected_mean)
     assert np.isclose(out[("abs_uplift", "0.5")], expected_mean)
 
-    for alpha in alphas:
+    for alpha in test_model.alphas:
         a_str_low, a_str_high = func._stringify_alpha(alpha)
         low, high = CompareMeans.from_data(
-            model_df.loc[model_df.branch == "treatment-b", column_label],
-            model_df.loc[model_df.branch == ref_branch, column_label],
+            test_model.model_df.loc[
+                test_model.model_df.branch == "treatment-b", test_model.target
+            ],
+            test_model.model_df.loc[
+                test_model.model_df.branch == test_model.ref_branch, test_model.target
+            ],
         ).zconfint_diff(alpha)
         assert np.isclose(out[("abs_uplift", a_str_low)], low, atol=0.1)
         assert np.isclose(out[("abs_uplift", a_str_high)], high, atol=0.1)
 
     ## cross-validate with existing bootstrap implementation
     boot_df = bootstrap_results["comparative"]["treatment-b"]
-    for alpha in alphas:
+    for alpha in test_model.alphas:
         a_str_low, a_str_high = func._stringify_alpha(alpha)
         assert np.isclose(
             out[("abs_uplift", a_str_low)], boot_df[("abs_uplift", a_str_low)], atol=1.0
@@ -268,16 +232,19 @@ def test__extract_absolute_uplifts():
 
 
 def test__extract_absolute_uplifts_covariate():
-    results, alphas, ref_branch, model_df, column_label, _, _ = (
-        _make_test_model_covariate()
-    )
-
     bootstrap_results = mafsb.compare_branches(
-        model_df, column_label, ref_branch_label=ref_branch
+        test_model_covariate.model_df,
+        test_model_covariate.target,
+        ref_branch_label=test_model_covariate.ref_branch,
     )
 
     # control vs treatment-a
-    out = func._extract_absolute_uplifts(results, "control", ref_branch, alphas)
+    out = func._extract_absolute_uplifts(
+        test_model_covariate.results,
+        "control",
+        test_model_covariate.ref_branch,
+        test_model_covariate.alphas,
+    )
 
     expected_mean = -0.1
     assert np.isclose(out[("abs_uplift", "exp")], expected_mean, atol=0.05)
@@ -288,7 +255,7 @@ def test__extract_absolute_uplifts_covariate():
     boot_df = bootstrap_results["comparative"]["control"]
 
     ###validate the widths of confidence intervals are smaller with LM approach
-    for alpha in alphas:
+    for alpha in test_model_covariate.alphas:
         a_str_low, a_str_high = func._stringify_alpha(alpha)
         ci_width_boot = (
             boot_df[("abs_uplift", a_str_high)] - boot_df[("abs_uplift", a_str_low)]
@@ -297,14 +264,19 @@ def test__extract_absolute_uplifts_covariate():
         assert ci_width_lm < ci_width_boot
 
     # treatment-a vs treatment-b
-    out = func._extract_absolute_uplifts(results, "treatment-b", ref_branch, alphas)
+    out = func._extract_absolute_uplifts(
+        test_model_covariate.results,
+        "treatment-b",
+        test_model_covariate.ref_branch,
+        test_model_covariate.alphas,
+    )
 
     expected_mean = 0.1
     assert np.isclose(out[("abs_uplift", "exp")], expected_mean, atol=0.05)
     assert np.isclose(out[("abs_uplift", "0.5")], expected_mean, atol=0.05)
 
     boot_df = bootstrap_results["comparative"]["treatment-b"]
-    for alpha in alphas:
+    for alpha in test_model_covariate.alphas:
         a_str_low, a_str_high = func._stringify_alpha(alpha)
         ci_width_boot = (
             boot_df[("abs_uplift", a_str_high)] - boot_df[("abs_uplift", a_str_low)]
@@ -314,17 +286,18 @@ def test__extract_absolute_uplifts_covariate():
 
 
 def test__extract_relative_uplifts():
-    results, alphas, ref_branch, model_df, column_label, treatment_branches = (
-        _make_test_model()
-    )
 
     bootstrap_results = mafsb.compare_branches(
-        model_df, column_label, ref_branch_label=ref_branch
+        test_model.model_df, test_model.target, ref_branch_label=test_model.ref_branch
     )
 
     # control vs treatment-a
     out = func._extract_relative_uplifts(
-        results, "control", ref_branch, alphas, treatment_branches
+        test_model.results,
+        "control",
+        test_model.ref_branch,
+        test_model.alphas,
+        test_model.treatment_branches,
     )
 
     expected_mean = (50 - 150) / 150
@@ -333,7 +306,7 @@ def test__extract_relative_uplifts():
 
     ## cross-validate with existing bootstrap implementation
     boot_df = bootstrap_results["comparative"]["control"]
-    for alpha in alphas:
+    for alpha in test_model.alphas:
         a_str_low, a_str_high = func._stringify_alpha(alpha)
         assert np.isclose(
             out[("rel_uplift", a_str_low)],
@@ -347,7 +320,11 @@ def test__extract_relative_uplifts():
         )
 
     out = func._extract_relative_uplifts(
-        results, "treatment-b", ref_branch, alphas, treatment_branches
+        test_model.results,
+        "treatment-b",
+        test_model.ref_branch,
+        test_model.alphas,
+        test_model.treatment_branches,
     )
 
     expected_mean = (250 - 150) / 150
@@ -356,7 +333,7 @@ def test__extract_relative_uplifts():
 
     ## cross-validate with existing bootstrap implementation
     boot_df = bootstrap_results["comparative"]["treatment-b"]
-    for alpha in alphas:
+    for alpha in test_model.alphas:
         a_str_low, a_str_high = func._stringify_alpha(alpha)
         assert np.isclose(
             out[("rel_uplift", a_str_low)],
@@ -371,17 +348,20 @@ def test__extract_relative_uplifts():
 
 
 def test__extract_relative_uplifts_covariate():
-    results, alphas, ref_branch, model_df, column_label, _, treatment_branches = (
-        _make_test_model_covariate()
-    )
 
     bootstrap_results = mafsb.compare_branches(
-        model_df, column_label, ref_branch_label=ref_branch
+        test_model_covariate.model_df,
+        test_model_covariate.target,
+        ref_branch_label=test_model_covariate.ref_branch,
     )
 
     # control vs treatment-a
     out = func._extract_relative_uplifts(
-        results, "control", ref_branch, alphas, treatment_branches
+        test_model_covariate.results,
+        "control",
+        test_model_covariate.ref_branch,
+        test_model_covariate.alphas,
+        test_model_covariate.treatment_branches,
     )
 
     expected_mean = -0.1 / 2.1
@@ -393,7 +373,7 @@ def test__extract_relative_uplifts_covariate():
     boot_df = bootstrap_results["comparative"]["control"]
 
     ###validate the widths of confidence intervals are smaller with LM approach
-    for alpha in alphas:
+    for alpha in test_model_covariate.alphas:
         a_str_low, a_str_high = func._stringify_alpha(alpha)
         ci_width_boot = (
             boot_df[("rel_uplift", a_str_high)] - boot_df[("rel_uplift", a_str_low)]
@@ -403,7 +383,11 @@ def test__extract_relative_uplifts_covariate():
 
     # treatment-a vs treatment-b
     out = func._extract_relative_uplifts(
-        results, "treatment-b", ref_branch, alphas, treatment_branches
+        test_model_covariate.results,
+        "treatment-b",
+        test_model_covariate.ref_branch,
+        test_model_covariate.alphas,
+        test_model_covariate.treatment_branches,
     )
 
     expected_mean = 0.1 / 2.1
@@ -411,7 +395,7 @@ def test__extract_relative_uplifts_covariate():
     assert np.isclose(out[("rel_uplift", "0.5")], expected_mean, atol=0.05)
 
     boot_df = bootstrap_results["comparative"]["treatment-b"]
-    for alpha in alphas:
+    for alpha in test_model_covariate.alphas:
         a_str_low, a_str_high = func._stringify_alpha(alpha)
         ci_width_boot = (
             boot_df[("rel_uplift", a_str_high)] - boot_df[("rel_uplift", a_str_low)]
@@ -424,12 +408,11 @@ def test_summarize_joint():
     """Validates the structure of the comparative results object,
     tests for accuracy of reported values are found above, in the
     test__extract_<>_uplifts tests"""
-    _, alphas, _, model_df, column_label, _ = _make_test_model()
 
     actual = mafslm.summarize_joint(
-        model_df,
-        column_label,
-        alphas,
+        test_model.model_df,
+        test_model.target,
+        test_model.alphas,
         ref_branch_label="treatment-a",
     )
 
@@ -509,10 +492,9 @@ def test_compare_branches_lm():
     format of the output object is correct. Functionality testing
     of specific elements of the object is covered by other tests"""
     branches = ["control", "treatment-a", "treatment-b"]
-    _, alphas, _, model_df, column_label, _ = _make_test_model()
 
     out = mafslm.compare_branches_lm(
-        model_df, column_label, "treatment-a", alphas=alphas
+        test_model.model_df, test_model.target, "treatment-a", alphas=test_model.alphas
     )
 
     assert list(out.keys()) == ["individual", "comparative"]
@@ -553,60 +535,55 @@ def test_compare_branches_lm():
 
 
 def test_fit_model():
-    expected_results, _, ref_branch, model_df, column_label, treatment_branches = (
-        _make_test_model()
-    )
 
     actual_results = mafslm.fit_model(
-        model_df, column_label, ref_branch, treatment_branches
+        test_model.model_df,
+        test_model.target,
+        test_model.ref_branch,
+        test_model.treatment_branches,
     )
 
-    pd.testing.assert_series_equal(actual_results.params, expected_results.params)
+    pd.testing.assert_series_equal(actual_results.params, test_model.results.params)
 
     alpha = 0.05
     pd.testing.assert_frame_equal(
-        actual_results.conf_int(alpha), expected_results.conf_int(alpha)
+        actual_results.conf_int(alpha), test_model.results.conf_int(alpha)
     )
 
 
 def test_fit_model_covariate():
-    (
-        expected_results,
-        _,
-        ref_branch,
-        model_df,
-        column_label,
-        column_label_pre,
-        treatment_branches,
-    ) = _make_test_model_covariate()
 
     actual_results = mafslm.fit_model(
-        model_df, column_label, ref_branch, treatment_branches, column_label_pre
+        test_model_covariate.model_df,
+        test_model_covariate.target,
+        test_model_covariate.ref_branch,
+        test_model_covariate.treatment_branches,
+        test_model_covariate.covariate,
     )
 
-    pd.testing.assert_series_equal(actual_results.params, expected_results.params)
+    pd.testing.assert_series_equal(
+        actual_results.params, test_model_covariate.results.params
+    )
 
     alpha = 0.05
     pd.testing.assert_frame_equal(
-        actual_results.conf_int(alpha), expected_results.conf_int(alpha)
+        actual_results.conf_int(alpha), test_model_covariate.results.conf_int(alpha)
     )
 
 
 def test_fit_model_covariate_robust_to_bad_covariate():
-    _, _, ref_branch, model_df, column_label, column_label_pre, treatment_branches = (
-        _make_test_model_covariate()
-    )
+    model_df = test_model_covariate.model_df.copy()
+    model_df.loc[:, test_model_covariate.covariate] = [0] * model_df.shape[0]
 
-    model_df.loc[:, column_label_pre] = [0] * model_df.shape[0]
-
-    expected_formula = (
-        f"{column_label} ~ C(branch, Treatment(reference='{ref_branch}'))"
-    )
-    expected_results = smf.ols(expected_formula, model_df).fit()
+    expected_results = smf.ols(test_model.formula, model_df).fit()
 
     with pytest.warns(Warning, match="Fell back to unadjusted inferences"):
         actual_results = mafslm.fit_model(
-            model_df, column_label, ref_branch, treatment_branches, column_label_pre
+            model_df,
+            test_model_covariate.target,
+            test_model_covariate.ref_branch,
+            test_model_covariate.treatment_branches,
+            test_model_covariate.covariate,
         )
 
     pd.testing.assert_series_equal(actual_results.params, expected_results.params)
@@ -618,22 +595,21 @@ def test_fit_model_covariate_robust_to_bad_covariate():
 
 
 def test_fit_model_covariate_fails_on_bad_data():
-    _, _, ref_branch, model_df, column_label, column_label_pre, treatment_branches = (
-        _make_test_model_covariate()
-    )
-
-    model_df.loc[:, column_label] = [0] * model_df.shape[0]
+    model_df = test_model_covariate.model_df.copy()
+    model_df.loc[:, test_model_covariate.target] = [0] * model_df.shape[0]
 
     with pytest.raises(Exception, match="Error fitting model"):
         mafslm.fit_model(
-            model_df, column_label, ref_branch, treatment_branches, column_label_pre
+            model_df,
+            test_model_covariate.target,
+            test_model_covariate.ref_branch,
+            test_model_covariate.treatment_branches,
+            test_model_covariate.covariate,
         )
 
 
 def test_fit_model_covariate_fails_on_bad_branch():
-    _, _, ref_branch, model_df, column_label, column_label_pre, treatment_branches = (
-        _make_test_model_covariate()
-    )
+    model_df = test_model_covariate.model_df.copy()
 
     model_df.loc[:, "branch"] = ["treatment-a"] * model_df.shape[0]
 
@@ -641,5 +617,9 @@ def test_fit_model_covariate_fails_on_bad_branch():
         Exception, match="Effect for branch control not found in model!"
     ):
         mafslm.fit_model(
-            model_df, column_label, ref_branch, treatment_branches, column_label_pre
+            model_df,
+            test_model_covariate.target,
+            test_model_covariate.ref_branch,
+            test_model_covariate.treatment_branches,
+            test_model_covariate.covariate,
         )
