@@ -425,7 +425,7 @@ def summarize_joint(
     output = {}
 
     for branch in treatment_branches:
-        rel_uplifts = _extract_absolute_uplifts(
+        abs_uplifts = _extract_absolute_uplifts(
             results, branch, ref_branch_label, alphas
         )
 
@@ -433,11 +433,11 @@ def summarize_joint(
             covariate_col_label is None
             or covariate_col_label not in results.params.index
         ):
-            abs_uplifts = _extract_relative_uplifts(
+            rel_uplifts = _extract_relative_uplifts(
                 results, branch, ref_branch_label, alphas, treatment_branches
             )
         else:
-            abs_uplifts = _extract_relative_uplifts(
+            rel_uplifts = _extract_relative_uplifts(
                 results,
                 branch,
                 ref_branch_label,
