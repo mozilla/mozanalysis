@@ -437,14 +437,29 @@ def prepare_df_for_modeling(
     target_col: str,
     threshold_quantile: float | None = None,
     covariate_col: str | None = None,
+    copy: bool = True,
 ) -> pd.DataFrame:
     """
     Performs outlier clipping inplace and returns a view into the dataframe that can be
     used for modeling: target and covariate, if passed, are guaranteed to be non-null.
+
+    Parameters:
+    - df (pd.DataFrame): a cleaned set of data, ready for modeling (such as the output
+    of `make_model_df`)
+    - target_col (str): the target variable for which inferences are desired.
+    - threshold_quantile (Optional[float]): the outlier threshold. See `filter_outliers`
+    - covariate_col_label (Optional[str]): the name of a covariate to include in the
+    model.
+    - copy (bool): if True (default) returns a cleaned copy of the data. If False,
+    modifies data inplace
     """
     indexer = ~df[target_col].isna()
     if covariate_col is not None:
         indexer &= ~df[covariate_col].isna()
+
+    if copy:
+        print("copying!")
+        df = df.copy()
 
     if threshold_quantile is not None:
         df[target_col] = df[target_col].clip(
@@ -502,6 +517,7 @@ def compare_branches_lm(
     covariate_col_label: str | None = None,
     threshold_quantile: float | None = None,
     alphas: list[float] | None = None,
+    interactive: bool = True,
     deallocate_aggressively: bool = False,
 ) -> dict[str, dict[str, pd.Series]]:
     """Performs individual and comparative inferences on branches using standard
@@ -520,6 +536,9 @@ def compare_branches_lm(
     - threshold_quantile (Optional[float]): the outlier threshold. See `filter_outliers`
     - alphas (list[float]): the desired confidence levels. Defaults to [0.01, 0.05]
     (99% and 95% confidence) if not passed.
+    - interactive (bool): When true (default), copies the modeling data to avoid
+    unexpected side effects. When false (used by Jetstream), it modifies data in-place
+    for reduced memory use.
     - deallocate_aggressively (bool): drop large objects as soon as possible trigger
     and garbage collect. Not normally needed in interactive use, but can help when
     called through Jetstream.
@@ -538,7 +557,7 @@ def compare_branches_lm(
         alphas = [0.01, 0.05]
 
     model_df = prepare_df_for_modeling(
-        df, col_label, threshold_quantile, covariate_col_label
+        df, col_label, threshold_quantile, covariate_col_label, copy=interactive
     )
 
     branch_list = _infer_branch_list(model_df.branch, None)

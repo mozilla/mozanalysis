@@ -405,7 +405,8 @@ def test__extract_relative_uplifts_covariate():
         assert ci_width_lm < ci_width_boot
 
 
-def test_summarize_joint():
+@pytest.mark.parametrize("deallocate", [True, False])
+def test_summarize_joint(deallocate):
     """Validates the structure of the comparative results object,
     tests for accuracy of reported values are found above, in the
     test__extract_<>_uplifts tests"""
@@ -415,6 +416,7 @@ def test_summarize_joint():
         test_model.target,
         test_model.alphas,
         ref_branch_label="treatment-a",
+        deallocate_aggressively=deallocate,
     )
 
     expected_index = [
@@ -438,21 +440,26 @@ def test_summarize_joint():
         assert len(actual[branch].index) == len(expected_index)
 
 
-def test_prepare_df_for_modeling():
+@pytest.mark.parametrize("copy", [True, False])
+def test_prepare_df_for_modeling(copy):
     # test removal of nulls
     y = [1, 2, 3, 4, None, np.nan]
     branch = ["control", "control", "treatment", "treatment", "control", "treatment"]
     df_in = pd.DataFrame({"y": y, "branch": branch})
-    df_actual = mafslm.prepare_df_for_modeling(df_in, "y")
+    df_actual = mafslm.prepare_df_for_modeling(df_in, "y", copy=copy)
     df_expected = pd.DataFrame({"y": [1.0, 2.0, 3.0, 4.0], "branch": branch[:4]})
     pd.testing.assert_frame_equal(df_actual, df_expected)
+    # null removal does not drop rows in place
+    # pd.testing.assert_frame_equal(df_in, df_expected)
 
     # test removal of nulls with covariate
     y = [1, 2, 3, 4, None, np.nan]
     y2 = [1, 2, None, np.nan, 3, 4]
     branch = ["control", "control", "treatment", "treatment", "control", "treatment"]
     df_in = pd.DataFrame({"y": y, "branch": branch, "y2": y2})
-    df_actual = mafslm.prepare_df_for_modeling(df_in, "y", covariate_col="y2")
+    df_actual = mafslm.prepare_df_for_modeling(
+        df_in, "y", covariate_col="y2", copy=copy
+    )
     df_expected = pd.DataFrame(
         {"y": [1.0, 2.0], "branch": branch[:2], "y2": [1.0, 2.0]}
     )
@@ -462,7 +469,9 @@ def test_prepare_df_for_modeling():
     y = list(range(100))
     branch = ["control"] * 100
     df_in = pd.DataFrame({"y": y, "branch": branch})
-    df_actual = mafslm.prepare_df_for_modeling(df_in, "y", threshold_quantile=0.95)
+    df_actual = mafslm.prepare_df_for_modeling(
+        df_in, "y", threshold_quantile=0.95, copy=copy
+    )
     df_expected = pd.DataFrame(
         {
             "y": [float(_y) for _y in y[:-5] + [np.quantile(y, 0.95)] * 5],
@@ -470,13 +479,15 @@ def test_prepare_df_for_modeling():
         }
     )
     pd.testing.assert_frame_equal(df_actual, df_expected)
+    if not copy:
+        pd.testing.assert_frame_equal(df_in, df_expected)
 
     # test covariate & thresholding
     y2 = list(range(100, 200))
     branch = ["control"] * 100
     df_in = pd.DataFrame({"y": y, "branch": branch, "y2": y2})
     df_actual = mafslm.prepare_df_for_modeling(
-        df_in, "y", covariate_col="y2", threshold_quantile=0.95
+        df_in, "y", covariate_col="y2", threshold_quantile=0.95, copy=copy
     )
     df_expected = pd.DataFrame(
         {
@@ -486,16 +497,25 @@ def test_prepare_df_for_modeling():
         }
     )
     pd.testing.assert_frame_equal(df_actual, df_expected)
+    if not copy:
+        pd.testing.assert_frame_equal(df_in, df_expected)
 
 
-def test_compare_branches_lm():
+@pytest.mark.parametrize("interactive", [True, False])
+@pytest.mark.parametrize("deallocate", [True, False])
+def test_compare_branches_lm(interactive, deallocate):
     """This is an integration type test, testing only that the
     format of the output object is correct. Functionality testing
     of specific elements of the object is covered by other tests"""
     branches = ["control", "treatment-a", "treatment-b"]
 
     out = mafslm.compare_branches_lm(
-        test_model.model_df, test_model.target, "treatment-a", alphas=test_model.alphas
+        test_model.model_df,
+        test_model.target,
+        "treatment-a",
+        alphas=test_model.alphas,
+        interactive=interactive,
+        deallocate_aggressively=deallocate,
     )
 
     assert list(out.keys()) == ["individual", "comparative"]
