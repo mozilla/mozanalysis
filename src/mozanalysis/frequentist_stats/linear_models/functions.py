@@ -10,10 +10,10 @@ from marginaleffects import avg_comparisons, datagrid
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
 
-from .MozOLS import MozOLS
+from .classes import MozOLS
 
 
-def stringify_alpha(alpha: float) -> tuple[str, str]:
+def _stringify_alpha(alpha: float) -> tuple[str, str]:
     """Converts a floating point alpha-level to the string
     labels of the endpoint of a confidence interval.
     E.g., 0.05 -> '0.025', '0.975'"""
@@ -45,7 +45,7 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> pd.Seri
     """
     str_quantiles = ["0.5"]
     for alpha in alphas:
-        str_quantiles.extend(stringify_alpha(alpha))
+        str_quantiles.extend(_stringify_alpha(alpha))
     res = pd.Series(index=sorted(str_quantiles) + ["mean"], dtype="float")
     dsw = DescrStatsW(branch_data)
     mean = dsw.mean
@@ -53,7 +53,7 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> pd.Seri
     res["mean"] = mean
     for alpha in alphas:
         low, high = dsw.tconfint_mean(alpha)
-        low_str, high_str = stringify_alpha(alpha)
+        low_str, high_str = _stringify_alpha(alpha)
         res[low_str] = low
         res[high_str] = high
     return res
@@ -167,7 +167,7 @@ def _make_joint_output(alphas: list[float], uplift_type: str) -> pd.Series:
     """
     str_quantiles = ["0.5", "exp"]
     for alpha in alphas:
-        str_quantiles.extend(stringify_alpha(alpha))
+        str_quantiles.extend(_stringify_alpha(alpha))
     str_quantiles.sort()
     index = pd.MultiIndex.from_tuples([(uplift_type, q) for q in str_quantiles])
     series = pd.Series(index=index, dtype="float")
@@ -201,7 +201,7 @@ def _extract_absolute_uplifts(
     for alpha in alphas:
         ci = results.conf_int(alpha=alpha)
         lower, upper = ci.loc[parameter_name]
-        low_str, high_str = stringify_alpha(alpha)
+        low_str, high_str = _stringify_alpha(alpha)
         output.loc[("abs_uplift", low_str)] = lower
         output.loc[("abs_uplift", high_str)] = upper
     return output
@@ -268,7 +268,7 @@ def _extract_relative_uplifts(
             7,
         ), "avg_comparisons result object not shaped as expected"
 
-        low_str, high_str = stringify_alpha(alpha)
+        low_str, high_str = _stringify_alpha(alpha)
         # subtract 1 b/c branch/reference - 1 = (branch - reference)/reference
         output.loc[("rel_uplift", low_str)] = ac["conf_low"][0] - 1
         output.loc[("rel_uplift", high_str)] = ac["conf_high"][0] - 1
@@ -432,6 +432,33 @@ def summarize_joint(
     return output
 
 
+def prepare_df_for_modeling(
+    df: pd.DataFrame,
+    target_col: str,
+    threshold_quantile: float | None = None,
+    covariate_col: str | None = None,
+) -> pd.DataFrame:
+    """
+    Performs outlier clipping inplace and returns a view into the dataframe that can be
+    used for modeling: target and covariate, if passed, are guaranteed to be non-null.
+    """
+    indexer = ~df[target_col].isna()
+    if covariate_col is not None:
+        indexer &= ~df[covariate_col].isna()
+
+    if threshold_quantile is not None:
+        df[target_col] = df[target_col].clip(
+            upper=df[target_col].quantile(threshold_quantile)
+        )
+
+    if (covariate_col is not None) and (threshold_quantile is not None):
+        df[covariate_col] = df[covariate_col].clip(
+            upper=df[covariate_col].quantile(threshold_quantile)
+        )
+
+    return df.loc[indexer]
+
+
 def compare_branches_lm(
     df: pd.DataFrame,
     col_label: str,
@@ -472,21 +499,24 @@ def compare_branches_lm(
         alphas = [0.01, 0.05]
 
     # apply outlier filtering inplace to avoid allocating intermediate df
-    indexer = ~df[col_label].isna()
-    if covariate_col_label is not None:
-        indexer &= ~df[covariate_col_label].isna()
+    # indexer = ~df[col_label].isna()
+    # if covariate_col_label is not None:
+    #     indexer &= ~df[covariate_col_label].isna()
 
-    if threshold_quantile is not None:
-        df[col_label] = df[col_label].clip(
-            upper=df[col_label].quantile(threshold_quantile)
-        )
+    # if threshold_quantile is not None:
+    #     df[col_label] = df[col_label].clip(
+    #         upper=df[col_label].quantile(threshold_quantile)
+    #     )
 
-    if (covariate_col_label is not None) and (threshold_quantile is not None):
-        df[covariate_col_label] = df[covariate_col_label].clip(
-            upper=df[covariate_col_label].quantile(threshold_quantile)
-        )
+    # if (covariate_col_label is not None) and (threshold_quantile is not None):
+    #     df[covariate_col_label] = df[covariate_col_label].clip(
+    #         upper=df[covariate_col_label].quantile(threshold_quantile)
+    #     )
 
-    model_df = df.loc[indexer]
+    # model_df = df.loc[indexer]
+    model_df = prepare_df_for_modeling(
+        df, col_label, threshold_quantile, covariate_col_label
+    )
 
     branch_list = _infer_branch_list(model_df.branch, None)
 
