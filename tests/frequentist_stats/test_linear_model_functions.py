@@ -1,10 +1,14 @@
+from copy import deepcopy
+
 import mozanalysis.frequentist_stats.bootstrap as mafsb
 import mozanalysis.frequentist_stats.linear_models as mafslm
 import mozanalysis.frequentist_stats.linear_models.functions as func
 import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
 import statsmodels.formula.api as smf
+from polars.testing import assert_frame_equal as pl_assert_frame_equal
 from statsmodels.stats.weightstats import CompareMeans
 
 from .helpers import test_model, test_model_covariate
@@ -644,3 +648,41 @@ def test_fit_model_covariate_fails_on_bad_branch():
             test_model_covariate.treatment_branches,
             test_model_covariate.covariate,
         )
+
+
+def test__create_datagrid():
+    # without covariate
+    branches = test_model.treatment_branches + [test_model.ref_branch]
+    newdata = func._create_datagrid(deepcopy(test_model.results), branches)
+
+    expected_data = []
+    for branch in branches:
+        expected_data.append(
+            {
+                "branch": branch,
+            }
+        )
+    expected = pl.DataFrame(expected_data)
+    pl_assert_frame_equal(newdata.select("branch"), expected)
+
+    # with covariate
+    branches = test_model_covariate.treatment_branches + [
+        test_model_covariate.ref_branch
+    ]
+    newdata = func._create_datagrid(
+        test_model_covariate.results, branches, test_model_covariate.covariate
+    )
+    expected_data = []
+    for branch in branches:
+        for q in test_model_covariate.model_df[test_model_covariate.covariate].quantile(
+            np.arange(0, 1, 0.0001)
+        ):
+            expected_data.append({"branch": branch, test_model_covariate.covariate: q})
+    expected = pl.DataFrame(expected_data)
+
+    pl_assert_frame_equal(
+        newdata.select("branch", test_model_covariate.covariate).sort(
+            "branch", test_model_covariate.covariate
+        ),
+        expected.sort("branch"),
+    )

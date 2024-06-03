@@ -6,6 +6,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+import polars as pl
 from marginaleffects import avg_comparisons, datagrid
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
@@ -207,6 +208,39 @@ def _extract_absolute_uplifts(
     return output
 
 
+def _create_datagrid(
+    results: RegressionResults,
+    branches: list[str],
+    covariate_col_label: str | None = None,
+) -> pl.DataFrame:
+    """
+    Creates a grid of data which approximates the empirical data distribution. This is
+    used to dramatically reduce the runtime/memory use of `_extract_relative_uplifts`
+    when the data is large.
+
+    Parameters:
+    - results (RegressionResults): the fitted model.
+    - branches (list[str]): the list of all experiment branches
+    - covariate_col_label (Optional[str]): the name of the covariate used in modeling
+
+    """
+    if covariate_col_label is None:
+        newdata = datagrid(model=results, grid_type="balanced", branch=branches)
+    else:
+        q = (
+            results.model.data.frame[covariate_col_label]
+            .quantile(np.arange(0, 1, 0.0001))
+            .values
+        )
+        newdata = datagrid(
+            model=results,
+            grid_type="balanced",
+            **{covariate_col_label: q},
+            branch=branches,
+        )
+    return newdata
+
+
 def _extract_relative_uplifts(
     results: RegressionResults,
     branch: str,
@@ -214,7 +248,6 @@ def _extract_relative_uplifts(
     alphas: list[str],
     treatment_branches: list[str],
     covariate_col_label: str | None = None,
-    covariate: pd.Series | None = None,
 ) -> pd.Series:
     """Extracts inferences on relative differences between branches from a fitted
     linear model. Unlike absolute differences, these are not simply existing parameters.
@@ -232,6 +265,8 @@ def _extract_relative_uplifts(
     present in the training data when the model was fit.
     - ref_branch (str): the name of the reference branch.
     - alphas (list[float]): the disired confidence levels.
+    - treatment_branches (list[str]): the list of treatment branches.
+    - covariate_col_label (Optional[str]): the name of the covariate used in modeling
 
     Returns:
     - output (pd.Series): the set of inferences. See `_make_joint_output`.
@@ -240,17 +275,7 @@ def _extract_relative_uplifts(
     output = _make_joint_output(alphas, "rel_uplift")
     branches = treatment_branches + [ref_branch]
 
-    # TODO: refactor into function for testing
-    if covariate_col_label is None:
-        nd = datagrid(model=results, grid_type="balanced", branch=branches)
-    else:
-        q = covariate.quantile(np.arange(0, 1, 0.0001)).values
-        nd = datagrid(
-            model=results,
-            grid_type="balanced",
-            **{covariate_col_label: q},
-            branch=branches,
-        )
+    newdata = _create_datagrid(results, branches, covariate_col_label)
 
     for alpha in alphas:
         # inferences on branch/ref_branch
@@ -260,7 +285,7 @@ def _extract_relative_uplifts(
             comparison="lnratioavg",
             transform=np.exp,
             conf_level=1 - alpha,
-            newdata=nd,
+            newdata=newdata,
         )
 
         assert ac.shape == (
@@ -419,7 +444,6 @@ def summarize_joint(
                 alphas,
                 treatment_branches,
                 covariate_col_label,
-                df[covariate_col_label],
             )
         output[branch] = pd.concat([rel_uplifts, abs_uplifts])
 
@@ -458,7 +482,6 @@ def prepare_df_for_modeling(
         indexer &= ~df[covariate_col].isna()
 
     if copy:
-        print("copying!")
         df = df.copy()
 
     if threshold_quantile is not None:
@@ -538,7 +561,7 @@ def compare_branches_lm(
     (99% and 95% confidence) if not passed.
     - interactive (bool): When true (default), copies the modeling data to avoid
     unexpected side effects. When false (used by Jetstream), it modifies data in-place
-    for reduced memory use.
+    for reduced memory use. Passed to `prepare_df_for_modeling`
     - deallocate_aggressively (bool): drop large objects as soon as possible trigger
     and garbage collect. Not normally needed in interactive use, but can help when
     called through Jetstream.
