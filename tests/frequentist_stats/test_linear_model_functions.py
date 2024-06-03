@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 import statsmodels.formula.api as smf
 from statsmodels.stats.weightstats import CompareMeans
+
 from .helpers import test_model, test_model_covariate
 
 

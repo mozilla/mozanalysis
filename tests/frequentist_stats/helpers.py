@@ -1,6 +1,9 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import statsmodels.formula.api as smf
+
+# all models in this file are fit using standard statsmodels.OLS objects
+# so that they can be compared against MozOLS models
 
 
 class UnitTestModel:

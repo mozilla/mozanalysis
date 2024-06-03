@@ -472,7 +472,8 @@ def _validate_parameters(
         raise ValueError(f"Target metric {col_label} not found in data")
 
     if np.isclose(df[col_label].std(), 0):
-        # only need to check target, if covariate has no variation, it will not be modeled
+        # only need to check target, if covariate has no variation,
+        # it will not be modeled
         raise ValueError(f"Metric {col_label} has no variation!")
 
     if ref_branch_label not in df.branch.unique():
@@ -483,11 +484,10 @@ def _validate_parameters(
             raise ValueError(f"Covariate {covariate_col_label} not found in data")
         if covariate_col_label == col_label:
             raise ValueError(
-                f"Covariate {covariate_col_label} must be different than target {col_label}"
+                f"Covariate {covariate_col_label} must be different than target {col_label}"  # noqa: E501
             )
-    if threshold_quantile:
-        if threshold_quantile <= 0 or threshold_quantile > 1:
-            raise ValueError(f"Threshold quantile must be in (0,1]")
+    if threshold_quantile and (threshold_quantile <= 0 or threshold_quantile > 1):
+        raise ValueError("Threshold quantile must be in (0,1]")
 
     if alphas:
         for alpha in alphas:
