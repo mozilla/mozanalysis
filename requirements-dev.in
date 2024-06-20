@@ -184,7 +184,7 @@ kiwisolver==1.4.5
     # via
     #   -c requirements.txt
     #   matplotlib
-marginaleffects==0.0.12
+marginaleffects==0.0.11
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -407,7 +407,7 @@ rsa==4.9
     # via
     #   -c requirements.txt
     #   google-auth
-ruff==0.4.9
+ruff==0.4.10
     # via
     #   -c requirements.txt
     #   mozanalysis
