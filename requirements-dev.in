@@ -184,7 +184,7 @@ kiwisolver==1.4.5
     # via
     #   -c requirements.txt
     #   matplotlib
-marginaleffects==0.0.11
+marginaleffects==0.0.12
     # via
     #   -c requirements.txt
     #   mozanalysis

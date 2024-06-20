@@ -100,7 +100,7 @@ keyring==25.2.1
     # via twine
 kiwisolver==1.4.5
     # via matplotlib
-marginaleffects==0.0.11
+marginaleffects==0.0.12
     # via mozanalysis
 markdown-it-py==3.0.0
     # via rich
