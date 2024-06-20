@@ -18,7 +18,7 @@ dependencies=[
     "google-cloud-bigquery",
     "google-cloud-bigquery-storage",
     "statsmodels",
-    "marginaleffects==0.0.11",
+    "marginaleffects>=0.0.11",
     "matplotlib",
     "SecretStorage"
 ]
@@ -36,7 +36,7 @@ testing = [
     "pytest-ruff",
     "pytest-cov",
     "pytest-timeout",
-    "ruff==0.4.4",
+    "ruff>=0.4.4",
     'build',
     'twine'
 ]

@@ -109,7 +109,7 @@ google-auth==2.30.0
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-cloud-bigquery==3.24.0
+google-cloud-bigquery==3.25.0
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -184,7 +184,7 @@ kiwisolver==1.4.5
     # via
     #   -c requirements.txt
     #   matplotlib
-marginaleffects==0.0.11
+marginaleffects==0.0.12
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -407,7 +407,7 @@ rsa==4.9
     # via
     #   -c requirements.txt
     #   google-auth
-ruff==0.4.4
+ruff==0.4.9
     # via
     #   -c requirements.txt
     #   mozanalysis

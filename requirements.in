@@ -58,7 +58,7 @@ google-auth==2.30.0
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-cloud-bigquery==3.24.0
+google-cloud-bigquery==3.25.0
     # via mozanalysis
 google-cloud-bigquery-storage==2.25.0
     # via mozanalysis
@@ -100,7 +100,7 @@ keyring==25.2.1
     # via twine
 kiwisolver==1.4.5
     # via matplotlib
-marginaleffects==0.0.11
+marginaleffects==0.0.12
     # via mozanalysis
 markdown-it-py==3.0.0
     # via rich
@@ -240,7 +240,7 @@ rich==13.7.1
     # via twine
 rsa==4.9
     # via google-auth
-ruff==0.4.4
+ruff==0.4.9
     # via
     #   mozanalysis
     #   pytest-ruff
