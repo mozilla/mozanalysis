@@ -42,7 +42,7 @@ testing = [
     "pytest-ruff",
     "pytest-cov",
     "pytest-timeout",
-    "ruff==0.4.4",
+    "ruff",
     'build',
     'twine',
 ]
