@@ -11,7 +11,6 @@ attrs==23.2.0
     #   mozanalysis
     #   mozilla-metric-config-parser
 backports-tarfile==1.2.0
-backports-tarfile==1.2.0
     # via
     #   -c requirements.txt
     #   jaraco-context
@@ -29,7 +28,6 @@ cattrs==23.2.3
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-certifi==2024.6.2
 certifi==2024.6.2
     # via
     #   -c requirements.txt
@@ -55,7 +53,6 @@ contourpy==1.2.1
     # via
     #   -c requirements.txt
     #   matplotlib
-coverage[toml]==7.5.3
 coverage[toml]==7.5.3
     # via
     #   -c requirements.txt
@@ -87,7 +84,6 @@ filelock==3.15.3
     # via
     #   tox
     #   virtualenv
-fonttools==4.53.0
 fonttools==4.53.0
     # via
     #   -c requirements.txt
@@ -218,7 +214,6 @@ mdurl==0.1.2
     #   -c requirements.txt
     #   markdown-it-py
 mizani==0.11.4
-mizani==0.11.4
     # via
     #   -c requirements.txt
     #   plotnine
@@ -304,7 +299,6 @@ pluggy==1.5.0
     #   -c requirements.txt
     #   pytest
     #   tox
-polars==0.20.31
 polars==0.20.31
     # via
     #   -c requirements.txt
@@ -400,7 +394,6 @@ readme-renderer==43.0
     #   -c requirements.txt
     #   twine
 requests==2.32.3
-requests==2.32.3
     # via
     #   -c requirements.txt
     #   google-api-core
@@ -429,7 +422,6 @@ ruff==0.4.10
     #   -c requirements.txt
     #   mozanalysis
     #   pytest-ruff
-scipy==1.13.1
 scipy==1.13.1
     # via
     #   -c requirements.txt
