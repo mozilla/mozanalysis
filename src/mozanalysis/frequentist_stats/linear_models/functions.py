@@ -198,7 +198,6 @@ def _extract_absolute_uplifts(
     output.loc[("abs_uplift", "0.5")] = results.params[parameter_name]
     output.loc[("abs_uplift", "exp")] = results.params[parameter_name]
 
-    # i = np.where(results.params.index == parameter_name)[0][0]
     for alpha in alphas:
         ci = results.conf_int(alpha=alpha)
         lower, upper = ci.loc[parameter_name]
