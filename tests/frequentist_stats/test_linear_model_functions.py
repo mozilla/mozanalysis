@@ -686,3 +686,59 @@ def test__create_datagrid():
         ),
         expected.sort("branch"),
     )
+
+
+def test_relative_inferences_with_without_datagrid():
+    from marginaleffects import avg_comparisons
+
+    branches = test_model.treatment_branches + [test_model.ref_branch]
+    datagrid = func._create_datagrid(deepcopy(test_model.results), branches)
+
+    for branch in test_model.treatment_branches:
+        expected = avg_comparisons(
+            test_model.results,
+            variables={"branch": [test_model.ref_branch, branch]},
+            comparison="lnratioavg",
+            transform=np.exp,
+            conf_level=1 - 0.05,
+        )
+
+        actual = avg_comparisons(
+            test_model.results,
+            variables={"branch": [test_model.ref_branch, branch]},
+            comparison="lnratioavg",
+            transform=np.exp,
+            conf_level=1 - 0.05,
+            newdata=datagrid,
+        )
+
+        pl_assert_frame_equal(expected, actual)
+
+
+def test_relative_inferences_with_without_datagrid_covariate():
+    from marginaleffects import avg_comparisons
+
+    branches = test_model_covariate.treatment_branches + [
+        test_model_covariate.ref_branch
+    ]
+    datagrid = func._create_datagrid(deepcopy(test_model_covariate.results), branches)
+
+    for branch in test_model_covariate.treatment_branches:
+        expected = avg_comparisons(
+            test_model_covariate.results,
+            variables={"branch": [test_model_covariate.ref_branch, branch]},
+            comparison="lnratioavg",
+            transform=np.exp,
+            conf_level=1 - 0.05,
+        )
+
+        actual = avg_comparisons(
+            test_model_covariate.results,
+            variables={"branch": [test_model_covariate.ref_branch, branch]},
+            comparison="lnratioavg",
+            transform=np.exp,
+            conf_level=1 - 0.05,
+            newdata=datagrid,
+        )
+
+        pl_assert_frame_equal(expected, actual)
