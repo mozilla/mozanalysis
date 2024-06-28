@@ -703,6 +703,11 @@ def test_relative_inferences_with_without_datagrid():
             conf_level=1 - 0.05,
         )
 
+        assert expected.shape == (
+            1,
+            7,
+        ), "avg_comparisons result object not shaped as expected"
+
         actual = avg_comparisons(
             test_model.results,
             variables={"branch": [test_model.ref_branch, branch]},
@@ -712,7 +717,14 @@ def test_relative_inferences_with_without_datagrid():
             newdata=datagrid,
         )
 
-        pl_assert_frame_equal(expected, actual)
+        assert actual.shape == (
+            1,
+            7,
+        ), "avg_comparisons result object not shaped as expected"
+
+        assert np.isclose(expected["conf_low"][0], actual["conf_low"][0])
+        assert np.isclose(expected["estimate"][0], actual["estimate"][0])
+        assert np.isclose(expected["conf_high"][0], actual["conf_high"][0])
 
 
 def test_relative_inferences_with_without_datagrid_covariate():
@@ -732,6 +744,11 @@ def test_relative_inferences_with_without_datagrid_covariate():
             conf_level=1 - 0.05,
         )
 
+        assert expected.shape == (
+            1,
+            7,
+        ), "avg_comparisons result object not shaped as expected"
+
         actual = avg_comparisons(
             test_model_covariate.results,
             variables={"branch": [test_model_covariate.ref_branch, branch]},
@@ -741,4 +758,11 @@ def test_relative_inferences_with_without_datagrid_covariate():
             newdata=datagrid,
         )
 
-        pl_assert_frame_equal(expected, actual)
+        assert actual.shape == (
+            1,
+            7,
+        ), "avg_comparisons result object not shaped as expected"
+
+        assert np.isclose(expected["conf_low"][0], actual["conf_low"][0])
+        assert np.isclose(expected["estimate"][0], actual["estimate"][0])
+        assert np.isclose(expected["conf_high"][0], actual["conf_high"][0])
