@@ -251,7 +251,7 @@ ruff==0.4.10
     # via
     #   mozanalysis
     #   pytest-ruff
-scipy==1.13.1
+scipy==1.14.0
     # via
     #   formulaic
     #   marginaleffects

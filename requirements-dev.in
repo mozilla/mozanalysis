@@ -422,7 +422,7 @@ ruff==0.4.10
     #   -c requirements.txt
     #   mozanalysis
     #   pytest-ruff
-scipy==1.13.1
+scipy==1.14.0
     # via
     #   -c requirements.txt
     #   formulaic
