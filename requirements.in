@@ -27,7 +27,7 @@ click==8.1.7
     # via mozilla-metric-config-parser
 contourpy==1.2.1
     # via matplotlib
-coverage[toml]==7.5.3
+coverage[toml]==7.5.4
     # via pytest-cov
 cryptography==42.0.8
     # via secretstorage
