@@ -76,7 +76,7 @@ exceptiongroup==1.2.1
     #   -c requirements.txt
     #   cattrs
     #   pytest
-faker==25.9.1
+faker==26.0.0
     # via
     #   -c requirements.txt
     #   polyfactory
