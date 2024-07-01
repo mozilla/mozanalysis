@@ -164,7 +164,7 @@ plotnine==0.13.6
     # via marginaleffects
 pluggy==1.5.0
     # via pytest
-polars==0.20.31
+polars==1.0.0
     # via marginaleffects
 polyfactory==2.16.0
     # via mozilla-nimbus-schemas
