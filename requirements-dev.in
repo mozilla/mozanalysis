@@ -129,7 +129,7 @@ google-resumable-media==2.7.1
     # via
     #   -c requirements.txt
     #   google-cloud-bigquery
-googleapis-common-protos==1.63.1
+googleapis-common-protos==1.63.2
     # via
     #   -c requirements.txt
     #   google-api-core
