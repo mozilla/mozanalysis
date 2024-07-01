@@ -504,7 +504,7 @@ def test_prepare_df_for_modeling(copy):
     if not copy:
         pd.testing.assert_frame_equal(df_in, df_expected)
 
-    # test behavior of clipping with integer dtypes 
+    # test behavior of clipping with integer dtypes
     y = list(range(100))
     branch = ["control"] * 100
     df_in = pd.DataFrame({"y": y, "branch": branch})
@@ -514,7 +514,9 @@ def test_prepare_df_for_modeling(copy):
     )
     df_expected = pd.DataFrame(
         {
-            "y": [float(_y) for _y in y[:-5] + [int(np.ceil(np.quantile(y, 0.95)))] * 5],
+            "y": [
+                float(_y) for _y in y[:-5] + [int(np.ceil(np.quantile(y, 0.95)))] * 5
+            ],
             "branch": branch,
         }
     )
