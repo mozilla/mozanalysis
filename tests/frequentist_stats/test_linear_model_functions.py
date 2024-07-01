@@ -504,6 +504,22 @@ def test_prepare_df_for_modeling(copy):
     if not copy:
         pd.testing.assert_frame_equal(df_in, df_expected)
 
+    # test behavior of clipping with integer dtypes 
+    y = list(range(100))
+    branch = ["control"] * 100
+    df_in = pd.DataFrame({"y": y, "branch": branch})
+    df_in["y"] = df_in.y.astype(pd.Int64Dtype())
+    df_actual = mafslm.prepare_df_for_modeling(
+        df_in, "y", threshold_quantile=0.948, copy=copy
+    )
+    df_expected = pd.DataFrame(
+        {
+            "y": [float(_y) for _y in y[:-5] + [int(np.ceil(np.quantile(y, 0.95)))] * 5],
+            "branch": branch,
+        }
+    )
+    pd.testing.assert_frame_equal(df_actual, df_expected)
+
 
 @pytest.mark.parametrize("interactive", [True, False])
 @pytest.mark.parametrize("deallocate", [True, False])
