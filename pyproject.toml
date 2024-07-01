@@ -1,15 +1,21 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8", "pytest-runner", "setuptools_scm"]
+requires = [
+    "setuptools>=64",
+    "setuptools_scm>=8",
+    "pytest-runner",
+    "setuptools_scm",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
-name= "mozanalysis"
+name = "mozanalysis"
 dynamic = ["version"]
-authors=[{name = "Mozilla Corporation", email="fx-data-dev@mozilla.org"}]
-description="A library for Mozilla experiments analysis"
-requires-python=">=3.10,<=3.11"
-dependencies=[
+authors = [{ name = "Mozilla Corporation", email = "fx-data-dev@mozilla.org" }]
+description = "A library for Mozilla experiments analysis"
+requires-python = ">=3.10,<=3.11"
+dependencies = [
     "attrs",
+    "formulaic",
     "mozilla-metric-config-parser>=2024.4.1",
     "numpy",
     "pandas",
@@ -18,9 +24,9 @@ dependencies=[
     "google-cloud-bigquery",
     "google-cloud-bigquery-storage",
     "statsmodels",
-    "marginaleffects==0.0.11",
+    "marginaleffects==0.0.12",
     "matplotlib",
-    "SecretStorage"
+    "SecretStorage",
 ]
 readme = "README.md"
 
@@ -38,32 +44,32 @@ testing = [
     "pytest-timeout",
     "ruff",
     'build',
-    'twine'
+    'twine',
 ]
 dev = ['pip-tools', 'tox', "mozanalysis[testing]"]
 
 [tool.setuptools_scm]
 
 [tool.ruff]
-line-length=88
-exclude = [".git","__pycache__"]
+line-length = 88
+exclude = [".git", "__pycache__"]
 target-version = "py310"
 
 [tool.ruff.lint]
-ignore= ["E741", "RUF005"]
+ignore = ["E741", "RUF005"]
 select = [
-    "E", # pycodestyle
-    "W", # pycodestyle
-    "F", # Pyflakes
-    "B", # flake8-bugbear
-    "C4", # flake8-comprehensions
-    "I", # isort
+    "E",   # pycodestyle
+    "W",   # pycodestyle
+    "F",   # Pyflakes
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "I",   # isort
     "SIM", # flake8-simplify
     "TCH", # flake8-type-checking
     "TID", # flake8-tidy-imports
-    "Q", # flake8-quotes
-    "UP", # pyupgrade
-    "PT", # flake8-pytest-style
+    "Q",   # flake8-quotes
+    "UP",  # pyupgrade
+    "PT",  # flake8-pytest-style
     "RUF", # Ruff-specific rules
 ]
 
