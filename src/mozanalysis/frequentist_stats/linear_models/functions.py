@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 from marginaleffects import avg_comparisons, datagrid
+from pandas.api.types import is_integer_dtype
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
 
@@ -481,19 +482,25 @@ def prepare_df_for_modeling(
         indexer &= ~df[covariate_col].isna()
 
     if copy:
-        df = df.copy()
+        df = df.loc[indexer].copy()
+    else:
+        df = df.loc[indexer]
 
     if threshold_quantile is not None:
-        df[target_col] = df[target_col].clip(
-            upper=df[target_col].quantile(threshold_quantile)
-        )
+        threshold = df[target_col].quantile(threshold_quantile)
+        if is_integer_dtype(df[target_col].dtype):
+            threshold = int(np.ceil(threshold))
+
+        df[target_col] = df[target_col].clip(upper=threshold)
 
     if (covariate_col is not None) and (threshold_quantile is not None):
-        df[covariate_col] = df[covariate_col].clip(
-            upper=df[covariate_col].quantile(threshold_quantile)
-        )
+        threshold = df[covariate_col].quantile(threshold_quantile)
+        if is_integer_dtype(df[covariate_col].dtype):
+            threshold = int(np.ceil(threshold))
 
-    return df.loc[indexer]
+        df[covariate_col] = df[covariate_col].clip(upper=threshold)
+
+    return df
 
 
 def _validate_parameters(
