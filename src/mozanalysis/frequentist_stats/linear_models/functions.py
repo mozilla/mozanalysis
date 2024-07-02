@@ -229,6 +229,7 @@ def _create_datagrid(
     else:
         q = (
             results.model.data.frame[covariate_col_label]
+            .astype(float)
             .quantile(np.arange(0, 1, 0.0001))
             .values
         )
