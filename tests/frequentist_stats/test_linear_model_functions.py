@@ -721,6 +721,15 @@ def test__create_datagrid():
         expected.sort("branch"),
     )
 
+    # handle pandas Float64Dtype
+    branches = test_model.treatment_branches + [test_model.ref_branch]
+    model_df = test_model.model_df.copy()
+    model_df["search_count"] = model_df.search_count.astype(pd.Float64Dtype())
+
+    results = smf.ols(test_model.formula, model_df).fit()
+
+    func._create_datagrid(results, branches)
+
 
 def test_relative_inferences_with_without_datagrid():
     from marginaleffects import avg_comparisons
