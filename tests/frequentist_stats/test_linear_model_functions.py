@@ -721,14 +721,20 @@ def test__create_datagrid():
         expected.sort("branch"),
     )
 
-    # handle pandas Float64Dtype
-    branches = test_model.treatment_branches + [test_model.ref_branch]
-    model_df = test_model.model_df.copy()
-    model_df["search_count"] = model_df.search_count.astype(pd.Float64Dtype())
+    # handle pandas types
+    branches = test_model_covariate.treatment_branches + [
+        test_model_covariate.ref_branch
+    ]
+    model_df = test_model_covariate.model_df.copy()
+
+    model_df["search_count"] = model_df.search_count.astype(int).astype(pd.Int64Dtype())
+    model_df[test_model_covariate.covariate] = (
+        model_df[test_model_covariate.covariate].astype(int).astype(pd.Int64Dtype())
+    )
 
     results = smf.ols(test_model.formula, model_df).fit()
-
-    func._create_datagrid(results, branches)
+    # should not throw, even though types are pandas types
+    func._create_datagrid(results, branches, test_model_covariate.covariate)
 
 
 def test_relative_inferences_with_without_datagrid():
