@@ -482,9 +482,7 @@ def prepare_df_for_modeling(
         indexer &= ~df[covariate_col].isna()
 
     if copy:
-        df = df.loc[indexer].copy()
-    else:
-        df = df.loc[indexer]
+        df = df.copy()
 
     if threshold_quantile is not None:
         threshold = df[target_col].quantile(threshold_quantile)
@@ -500,7 +498,7 @@ def prepare_df_for_modeling(
 
         df[covariate_col] = df[covariate_col].clip(upper=threshold)
 
-    return df
+    return df.loc[indexer]
 
 
 def _validate_parameters(

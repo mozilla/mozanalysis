@@ -469,8 +469,25 @@ def test_prepare_df_for_modeling(copy):
     )
     pd.testing.assert_frame_equal(df_actual, df_expected)
 
-    # test thresholding
+    # test thresholding ints
     y = list(range(100))
+    branch = ["control"] * 100
+    df_in = pd.DataFrame({"y": y, "branch": branch})
+    df_actual = mafslm.prepare_df_for_modeling(
+        df_in, "y", threshold_quantile=0.95, copy=copy
+    )
+    df_expected = pd.DataFrame(
+        {
+            "y": [int(_y) for _y in y[:-5] + [int(np.ceil(np.quantile(y, 0.95)))] * 5],
+            "branch": branch,
+        }
+    )
+    pd.testing.assert_frame_equal(df_actual, df_expected)
+    if not copy:
+        pd.testing.assert_frame_equal(df_in, df_expected)
+
+    # test thresholding floats
+    y = [float(_y) for _y in (range(100))]
     branch = ["control"] * 100
     df_in = pd.DataFrame({"y": y, "branch": branch})
     df_actual = mafslm.prepare_df_for_modeling(
@@ -487,7 +504,7 @@ def test_prepare_df_for_modeling(copy):
         pd.testing.assert_frame_equal(df_in, df_expected)
 
     # test covariate & thresholding
-    y2 = list(range(100, 200))
+    y2 = [float(_y) for _y in range(100, 200)]
     branch = ["control"] * 100
     df_in = pd.DataFrame({"y": y, "branch": branch, "y2": y2})
     df_actual = mafslm.prepare_df_for_modeling(
@@ -514,12 +531,11 @@ def test_prepare_df_for_modeling(copy):
     )
     df_expected = pd.DataFrame(
         {
-            "y": [
-                float(_y) for _y in y[:-5] + [int(np.ceil(np.quantile(y, 0.95)))] * 5
-            ],
+            "y": [int(_y) for _y in y[:-5] + [int(np.ceil(np.quantile(y, 0.948)))] * 5],
             "branch": branch,
         }
     )
+    df_expected["y"] = df_expected.y.astype(pd.Int64Dtype())
     pd.testing.assert_frame_equal(df_actual, df_expected)
 
 
