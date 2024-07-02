@@ -469,8 +469,25 @@ def test_prepare_df_for_modeling(copy):
     )
     pd.testing.assert_frame_equal(df_actual, df_expected)
 
-    # test thresholding
+    # test thresholding ints
     y = list(range(100))
+    branch = ["control"] * 100
+    df_in = pd.DataFrame({"y": y, "branch": branch})
+    df_actual = mafslm.prepare_df_for_modeling(
+        df_in, "y", threshold_quantile=0.95, copy=copy
+    )
+    df_expected = pd.DataFrame(
+        {
+            "y": [int(_y) for _y in y[:-5] + [int(np.ceil(np.quantile(y, 0.95)))] * 5],
+            "branch": branch,
+        }
+    )
+    pd.testing.assert_frame_equal(df_actual, df_expected)
+    if not copy:
+        pd.testing.assert_frame_equal(df_in, df_expected)
+
+    # test thresholding floats
+    y = [float(_y) for _y in (range(100))]
     branch = ["control"] * 100
     df_in = pd.DataFrame({"y": y, "branch": branch})
     df_actual = mafslm.prepare_df_for_modeling(
@@ -487,7 +504,7 @@ def test_prepare_df_for_modeling(copy):
         pd.testing.assert_frame_equal(df_in, df_expected)
 
     # test covariate & thresholding
-    y2 = list(range(100, 200))
+    y2 = [float(_y) for _y in range(100, 200)]
     branch = ["control"] * 100
     df_in = pd.DataFrame({"y": y, "branch": branch, "y2": y2})
     df_actual = mafslm.prepare_df_for_modeling(
@@ -503,6 +520,23 @@ def test_prepare_df_for_modeling(copy):
     pd.testing.assert_frame_equal(df_actual, df_expected)
     if not copy:
         pd.testing.assert_frame_equal(df_in, df_expected)
+
+    # test behavior of clipping with integer dtypes
+    y = list(range(100))
+    branch = ["control"] * 100
+    df_in = pd.DataFrame({"y": y, "branch": branch})
+    df_in["y"] = df_in.y.astype(pd.Int64Dtype())
+    df_actual = mafslm.prepare_df_for_modeling(
+        df_in, "y", threshold_quantile=0.948, copy=copy
+    )
+    df_expected = pd.DataFrame(
+        {
+            "y": [int(_y) for _y in y[:-5] + [int(np.ceil(np.quantile(y, 0.948)))] * 5],
+            "branch": branch,
+        }
+    )
+    df_expected["y"] = df_expected.y.astype(pd.Int64Dtype())
+    pd.testing.assert_frame_equal(df_actual, df_expected)
 
 
 @pytest.mark.parametrize("interactive", [True, False])
@@ -686,6 +720,21 @@ def test__create_datagrid():
         ),
         expected.sort("branch"),
     )
+
+    # handle pandas types
+    branches = test_model_covariate.treatment_branches + [
+        test_model_covariate.ref_branch
+    ]
+    model_df = test_model_covariate.model_df.copy()
+
+    model_df["search_count"] = model_df.search_count.astype(int).astype(pd.Int64Dtype())
+    model_df[test_model_covariate.covariate] = (
+        model_df[test_model_covariate.covariate].astype(int).astype(pd.Int64Dtype())
+    )
+
+    results = smf.ols(test_model.formula, model_df).fit()
+    # should not throw, even though types are pandas types
+    func._create_datagrid(results, branches, test_model_covariate.covariate)
 
 
 def test_relative_inferences_with_without_datagrid():
