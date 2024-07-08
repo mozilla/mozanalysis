@@ -1,3 +1,5 @@
+import logging
+import re
 from copy import deepcopy
 
 import mozanalysis.frequentist_stats.bootstrap as mafsb
@@ -12,6 +14,8 @@ from polars.testing import assert_frame_equal as pl_assert_frame_equal
 from statsmodels.stats.weightstats import CompareMeans
 
 from .helpers import test_model, test_model_covariate
+
+logger = logging.getLogger(__name__)
 
 
 def test__stringify_alpha():
@@ -593,6 +597,34 @@ def test_compare_branches_lm(interactive, deallocate):
         assert sorted(out["comparative"][branch].index) == expected_index
 
 
+def test_compare_branches_lm_fallback(caplog):
+    # tests whether the results when called with a missing covariate equal the
+    # results when called without a covariate. Also tests that a log was emitted.
+    msg = "Covariate fake_covariate not found, falling back to unadjusted inferences"
+
+    assert msg not in caplog.text
+
+    actual = mafslm.compare_branches_lm(
+        test_model_covariate.model_df,
+        test_model_covariate.target,
+        test_model_covariate.ref_branch,
+        "fake_covariate",
+    )
+
+    expected = mafslm.compare_branches_lm(
+        test_model_covariate.model_df,
+        test_model_covariate.target,
+        test_model_covariate.ref_branch,
+    )
+
+    for branch in test_model_covariate.treatment_branches:
+        pd.testing.assert_series_equal(
+            actual["comparative"][branch], expected["comparative"][branch]
+        )
+
+    assert msg in caplog.text
+
+
 def test_fit_model():
 
     actual_results = mafslm.fit_model(
@@ -815,3 +847,111 @@ def test_relative_inferences_with_without_datagrid_covariate():
         assert np.isclose(expected["conf_low"][0], actual["conf_low"][0])
         assert np.isclose(expected["estimate"][0], actual["estimate"][0])
         assert np.isclose(expected["conf_high"][0], actual["conf_high"][0])
+
+
+def test__validate_parameters():
+    with pytest.raises(ValueError, match="Target metric fake_var not found in data"):
+        func._validate_parameters(
+            test_model.model_df, "fake_var", test_model.ref_branch, None, None, None
+        )
+
+    df = test_model.model_df.copy()
+    df["search_count"] = 1
+    with pytest.raises(ValueError, match="Metric search_count has no variation"):
+        func._validate_parameters(
+            df, "search_count", test_model.ref_branch, None, None, None
+        )
+
+    with pytest.raises(
+        ValueError, match="No data from reference branch fake_branch found"
+    ):
+        func._validate_parameters(
+            test_model.model_df, test_model.target, "fake_branch", None, None, None
+        )
+
+    msg = re.escape("Threshold quantile must be in (0,1]")
+    with pytest.raises(ValueError, match=msg):
+        func._validate_parameters(
+            test_model.model_df,
+            test_model.target,
+            test_model.ref_branch,
+            None,
+            -1,
+            None,
+        )
+
+    with pytest.raises(ValueError, match=msg):
+        func._validate_parameters(
+            test_model.model_df,
+            test_model.target,
+            test_model.ref_branch,
+            None,
+            0,
+            None,
+        )
+
+    with pytest.raises(ValueError, match=msg):
+        func._validate_parameters(
+            test_model.model_df,
+            test_model.target,
+            test_model.ref_branch,
+            None,
+            1.00000001,
+            None,
+        )
+
+    msg = re.escape("alpha must be in (0.002,1)")
+    with pytest.raises(ValueError, match=msg):
+        func._validate_parameters(
+            test_model.model_df,
+            test_model.target,
+            test_model.ref_branch,
+            None,
+            None,
+            [0.001],
+        )
+
+    with pytest.raises(ValueError, match=msg):
+        func._validate_parameters(
+            test_model.model_df,
+            test_model.target,
+            test_model.ref_branch,
+            None,
+            None,
+            [1.001],
+        )
+
+    with pytest.raises(ValueError, match=msg):
+        func._validate_parameters(
+            test_model.model_df,
+            test_model.target,
+            test_model.ref_branch,
+            None,
+            None,
+            [0.05, 0.1, 0.01, 0.000001],
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=f"Covariate {test_model_covariate.target} must be different than target {test_model_covariate.target}",  # noqa: E501
+    ):
+        func._validate_parameters(
+            test_model_covariate.model_df,
+            test_model_covariate.target,
+            test_model_covariate.ref_branch,
+            test_model_covariate.target,
+            None,
+            None,
+        )
+
+    with pytest.raises(
+        func.CovariateNotFound, match="Covariate fake_covariate not found in data"
+    ):
+        func._validate_parameters(
+            test_model_covariate.model_df,
+            test_model_covariate.target,
+            test_model_covariate.ref_branch,
+            "fake_covariate",
+            None,
+            None,
+        )

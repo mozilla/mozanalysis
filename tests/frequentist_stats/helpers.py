@@ -21,7 +21,6 @@ class UnitTestModel:
         self.target = "search_count"
         self.formula = "search_count ~ C(branch, Treatment(reference='treatment-a'))"
         self.results = smf.ols(self.formula, self.model_df).fit()
-        self.alphastreatment_branches = ["control", "treatment-b"]
 
 
 class UnitTestModelCovariate:

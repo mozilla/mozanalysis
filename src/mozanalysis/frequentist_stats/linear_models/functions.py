@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import logging
 import re
 import warnings
 
@@ -13,6 +14,8 @@ from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
 
 from .classes import MozOLS
+
+logger = logging.getLogger(__name__)
 
 
 def _stringify_alpha(alpha: float) -> tuple[str, str]:
@@ -502,6 +505,10 @@ def prepare_df_for_modeling(
     return df.loc[indexer]
 
 
+class CovariateNotFound(Exception):
+    pass
+
+
 def _validate_parameters(
     df: pd.DataFrame,
     col_label: str,
@@ -522,20 +529,25 @@ def _validate_parameters(
     if ref_branch_label not in df.branch.unique():
         raise ValueError(f"No data from reference branch {ref_branch_label} found")
 
-    if covariate_col_label:
-        if covariate_col_label not in df.columns:
-            raise ValueError(f"Covariate {covariate_col_label} not found in data")
-        if covariate_col_label == col_label:
-            raise ValueError(
-                f"Covariate {covariate_col_label} must be different than target {col_label}"  # noqa: E501
-            )
-    if threshold_quantile and (threshold_quantile <= 0 or threshold_quantile > 1):
+    if (threshold_quantile is not None) and (
+        threshold_quantile <= 0 or threshold_quantile > 1
+    ):
         raise ValueError("Threshold quantile must be in (0,1]")
 
     if alphas:
         for alpha in alphas:
             if alpha < 0.002 or alpha >= 1:
                 raise ValueError("alpha must be in (0.002,1)")
+
+    if covariate_col_label:
+        if covariate_col_label not in df.columns:
+            raise CovariateNotFound(
+                f"Covariate {covariate_col_label} not found in data"
+            )
+        if covariate_col_label == col_label:
+            raise ValueError(
+                f"Covariate {covariate_col_label} must be different than target {col_label}"  # noqa: E501
+            )
 
 
 def compare_branches_lm(
@@ -577,9 +589,31 @@ def compare_branches_lm(
     and `summarize_joint` for more information on the output structure.
 
     """
-    _validate_parameters(
-        df, col_label, ref_branch_label, covariate_col_label, threshold_quantile, alphas
-    )
+    try:
+        _validate_parameters(
+            df,
+            col_label,
+            ref_branch_label,
+            covariate_col_label,
+            threshold_quantile,
+            alphas,
+        )
+    except CovariateNotFound:
+        initial_covariate_col_label = covariate_col_label
+        covariate_col_label = None
+        # revalidate
+        _validate_parameters(
+            df,
+            col_label,
+            ref_branch_label,
+            covariate_col_label,
+            threshold_quantile,
+            alphas,
+        )
+
+        logger.warn(
+            f"Covariate {initial_covariate_col_label} not found, falling back to unadjusted inferences"  # noqa: E501
+        )
 
     if alphas is None:
         alphas = [0.01, 0.05]
