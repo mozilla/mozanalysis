@@ -600,9 +600,7 @@ def test_compare_branches_lm(interactive, deallocate):
 def test_compare_branches_lm_fallback(caplog):
     # tests whether the results when called with a missing covariate equal the
     # results when called without a covariate. Also tests that a log was emitted.
-    msg = (
-        "Covariate fake_covariate not found, falling back to unadjusted inferences",
-    )[0]
+    msg = "Covariate fake_covariate not found, falling back to unadjusted inferences"
 
     assert msg not in caplog.text
 
