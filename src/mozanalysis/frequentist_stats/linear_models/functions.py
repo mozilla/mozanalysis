@@ -374,23 +374,40 @@ def fit_model(
 
     model = MozOLS.from_formula(formula, df)
     fell_back = False
+    lin_alg_error = False
     try:
         results = model.fit()
-    except np.linalg.LinAlgError as lae:
+    except np.linalg.LinAlgError:
         if covariate is None:
             # nothing we can do about this
-            raise lae
+            lin_alg_error = True
+
         else:
-            # maybe covariate is bad (e.g., pre-treatment covariate in
-            # onboarding experiment is always zero), try falling back to
-            # unadjusted inferences
+            # maybe covariate is bad in a way that we havent otherwise accounted for
+            # try falling back to unadjusted inferences
+            msg = "Unexpectedly fell back to unadjusted inferences"
             formula = make_formula(target, ref_branch, None)
             model = MozOLS.from_formula(formula, df)
-            results = model.fit()
-            msg = "Unexpectedly back to unadjusted inferences"
-            logger.warning(msg)
-            warnings.warn(msg, stacklevel=1)
+            try:
+                results = model.fit()
+                logger.warning(msg)
+                warnings.warn(msg, stacklevel=1)
+            except np.linalg.LinAlgError:
+                # well... we tried our best
+                lin_alg_error = True
+
             fell_back = True
+
+    if lin_alg_error:
+        msg = (
+            "Encountered a linear algebra error when fitting"
+            f" model for target {target}"
+        )
+        if covariate is not None:
+            msg += " even when falling back to unadjusted inferences"
+        logger.warning(msg)
+        warnings.warn(msg, stacklevel=1)
+        raise FailedToFitModel(msg)
 
     if not np.isfinite(results.llf):
         msg = f"Failed to fit model for target {target}"
@@ -687,6 +704,9 @@ def compare_branches_lm(
             f"Covariate {initial_covariate_col_label} not found, falling back to unadjusted inferences"  # noqa: E501
         )
     except UnableToAnalyze:
+        # validation has found a case of degenerate data that we are not able to
+        # perform analysis on. Therefore, we gracefully fail by returning an
+        # empty output to Jetstream
         branch_list = _infer_branch_list(df.branch, None)
         return _make_empty_compare_branches_output(
             ref_branch_label, df.branch, alphas, branch_list
@@ -714,6 +734,8 @@ def compare_branches_lm(
         )
         out["comparative"] = comparative
     except FailedToFitModel as e:
+        # we encountered an unrecoverable error when attempting to fit the linear model
+        # as a result, we gracefully fail by returning an empty comparative result
         logger.warning(e)
         out["comparative"] = _make_empty_compare_branches_output(
             ref_branch_label, model_df.branch, alphas, branch_list

@@ -668,7 +668,7 @@ def test_fit_model_covariate_robust_to_bad_covariate():
 
     expected_results = smf.ols(test_model.formula, model_df).fit()
 
-    with pytest.warns(Warning, match="Unexpectedly back to unadjusted inferences"):
+    with pytest.warns(Warning, match="Unexpectedly fell back to unadjusted inferences"):
         actual_results = mafslm.fit_model(
             model_df,
             test_model_covariate.target,
