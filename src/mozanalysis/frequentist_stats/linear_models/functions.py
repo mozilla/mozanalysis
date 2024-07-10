@@ -57,7 +57,7 @@ def _stringify_alpha(alpha: float) -> tuple[str, str]:
     return f"{alpha/2:0.3f}", f"{1-alpha/2:0.3f}"
 
 
-def _make_univariate_output(alphas: list[float]) -> pd.Series:
+def _make_univariate_output(alphas: list[float]) -> Estimates:
     str_quantiles = ["0.5"]
     for alpha in alphas:
         str_quantiles.extend(_stringify_alpha(alpha))
@@ -65,7 +65,7 @@ def _make_univariate_output(alphas: list[float]) -> pd.Series:
     return res
 
 
-def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> pd.Series:
+def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> Estimates:
     """Inferences (point estimate and confidence intervals) for
     the mean of a single branch's data. Constructs confidence
     intervals from central limit theory (uses the t-distribution)
@@ -191,7 +191,7 @@ def make_formula(target: str, ref_branch: str, covariate: str | None = None) -> 
     return formula
 
 
-def _make_joint_output(alphas: list[float], uplift_type: Uplift) -> pd.Series:
+def _make_joint_output(alphas: list[float], uplift_type: Uplift) -> Estimates:
     """Constructs an empty pandas series to hold comparative results. The series
     will be multiindexed for backwards compatability with the bootstrap results.
 
@@ -217,7 +217,7 @@ def _make_joint_output(alphas: list[float], uplift_type: Uplift) -> pd.Series:
 
 def _extract_absolute_uplifts(
     results: RegressionResults, branch: str, ref_branch: str, alphas: list[float]
-) -> pd.Series:
+) -> Estimates:
     """Extracts inferences on absolute differences between branches from a fitted
     linear model. These are simply the point estimates and confidence intervals of the
     appropriate term in the model.
@@ -287,7 +287,7 @@ def _extract_relative_uplifts(
     alphas: list[float],
     treatment_branches: list[str],
     covariate_col_label: str | None = None,
-) -> pd.Series:
+) -> Estimates:
     """Extracts inferences on relative differences between branches from a fitted
     linear model. Unlike absolute differences, these are not simply existing parameters.
     We desire inferences on (T-C)/C = T/C-1. Since 1 is a constant, we desire inferences
@@ -442,7 +442,7 @@ def summarize_joint(
     ref_branch_label: str = "control",
     covariate_col_label: str | None = None,
     deallocate_aggressively: bool = False,
-) -> dict[str, pd.Series]:
+) -> EstimatesByBranch:
     """The primary entrypoint for linear model based inferences on comparisons
     of treatment branches. Computes absolute and relative differences between
     each treatment branch relative to the reference branch (point estimates and
