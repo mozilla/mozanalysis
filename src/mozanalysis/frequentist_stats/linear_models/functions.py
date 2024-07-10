@@ -4,7 +4,6 @@
 import logging
 import re
 import warnings
-from typing import Literal, TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -14,34 +13,39 @@ from pandas.api.types import is_integer_dtype
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
 
+from mozanalysis.types import (
+    ComparativeOption,
+    CompareBranchesOutput,
+    Estimates,
+    EstimatesByBranch,
+    Uplift,
+)
+
 from .classes import MozOLS
 
 logger = logging.getLogger(__name__)
 
-##Types
-
-ComparativeOption = Literal["individual", "comparative"]
-
-Estimates: TypeAlias = pd.Series
-BranchLabel = str
-EstimatesByBranch = dict[BranchLabel, Estimates]
-
-CompareBranchesOutput = dict[ComparativeOption, EstimatesByBranch]
-
-Uplift = Literal["abs_uplift", "rel_uplift"]
 
 ## Exceptions
 
 
-class CovariateNotFound(Exception):
+class LinearModelException(Exception):
     pass
 
 
-class UnableToAnalyze(Exception):
+class CovariateNotFound(LinearModelException):
     pass
 
 
-class FailedToFitModel(Exception):
+class UnableToAnalyze(LinearModelException):
+    pass
+
+
+class FailedToFitModel(LinearModelException):
+    pass
+
+
+class MissingModelParameter(LinearModelException):
     pass
 
 
@@ -191,25 +195,25 @@ def make_formula(target: str, ref_branch: str, covariate: str | None = None) -> 
     return formula
 
 
-def _make_joint_output(alphas: list[float], uplift_type: Uplift) -> Estimates:
+def _make_joint_output(alphas: list[float], uplift: Uplift) -> Estimates:
     """Constructs an empty pandas series to hold comparative results. The series
     will be multiindexed for backwards compatability with the bootstrap results.
 
     Parameters:
     - alphas (list[float]): the desired confidence levels
-    - uplift_type (str): either `abs_uplift` or `rel_uplift` for inferences on the
+    - uplift (Uplift): either Uplift.ABSOLUTE or Uplift.RELATIVE for inferences on the
     absolute and relative differences between branches, respectively.
 
     Returns:
-    - series (pd.Series): the empty series. Will have keys of (uplift_type, '0.5')
-    and (uplift_type, 'exp'), as well as 2 keys, one for each alpha. For more info
+    - series (pd.Series): the empty series. Will have keys of (uplift.value, '0.5')
+    and (uplift.value, 'exp'), as well as 2 keys, one for each alpha. For more info
     on keys, see `summarize_one_branch` and `stringify_alpha` above.
     """
     str_quantiles = ["0.5", "exp"]
     for alpha in alphas:
         str_quantiles.extend(_stringify_alpha(alpha))
     str_quantiles.sort()
-    index = pd.MultiIndex.from_tuples([(uplift_type, q) for q in str_quantiles])
+    index = pd.MultiIndex.from_tuples([(uplift.value, q) for q in str_quantiles])
     series = pd.Series(index=index, dtype="float")
 
     return series
@@ -232,17 +236,18 @@ def _extract_absolute_uplifts(
     Returns:
     - output (pd.Series): the set of inferences. See `_make_joint_output`.
     """
-    output = _make_joint_output(alphas, "abs_uplift")
+    output = _make_joint_output(alphas, Uplift.ABSOLUTE)
     parameter_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
-    output.loc[("abs_uplift", "0.5")] = results.params[parameter_name]
-    output.loc[("abs_uplift", "exp")] = results.params[parameter_name]
+    abs_uplift = Uplift.ABSOLUTE.value
+    output.loc[(abs_uplift, "0.5")] = results.params[parameter_name]
+    output.loc[(abs_uplift, "exp")] = results.params[parameter_name]
 
     for alpha in alphas:
         ci = results.conf_int(alpha=alpha)
         lower, upper = ci.loc[parameter_name]
         low_str, high_str = _stringify_alpha(alpha)
-        output.loc[("abs_uplift", low_str)] = lower
-        output.loc[("abs_uplift", high_str)] = upper
+        output.loc[(abs_uplift, low_str)] = lower
+        output.loc[(abs_uplift, high_str)] = upper
     return output
 
 
@@ -311,7 +316,7 @@ def _extract_relative_uplifts(
     - output (pd.Series): the set of inferences. See `_make_joint_output`.
     """
 
-    output = _make_joint_output(alphas, "rel_uplift")
+    output = _make_joint_output(alphas, Uplift.RELATIVE)
     branches = treatment_branches + [ref_branch]
 
     newdata = _create_datagrid(results, branches, covariate_col_label)
@@ -334,10 +339,11 @@ def _extract_relative_uplifts(
 
         low_str, high_str = _stringify_alpha(alpha)
         # subtract 1 b/c branch/reference - 1 = (branch - reference)/reference
-        output.loc[("rel_uplift", low_str)] = ac["conf_low"][0] - 1
-        output.loc[("rel_uplift", high_str)] = ac["conf_high"][0] - 1
-        output.loc[("rel_uplift", "0.5")] = ac["estimate"][0] - 1
-        output.loc[("rel_uplift", "exp")] = ac["estimate"][0] - 1
+        rel_uplift = Uplift.RELATIVE.value
+        output.loc[(rel_uplift, low_str)] = ac["conf_low"][0] - 1
+        output.loc[(rel_uplift, high_str)] = ac["conf_high"][0] - 1
+        output.loc[(rel_uplift, "0.5")] = ac["estimate"][0] - 1
+        output.loc[(rel_uplift, "exp")] = ac["estimate"][0] - 1
 
     return output
 
@@ -372,8 +378,8 @@ def fit_model(
 
     Raises:
     - `FailedToFitModel` if unable to fit the model.
-    - `Exception` if certain unexpected conditions arise (e.g., one of the treatment)
-    branches, which was expected to have a model parameter, does not get one.
+    - `MissingModelParameter` if one of the treatment branches, which was expected to
+    have a model parameter, does not get one.
     """
     formula = make_formula(target, ref_branch, covariate)
 
@@ -426,7 +432,9 @@ def fit_model(
         param_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
         if param_name not in results.params:
             # this can occur if a branch does not have any non-null data
-            raise Exception(f"Effect for branch {branch} not found in model!")
+            raise MissingModelParameter(
+                f"Effect for branch {branch} not found in model!"
+            )
 
     if deallocate_aggressively:
         import gc
@@ -584,17 +592,17 @@ def _make_empty_compare_branches_output(
     out: CompareBranchesOutput = {}
     branch_list = _infer_branch_list(branches, branch_list)
     individual = {b: _make_univariate_output(alphas) for b in branch_list}
-    out["individual"] = individual
+    out[ComparativeOption.INDIVIDUAL] = individual
 
     treatment_branches = [b for b in branch_list if b != ref_branch_label]
     comparative_empty_result = pd.concat(
         [
-            _make_joint_output(alphas, "abs_uplift"),
-            _make_joint_output(alphas, "rel_uplift"),
+            _make_joint_output(alphas, Uplift.ABSOLUTE),
+            _make_joint_output(alphas, Uplift.RELATIVE),
         ]
     )
     comparative = {b: comparative_empty_result.copy() for b in treatment_branches}
-    out["comparative"] = comparative
+    out[ComparativeOption.COMPARATIVE] = comparative
 
     return out
 
@@ -701,7 +709,6 @@ def compare_branches_lm(
     and `summarize_joint` for more information on the output structure.
 
     """
-
     if alphas is None:
         alphas = [0.01, 0.05]
 
@@ -746,7 +753,7 @@ def compare_branches_lm(
     branch_list = _infer_branch_list(model_df.branch, None)
 
     out: CompareBranchesOutput = {}
-    out["individual"] = summarize_univariate(
+    out[ComparativeOption.INDIVIDUAL] = summarize_univariate(
         model_df[col_label], model_df.branch, alphas, branch_list=branch_list
     )
     try:
@@ -759,13 +766,13 @@ def compare_branches_lm(
             covariate_col_label=covariate_col_label,
             deallocate_aggressively=deallocate_aggressively,
         )
-        out["comparative"] = comparative
+        out[ComparativeOption.COMPARATIVE] = comparative
     except FailedToFitModel as e:
         # we encountered an unrecoverable error when attempting to fit the linear model
         # as a result, we gracefully fail by returning an empty comparative result
         logger.warning(e)
-        out["comparative"] = _make_empty_compare_branches_output(
+        out[ComparativeOption.COMPARATIVE] = _make_empty_compare_branches_output(
             ref_branch_label, model_df.branch, alphas, branch_list
-        )["comparative"]
+        )[ComparativeOption.COMPARATIVE]
 
     return out

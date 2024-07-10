@@ -6,6 +6,7 @@ from itertools import product
 import mozanalysis.frequentist_stats.bootstrap as mafsb
 import mozanalysis.frequentist_stats.linear_models as mafslm
 import mozanalysis.frequentist_stats.linear_models.functions as func
+import mozanalysis.types as types
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -147,7 +148,7 @@ def test_make_formula():
 
 
 def test__make_joint_output():
-    out = func._make_joint_output([0.01, 0.05], "rel_uplift")
+    out = func._make_joint_output([0.01, 0.05], types.Uplift.RELATIVE)
 
     expected_keys = [
         ("rel_uplift", "exp"),
