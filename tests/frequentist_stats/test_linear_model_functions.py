@@ -973,8 +973,6 @@ def test__make_empty_compare_branches_output():
 
     treatment_branches = ["treatment-a", "treatment-b"]
 
-    expected = {b: estimates.copy() for b in treatment_branches}
-
     actual = func._make_empty_compare_branches_output(
         "control", df, [0.05], treatment_branches
     )
