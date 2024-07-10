@@ -691,7 +691,7 @@ def test_fit_model_covariate_fails_on_bad_data():
 
     with pytest.raises(
         Exception,
-        match="Failed to fit model for target search_count using covariate search_count_pre",
+        match="Failed to fit model for target search_count using covariate search_count_pre",  # noqa: E501
     ):
         mafslm.fit_model(
             model_df,

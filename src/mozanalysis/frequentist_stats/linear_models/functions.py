@@ -572,7 +572,7 @@ def _make_empty_compare_branches_output(
     alphas: list[float],
     branch_list: list[str] | None = None,
 ) -> CompareBranchesOutput:
-    out: CompareBranchesOutput = dict()
+    out: CompareBranchesOutput = {}
     branch_list = _infer_branch_list(branches, branch_list)
     individual = {b: _make_univariate_output(alphas) for b in branch_list}
     out["individual"] = individual
@@ -718,7 +718,7 @@ def compare_branches_lm(
 
     branch_list = _infer_branch_list(model_df.branch, None)
 
-    out: CompareBranchesOutput = dict()
+    out: CompareBranchesOutput = {}
     out["individual"] = summarize_univariate(
         model_df[col_label], model_df.branch, alphas, branch_list=branch_list
     )
