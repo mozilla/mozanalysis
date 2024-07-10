@@ -857,7 +857,9 @@ def test__validate_parameters():
 
     df = test_model.model_df.copy()
     df["search_count"] = 1
-    with pytest.raises(ValueError, match="Metric search_count has no variation"):
+    with pytest.raises(
+        func.UnableToAnalyze, match="Metric search_count has no variation"
+    ):
         func._validate_parameters(
             df, "search_count", test_model.ref_branch, None, None, None
         )
