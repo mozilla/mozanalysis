@@ -4,6 +4,7 @@
 import logging
 import re
 import warnings
+from typing import Literal, TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,19 @@ from .classes import MozOLS
 
 logger = logging.getLogger(__name__)
 
+##Types
+
+ComparativeOption = Literal["individual", "comparative"]
+
+Estimates: TypeAlias = pd.Series
+BranchLabel = str
+
+CompareBranchesOutput = dict[ComparativeOption, dict[BranchLabel, Estimates]]
+
+Uplift = Literal["abs_uplift", "rel_uplift"]
+
+## Functions
+
 
 def _stringify_alpha(alpha: float) -> tuple[str, str]:
     """Converts a floating point alpha-level to the string
@@ -25,6 +39,14 @@ def _stringify_alpha(alpha: float) -> tuple[str, str]:
     if alpha < 0.002 or alpha >= 1:
         raise ValueError("alpha must be in (0.002,1)")
     return f"{alpha/2:0.3f}", f"{1-alpha/2:0.3f}"
+
+
+def _make_univariate_output(alphas: list[float]) -> pd.Series:
+    str_quantiles = ["0.5"]
+    for alpha in alphas:
+        str_quantiles.extend(_stringify_alpha(alpha))
+    res = pd.Series(index=sorted(str_quantiles) + ["mean"], dtype="float")
+    return res
 
 
 def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> pd.Series:
@@ -48,10 +70,7 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> pd.Seri
       - '0.975': the upper bound of the 95% confidence interval
       - '0.995': the upper bound of the 99% confidence interval
     """
-    str_quantiles = ["0.5"]
-    for alpha in alphas:
-        str_quantiles.extend(_stringify_alpha(alpha))
-    res = pd.Series(index=sorted(str_quantiles) + ["mean"], dtype="float")
+    res = _make_univariate_output(alphas)
     dsw = DescrStatsW(branch_data)
     mean = dsw.mean
     res["0.5"] = mean  # backwards compatibility
@@ -98,7 +117,7 @@ def summarize_univariate(
     branch_list = _infer_branch_list(branches, branch_list)
 
     return {
-        b: summarize_one_branch(data.loc[(branches == b).values], alphas)
+        b: summarize_one_branch(data.loc[(branches == b).values], alphas)  # type: ignore
         for b in branch_list
     }
 
@@ -156,7 +175,7 @@ def make_formula(target: str, ref_branch: str, covariate: str | None = None) -> 
     return formula
 
 
-def _make_joint_output(alphas: list[float], uplift_type: str) -> pd.Series:
+def _make_joint_output(alphas: list[float], uplift_type: Uplift) -> pd.Series:
     """Constructs an empty pandas series to hold comparative results. The series
     will be multiindexed for backwards compatability with the bootstrap results.
 
@@ -249,7 +268,7 @@ def _extract_relative_uplifts(
     results: RegressionResults,
     branch: str,
     ref_branch: str,
-    alphas: list[str],
+    alphas: list[float],
     treatment_branches: list[str],
     covariate_col_label: str | None = None,
 ) -> pd.Series:
@@ -505,7 +524,35 @@ def prepare_df_for_modeling(
     return df.loc[indexer]
 
 
+def make_empty_return_payload(
+    ref_branch_label: str,
+    branches: pd.Series,
+    alphas: list[float],
+    branch_list: list[str] | None = None,
+) -> CompareBranchesOutput:
+    out: CompareBranchesOutput = dict()
+    branch_list = _infer_branch_list(branches, branch_list)
+    individual = {b: _make_univariate_output(alphas) for b in branch_list}
+    out["individual"] = individual
+
+    treatment_branches = [b for b in branch_list if b != ref_branch_label]
+    comparative_empty_result = pd.concat(
+        [
+            _make_joint_output(alphas, "abs_uplift"),
+            _make_joint_output(alphas, "rel_uplift"),
+        ]
+    )
+    comparative = {b: comparative_empty_result.copy() for b in treatment_branches}
+    out["comparative"] = comparative
+
+    return out
+
+
 class CovariateNotFound(Exception):
+    pass
+
+
+class UnableToAnalyze(Exception):
     pass
 
 
@@ -519,12 +566,16 @@ def _validate_parameters(
 ) -> None:
 
     if col_label not in df.columns:
+        # this should never happen... raise up to Jetstream
         raise ValueError(f"Target metric {col_label} not found in data")
 
     if np.isclose(df[col_label].std(), 0):
-        # only need to check target, if covariate has no variation,
+        # this error can be expected in the case of preenrollment analysis
+        # periods for new-user experiments (e.g., onboarding) where there is
+        # no preenrollment data.
+        # we only need to check target, if covariate has no variation,
         # it will not be modeled
-        raise ValueError(f"Metric {col_label} has no variation!")
+        raise UnableToAnalyze(f"Metric {col_label} has no variation!")
 
     if ref_branch_label not in df.branch.unique():
         raise ValueError(f"No data from reference branch {ref_branch_label} found")
@@ -559,7 +610,7 @@ def compare_branches_lm(
     alphas: list[float] | None = None,
     interactive: bool = True,
     deallocate_aggressively: bool = False,
-) -> dict[str, dict[str, pd.Series]]:
+) -> CompareBranchesOutput:
     """Performs individual and comparative inferences on branches using standard
     central limit theory (t-tests and linear regressions). Can incorporate a covariate
     (`covariate_col_label`) to increase precision of comparative inferences.
@@ -589,6 +640,10 @@ def compare_branches_lm(
     and `summarize_joint` for more information on the output structure.
 
     """
+    logger.info(df.head())
+    if alphas is None:
+        alphas = [0.01, 0.05]
+
     try:
         _validate_parameters(
             df,
@@ -614,9 +669,11 @@ def compare_branches_lm(
         logger.warn(
             f"Covariate {initial_covariate_col_label} not found, falling back to unadjusted inferences"  # noqa: E501
         )
-
-    if alphas is None:
-        alphas = [0.01, 0.05]
+    except UnableToAnalyze:
+        branch_list = _infer_branch_list(df.branch, None)
+        return make_empty_return_payload(
+            ref_branch_label, df.branch, alphas, branch_list
+        )
 
     model_df = prepare_df_for_modeling(
         df, col_label, threshold_quantile, covariate_col_label, copy=interactive
