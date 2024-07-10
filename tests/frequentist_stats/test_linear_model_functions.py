@@ -1,10 +1,12 @@
 import logging
 import re
 from copy import deepcopy
+from itertools import product
 
 import mozanalysis.frequentist_stats.bootstrap as mafsb
 import mozanalysis.frequentist_stats.linear_models as mafslm
 import mozanalysis.frequentist_stats.linear_models.functions as func
+import mozanalysis.types as types
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -146,7 +148,7 @@ def test_make_formula():
 
 
 def test__make_joint_output():
-    out = func._make_joint_output([0.01, 0.05], "rel_uplift")
+    out = func._make_joint_output([0.01, 0.05], types.Uplift.RELATIVE)
 
     expected_keys = [
         ("rel_uplift", "exp"),
@@ -668,7 +670,7 @@ def test_fit_model_covariate_robust_to_bad_covariate():
 
     expected_results = smf.ols(test_model.formula, model_df).fit()
 
-    with pytest.warns(Warning, match="Fell back to unadjusted inferences"):
+    with pytest.warns(Warning, match="Unexpectedly fell back to unadjusted inferences"):
         actual_results = mafslm.fit_model(
             model_df,
             test_model_covariate.target,
@@ -689,7 +691,10 @@ def test_fit_model_covariate_fails_on_bad_data():
     model_df = test_model_covariate.model_df.copy()
     model_df.loc[:, test_model_covariate.target] = [0] * model_df.shape[0]
 
-    with pytest.raises(Exception, match="Error fitting model"):
+    with pytest.raises(
+        Exception,
+        match="Failed to fit model for target search_count using covariate search_count_pre",  # noqa: E501
+    ):
         mafslm.fit_model(
             model_df,
             test_model_covariate.target,
@@ -857,7 +862,9 @@ def test__validate_parameters():
 
     df = test_model.model_df.copy()
     df["search_count"] = 1
-    with pytest.raises(ValueError, match="Metric search_count has no variation"):
+    with pytest.raises(
+        func.UnableToAnalyze, match="Metric search_count has no variation"
+    ):
         func._validate_parameters(
             df, "search_count", test_model.ref_branch, None, None, None
         )
@@ -955,3 +962,21 @@ def test__validate_parameters():
             None,
             None,
         )
+
+
+def test__make_empty_compare_branches_output():
+    df = pd.DataFrame({"branch": ["control", "treatment-a", "treatment-b"]})
+    str_quantiles = ["0.5", "exp", "0.025", "0.975"]
+    index = pd.MultiIndex.from_tuples(
+        product(["abs_uplift", "rel_uplift"], str_quantiles)
+    )
+    estimates = pd.Series(index=index)
+
+    treatment_branches = ["treatment-a", "treatment-b"]
+
+    actual = func._make_empty_compare_branches_output(
+        "control", df, [0.05], treatment_branches
+    )
+
+    for branch_df in actual["comparative"].values():
+        pd.testing.assert_series_equal(estimates.sort_index(), branch_df.sort_index())

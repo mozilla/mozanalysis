@@ -13,9 +13,43 @@ from pandas.api.types import is_integer_dtype
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
 
+from mozanalysis.types import (
+    ComparativeOption,
+    CompareBranchesOutput,
+    Estimates,
+    EstimatesByBranch,
+    Uplift,
+)
+
 from .classes import MozOLS
 
 logger = logging.getLogger(__name__)
+
+
+## Exceptions
+
+
+class LinearModelException(Exception):
+    pass
+
+
+class CovariateNotFound(LinearModelException):
+    pass
+
+
+class UnableToAnalyze(LinearModelException):
+    pass
+
+
+class FailedToFitModel(LinearModelException):
+    pass
+
+
+class MissingModelParameter(LinearModelException):
+    pass
+
+
+## Functions
 
 
 def _stringify_alpha(alpha: float) -> tuple[str, str]:
@@ -27,7 +61,15 @@ def _stringify_alpha(alpha: float) -> tuple[str, str]:
     return f"{alpha/2:0.3f}", f"{1-alpha/2:0.3f}"
 
 
-def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> pd.Series:
+def _make_univariate_output(alphas: list[float]) -> Estimates:
+    str_quantiles = ["0.5"]
+    for alpha in alphas:
+        str_quantiles.extend(_stringify_alpha(alpha))
+    res = pd.Series(index=sorted(str_quantiles) + ["mean"], dtype="float")
+    return res
+
+
+def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> Estimates:
     """Inferences (point estimate and confidence intervals) for
     the mean of a single branch's data. Constructs confidence
     intervals from central limit theory (uses the t-distribution)
@@ -48,10 +90,7 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> pd.Seri
       - '0.975': the upper bound of the 95% confidence interval
       - '0.995': the upper bound of the 99% confidence interval
     """
-    str_quantiles = ["0.5"]
-    for alpha in alphas:
-        str_quantiles.extend(_stringify_alpha(alpha))
-    res = pd.Series(index=sorted(str_quantiles) + ["mean"], dtype="float")
+    res = _make_univariate_output(alphas)
     dsw = DescrStatsW(branch_data)
     mean = dsw.mean
     res["0.5"] = mean  # backwards compatibility
@@ -78,7 +117,7 @@ def summarize_univariate(
     branches: pd.Series,
     alphas: list[float],
     branch_list: list[str] | None = None,
-) -> dict[str, pd.Series]:
+) -> EstimatesByBranch:
     """Univariate inferences (point estimates and confidence intervals) for the
     mean of each branch's data.
 
@@ -98,7 +137,7 @@ def summarize_univariate(
     branch_list = _infer_branch_list(branches, branch_list)
 
     return {
-        b: summarize_one_branch(data.loc[(branches == b).values], alphas)
+        b: summarize_one_branch(data.loc[(branches == b).values], alphas)  # type: ignore
         for b in branch_list
     }
 
@@ -156,25 +195,25 @@ def make_formula(target: str, ref_branch: str, covariate: str | None = None) -> 
     return formula
 
 
-def _make_joint_output(alphas: list[float], uplift_type: str) -> pd.Series:
+def _make_joint_output(alphas: list[float], uplift: Uplift) -> Estimates:
     """Constructs an empty pandas series to hold comparative results. The series
     will be multiindexed for backwards compatability with the bootstrap results.
 
     Parameters:
     - alphas (list[float]): the desired confidence levels
-    - uplift_type (str): either `abs_uplift` or `rel_uplift` for inferences on the
+    - uplift (Uplift): either Uplift.ABSOLUTE or Uplift.RELATIVE for inferences on the
     absolute and relative differences between branches, respectively.
 
     Returns:
-    - series (pd.Series): the empty series. Will have keys of (uplift_type, '0.5')
-    and (uplift_type, 'exp'), as well as 2 keys, one for each alpha. For more info
+    - series (pd.Series): the empty series. Will have keys of (uplift.value, '0.5')
+    and (uplift.value, 'exp'), as well as 2 keys, one for each alpha. For more info
     on keys, see `summarize_one_branch` and `stringify_alpha` above.
     """
     str_quantiles = ["0.5", "exp"]
     for alpha in alphas:
         str_quantiles.extend(_stringify_alpha(alpha))
     str_quantiles.sort()
-    index = pd.MultiIndex.from_tuples([(uplift_type, q) for q in str_quantiles])
+    index = pd.MultiIndex.from_tuples([(uplift.value, q) for q in str_quantiles])
     series = pd.Series(index=index, dtype="float")
 
     return series
@@ -182,7 +221,7 @@ def _make_joint_output(alphas: list[float], uplift_type: str) -> pd.Series:
 
 def _extract_absolute_uplifts(
     results: RegressionResults, branch: str, ref_branch: str, alphas: list[float]
-) -> pd.Series:
+) -> Estimates:
     """Extracts inferences on absolute differences between branches from a fitted
     linear model. These are simply the point estimates and confidence intervals of the
     appropriate term in the model.
@@ -197,17 +236,18 @@ def _extract_absolute_uplifts(
     Returns:
     - output (pd.Series): the set of inferences. See `_make_joint_output`.
     """
-    output = _make_joint_output(alphas, "abs_uplift")
+    output = _make_joint_output(alphas, Uplift.ABSOLUTE)
     parameter_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
-    output.loc[("abs_uplift", "0.5")] = results.params[parameter_name]
-    output.loc[("abs_uplift", "exp")] = results.params[parameter_name]
+    abs_uplift = Uplift.ABSOLUTE.value
+    output.loc[(abs_uplift, "0.5")] = results.params[parameter_name]
+    output.loc[(abs_uplift, "exp")] = results.params[parameter_name]
 
     for alpha in alphas:
         ci = results.conf_int(alpha=alpha)
         lower, upper = ci.loc[parameter_name]
         low_str, high_str = _stringify_alpha(alpha)
-        output.loc[("abs_uplift", low_str)] = lower
-        output.loc[("abs_uplift", high_str)] = upper
+        output.loc[(abs_uplift, low_str)] = lower
+        output.loc[(abs_uplift, high_str)] = upper
     return output
 
 
@@ -249,10 +289,10 @@ def _extract_relative_uplifts(
     results: RegressionResults,
     branch: str,
     ref_branch: str,
-    alphas: list[str],
+    alphas: list[float],
     treatment_branches: list[str],
     covariate_col_label: str | None = None,
-) -> pd.Series:
+) -> Estimates:
     """Extracts inferences on relative differences between branches from a fitted
     linear model. Unlike absolute differences, these are not simply existing parameters.
     We desire inferences on (T-C)/C = T/C-1. Since 1 is a constant, we desire inferences
@@ -276,7 +316,7 @@ def _extract_relative_uplifts(
     - output (pd.Series): the set of inferences. See `_make_joint_output`.
     """
 
-    output = _make_joint_output(alphas, "rel_uplift")
+    output = _make_joint_output(alphas, Uplift.RELATIVE)
     branches = treatment_branches + [ref_branch]
 
     newdata = _create_datagrid(results, branches, covariate_col_label)
@@ -299,10 +339,11 @@ def _extract_relative_uplifts(
 
         low_str, high_str = _stringify_alpha(alpha)
         # subtract 1 b/c branch/reference - 1 = (branch - reference)/reference
-        output.loc[("rel_uplift", low_str)] = ac["conf_low"][0] - 1
-        output.loc[("rel_uplift", high_str)] = ac["conf_high"][0] - 1
-        output.loc[("rel_uplift", "0.5")] = ac["estimate"][0] - 1
-        output.loc[("rel_uplift", "exp")] = ac["estimate"][0] - 1
+        rel_uplift = Uplift.RELATIVE.value
+        output.loc[(rel_uplift, low_str)] = ac["conf_low"][0] - 1
+        output.loc[(rel_uplift, high_str)] = ac["conf_high"][0] - 1
+        output.loc[(rel_uplift, "0.5")] = ac["estimate"][0] - 1
+        output.loc[(rel_uplift, "exp")] = ac["estimate"][0] - 1
 
     return output
 
@@ -334,33 +375,66 @@ def fit_model(
 
     Returns:
     - results (RegressionResults): the fitted model results object.
+
+    Raises:
+    - `FailedToFitModel` if unable to fit the model.
+    - `MissingModelParameter` if one of the treatment branches, which was expected to
+    have a model parameter, does not get one.
     """
     formula = make_formula(target, ref_branch, covariate)
 
     model = MozOLS.from_formula(formula, df)
+    fell_back = False
+    lin_alg_error = False
     try:
         results = model.fit()
-    except np.linalg.LinAlgError as lae:
+    except np.linalg.LinAlgError:
         if covariate is None:
             # nothing we can do about this
-            raise lae
+            lin_alg_error = True
+
         else:
-            # maybe covariate is bad (e.g., pre-treatment covariate in
-            # onboarding experiment is always zero), try falling back to
-            # unadjusted inferences
+            # maybe covariate is bad in a way that we havent otherwise accounted for
+            # try falling back to unadjusted inferences
+            msg = "Unexpectedly fell back to unadjusted inferences"
             formula = make_formula(target, ref_branch, None)
             model = MozOLS.from_formula(formula, df)
-            results = model.fit()
-            warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
+            try:
+                results = model.fit()
+                logger.warning(msg)
+                warnings.warn(msg, stacklevel=1)
+            except np.linalg.LinAlgError:
+                # well... we tried our best
+                lin_alg_error = True
+
+            fell_back = True
+
+    if lin_alg_error:
+        msg = (
+            "Encountered a linear algebra error when fitting"
+            f" model for target {target}"
+        )
+        if covariate is not None:
+            msg += " even when falling back to unadjusted inferences"
+        logger.warning(msg)
+        warnings.warn(msg, stacklevel=1)
+        raise FailedToFitModel(msg)
 
     if not np.isfinite(results.llf):
-        raise Exception("Error fitting model")
+        msg = f"Failed to fit model for target {target}"
+        if covariate is not None:
+            msg += f" using covariate {covariate}"
+            if fell_back:
+                msg += " even after attempting to recover using unadjusted inferences"
+        raise FailedToFitModel(msg)
 
     for branch in treatment_branches:
         param_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
         if param_name not in results.params:
             # this can occur if a branch does not have any non-null data
-            raise Exception(f"Effect for branch {branch} not found in model!")
+            raise MissingModelParameter(
+                f"Effect for branch {branch} not found in model!"
+            )
 
     if deallocate_aggressively:
         import gc
@@ -381,7 +455,7 @@ def summarize_joint(
     ref_branch_label: str = "control",
     covariate_col_label: str | None = None,
     deallocate_aggressively: bool = False,
-) -> dict[str, pd.Series]:
+) -> EstimatesByBranch:
     """The primary entrypoint for linear model based inferences on comparisons
     of treatment branches. Computes absolute and relative differences between
     each treatment branch relative to the reference branch (point estimates and
@@ -505,8 +579,32 @@ def prepare_df_for_modeling(
     return df.loc[indexer]
 
 
-class CovariateNotFound(Exception):
-    pass
+def _make_empty_compare_branches_output(
+    ref_branch_label: str,
+    branches: pd.Series,
+    alphas: list[float],
+    branch_list: list[str] | None = None,
+) -> CompareBranchesOutput:
+    """
+    Constructs an empty output to be returned to Jetstream in the case of an
+    expected failure mode.
+    """
+    out: CompareBranchesOutput = {}
+    branch_list = _infer_branch_list(branches, branch_list)
+    individual = {b: _make_univariate_output(alphas) for b in branch_list}
+    out[ComparativeOption.INDIVIDUAL] = individual
+
+    treatment_branches = [b for b in branch_list if b != ref_branch_label]
+    comparative_empty_result = pd.concat(
+        [
+            _make_joint_output(alphas, Uplift.ABSOLUTE),
+            _make_joint_output(alphas, Uplift.RELATIVE),
+        ]
+    )
+    comparative = {b: comparative_empty_result.copy() for b in treatment_branches}
+    out[ComparativeOption.COMPARATIVE] = comparative
+
+    return out
 
 
 def _validate_parameters(
@@ -517,14 +615,36 @@ def _validate_parameters(
     threshold_quantile: float | None = None,
     alphas: list[float] | None = None,
 ) -> None:
+    """
+    Validates the analysis parameters to check for common failure cases. Intended
+    to be called by `compare_branches_lm`.
+
+    Raises `UnableToAnalyze` if `compare_branches_lm` should gracefully return an
+    empty analysis output. This is the case if the failure mode is of a known type
+    and we want the analyst to see the empty results, to know that analysis was
+    attempted but refused. In this case, Jetstream will not throw an error that
+    would trigger an alert.
+
+    Raises `CovariateNotFound` if covariate-adjustment was requested but the
+    covariate isn't present. This indicates that `compare_branches_lm` should
+    fall back to unadjusted inferences.
+
+    Raises `ValueError` if any other non-recoverable error was found. In this case,
+    we desire Jetstream to log an error and alert on the issue. These are generally
+    misconfigured parameters.
+    """
 
     if col_label not in df.columns:
+        # this should never happen... raise up to Jetstream
         raise ValueError(f"Target metric {col_label} not found in data")
 
     if np.isclose(df[col_label].std(), 0):
-        # only need to check target, if covariate has no variation,
+        # this error can be expected in the case of preenrollment analysis
+        # periods for new-user experiments (e.g., onboarding) where there is
+        # no preenrollment data.
+        # we only need to check target, if covariate has no variation,
         # it will not be modeled
-        raise ValueError(f"Metric {col_label} has no variation!")
+        raise UnableToAnalyze(f"Metric {col_label} has no variation!")
 
     if ref_branch_label not in df.branch.unique():
         raise ValueError(f"No data from reference branch {ref_branch_label} found")
@@ -559,7 +679,7 @@ def compare_branches_lm(
     alphas: list[float] | None = None,
     interactive: bool = True,
     deallocate_aggressively: bool = False,
-) -> dict[str, dict[str, pd.Series]]:
+) -> CompareBranchesOutput:
     """Performs individual and comparative inferences on branches using standard
     central limit theory (t-tests and linear regressions). Can incorporate a covariate
     (`covariate_col_label`) to increase precision of comparative inferences.
@@ -589,6 +709,9 @@ def compare_branches_lm(
     and `summarize_joint` for more information on the output structure.
 
     """
+    if alphas is None:
+        alphas = [0.01, 0.05]
+
     try:
         _validate_parameters(
             df,
@@ -614,9 +737,14 @@ def compare_branches_lm(
         logger.warn(
             f"Covariate {initial_covariate_col_label} not found, falling back to unadjusted inferences"  # noqa: E501
         )
-
-    if alphas is None:
-        alphas = [0.01, 0.05]
+    except UnableToAnalyze:
+        # validation has found a case of degenerate data that we are not able to
+        # perform analysis on. Therefore, we gracefully fail by returning an
+        # empty output to Jetstream
+        branch_list = _infer_branch_list(df.branch, None)
+        return _make_empty_compare_branches_output(
+            ref_branch_label, df.branch, alphas, branch_list
+        )
 
     model_df = prepare_df_for_modeling(
         df, col_label, threshold_quantile, covariate_col_label, copy=interactive
@@ -624,11 +752,12 @@ def compare_branches_lm(
 
     branch_list = _infer_branch_list(model_df.branch, None)
 
-    return {
-        "individual": summarize_univariate(
-            model_df[col_label], model_df.branch, alphas, branch_list=branch_list
-        ),
-        "comparative": summarize_joint(
+    out: CompareBranchesOutput = {}
+    out[ComparativeOption.INDIVIDUAL] = summarize_univariate(
+        model_df[col_label], model_df.branch, alphas, branch_list=branch_list
+    )
+    try:
+        comparative = summarize_joint(
             model_df,
             col_label,
             alphas,
@@ -636,5 +765,14 @@ def compare_branches_lm(
             branch_list=branch_list,
             covariate_col_label=covariate_col_label,
             deallocate_aggressively=deallocate_aggressively,
-        ),
-    }
+        )
+        out[ComparativeOption.COMPARATIVE] = comparative
+    except FailedToFitModel as e:
+        # we encountered an unrecoverable error when attempting to fit the linear model
+        # as a result, we gracefully fail by returning an empty comparative result
+        logger.warning(e)
+        out[ComparativeOption.COMPARATIVE] = _make_empty_compare_branches_output(
+            ref_branch_label, model_df.branch, alphas, branch_list
+        )[ComparativeOption.COMPARATIVE]
+
+    return out
