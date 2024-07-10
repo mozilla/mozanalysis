@@ -24,10 +24,26 @@ ComparativeOption = Literal["individual", "comparative"]
 
 Estimates: TypeAlias = pd.Series
 BranchLabel = str
+EstimatesByBranch = dict[BranchLabel, Estimates]
 
-CompareBranchesOutput = dict[ComparativeOption, dict[BranchLabel, Estimates]]
+CompareBranchesOutput = dict[ComparativeOption, EstimatesByBranch]
 
 Uplift = Literal["abs_uplift", "rel_uplift"]
+
+## Exceptions
+
+
+class CovariateNotFound(Exception):
+    pass
+
+
+class UnableToAnalyze(Exception):
+    pass
+
+
+class FailedToFitModel(Exception):
+    pass
+
 
 ## Functions
 
@@ -97,7 +113,7 @@ def summarize_univariate(
     branches: pd.Series,
     alphas: list[float],
     branch_list: list[str] | None = None,
-) -> dict[str, pd.Series]:
+) -> EstimatesByBranch:
     """Univariate inferences (point estimates and confidence intervals) for the
     mean of each branch's data.
 
@@ -357,6 +373,7 @@ def fit_model(
     formula = make_formula(target, ref_branch, covariate)
 
     model = MozOLS.from_formula(formula, df)
+    fell_back = False
     try:
         results = model.fit()
     except np.linalg.LinAlgError as lae:
@@ -370,10 +387,18 @@ def fit_model(
             formula = make_formula(target, ref_branch, None)
             model = MozOLS.from_formula(formula, df)
             results = model.fit()
-            warnings.warn("Fell back to unadjusted inferences", stacklevel=1)
+            msg = "Unexpectedly back to unadjusted inferences"
+            logger.warning(msg)
+            warnings.warn(msg, stacklevel=1)
+            fell_back = True
 
     if not np.isfinite(results.llf):
-        raise Exception("Error fitting model")
+        msg = f"Failed to fit model for target {target}"
+        if covariate is not None:
+            msg += f" using covariate {covariate}"
+            if fell_back:
+                msg += " even after attempting to recover using unadjusted inferences"
+        raise FailedToFitModel(msg)
 
     for branch in treatment_branches:
         param_name = f"C(branch, Treatment(reference='{ref_branch}'))[T.{branch}]"
@@ -524,7 +549,7 @@ def prepare_df_for_modeling(
     return df.loc[indexer]
 
 
-def make_empty_return_payload(
+def _make_empty_compare_branches_output(
     ref_branch_label: str,
     branches: pd.Series,
     alphas: list[float],
@@ -546,14 +571,6 @@ def make_empty_return_payload(
     out["comparative"] = comparative
 
     return out
-
-
-class CovariateNotFound(Exception):
-    pass
-
-
-class UnableToAnalyze(Exception):
-    pass
 
 
 def _validate_parameters(
@@ -640,7 +657,7 @@ def compare_branches_lm(
     and `summarize_joint` for more information on the output structure.
 
     """
-    logger.info(df.head())
+
     if alphas is None:
         alphas = [0.01, 0.05]
 
@@ -671,7 +688,7 @@ def compare_branches_lm(
         )
     except UnableToAnalyze:
         branch_list = _infer_branch_list(df.branch, None)
-        return make_empty_return_payload(
+        return _make_empty_compare_branches_output(
             ref_branch_label, df.branch, alphas, branch_list
         )
 
@@ -681,11 +698,12 @@ def compare_branches_lm(
 
     branch_list = _infer_branch_list(model_df.branch, None)
 
-    return {
-        "individual": summarize_univariate(
-            model_df[col_label], model_df.branch, alphas, branch_list=branch_list
-        ),
-        "comparative": summarize_joint(
+    out: CompareBranchesOutput = dict()
+    out["individual"] = summarize_univariate(
+        model_df[col_label], model_df.branch, alphas, branch_list=branch_list
+    )
+    try:
+        comparative = summarize_joint(
             model_df,
             col_label,
             alphas,
@@ -693,5 +711,12 @@ def compare_branches_lm(
             branch_list=branch_list,
             covariate_col_label=covariate_col_label,
             deallocate_aggressively=deallocate_aggressively,
-        ),
-    }
+        )
+        out["comparative"] = comparative
+    except FailedToFitModel as e:
+        logger.warning(e)
+        out["comparative"] = _make_empty_compare_branches_output(
+            ref_branch_label, model_df.branch, alphas, branch_list
+        )["comparative"]
+
+    return out

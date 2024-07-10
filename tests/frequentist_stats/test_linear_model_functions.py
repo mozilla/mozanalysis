@@ -668,7 +668,7 @@ def test_fit_model_covariate_robust_to_bad_covariate():
 
     expected_results = smf.ols(test_model.formula, model_df).fit()
 
-    with pytest.warns(Warning, match="Fell back to unadjusted inferences"):
+    with pytest.warns(Warning, match="Unexpectedly back to unadjusted inferences"):
         actual_results = mafslm.fit_model(
             model_df,
             test_model_covariate.target,
@@ -689,7 +689,10 @@ def test_fit_model_covariate_fails_on_bad_data():
     model_df = test_model_covariate.model_df.copy()
     model_df.loc[:, test_model_covariate.target] = [0] * model_df.shape[0]
 
-    with pytest.raises(Exception, match="Error fitting model"):
+    with pytest.raises(
+        Exception,
+        match="Failed to fit model for target search_count using covariate search_count_pre",
+    ):
         mafslm.fit_model(
             model_df,
             test_model_covariate.target,
