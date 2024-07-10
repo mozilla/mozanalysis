@@ -1,6 +1,7 @@
 import logging
 import re
 from copy import deepcopy
+from itertools import product
 
 import mozanalysis.frequentist_stats.bootstrap as mafsb
 import mozanalysis.frequentist_stats.linear_models as mafslm
@@ -960,3 +961,23 @@ def test__validate_parameters():
             None,
             None,
         )
+
+
+def test__make_empty_compare_branches_output():
+    df = pd.DataFrame({"branch": ["control", "treatment-a", "treatment-b"]})
+    str_quantiles = ["0.5", "exp", "0.025", "0.975"]
+    index = pd.MultiIndex.from_tuples(
+        product(["abs_uplift", "rel_uplift"], str_quantiles)
+    )
+    estimates = pd.Series(index=index)
+
+    treatment_branches = ["treatment-a", "treatment-b"]
+
+    expected = {b: estimates.copy() for b in treatment_branches}
+
+    actual = func._make_empty_compare_branches_output(
+        "control", df, [0.05], treatment_branches
+    )
+
+    for branch_df in actual["comparative"].values():
+        pd.testing.assert_series_equal(estimates.sort_index(), branch_df.sort_index())
