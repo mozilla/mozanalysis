@@ -369,6 +369,11 @@ def fit_model(
 
     Returns:
     - results (RegressionResults): the fitted model results object.
+
+    Raises:
+    - `FailedToFitModel` if unable to fit the model.
+    - `Exception` if certain unexpected conditions arise (e.g., one of the treatment)
+    branches, which was expected to have a model parameter, does not get one.
     """
     formula = make_formula(target, ref_branch, covariate)
 
@@ -572,6 +577,10 @@ def _make_empty_compare_branches_output(
     alphas: list[float],
     branch_list: list[str] | None = None,
 ) -> CompareBranchesOutput:
+    """
+    Constructs an empty output to be returned to Jetstream in the case of an
+    expected failure mode.
+    """
     out: CompareBranchesOutput = {}
     branch_list = _infer_branch_list(branches, branch_list)
     individual = {b: _make_univariate_output(alphas) for b in branch_list}
@@ -598,6 +607,24 @@ def _validate_parameters(
     threshold_quantile: float | None = None,
     alphas: list[float] | None = None,
 ) -> None:
+    """
+    Validates the analysis parameters to check for common failure cases. Intended
+    to be called by `compare_branches_lm`.
+
+    Raises `UnableToAnalyze` if `compare_branches_lm` should gracefully return an
+    empty analysis output. This is the case if the failure mode is of a known type
+    and we want the analyst to see the empty results, to know that analysis was
+    attempted but refused. In this case, Jetstream will not throw an error that
+    would trigger an alert.
+
+    Raises `CovariateNotFound` if covariate-adjustment was requested but the
+    covariate isn't present. This indicates that `compare_branches_lm` should
+    fall back to unadjusted inferences.
+
+    Raises `ValueError` if any other non-recoverable error was found. In this case,
+    we desire Jetstream to log an error and alert on the issue. These are generally
+    misconfigured parameters.
+    """
 
     if col_label not in df.columns:
         # this should never happen... raise up to Jetstream
