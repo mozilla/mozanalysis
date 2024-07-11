@@ -36,7 +36,7 @@ When adding new dependencies, add them to the `pyproject.toml` `dependencies` li
 ### With pytest
 Run `pytest` on the commandline from the root of the package file structure.
 
-### with Tox
+### With tox
 
 Tox is included in the dev dependencies.  If you want to run with tox, install the dev dependencies in the `requirements-dev.txt` as detailed above.
 
@@ -51,7 +51,7 @@ For example, you can run:
 
 * `tox tests/test_utils.py` to run tests in a specific file
 
-### with the CircleCI utilities
+### With the CircleCI utilities
 
 To test/debug this package locally, you can run exactly the job that
 CircleCI runs for continuous integration by

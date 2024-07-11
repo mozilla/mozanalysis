@@ -12,6 +12,10 @@ import pandas as pd
 import polars as pl
 import pytest
 import statsmodels.formula.api as smf
+from mozanalysis.frequentist_stats.linear_models.functions import (
+    FailedToFitModel,
+    MissingModelParameter,
+)
 from polars.testing import assert_frame_equal as pl_assert_frame_equal
 from statsmodels.stats.weightstats import CompareMeans
 
@@ -297,7 +301,6 @@ def test__extract_absolute_uplifts_covariate():
 
 
 def test__extract_relative_uplifts():
-
     bootstrap_results = mafsb.compare_branches(
         test_model.model_df, test_model.target, ref_branch_label=test_model.ref_branch
     )
@@ -359,7 +362,6 @@ def test__extract_relative_uplifts():
 
 
 def test__extract_relative_uplifts_covariate():
-
     bootstrap_results = mafsb.compare_branches(
         test_model_covariate.model_df,
         test_model_covariate.target,
@@ -628,7 +630,6 @@ def test_compare_branches_lm_fallback(caplog):
 
 
 def test_fit_model():
-
     actual_results = mafslm.fit_model(
         test_model.model_df,
         test_model.target,
@@ -645,7 +646,6 @@ def test_fit_model():
 
 
 def test_fit_model_covariate():
-
     actual_results = mafslm.fit_model(
         test_model_covariate.model_df,
         test_model_covariate.target,
@@ -692,7 +692,7 @@ def test_fit_model_covariate_fails_on_bad_data():
     model_df.loc[:, test_model_covariate.target] = [0] * model_df.shape[0]
 
     with pytest.raises(
-        Exception,
+        FailedToFitModel,
         match="Failed to fit model for target search_count using covariate search_count_pre",  # noqa: E501
     ):
         mafslm.fit_model(
@@ -710,7 +710,7 @@ def test_fit_model_covariate_fails_on_bad_branch():
     model_df.loc[:, "branch"] = ["treatment-a"] * model_df.shape[0]
 
     with pytest.raises(
-        Exception, match="Effect for branch control not found in model!"
+        MissingModelParameter, match="Effect for branch control not found in model!"
     ):
         mafslm.fit_model(
             model_df,
