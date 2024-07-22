@@ -281,7 +281,7 @@ class InflightDataSource(DataSource):
             f"""
             SELECT 
                 n,
-                MIN({branch_timestamps}) AS record_timestamp,
+                MIN([{branch_timestamps}]) AS record_timestamp,
             """
         )
         for branch in clean_comparison_branches:
