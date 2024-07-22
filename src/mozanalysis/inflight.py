@@ -40,6 +40,9 @@ class InflightDataSource(DataSource):
         elif self.experiments_column_type == "glean":
             return """`mozfun.map.get_key`(ds.ping_info.experiments, '{experiment_slug}').branch"""
 
+        elif self.experiments_column_type == "main_live":
+            return """`mozfun.map.get_key`(ds.environment.experiments, '{experiment_slug}').branch"""
+
         else:
             raise ValueError
 
