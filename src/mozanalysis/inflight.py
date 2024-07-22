@@ -65,8 +65,7 @@ class InflightDataSource(DataSource):
         relies upon experiment annotations.
         """
 
-        query = dedent(
-            f"""
+        query = f"""
         SELECT 
             ds.client_id,
             {self.experiments_column_expr} AS branch,
@@ -79,7 +78,6 @@ class InflightDataSource(DataSource):
         GROUP BY client_id, branch
         ORDER BY event_timestamp
         """  # noqa
-        )
 
         return query
 
@@ -95,8 +93,7 @@ class InflightDataSource(DataSource):
         Assumes an upstream CTE holding the output of `build_record_query`
         named `records`.
         """
-        query = dedent(
-            f"""
+        query = f"""
         SELECT 
             *,
             CASE WHEN branch = "{comparison_branch}" THEN 1 ELSE 0 END AS treated,
@@ -106,7 +103,7 @@ class InflightDataSource(DataSource):
         FROM records 
         WHERE branch in ("{reference_branch}", "{comparison_branch}")
         """
-        )
+
         return query
 
     def build_statistics_query_piece_sufficient_statistics(self) -> str:
@@ -124,15 +121,13 @@ class InflightDataSource(DataSource):
         named `prep`.
         """
 
-        query = dedent(
-            """
+        query = """
         SELECT 
             *, 
             treated*Y_i/0.5 - not_treated*Y_i/0.5 AS tau_hat_i,
             treated*POW(Y_i,2)/POW(0.5,2) + not_treated*POW(Y_i,2)/POW(0.5,2) AS sigma_hat_sq_i,
         FROM prep 
         """
-        )
 
         return query
 
@@ -151,8 +146,7 @@ class InflightDataSource(DataSource):
         `build_statistics_query_piece_sufficient_statistics` named `sufficient_statistics`.
         """
 
-        query = dedent(
-            """
+        query = """
         SELECT 
             *, 
             -- SUM(tau_hat_i) OVER (ORDER BY event_timestamp) AS tau_hat_i_acc,
@@ -160,7 +154,7 @@ class InflightDataSource(DataSource):
             SUM(sigma_hat_sq_i) OVER (ORDER BY event_timestamp) AS var_est
         FROM sufficient_statistics
         """
-        )
+
         return query
 
     def build_statistics_query_piece_ci_terms(
@@ -177,15 +171,14 @@ class InflightDataSource(DataSource):
         eta_sq = self.eta(minimum_width_observations, alpha) ** 2
         alpha_sq = alpha**2
 
-        query = dedent(
-            f"""
+        query = f"""
         SELECT 
             *,
             (var_est * {eta_sq} + 1)/{eta_sq} AS width_term_1,
             LN((var_est * {eta_sq}+1)/{alpha_sq}) AS width_term_2
         FROM accumulators
         """
-        )
+
         return query
 
     def build_statistics_query_piece_ci_width(self) -> str:
@@ -200,14 +193,12 @@ class InflightDataSource(DataSource):
         `build_statistics_query_piece_ci_terms` named `ci_terms`.
         """
 
-        query = dedent(
-            """
+        query = """
         SELECT 
             *, 
             (1/n) * SQRT(width_term_1 * width_term_2) AS ci_width
         FROM ci_terms
         """
-        )
 
         return query
 
@@ -219,8 +210,7 @@ class InflightDataSource(DataSource):
         `build_statistics_query_piece_ci_width` named `ci_width_term`
         """
 
-        query = dedent(
-            f"""
+        query = f"""
         SELECT 
             event_timestamp,
             n, 
@@ -230,7 +220,7 @@ class InflightDataSource(DataSource):
             point_est + ci_width AS ci_upper
         FROM ci_width_term
         """
-        )
+
         return query
 
     def build_statistics_query_one_branch(
@@ -246,8 +236,7 @@ class InflightDataSource(DataSource):
         a `comparison_branch` to a `reference_branch`.
         """
 
-        query = dedent(
-            f"""
+        query = f"""
         WITH prep AS (
             {self.build_statistics_query_piece_prep(comparison_branch, reference_branch, metric_name)}
         ), sufficient_statistics AS (
@@ -264,7 +253,6 @@ class InflightDataSource(DataSource):
         SELECT *
         FROM ci_cleanup
         """
-        )
 
         return query
 
@@ -277,37 +265,31 @@ class InflightDataSource(DataSource):
         branch_timestamps = ", ".join(
             [f"{branch}.event_timestamp" for branch in clean_comparison_branches]
         )
-        query = dedent(
-            f"""
+        query = f"""
             SELECT 
                 n,
                 LEAST({branch_timestamps}) AS record_timestamp,
             """
-        )
+
         for branch in clean_comparison_branches:
-            query += dedent(
-                f"""
+            query += f"""
 
                     {branch}.point_est AS point_est_{branch},    
                     {branch}.ci_lower AS ci_lower_{branch},                
                     {branch}.ci_upper AS ci_upper{branch},                                
             """
-            )
 
-        query += dedent(
-            f"""
+        query += f"""
             FROM {clean_comparison_branches[0]}
             """
-        )
 
         if len(clean_comparison_branches) > 1:
             for next_branch in clean_comparison_branches[1:]:
-                query += dedent(
-                    f"""
+                query += f"""
                     FULL OUTER JOIN {next_branch} 
                     USING(n)
                     """
-                )
+
         return query
 
     def build_statistics_query(
@@ -339,11 +321,10 @@ class InflightDataSource(DataSource):
                 minimum_width_observations,
                 alpha,
             )
-            query += dedent(
-                f""", {comparison_branch_name} AS (
+            query += f""", {comparison_branch_name} AS (
                     {subquery}
                 )"""
-            )
+
         query += "\n"
         query += self.build_union_query(comparison_branches, full_sample)
 
