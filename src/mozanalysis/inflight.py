@@ -65,8 +65,7 @@ class InflightDataSource(DataSource):
         relies upon experiment annotations.
         """
 
-        query = f"""
-        SELECT 
+        query = f"""SELECT 
             ds.client_id,
             {self.experiments_column_expr} AS branch,
             MIN(ds.{self.timestamp_column}) AS event_timestamp,
@@ -76,8 +75,7 @@ class InflightDataSource(DataSource):
             AND ds.{self.timestamp_column} BETWEEN "{start_date}" AND "{end_date}"
             AND {self.experiments_column_expr} IS NOT NULL 
         GROUP BY client_id, branch
-        ORDER BY event_timestamp
-        """  # noqa
+        ORDER BY event_timestamp"""  # noqa
 
         return query
 
@@ -237,21 +235,21 @@ class InflightDataSource(DataSource):
         """
 
         query = f"""
-        WITH prep AS (
-            {self.build_statistics_query_piece_prep(comparison_branch, reference_branch, metric_name)}
-        ), sufficient_statistics AS (
-            {self.build_statistics_query_piece_sufficient_statistics()}
-        ), accumulators AS (
-            {self.build_statistics_query_piece_accumulators()}
-        ), ci_terms AS (
-            {self.build_statistics_query_piece_ci_terms(minimum_width_observations, alpha)}
-        ), ci_width_term AS (
-            {self.build_statistics_query_piece_ci_width()}
-        ), ci_cleanup AS (
-            {self.build_statistics_query_piece_cleanup(comparison_branch)}
-        )
-        SELECT *
-        FROM ci_cleanup
+    WITH prep AS (
+        {self.build_statistics_query_piece_prep(comparison_branch, reference_branch, metric_name)}
+    ), sufficient_statistics AS (
+        {self.build_statistics_query_piece_sufficient_statistics()}
+    ), accumulators AS (
+        {self.build_statistics_query_piece_accumulators()}
+    ), ci_terms AS (
+        {self.build_statistics_query_piece_ci_terms(minimum_width_observations, alpha)}
+    ), ci_width_term AS (
+        {self.build_statistics_query_piece_ci_width()}
+    ), ci_cleanup AS (
+        {self.build_statistics_query_piece_cleanup(comparison_branch)}
+    )
+    SELECT *
+    FROM ci_cleanup
         """
 
         return query
@@ -306,8 +304,7 @@ class InflightDataSource(DataSource):
         full_sample: bool = False,
     ) -> str:
         query = dedent(
-            f"""
-        WITH records AS (
+            f"""WITH records AS (
             {self.build_record_query(metric, start_date, end_date, experiment_slug, from_expr_dataset)}
         )"""
         )
