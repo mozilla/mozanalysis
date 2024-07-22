@@ -65,17 +65,18 @@ class InflightDataSource(DataSource):
         relies upon experiment annotations.
         """
 
-        query = f"""SELECT 
-            ds.client_id,
-            {self.experiments_column_expr} AS branch,
-            MIN(ds.{self.timestamp_column}) AS event_timestamp,
-            MIN_BY({metric.select_expr.format(experiment_slug=experiment_slug)}, ds.{self.timestamp_column}) AS {metric.name}
-        FROM {self.from_expr_for(from_expr_dataset)} ds
-        WHERE 1=1
-            AND ds.{self.timestamp_column} BETWEEN "{start_date}" AND "{end_date}"
-            AND {self.experiments_column_expr} IS NOT NULL 
-        GROUP BY client_id, branch
-        ORDER BY event_timestamp"""  # noqa
+        query = f"""
+    SELECT 
+        ds.client_id,
+        {self.experiments_column_expr} AS branch,
+        MIN(ds.{self.timestamp_column}) AS event_timestamp,
+        MIN_BY({metric.select_expr.format(experiment_slug=experiment_slug)}, ds.{self.timestamp_column}) AS {metric.name}
+    FROM {self.from_expr_for(from_expr_dataset)} ds
+    WHERE 1=1
+        AND ds.{self.timestamp_column} BETWEEN "{start_date}" AND "{end_date}"
+        AND {self.experiments_column_expr} IS NOT NULL 
+    GROUP BY client_id, branch
+    ORDER BY event_timestamp"""  # noqa
 
         return query
 
@@ -303,9 +304,11 @@ class InflightDataSource(DataSource):
         alpha: float = 0.05,
         full_sample: bool = False,
     ) -> str:
+        record_query = self.build_record_query(
+            metric, start_date, end_date, experiment_slug, from_expr_dataset
+        )
         query = dedent(
-            f"""WITH records AS (
-            {self.build_record_query(metric, start_date, end_date, experiment_slug, from_expr_dataset)}
+            f"""WITH records AS ({record_query}
         )"""
         )
 
