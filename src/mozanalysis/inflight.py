@@ -52,7 +52,7 @@ class InflightDataSource(DataSource):
 
     def build_record_query(
         self,
-        metric: Metric,
+        metric: "InflightMetric",
         start_date: str,
         end_date: str,
         experiment_slug: str,
@@ -314,7 +314,7 @@ class InflightDataSource(DataSource):
         self,
         comparison_branches: list[str],
         reference_branch: str,
-        metric: Metric,
+        metric: "InflightMetric",
         start_date: str,
         end_date: str,
         experiment_slug: str,
@@ -366,6 +366,7 @@ class InflightDataSource(DataSource):
             (-1 * lambertw(-1 * alpha_sq * np.exp(1), -1) - 1)
             / minimum_width_observations
         ).real
+        assert np.isfinite(eta)
         return eta
 
     @staticmethod
