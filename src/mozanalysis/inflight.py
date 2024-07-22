@@ -263,7 +263,7 @@ class InflightDataSource(DataSource):
 
                     {branch}.point_est AS point_est_{branch},    
                     {branch}.ci_lower AS ci_lower_{branch},                
-                    {branch}.ci_upper AS ci_upper{branch},                                
+                    {branch}.ci_upper AS ci_upper_{branch},                                
             """
 
         query += f"""
@@ -276,6 +276,10 @@ class InflightDataSource(DataSource):
                     FULL OUTER JOIN {next_branch} 
                     USING(n)
                     """
+
+        query += f"""
+        ORDER BY record_timestamp
+        """
 
         return query
 
