@@ -24,28 +24,28 @@ class InflightDataSource(DataSource):
         default="submission_timestamp", validator=attr.validators.instance_of(str)
     )
 
-    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean", "main_live")
+    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean", "main_live")  # noqa
 
     @property
-    def experiments_column_expr(self, experiment_slug: str) -> str:
+    def experiments_column_expr(self) -> str:
         """Returns a SQL expression to extract the branch from the
         experiment annotations"""
         if self.experiments_column_type is None:
             raise ExperimentAnnotationMissingError
 
         elif self.experiments_column_type == "simple":
-            return f"""`mozfun.map.get_key`(ds.experiments, '{experiment_slug}')"""
+            return """`mozfun.map.get_key`(ds.experiments, '{experiment_slug}')"""
 
         elif self.experiments_column_type == "native":
             return (
-                f"""`mozfun.map.get_key`(ds.experiments, '{experiment_slug}').branch"""
+                """`mozfun.map.get_key`(ds.experiments, '{experiment_slug}').branch"""
             )
 
         elif self.experiments_column_type == "glean":
-            return f"""`mozfun.map.get_key`(ds.ping_info.experiments, '{experiment_slug}').branch"""
+            return """`mozfun.map.get_key`(ds.ping_info.experiments, '{experiment_slug}').branch"""
 
         elif self.experiments_column_type == "main_live":
-            return f"""`mozfun.map.get_key`(ds.environment.experiments, '{experiment_slug}').branch"""
+            return """`mozfun.map.get_key`(ds.environment.experiments, '{experiment_slug}').branch"""
 
         else:
             raise ValueError
@@ -68,13 +68,13 @@ class InflightDataSource(DataSource):
         query = f"""
     SELECT 
         ds.client_id,
-        {self.experiments_column_expr} AS branch,
+        {self.experiments_column_expr.format(experiment_slug=experiment_slug)} AS branch,
         MIN(ds.{self.timestamp_column}) AS event_timestamp,
         MIN_BY({metric.select_expr.format(experiment_slug=experiment_slug)}, ds.{self.timestamp_column}) AS {metric.name}
     FROM {self.from_expr_for(from_expr_dataset)} ds
     WHERE 1=1
         AND ds.{self.timestamp_column} BETWEEN "{start_date}" AND "{end_date}"
-        AND {self.experiments_column_expr(experiment_slug)} IS NOT NULL 
+        AND {self.experiments_column_expr.format(experiment_slug=experiment_slug)} IS NOT NULL 
     GROUP BY client_id, branch
     ORDER BY event_timestamp"""  # noqa
 
