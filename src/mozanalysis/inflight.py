@@ -216,7 +216,7 @@ class InflightDataSource(DataSource):
         Cleans up the output of `build_statistics_query_piece_ci_width`.
 
         Assumes an upstream CTE holding the output of
-        `build_statistics_query_piece_ci_width` named `ci_width`
+        `build_statistics_query_piece_ci_width` named `ci_width_term`
         """
 
         query = dedent(
@@ -256,7 +256,7 @@ class InflightDataSource(DataSource):
             {self.build_statistics_query_piece_accumulators()}
         ), ci_terms AS (
             {self.build_statistics_query_piece_ci_terms(minimum_width_observations, alpha)}
-        ), ci_width AS (
+        ), ci_width_term AS (
             {self.build_statistics_query_piece_ci_width()}
         ), ci_cleanup AS (
             {self.build_statistics_query_piece_cleanup(comparison_branch)}
