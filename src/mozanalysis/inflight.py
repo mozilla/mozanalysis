@@ -1,12 +1,14 @@
 import attr
 
-from mozanalysis.experiment import TimeLimits
-from mozanalysis.metrics import DataSource, Metric
+from mozanalysis.metrics import DataSource
+
+from metric_config_parser.experiment import Experiment
 
 from textwrap import dedent
 
 import numpy as np
 from scipy.special import lambertw
+from datetime import datetime
 
 
 class ExperimentAnnotationMissingError(Exception):
@@ -53,9 +55,7 @@ class InflightDataSource(DataSource):
     def build_record_query(
         self,
         metric: "InflightMetric",
-        start_date: str,
-        end_date: str,
-        experiment_slug: str,
+        experiment: Experiment,
         from_expr_dataset: str | None = None,
     ) -> str:
         """
@@ -68,13 +68,13 @@ class InflightDataSource(DataSource):
         query = f"""
     SELECT 
         ds.client_id,
-        {self.experiments_column_expr.format(experiment_slug=experiment_slug)} AS branch,
+        {self.experiments_column_expr.format(experiment_slug=experiment.normandy_slug)} AS branch,
         MIN(ds.{self.timestamp_column}) AS event_timestamp,
-        MIN_BY({metric.select_expr.format(experiment_slug=experiment_slug)}, ds.{self.timestamp_column}) AS {metric.name}
+        MIN_BY({metric.select_expr.format(experiment_slug=experiment.normandy_slug)}, ds.{self.timestamp_column}) AS {metric.name}
     FROM {self.from_expr_for(from_expr_dataset)} ds
     WHERE 1=1
-        AND ds.{self.timestamp_column} BETWEEN "{start_date}" AND "{end_date}"
-        AND {self.experiments_column_expr.format(experiment_slug=experiment_slug)} IS NOT NULL 
+        AND ds.{self.timestamp_column} BETWEEN "{experiment.start_date.strftime('%Y-%m-%d')}" AND "{(experiment.end_date or datetime.now()).strftime('%Y-%m-%d')}"
+        AND {self.experiments_column_expr.format(experiment_slug=experiment.normandy_slug)} IS NOT NULL 
     GROUP BY client_id, branch
     ORDER BY event_timestamp"""  # noqa
 
@@ -279,20 +279,19 @@ ORDER BY record_timestamp"""
 
     def build_statistics_query(
         self,
-        comparison_branches: list[str],
-        reference_branch: str,
+        experiment: Experiment,
         metric: "InflightMetric",
-        start_date: str,
-        end_date: str,
-        experiment_slug: str,
         from_expr_dataset: str | None = None,
         minimum_width_observations: int = 1000,
         alpha: float = 0.05,
         full_sample: bool = False,
     ) -> str:
-        record_query = self.build_record_query(
-            metric, start_date, end_date, experiment_slug, from_expr_dataset
-        )
+        comparison_branches = [
+            branch.slug
+            for branch in experiment.branches
+            if branch.slug != experiment.reference_branch
+        ]
+        record_query = self.build_record_query(metric, experiment, from_expr_dataset)
         query = dedent(
             f"""WITH records AS ({record_query}
 )"""
@@ -302,7 +301,7 @@ ORDER BY record_timestamp"""
             comparison_branch_name = self.sanitize_branch_name(comparison_branch)
             subquery = self.build_statistics_query_one_branch(
                 comparison_branch,
-                reference_branch,
+                experiment.reference_branch,
                 metric.name,
                 minimum_width_observations,
                 alpha,
@@ -350,23 +349,15 @@ class InflightMetric:
 
     def render_inflight_query(
         self,
-        start_date: str,
-        end_date: str,
-        comparison_branches: list[str],
-        reference_branch: str,
-        experiment_slug: str,
+        experiment: Experiment,
         from_expr_dataset: str | None = None,
         minimum_width_observations: int = 100,
         alpha: float = 0.05,
         full_sample: bool = False,
     ) -> str:
         return self.data_source.build_statistics_query(
-            comparison_branches,
-            reference_branch,
+            experiment,
             self,
-            start_date,
-            end_date,
-            experiment_slug,
             from_expr_dataset=from_expr_dataset,
             minimum_width_observations=minimum_width_observations,
             alpha=alpha,
