@@ -69,13 +69,13 @@ class InflightDataSource(DataSource):
             f"""
         SELECT 
             ds.client_id,
-            {self.experiments_column_expr()} AS branch,
+            {self.experiments_column_expr} AS branch,
             MIN(ds.{self.timestamp_column}) AS event_timestamp,
             MIN_BY({metric.select_expr.format(experiment_slug=experiment_slug)}, ds.{self.timestamp_column}) AS {metric.name}
         FROM {self.from_expr_for(from_expr_dataset)} ds
         WHERE 1=1
             AND ds.{self.timestamp_column} BETWEEN "{start_date}" AND "{end_date}"
-            AND {self.experiments_column_expr()} IS NOT NULL 
+            AND {self.experiments_column_expr} IS NOT NULL 
         GROUP BY client_id, branch
         ORDER BY event_timestamp
         """  # noqa
