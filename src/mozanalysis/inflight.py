@@ -372,8 +372,13 @@ class InflightDataSource(DataSource):
 
 
 @attr.s(frozen=True, slots=True)
-class InflightMetric(Metric):
+class InflightMetric:
+    name = attr.ib(type=str)
+    select_expr = attr.ib(type=str)
     data_source = attr.ib(type=InflightDataSource)
+    friendly_name = attr.ib(type=str | None, default=None)
+    description = attr.ib(type=str | None, default=None)
+    app_name = attr.ib(type=str | None, default=None)
 
     def render_inflight_query(
         self,
