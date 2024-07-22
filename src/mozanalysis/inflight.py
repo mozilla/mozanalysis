@@ -92,16 +92,14 @@ class InflightDataSource(DataSource):
         Assumes an upstream CTE holding the output of `build_record_query`
         named `records`.
         """
-        query = f"""
-        SELECT 
+        query = f"""SELECT 
             *,
             CASE WHEN branch = "{comparison_branch}" THEN 1 ELSE 0 END AS treated,
             CASE WHEN branch = "{reference_branch}" THEN 1 ELSE 0 END AS not_treated,
             {metric_name} AS Y_i,
             RANK() OVER (ORDER BY event_timestamp) AS n
         FROM records 
-        WHERE branch in ("{reference_branch}", "{comparison_branch}")
-        """
+        WHERE branch in ("{reference_branch}", "{comparison_branch}")"""
 
         return query
 
@@ -120,13 +118,11 @@ class InflightDataSource(DataSource):
         named `prep`.
         """
 
-        query = """
-        SELECT 
+        query = """SELECT 
             *, 
             treated*Y_i/0.5 - not_treated*Y_i/0.5 AS tau_hat_i,
             treated*POW(Y_i,2)/POW(0.5,2) + not_treated*POW(Y_i,2)/POW(0.5,2) AS sigma_hat_sq_i,
-        FROM prep 
-        """
+        FROM prep"""
 
         return query
 
@@ -145,14 +141,12 @@ class InflightDataSource(DataSource):
         `build_statistics_query_piece_sufficient_statistics` named `sufficient_statistics`.
         """
 
-        query = """
-        SELECT 
+        query = """SELECT 
             *, 
             -- SUM(tau_hat_i) OVER (ORDER BY event_timestamp) AS tau_hat_i_acc,
             1/n * SUM(tau_hat_i) OVER (ORDER BY event_timestamp) AS point_est,
             SUM(sigma_hat_sq_i) OVER (ORDER BY event_timestamp) AS var_est
-        FROM sufficient_statistics
-        """
+        FROM sufficient_statistics"""
 
         return query
 
@@ -170,13 +164,11 @@ class InflightDataSource(DataSource):
         eta_sq = self.eta(minimum_width_observations, alpha) ** 2
         alpha_sq = alpha**2
 
-        query = f"""
-        SELECT 
+        query = f"""SELECT 
             *,
             (var_est * {eta_sq} + 1)/{eta_sq} AS width_term_1,
             LN((var_est * {eta_sq}+1)/{alpha_sq}) AS width_term_2
-        FROM accumulators
-        """
+        FROM accumulators"""
 
         return query
 
@@ -192,12 +184,10 @@ class InflightDataSource(DataSource):
         `build_statistics_query_piece_ci_terms` named `ci_terms`.
         """
 
-        query = """
-        SELECT 
+        query = """SELECT 
             *, 
             (1/n) * SQRT(width_term_1 * width_term_2) AS ci_width
-        FROM ci_terms
-        """
+        FROM ci_terms"""
 
         return query
 
@@ -209,16 +199,14 @@ class InflightDataSource(DataSource):
         `build_statistics_query_piece_ci_width` named `ci_width_term`
         """
 
-        query = f"""
-        SELECT 
+        query = f"""SELECT 
             event_timestamp,
             n, 
             "{comparison_branch}" AS comparison_branch,
             point_est, 
             point_est - ci_width AS ci_lower,
             point_est + ci_width AS ci_upper
-        FROM ci_width_term
-        """
+        FROM ci_width_term"""
 
         return query
 
