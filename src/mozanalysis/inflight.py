@@ -238,7 +238,7 @@ class InflightDataSource(DataSource):
         comparison_branch: str,
         reference_branch: str,
         metric_name: str,
-        minimum_width_observations: int = 1000,
+        minimum_width_observations: int = 100,
         alpha: float = 0.05,
     ) -> str:
         """
@@ -391,7 +391,8 @@ class InflightMetric:
         reference_branch: str,
         experiment_slug: str,
         from_expr_dataset: str | None = None,
-        minimum_width_observations: int = 1000,
+        minimum_width_observations: int = 100,
+        alpha: float = 0.05,
         full_sample: bool = False,
     ) -> str:
         return self.data_source.build_statistics_query(
@@ -401,7 +402,8 @@ class InflightMetric:
             start_date,
             end_date,
             experiment_slug,
-            from_expr_dataset,
-            minimum_width_observations,
-            full_sample,
+            from_expr_dataset=from_expr_dataset,
+            minimum_width_observations=minimum_width_observations,
+            alpha=alpha,
+            full_sample=full_sample,
         )
