@@ -228,7 +228,7 @@ class InflightDataSource(DataSource):
             point_est, 
             point_est - ci_width AS ci_lower,
             point_est + ci_width AS ci_upper
-        FROM ci_width
+        FROM ci_width_term
         """
         )
         return query
