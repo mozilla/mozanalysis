@@ -24,6 +24,8 @@ class InflightDataSource(DataSource):
         default="submission_timestamp", validator=attr.validators.instance_of(str)
     )
 
+    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean", "main_live")
+
     @property
     def experiments_column_expr(self) -> str:
         """Returns a SQL expression to extract the branch from the
