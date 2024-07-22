@@ -321,9 +321,7 @@ class InflightDataSource(DataSource):
                 minimum_width_observations,
                 alpha,
             )
-            query += f""", {comparison_branch_name} AS (
-                    {subquery}
-                )"""
+            query += f""", {comparison_branch_name} AS ({subquery})"""
 
         query += "\n"
         query += self.build_union_query(comparison_branches, full_sample)
