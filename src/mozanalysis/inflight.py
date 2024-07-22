@@ -309,7 +309,7 @@ class InflightDataSource(DataSource):
         )
         query = dedent(
             f"""WITH records AS ({record_query}
-        )"""
+)"""
         )
 
         for comparison_branch in comparison_branches:
