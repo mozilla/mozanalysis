@@ -274,14 +274,14 @@ class InflightDataSource(DataSource):
         clean_comparison_branches = [
             self.sanitize_branch_name(branch) for branch in comparison_branches
         ]
-        branch_timestamps = ",".join(
+        branch_timestamps = ", ".join(
             [f"{branch}.event_timestamp" for branch in clean_comparison_branches]
         )
         query = dedent(
             f"""
             SELECT 
                 n,
-                MIN([{branch_timestamps}]) AS record_timestamp,
+                LEAST({branch_timestamps}) AS record_timestamp,
             """
         )
         for branch in clean_comparison_branches:
