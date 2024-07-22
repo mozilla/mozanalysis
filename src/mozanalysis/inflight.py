@@ -238,7 +238,8 @@ class InflightDataSource(DataSource):
         {self.build_statistics_query_piece_cleanup(comparison_branch)}
     )
     SELECT *
-    FROM ci_cleanup"""
+    FROM ci_cleanup
+"""
 
         return query
 
