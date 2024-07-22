@@ -269,13 +269,11 @@ FROM {clean_comparison_branches[0]}"""
         if len(clean_comparison_branches) > 1:
             for next_branch in clean_comparison_branches[1:]:
                 query += f"""
-                    FULL OUTER JOIN {next_branch} 
-                    USING(n)
-                    """
+FULL OUTER JOIN {next_branch} 
+USING(n)"""
 
         query += f"""
-        ORDER BY record_timestamp
-        """
+ORDER BY record_timestamp"""
 
         return query
 
