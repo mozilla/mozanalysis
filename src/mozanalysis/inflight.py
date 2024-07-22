@@ -20,7 +20,9 @@ class InflightDataSource(DataSource):
     Specifically, Theorem 4.1 from [Design-Based Confidence Sequences for Anytime-valid Causal Inference](https://arxiv.org/pdf/2210.08639.pdf)
     """  # noqa
 
-    timestamp_column = attr.ib(validator=attr.validators.instance_of(str))
+    timestamp_column = attr.ib(
+        default="submission_timestamp", validator=attr.validators.instance_of(str)
+    )
 
     @property
     def experiments_column_expr(self) -> str:
@@ -49,7 +51,8 @@ class InflightDataSource(DataSource):
     def build_record_query(
         self,
         metric: Metric,
-        time_limits: TimeLimits,
+        start_date: str,
+        end_date: str,
         experiment_slug: str,
         from_expr_dataset: str | None = None,
     ) -> str:
@@ -69,7 +72,7 @@ class InflightDataSource(DataSource):
             MIN_BY({metric.select_expr.format(experiment_slug=experiment_slug)}, ds.{self.timestamp_column}) AS {metric.name}
         FROM {self.from_expr_for(from_expr_dataset)} ds
         WHERE 1=1
-            AND ds.{self.timestamp_column} BETWEEN {time_limits.first_date_data_required} AND {time_limits.last_date_data_required}
+            AND ds.{self.timestamp_column} BETWEEN "{start_date}" AND "{end_date}"
             AND {self.experiments_column_expr()} IS NOT NULL 
         GROUP BY client_id, branch
         ORDER BY event_timestamp
@@ -310,7 +313,8 @@ class InflightDataSource(DataSource):
         comparison_branches: list[str],
         reference_branch: str,
         metric: Metric,
-        time_limits: TimeLimits,
+        start_date: str,
+        end_date: str,
         experiment_slug: str,
         from_expr_dataset: str | None = None,
         minimum_width_observations: int = 1000,
@@ -320,7 +324,7 @@ class InflightDataSource(DataSource):
         query = dedent(
             f"""
         WITH records AS (
-            {self.build_record_query(metric, time_limits, experiment_slug, from_expr_dataset)}
+            {self.build_record_query(metric, start_date, end_date, experiment_slug, from_expr_dataset)}
         )"""
         )
 
@@ -370,3 +374,26 @@ class InflightDataSource(DataSource):
 @attr.s(frozen=True, slots=True)
 class InflightMetric(Metric):
     data_source = attr.ib(type=InflightDataSource)
+
+    def render_inflight_query(
+        self,
+        start_date: str,
+        end_date: str,
+        comparison_branches: list[str],
+        reference_branch: str,
+        experiment_slug: str,
+        from_expr_dataset: str | None = None,
+        minimum_width_observations: int = 1000,
+        full_sample: bool = False,
+    ) -> str:
+        return self.data_source.build_statistics_query(
+            comparison_branches,
+            reference_branch,
+            self,
+            start_date,
+            end_date,
+            experiment_slug,
+            from_expr_dataset,
+            minimum_width_observations,
+            full_sample,
+        )
