@@ -27,25 +27,25 @@ class InflightDataSource(DataSource):
     EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean", "main_live")
 
     @property
-    def experiments_column_expr(self) -> str:
+    def experiments_column_expr(self, experiment_slug: str) -> str:
         """Returns a SQL expression to extract the branch from the
         experiment annotations"""
         if self.experiments_column_type is None:
             raise ExperimentAnnotationMissingError
 
         elif self.experiments_column_type == "simple":
-            return """`mozfun.map.get_key`(ds.experiments, '{experiment_slug}')"""
+            return f"""`mozfun.map.get_key`(ds.experiments, '{experiment_slug}')"""
 
         elif self.experiments_column_type == "native":
             return (
-                """`mozfun.map.get_key`(ds.experiments, '{experiment_slug}').branch"""
+                f"""`mozfun.map.get_key`(ds.experiments, '{experiment_slug}').branch"""
             )
 
         elif self.experiments_column_type == "glean":
-            return """`mozfun.map.get_key`(ds.ping_info.experiments, '{experiment_slug}').branch"""
+            return f"""`mozfun.map.get_key`(ds.ping_info.experiments, '{experiment_slug}').branch"""
 
         elif self.experiments_column_type == "main_live":
-            return """`mozfun.map.get_key`(ds.environment.experiments, '{experiment_slug}').branch"""
+            return f"""`mozfun.map.get_key`(ds.environment.experiments, '{experiment_slug}').branch"""
 
         else:
             raise ValueError
@@ -74,7 +74,7 @@ class InflightDataSource(DataSource):
     FROM {self.from_expr_for(from_expr_dataset)} ds
     WHERE 1=1
         AND ds.{self.timestamp_column} BETWEEN "{start_date}" AND "{end_date}"
-        AND {self.experiments_column_expr} IS NOT NULL 
+        AND {self.experiments_column_expr(experiment_slug)} IS NOT NULL 
     GROUP BY client_id, branch
     ORDER BY event_timestamp"""  # noqa
 
