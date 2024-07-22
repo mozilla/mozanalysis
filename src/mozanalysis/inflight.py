@@ -253,22 +253,18 @@ class InflightDataSource(DataSource):
             [f"{branch}.event_timestamp" for branch in clean_comparison_branches]
         )
         query = f"""
-            SELECT 
-                n,
-                LEAST({branch_timestamps}) AS record_timestamp,
-            """
+SELECT 
+    n,
+    LEAST({branch_timestamps}) AS record_timestamp,"""
 
         for branch in clean_comparison_branches:
             query += f"""
-
-                    {branch}.point_est AS point_est_{branch},    
-                    {branch}.ci_lower AS ci_lower_{branch},                
-                    {branch}.ci_upper AS ci_upper_{branch},                                
-            """
+    {branch}.point_est AS point_est_{branch},
+    {branch}.ci_lower AS ci_lower_{branch},
+    {branch}.ci_upper AS ci_upper_{branch},"""
 
         query += f"""
-            FROM {clean_comparison_branches[0]}
-            """
+FROM {clean_comparison_branches[0]}"""
 
         if len(clean_comparison_branches) > 1:
             for next_branch in clean_comparison_branches[1:]:
