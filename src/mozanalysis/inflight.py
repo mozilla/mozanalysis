@@ -390,9 +390,7 @@ ORDER BY record_timestamp"""
         full_sample: bool = False,
         **ignored_runtime_statistical_kwargs,
     ) -> None:
-        view_name = context.fully_qualify_table_name(
-            self.statistics_view_name(experiment, metric)
-        )
+        view_name = self.statistics_view_name(experiment, metric)
         view_sql = self.render_statistics_query(experiment, metric, full_sample)
 
         context.create_view(view_name, view_sql, replace_view=True)
