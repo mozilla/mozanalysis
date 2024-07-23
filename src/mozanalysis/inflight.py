@@ -342,11 +342,14 @@ ORDER BY record_timestamp"""
         self,
         experiment: Experiment,
         metric: InflightMetric,
+        context: BigQueryContext,
         full_sample: bool = False,
         **ignored_kwargs,
     ) -> str:
 
-        metric_view = metric.record_view_name(experiment)
+        metric_view = context.fully_qualify_table_name(
+            metric.record_view_name(experiment)
+        )
 
         comparison_branches = [
             branch.slug
@@ -391,7 +394,9 @@ ORDER BY record_timestamp"""
         **ignored_runtime_statistical_kwargs,
     ) -> None:
         view_name = self.statistics_view_name(experiment, metric)
-        view_sql = self.render_statistics_query(experiment, metric, full_sample)
+        view_sql = self.render_statistics_query(
+            experiment, metric, context, full_sample
+        )
 
         context.create_view(view_name, view_sql, replace_view=True)
 
