@@ -121,8 +121,7 @@ class InflightMetric:
 
 @attr.s()
 class InflightStatistic(ABC):
-
-    alpha: float = 0.05
+    alpha = attr.ib(type=float, default=0.05)
 
     def render_statistics_query(
         self,
@@ -144,7 +143,7 @@ class InflightStatistic(ABC):
 
 @attr.s()
 class DesignBasedConfidenceSequences(InflightStatistic):
-    minimum_width_observations: int = 100
+    minimum_width_observations = attr.ib(type=int, default=100)
 
     def render_statistics_query_piece_prep(
         self, comparison_branch: str, reference_branch: str, metric_name: str
@@ -424,10 +423,11 @@ ORDER BY record_timestamp"""
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
 
+@attr.s()
 class InflightSummary:
-    metric: InflightMetric
-    statistic: InflightStatistic
-    experiment: Experiment
+    metric = attr.ib(type=InflightMetric)
+    statistic = attr.ib(type=InflightStatistic)
+    experiment = attr.ib(type=Experiment)
 
     def publish_views(
         self, context: BigQueryContext, **runtime_statistical_kwargs
