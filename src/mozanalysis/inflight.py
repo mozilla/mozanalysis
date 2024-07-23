@@ -116,7 +116,7 @@ class InflightMetric:
         view_name = self.record_view_name(experiment)
         view_sql = self.render_records_query(experiment, from_expr_dataset)
 
-        context.create_view(view_name, view_sql)
+        context.create_view(view_name, view_sql, replace_view=True)
 
 
 @attr.s()
@@ -395,7 +395,7 @@ ORDER BY record_timestamp"""
         )
         view_sql = self.render_statistics_query(experiment, metric, full_sample)
 
-        context.create_view(view_name, view_sql)
+        context.create_view(view_name, view_sql, replace_view=True)
 
     @property
     def eta(self) -> float:
