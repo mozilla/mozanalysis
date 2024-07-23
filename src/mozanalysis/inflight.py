@@ -1,6 +1,8 @@
 import attr
+import re
 
 from mozanalysis.metrics import DataSource
+from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 
 from metric_config_parser.experiment import Experiment
 
@@ -9,6 +11,8 @@ from textwrap import dedent
 import numpy as np
 from scipy.special import lambertw
 from datetime import datetime
+
+from abc import ABC
 
 
 class ExperimentAnnotationMissingError(Exception):
@@ -52,7 +56,7 @@ class InflightDataSource(DataSource):
         else:
             raise ValueError
 
-    def build_record_query(
+    def render_records_query(
         self,
         metric: "InflightMetric",
         experiment: Experiment,
@@ -80,7 +84,69 @@ class InflightDataSource(DataSource):
 
         return query
 
-    def build_statistics_query_piece_prep(
+
+@attr.s(frozen=True, slots=True)
+class InflightMetric:
+    name = attr.ib(type=str)
+    select_expr = attr.ib(type=str)
+    data_source = attr.ib(type=InflightDataSource)
+    friendly_name = attr.ib(type=str | None, default=None)
+    description = attr.ib(type=str | None, default=None)
+    app_name = attr.ib(type=str | None, default=None)
+
+    def render_records_query(
+        self, experiment: Experiment, from_expr_dataset: str | None = None
+    ) -> str:
+        return self.data_source.render_records_query(
+            self, experiment, from_expr_dataset
+        )
+
+    def record_view_name(self, experiment: Experiment) -> str:
+        bq_experiment_slug = sanitize_table_name_for_bq(experiment.normandy_slug)
+        metric_slug = sanitize_table_name_for_bq(self.name)
+        view_name = f"records_{bq_experiment_slug}_{metric_slug}"
+        return view_name
+
+    def publish_records_view(
+        self,
+        context: BigQueryContext,
+        experiment: Experiment,
+        from_expr_dataset: str | None = None,
+    ) -> None:
+        view_name = self.record_view_name(experiment)
+        view_sql = self.render_records_query(experiment, from_expr_dataset)
+
+        context.create_view(view_name, view_sql)
+
+
+@attr.s()
+class InflightStatistic(ABC):
+
+    alpha: float = 0.05
+
+    def render_statistics_query(
+        self,
+        experiment: Experiment,
+        metric: "InflightMetric",
+        **statistics_kwargs,
+    ) -> str:
+        raise NotImplementedError
+
+    def publish_statistics_view(
+        self,
+        experiment: Experiment,
+        metric: InflightMetric,
+        context: BigQueryContext,
+        **statistical_kwargs,
+    ) -> None:
+        raise NotImplementedError
+
+
+@attr.s()
+class DesignBasedConfidenceSequences(InflightStatistic):
+    minimum_width_observations: int = 100
+
+    def render_statistics_query_piece_prep(
         self, comparison_branch: str, reference_branch: str, metric_name: str
     ) -> str:
         """
@@ -89,7 +155,7 @@ class InflightDataSource(DataSource):
         Filters to clients from the `reference_branch` or `comparison_branch`,
         constructs treatment indicators, a `Y_i` column, and a rank column.
 
-        Assumes an upstream CTE holding the output of `build_record_query`
+        Assumes an upstream CTE holding the output of `render_record_query`
         named `records`.
         """
         query = f"""SELECT 
@@ -103,9 +169,9 @@ class InflightDataSource(DataSource):
 
         return query
 
-    def build_statistics_query_piece_sufficient_statistics(self) -> str:
+    def render_statistics_query_piece_sufficient_statistics(self) -> str:
         """
-        Builds upon `build_statistics_query_piece_intro` to add the sufficient statistics
+        Builds upon `render_statistics_query_piece_intro` to add the sufficient statistics
         `tau_hat_i` and `sigma_hat_sq_i` necessary to calculate the confidence sequence.
 
         Adds:
@@ -114,7 +180,7 @@ class InflightDataSource(DataSource):
         - `sigma_hat_sq_i`: either +1/4*(metric value)^2 (in case of comparison branch) or
         -1/4*(metric value)^2 (in case of reference branch).
 
-        Assumes an upstream CTE holding the output of `build_statistics_query_piece_prep`
+        Assumes an upstream CTE holding the output of `render_statistics_query_piece_prep`
         named `prep`.
         """
 
@@ -126,9 +192,9 @@ class InflightDataSource(DataSource):
 
         return query
 
-    def build_statistics_query_piece_accumulators(self) -> str:
+    def render_statistics_query_piece_accumulators(self) -> str:
         """
-        Builds upon `build_statistics_query_piece_sufficient_statistics` to construct
+        Builds upon `render_statistics_query_piece_sufficient_statistics` to construct
         expanding sufficient statistics (accumulate the sufficient statistics over time).
 
         Adds:
@@ -138,7 +204,7 @@ class InflightDataSource(DataSource):
         this time point. Known as S_n in the literature.
 
         Assumes an upstream CTE holding the output of
-        `build_statistics_query_piece_sufficient_statistics` named `sufficient_statistics`.
+        `render_statistics_query_piece_sufficient_statistics` named `sufficient_statistics`.
         """
 
         query = """SELECT 
@@ -150,19 +216,17 @@ class InflightDataSource(DataSource):
 
         return query
 
-    def build_statistics_query_piece_ci_terms(
-        self, minimum_width_observations: int = 100, alpha: float = 0.05
-    ) -> str:
+    def render_statistics_query_piece_ci_terms(self) -> str:
         """
-        Builds upon `build_statistics_query_piece_accumulators` to construct
+        Builds upon `render_statistics_query_piece_accumulators` to construct
         the two terms needed to calculate the width of the confidence sequence.
 
         Assumes an upstream CTE holding the output of
-        `build_statistics_query_piece_accumulators` named `accumulators`.
+        `render_statistics_query_piece_accumulators` named `accumulators`.
         """
 
-        eta_sq = self.eta(minimum_width_observations, alpha) ** 2
-        alpha_sq = alpha**2
+        eta_sq = self.eta**2
+        alpha_sq = self.alpha**2
 
         query = f"""SELECT 
             *,
@@ -172,16 +236,16 @@ class InflightDataSource(DataSource):
 
         return query
 
-    def build_statistics_query_piece_ci_width(self) -> str:
+    def render_statistics_query_piece_ci_width(self) -> str:
         """
-        Builds upon `build_statistics_query_piece_accumulators` to construct
+        Builds upon `render_statistics_query_piece_accumulators` to construct
         the two terms needed to calculate the width of the confidence sequence.
 
         Adds:
         - ci_width: the width of the confidence sequence at this time.
 
         Assumes an upstream CTE holding the output of
-        `build_statistics_query_piece_ci_terms` named `ci_terms`.
+        `render_statistics_query_piece_ci_terms` named `ci_terms`.
         """
 
         query = """SELECT 
@@ -191,12 +255,12 @@ class InflightDataSource(DataSource):
 
         return query
 
-    def build_statistics_query_piece_cleanup(self, comparison_branch: str) -> str:
+    def render_statistics_query_piece_cleanup(self, comparison_branch: str) -> str:
         """
-        Cleans up the output of `build_statistics_query_piece_ci_width`.
+        Cleans up the output of `render_statistics_query_piece_ci_width`.
 
         Assumes an upstream CTE holding the output of
-        `build_statistics_query_piece_ci_width` named `ci_width_term`
+        `render_statistics_query_piece_ci_width` named `ci_width_term`
         """
 
         query = f"""SELECT 
@@ -210,13 +274,11 @@ class InflightDataSource(DataSource):
 
         return query
 
-    def build_statistics_query_one_branch(
+    def render_statistics_query_one_branch(
         self,
         comparison_branch: str,
         reference_branch: str,
         metric_name: str,
-        minimum_width_observations: int = 100,
-        alpha: float = 0.05,
     ) -> str:
         """
         Builds the statistical query to construct the confidence sequence to compare
@@ -225,17 +287,17 @@ class InflightDataSource(DataSource):
 
         query = f"""
     WITH prep AS (
-        {self.build_statistics_query_piece_prep(comparison_branch, reference_branch, metric_name)}
+        {self.render_statistics_query_piece_prep(comparison_branch, reference_branch, metric_name)}
     ), sufficient_statistics AS (
-        {self.build_statistics_query_piece_sufficient_statistics()}
+        {self.render_statistics_query_piece_sufficient_statistics()}
     ), accumulators AS (
-        {self.build_statistics_query_piece_accumulators()}
+        {self.render_statistics_query_piece_accumulators()}
     ), ci_terms AS (
-        {self.build_statistics_query_piece_ci_terms(minimum_width_observations, alpha)}
+        {self.render_statistics_query_piece_ci_terms()}
     ), ci_width_term AS (
-        {self.build_statistics_query_piece_ci_width()}
+        {self.render_statistics_query_piece_ci_width()}
     ), ci_cleanup AS (
-        {self.build_statistics_query_piece_cleanup(comparison_branch)}
+        {self.render_statistics_query_piece_cleanup(comparison_branch)}
     )
     SELECT *
     FROM ci_cleanup
@@ -243,11 +305,11 @@ class InflightDataSource(DataSource):
 
         return query
 
-    def build_union_query(
+    def render_union_query(
         self, comparison_branches: list[str], full_sample: bool = False
     ) -> str:
         clean_comparison_branches = [
-            self.sanitize_branch_name(branch) for branch in comparison_branches
+            sanitize_table_name_for_bq(branch) for branch in comparison_branches
         ]
         branch_timestamps = ", ".join(
             [f"{branch}.event_timestamp" for branch in clean_comparison_branches]
@@ -277,44 +339,65 @@ ORDER BY record_timestamp"""
 
         return query
 
-    def build_statistics_query(
+    def render_statistics_query(
         self,
         experiment: Experiment,
-        metric: "InflightMetric",
-        from_expr_dataset: str | None = None,
-        minimum_width_observations: int = 1000,
-        alpha: float = 0.05,
+        metric: InflightMetric,
         full_sample: bool = False,
+        **ignored_kwargs,
     ) -> str:
+
+        metric_view = metric.record_view_name(experiment)
+
         comparison_branches = [
             branch.slug
             for branch in experiment.branches
             if branch.slug != experiment.reference_branch
         ]
-        record_query = self.build_record_query(metric, experiment, from_expr_dataset)
+
         query = dedent(
-            f"""WITH records AS ({record_query}
+            f"""WITH records AS (SELECT * FROM {metric_view}
 )"""
         )
 
         for comparison_branch in comparison_branches:
-            comparison_branch_name = self.sanitize_branch_name(comparison_branch)
-            subquery = self.build_statistics_query_one_branch(
+            comparison_branch_name = sanitize_table_name_for_bq(comparison_branch)
+            subquery = self.render_statistics_query_one_branch(
                 comparison_branch,
                 experiment.reference_branch,
                 metric.name,
-                minimum_width_observations,
-                alpha,
             )
             query += f""", {comparison_branch_name} AS ({subquery})"""
 
         query += "\n"
-        query += self.build_union_query(comparison_branches, full_sample)
+        query += self.render_union_query(comparison_branches, full_sample)
 
         return query
 
-    @staticmethod
-    def eta(minimum_width_observations: int = 100, alpha: float = 0.05) -> float:
+    def statistics_view_name(
+        self, experiment: Experiment, metric: InflightMetric
+    ) -> str:
+        bq_experiment_slug = sanitize_table_name_for_bq(experiment.normandy_slug)
+        metric_slug = sanitize_table_name_for_bq(metric.name)
+        statistics_slug = self.name()
+        view_name = f"statistics_{bq_experiment_slug}_{metric_slug}_{statistics_slug}"
+        return view_name
+
+    def publish_statistics_view(
+        self,
+        experiment: Experiment,
+        metric: InflightMetric,
+        context: BigQueryContext,
+        full_sample: bool = False,
+        **ignored_runtime_statistical_kwargs,
+    ) -> None:
+        view_name = self.statistics_view_name(experiment, metric)
+        view_sql = self.render_statistics_query(experiment, metric, full_sample)
+
+        context.create_view(view_name, view_sql)
+
+    @property
+    def eta(self) -> float:
         """
         Returns the `eta` (tuning parameter) that minimizes the relative width of the
         confidence sequence after `minimum_width_observations` clients enrolled. Note
@@ -325,41 +408,31 @@ ORDER BY record_timestamp"""
 
         We default to 100 to focus the "alpha spending" near the start of the experiment.
         """
-        alpha_sq = alpha**2
+        alpha_sq = self.alpha**2
         eta = np.sqrt(
             (-1 * lambertw(-1 * alpha_sq * np.exp(1), -1) - 1)
-            / minimum_width_observations
+            / self.minimum_width_observations
         ).real
         assert np.isfinite(eta)
         return eta
 
-    @staticmethod
-    def sanitize_branch_name(branch: str) -> str:
-        return branch.replace("-", "_")
+    @classmethod
+    def name(cls):
+        """Return snake-cased name of the statistic."""
+        # https://stackoverflow.com/a/1176023
+        name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", cls.__name__)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
 
-@attr.s(frozen=True, slots=True)
-class InflightMetric:
-    name = attr.ib(type=str)
-    select_expr = attr.ib(type=str)
-    data_source = attr.ib(type=InflightDataSource)
-    friendly_name = attr.ib(type=str | None, default=None)
-    description = attr.ib(type=str | None, default=None)
-    app_name = attr.ib(type=str | None, default=None)
+class InflightSummary:
+    metric: InflightMetric
+    statistic: InflightStatistic
+    experiment: Experiment
 
-    def render_inflight_query(
-        self,
-        experiment: Experiment,
-        from_expr_dataset: str | None = None,
-        minimum_width_observations: int = 100,
-        alpha: float = 0.05,
-        full_sample: bool = False,
-    ) -> str:
-        return self.data_source.build_statistics_query(
-            experiment,
-            self,
-            from_expr_dataset=from_expr_dataset,
-            minimum_width_observations=minimum_width_observations,
-            alpha=alpha,
-            full_sample=full_sample,
+    def publish_views(
+        self, context: BigQueryContext, **runtime_statistical_kwargs
+    ) -> None:
+        self.metric.publish_records_view(context, self.experiment)
+        self.statistic.publish_statistics_view(
+            self.experiment, self.metric, context, **runtime_statistical_kwargs
         )
