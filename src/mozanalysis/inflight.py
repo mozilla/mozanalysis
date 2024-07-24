@@ -5,6 +5,7 @@ from mozanalysis.metrics import DataSource
 from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 
 from metric_config_parser.experiment import Experiment
+import metric_config_parser.metric as parser_metric  # import Summary, Metric, DataSource
 
 from textwrap import dedent
 
@@ -84,6 +85,17 @@ class InflightDataSource(DataSource):
 
         return query
 
+    @classmethod
+    def from_data_source(
+        cls, data_source: parser_metric.DataSource
+    ) -> "InflightDataSource":
+        return cls(
+            name=data_source.name,
+            from_expr=data_source.from_expression,
+            experiments_column_type=data_source.experiments_column_type,
+            timestamp_column=data_source.timestamp_column,
+        )
+
 
 @attr.s(frozen=True, slots=True)
 class InflightMetric:
@@ -92,7 +104,6 @@ class InflightMetric:
     data_source = attr.ib(type=InflightDataSource)
     friendly_name = attr.ib(type=str | None, default=None)
     description = attr.ib(type=str | None, default=None)
-    app_name = attr.ib(type=str | None, default=None)
 
     def render_records_query(
         self, experiment: Experiment, from_expr_dataset: str | None = None
@@ -117,6 +128,18 @@ class InflightMetric:
         view_sql = self.render_records_query(experiment, from_expr_dataset)
 
         context.create_view(view_name, view_sql, replace_view=True)
+        print(f"published records view for {self.name} to {view_name}")
+
+    @classmethod
+    def from_metric(cls, metric: parser_metric.Metric) -> "InflightMetric":
+        data_source = InflightDataSource.from_data_source(metric.data_source)
+        return cls(
+            name=metric.name,
+            select_expr=metric.select_expression,
+            data_source=data_source,
+            friendly_name=metric.friendly_name,
+            description=metric.description,
+        )
 
 
 @attr.s()
@@ -400,6 +423,8 @@ ORDER BY record_timestamp"""
 
         context.create_view(view_name, view_sql, replace_view=True)
 
+        print(f"published statistics view for {metric.name} to {view_name}")
+
     @property
     def eta(self) -> float:
         """
@@ -441,3 +466,22 @@ class InflightSummary:
         self.statistic.publish_statistics_view(
             self.experiment, self.metric, context, **runtime_statistical_kwargs
         )
+
+    @classmethod
+    def from_summary(
+        cls, summary: parser_metric.Summary, experiment: Experiment
+    ) -> "InflightSummary":
+        found = False
+        for statistic_class in set(InflightStatistic.__subclasses__()):
+            if statistic_class.name() == summary.statistic.name:
+                found = True
+                break
+
+        if not found:
+            raise ValueError(f"Statistic '{summary.statistic.name}' does not exist.")
+
+        statistic = statistic_class(**summary.statistic.params)
+
+        metric = InflightMetric.from_metric(summary.metric)
+
+        return cls(metric=metric, statistic=statistic, experiment=experiment)
