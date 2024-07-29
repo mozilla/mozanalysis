@@ -8,6 +8,23 @@ from metric_config_parser.config import ConfigCollection
 
 METRIC_HUB_JETSTREAM_REPO = "https://github.com/mozilla/metric-hub/tree/main/jetstream"
 
+class ApplicationNotFound(ValueError):
+    pass 
+
+class MetricNotFound(ValueError): 
+    pass
+
+class DataSourceNotFound(ValueError):
+    pass 
+
+class SegmentNotFound(ValueError):
+    pass
+
+
+class SegmentDataSourceNotFound(ValueError):
+    pass
+
+
 
 class _ConfigLoader:
     """
@@ -42,6 +59,12 @@ class _ConfigLoader:
         self.configs.merge(config_collection)
         return self
 
+    def check_configs_for_app(self, app_name: str) -> bool: 
+        for definition in self.configs.definitions: 
+            if app_name == definition.platform: 
+                return True 
+        return False
+
     def get_metric(self, metric_slug: str, app_name: str):
         """Load a metric definition for the given app.
 
@@ -51,7 +74,10 @@ class _ConfigLoader:
 
         metric_definition = self.configs.get_metric_definition(metric_slug, app_name)
         if metric_definition is None:
-            raise Exception(f"Could not find definition for metric {metric_slug}")
+            if self.check_configs_for_app(app_name): 
+                raise MetricNotFound(f"Could not find definition for metric {metric_slug}")
+            else: 
+                raise ApplicationNotFound(f"Could not find application {app_name}")
 
         return Metric(
             name=metric_definition.name,
@@ -78,9 +104,10 @@ class _ConfigLoader:
             data_source_slug, app_name
         )
         if data_source_definition is None:
-            raise Exception(
-                f"Could not find definition for data source {data_source_slug}"
-            )
+            if self.check_configs_for_app(app_name): 
+                raise DataSourceNotFound(f"Could not find definition for data source {data_source_definition}")
+            else: 
+                raise ApplicationNotFound(f"Could not find application {app_name}")
 
         return DataSource(
             name=data_source_definition.name,
@@ -105,7 +132,10 @@ class _ConfigLoader:
 
         segment_definition = self.configs.get_segment_definition(segment_slug, app_name)
         if segment_definition is None:
-            raise Exception(f"Could not find definition for segment {segment_slug}")
+            if self.check_configs_for_app(app_name): 
+                raise SegmentNotFound(f"Could not find definition for segment {segment_definition}")
+            else: 
+                raise ApplicationNotFound(f"Could not find application {app_name}")
 
         return Segment(
             name=segment_definition.name,
@@ -131,9 +161,10 @@ class _ConfigLoader:
             data_source_slug, app_name
         )
         if data_source_definition is None:
-            raise Exception(
-                f"Could not find definition for segment data source {data_source_slug}"
-            )
+            if self.check_configs_for_app(app_name): 
+                raise SegmentDataSourceNotFound(f"Could not find definition for segment data source {data_source_definition}")
+            else: 
+                raise ApplicationNotFound(f"Could not find application {app_name}")
 
         return SegmentDataSource(
             name=data_source_definition.name,
