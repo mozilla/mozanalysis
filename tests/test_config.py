@@ -4,7 +4,14 @@
 
 import pytest
 from helpers.cheap_lint import sql_lint  # local helper file
-from mozanalysis.config import ConfigLoader
+from mozanalysis.config import (
+    ConfigLoader,
+    ApplicationNotFound,
+    MetricNotFound,
+    DataSourceNotFound,
+    SegmentDataSourceNotFound,
+    SegmentNotFound,
+)
 from mozanalysis.metrics import DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
 
@@ -21,9 +28,16 @@ def test_get_metric():
 
 def test_unknown_metric_fails():
     with pytest.raises(
-        Exception, match="Could not find definition for metric fake_metric"
+        MetricNotFound, match="Could not find definition for metric fake_metric"
     ):
         ConfigLoader.get_metric("fake_metric", "firefox_desktop")
+
+
+def test_metric_unknown_app_fails():
+    with pytest.raises(
+        ApplicationNotFound, match="Could not find application fake_app"
+    ):
+        ConfigLoader.get_metric("fake_metric", "fake_app")
 
 
 def test_get_data_source():
@@ -37,9 +51,17 @@ def test_get_data_source():
 
 def test_unknown_data_source_fails():
     with pytest.raises(
-        Exception, match="Could not find definition for data source fake_data_source"
+        DataSourceNotFound,
+        match="Could not find definition for data source fake_data_source",
     ):
         ConfigLoader.get_data_source("fake_data_source", "firefox_desktop")
+
+
+def test_data_source_unknown_app_fails():
+    with pytest.raises(
+        ApplicationNotFound, match="Could not find application fake_app"
+    ):
+        ConfigLoader.get_data_source("fake_data_source", "fake_app")
 
 
 def test_get_segment():
@@ -52,9 +74,16 @@ def test_get_segment():
 
 def test_unknown_segment_fails():
     with pytest.raises(
-        Exception, match="Could not find definition for segment fake_segment"
+        SegmentNotFound, match="Could not find definition for segment fake_segment"
     ):
         ConfigLoader.get_segment("fake_segment", "firefox_desktop")
+
+
+def test_segment_unknown_app_fails():
+    with pytest.raises(
+        ApplicationNotFound, match="Could not find application fake_app"
+    ):
+        ConfigLoader.get_segment("fake_segment", "fake_app")
 
 
 def test_get_segment_data_source():
@@ -70,7 +99,7 @@ def test_get_segment_data_source():
 
 def test_unknown_segment_data_source_fails():
     with pytest.raises(
-        Exception,
+        SegmentDataSourceNotFound,
         match=(
             "Could not find definition for segment "
             + "data source fake_segment_data_source"
@@ -79,6 +108,13 @@ def test_unknown_segment_data_source_fails():
         ConfigLoader.get_segment_data_source(
             "fake_segment_data_source", "firefox_desktop"
         )
+
+
+def test_segmentdatasource_unknown_app_fails():
+    with pytest.raises(
+        ApplicationNotFound, match="Could not find application fake_app"
+    ):
+        ConfigLoader.get_segment_data_source("fake_segment_data_source", "fake_app")
 
 
 def test_get_outcome_metric_outcome_data_source():
