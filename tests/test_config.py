@@ -5,10 +5,10 @@
 import pytest
 from helpers.cheap_lint import sql_lint  # local helper file
 from mozanalysis.config import (
-    ConfigLoader,
     ApplicationNotFound,
-    MetricNotFound,
+    ConfigLoader,
     DataSourceNotFound,
+    MetricNotFound,
     SegmentDataSourceNotFound,
     SegmentNotFound,
 )

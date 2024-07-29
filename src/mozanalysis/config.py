@@ -172,7 +172,7 @@ class _ConfigLoader:
         if data_source_definition is None:
             if self.check_configs_for_app(app_name):
                 raise SegmentDataSourceNotFound(
-                    f"Could not find definition for segment data source {data_source_slug}"
+                    f"Could not find definition for segment data source {data_source_slug}"  # noqa:E501
                 )
             else:
                 raise ApplicationNotFound(f"Could not find application {app_name}")
