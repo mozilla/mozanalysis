@@ -8,7 +8,7 @@ from helpers.config_loader_lists import (
     klar_android_metrics,
     klar_ios_metrics,
 )
-from mozanalysis.config import ConfigLoader
+from mozanalysis.config import ConfigLoader, ApplicationNotFound
 from mozanalysis.experiment import (
     AnalysisWindow,
     EnrollmentsQueryType,
@@ -816,9 +816,7 @@ def test_resolve_invalid_app_name():
         num_dates_enrollment=8,
     )
 
-    with pytest.raises(
-        Exception, match="Could not find definition for metric baseline_ping_count"
-    ):
+    with pytest.raises(ApplicationNotFound, match="Could not find application unknown"):
         exp.build_metrics_query(
             metric_list=["baseline_ping_count"],
             time_limits=tl,
