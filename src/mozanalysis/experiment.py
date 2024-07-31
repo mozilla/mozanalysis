@@ -587,9 +587,7 @@ class Experiment:
             FROM `{enrollments_table}` e
             CROSS JOIN analysis_windows aw
         ),
-        exposures AS (
-            {exposure_query}
-        ),
+        exposures AS ({exposure_query}),
         enrollments AS (
             SELECT
                 e.* EXCEPT (exposure_date, num_exposure_events),
