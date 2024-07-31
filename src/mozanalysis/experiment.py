@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from typing_extensions import assert_never
 
 import attr
@@ -16,6 +16,7 @@ from mozanalysis.config import ConfigLoader
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.utils import add_days, date_sub, hash_ish
 from mozanalysis.types import AnalysisUnit
+from mozanalysis.segments import Segment, SegmentDataSource
 
 if TYPE_CHECKING:
     from pandas import DataFrame
@@ -30,6 +31,10 @@ class EnrollmentsQueryType(str, Enum):
     FENIX_FALLBACK = "fenix-fallback"
     NORMANDY = "normandy"
     GLEAN_EVENT = "glean-event"
+
+
+AggregatorType = Metric | Segment
+DataSourceType = DataSource | SegmentDataSource
 
 
 @attr.s(frozen=True, slots=True)
@@ -131,7 +136,7 @@ class Experiment:
             before UTC midnight.
     """
 
-    experiment_slug = attr.ib()
+    experiment_slug = attr.ib(type=str)
     start_date = attr.ib()
     num_dates_enrollment = attr.ib(default=None)
     app_id = attr.ib(default=None)
@@ -425,7 +430,7 @@ class Experiment:
             fully_qualified_table_name=bq_context.fully_qualify_table_name(
                 full_res_table_name
             ),
-            analysis_windows=time_limits.analysis_windows,
+            analysis_windows=list(time_limits.analysis_windows),
         )
 
     def build_enrollments_query(
@@ -975,20 +980,21 @@ class Experiment:
 
     def _build_metrics_query_bits(
         self,
-        metric_list: list[Metric],
+        metric_list: list[Metric | str],
         time_limits: TimeLimits,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal=None,
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
-        metrics = []
+        metrics: list[Metric] = []
         for metric in metric_list:
             if isinstance(metric, str):
                 metrics.append(ConfigLoader.get_metric(metric, self.get_app_name()))
             else:
                 metrics.append(metric)
 
-        ds_metrics = self._partition_by_data_source(metrics)
+        ds_metrics = self._partition_metrics_by_data_source(metrics)
+        ds_metrics = cast(dict[DataSource, list[Metric]], ds_metrics)
         ds_metrics = {
             ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
             for ds, metrics in ds_metrics.items()
@@ -1020,9 +1026,20 @@ class Experiment:
 
         return metrics_columns, metrics_joins
 
-    def _partition_by_data_source(
-        self, metric_or_segment_list: list[Metric] | list[Segment]
-    ) -> dict[DataSource | SegmentDataSource, list[Metric | Segment]]:
+    def _partition_segments_by_data_source(
+        self, metric_or_segment_list: list[Segment]
+    ) -> dict[SegmentDataSource, list[Segment]]:
+        """Return a dict mapping data sources to metric/segment lists."""
+        data_sources = {m.data_source for m in metric_or_segment_list}
+
+        return {
+            ds: [m for m in metric_or_segment_list if m.data_source == ds]
+            for ds in data_sources
+        }
+
+    def _partition_metrics_by_data_source(
+        self, metric_or_segment_list: list[Metric]
+    ) -> dict[DataSource, list[Metric]]:
         """Return a dict mapping data sources to metric/segment lists."""
         data_sources = {m.data_source for m in metric_or_segment_list}
 
@@ -1049,7 +1066,7 @@ class Experiment:
         # arrive with "how segments work" as their first question.
 
         segments_columns, segments_joins = self._build_segments_query_bits(
-            segment_list or [], time_limits
+            cast(list[Segment | str], segment_list) or [], time_limits
         )
 
         return """
@@ -1078,7 +1095,7 @@ class Experiment:
             else:
                 segments.append(segment)
 
-        ds_segments = self._partition_by_data_source(segments)
+        ds_segments = self._partition_segments_by_data_source(segments)
 
         segments_columns = []
         segments_joins = []
@@ -1256,6 +1273,8 @@ class TimeLimits:
                 for i in range(num_periods)
             ]
         )
+
+        analysis_windows = cast(tuple[AnalysisWindow], analysis_windows)
 
         last_date_data_required = add_days(
             last_enrollment_date, analysis_windows[-1].end

@@ -6,6 +6,9 @@ from dataclasses import dataclass
 
 from metric_config_parser.config import ConfigCollection
 
+from mozanalysis.metrics import Metric
+
+
 METRIC_HUB_JETSTREAM_REPO = "https://github.com/mozilla/metric-hub/tree/main/jetstream"
 
 
@@ -42,12 +45,11 @@ class _ConfigLoader:
         self.configs.merge(config_collection)
         return self
 
-    def get_metric(self, metric_slug: str, app_name: str):
+    def get_metric(self, metric_slug: str, app_name: str) -> Metric:
         """Load a metric definition for the given app.
 
         Returns a :class:`mozanalysis.metrics.Metric` instance.
         """
-        from mozanalysis.metrics import Metric
 
         metric_definition = self.configs.get_metric_definition(metric_slug, app_name)
         if metric_definition is None:
