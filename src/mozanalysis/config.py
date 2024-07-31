@@ -8,7 +8,6 @@ from metric_config_parser.config import ConfigCollection
 
 from mozanalysis.metrics import Metric
 
-
 METRIC_HUB_JETSTREAM_REPO = "https://github.com/mozilla/metric-hub/tree/main/jetstream"
 
 

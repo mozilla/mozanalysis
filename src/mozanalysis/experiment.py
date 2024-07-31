@@ -6,22 +6,20 @@ from __future__ import annotations
 import logging
 from enum import Enum
 from typing import TYPE_CHECKING, cast
-from typing_extensions import assert_never
 
 import attr
+from typing_extensions import assert_never
 
 from mozanalysis import APPS
 from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
-from mozanalysis.utils import add_days, date_sub, hash_ish
-from mozanalysis.types import AnalysisUnit
 from mozanalysis.segments import Segment, SegmentDataSource
+from mozanalysis.types import AnalysisUnit
+from mozanalysis.utils import add_days, date_sub, hash_ish
 
 if TYPE_CHECKING:
     from pandas import DataFrame
-
-    from mozanalysis.segments import Segment, SegmentDataSource
 
 logger = logging.getLogger(__name__)
 
@@ -1018,7 +1016,7 @@ class Experiment:
                 f"""    LEFT JOIN (
             {query_for_metrics}
             ) ds_{i} USING ({self.analysis_unit.value}, branch, analysis_window_start, analysis_window_end)
-                    """
+                    """  # noqa: E501
             )
 
             for m in ds_metrics[ds]:
@@ -1494,7 +1492,7 @@ class TimeSeriesResult:
             FROM {self.fully_qualified_table_name}
             WHERE analysis_window_start = {analysis_window.start}
             AND analysis_window_end = {analysis_window.end}
-        """
+        """  # noqa: E501
 
     def _build_aggregated_data_query(
         self, metric_list: list[Metric], aggregate_function: str
