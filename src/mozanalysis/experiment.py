@@ -6,6 +6,7 @@ from __future__ import annotations
 import logging
 from enum import Enum
 from typing import TYPE_CHECKING
+from typing_extensions import assert_never
 
 import attr
 
@@ -14,6 +15,7 @@ from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.utils import add_days, date_sub, hash_ish
+from mozanalysis.types import AnalysisUnit
 
 if TYPE_CHECKING:
     from pandas import DataFrame
@@ -134,6 +136,7 @@ class Experiment:
     num_dates_enrollment = attr.ib(default=None)
     app_id = attr.ib(default=None)
     app_name = attr.ib(default=None)
+    analysis_unit = attr.ib(type=AnalysisUnit, default=AnalysisUnit.CLIENT_ID)
 
     def get_app_name(self):
         """
@@ -189,6 +192,10 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
+            analysis_unit (AnalysisUnit):  the "unit" of analysis, namely the
+                id that defines an experimental unit. For example: `client_id`
+                for mobile experiments or `group_id` for desktop experiments. Can be
+                overridden through a ``custom_enrollments_query``, but shouldn't.
             custom_enrollments_query (str): A full SQL query that
                 will generate the `enrollments` common table expression
                 used in the main query. The query must produce the columns
@@ -317,6 +324,10 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
+            analysis_unit (AnalysisUnit):  the "unit" of analysis, namely the
+                id that defines an experimental unit. For example: `client_id`
+                for mobile experiments or `group_id` for desktop experiments. Can be
+                overridden through a ``custom_enrollments_query``, but shouldn't.
             custom_enrollments_query (str): A full SQL query that
                 will generate the `enrollments` common table expression
                 used in the main query. The query must produce the columns
@@ -437,6 +448,10 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
+            analysis_unit (AnalysisUnit):  the "unit" of analysis, namely the
+                id that defines an experimental unit. For example: `client_id`
+                for mobile experiments or `group_id` for desktop experiments. Can be
+                overridden through a ``custom_enrollments_query``, but shouldn't.
             custom_enrollments_query (str): A full SQL query that
                 will generate the `enrollments` common table expression
                 used in the main query. The query must produce the columns
@@ -465,7 +480,9 @@ class Experiment:
         sample_size = sample_size or 100
 
         enrollments_query = custom_enrollments_query or self._build_enrollments_query(
-            time_limits, enrollments_query_type, sample_size
+            time_limits,
+            enrollments_query_type,
+            sample_size,
         )
 
         if exposure_signal:
@@ -474,10 +491,14 @@ class Experiment:
             )
         else:
             exposure_query = custom_exposure_query or self._build_exposure_query(
-                time_limits, enrollments_query_type
+                time_limits,
+                enrollments_query_type,
             )
 
-        segments_query = self._build_segments_query(segment_list, time_limits)
+        segments_query = self._build_segments_query(
+            segment_list,
+            time_limits,
+        )
 
         return f"""
             WITH raw_enrollments AS ({enrollments_query}),
@@ -486,10 +507,10 @@ class Experiment:
 
             SELECT
                 se.*,
-                e.* EXCEPT (client_id, branch)
+                e.* EXCEPT ({self.analysis_unit}, branch)
             FROM segmented_enrollments se
             LEFT JOIN exposures e
-            USING (client_id, branch)
+            USING ({self.analysis_unit.value}, branch)
         """
 
     def build_metrics_query(
@@ -573,7 +594,7 @@ class Experiment:
                 x.num_exposure_events
             FROM exposures x
                 RIGHT JOIN raw_enrollments e
-                USING (client_id, branch)
+                USING ({id_column}, branch)
         )
         SELECT
             enrollments.*,
@@ -586,6 +607,7 @@ class Experiment:
             metrics_columns=",\n        ".join(metrics_columns),
             metrics_joins="\n".join(metrics_joins),
             enrollments_table=enrollments_table,
+            id_column=self.analysis_unit.value,
         )
 
     @staticmethod
@@ -611,30 +633,47 @@ class Experiment:
     ) -> str:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == EnrollmentsQueryType.NORMANDY:
-            return self._build_enrollments_query_normandy(time_limits, sample_size)
+            return self._build_enrollments_query_normandy(
+                time_limits,
+                sample_size,
+            )
         elif enrollments_query_type == EnrollmentsQueryType.GLEAN_EVENT:
             if not self.app_id:
                 raise ValueError(
                     "App ID must be defined for building Glean enrollments query"
                 )
+            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
+                raise ValueError(
+                    "Glean enrollments currently only support client_id analysis units"
+                )
             return self._build_enrollments_query_glean_event(
                 time_limits, self.app_id, sample_size
             )
         elif enrollments_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
+            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
+                raise ValueError(
+                    "Fenix fallback enrollments currently only support client_id analysis units"  # noqa: E501
+                )
             return self._build_enrollments_query_fenix_baseline(
                 time_limits, sample_size
             )
         elif enrollments_query_type == EnrollmentsQueryType.CIRRUS:
+            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
+                raise ValueError(
+                    "Cirrus enrollments currently only support client_id analysis units"
+                )
             if not self.app_id:
                 raise ValueError(
                     "App ID must be defined for building Cirrus enrollments query"
                 )
             return self._build_enrollments_query_cirrus(time_limits, self.app_id)
         else:
-            raise ValueError
+            assert_never(enrollments_query_type)
 
     def _build_exposure_query(
-        self, time_limits: TimeLimits, exposure_query_type: EnrollmentsQueryType
+        self,
+        time_limits: TimeLimits,
+        exposure_query_type: EnrollmentsQueryType,
     ) -> str:
         """Return SQL to query a list of exposures and their branches"""
         if exposure_query_type == EnrollmentsQueryType.NORMANDY:
@@ -644,12 +683,24 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Glean exposures query"
                 )
+            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
+                raise ValueError(
+                    "Glean exposures currently only support client_id analysis units"
+                )
             return self._build_exposure_query_glean_event(time_limits, self.app_id)
         elif exposure_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
+            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
+                raise ValueError(
+                    "Fenix fallback exposures currently only support client_id analysis units"  # noqa: E501
+                )
             return self._build_exposure_query_glean_event(
                 time_limits, "org_mozilla_firefox"
             )
         elif exposure_query_type == EnrollmentsQueryType.CIRRUS:
+            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
+                raise ValueError(
+                    "Cirrus exposures currently only support client_id analysis units"
+                )
             if not self.app_id:
                 raise ValueError(
                     "App ID must be defined for building Cirrus exposures query"
@@ -661,30 +712,56 @@ class Experiment:
                 event_category="cirrus_events",
             )
         else:
-            raise ValueError
+            assert_never(exposure_query_type)
 
     def _build_enrollments_query_normandy(
-        self, time_limits: TimeLimits, sample_size: int = 100
+        self,
+        time_limits: TimeLimits,
+        sample_size: int = 100,
     ) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
-        return f"""
-        SELECT
-            e.client_id,
-            `mozfun.map.get_key`(e.event_map_values, 'branch')
-                AS branch,
-            MIN(e.submission_date) AS enrollment_date,
-            COUNT(e.submission_date) AS num_enrollment_events
-        FROM
-            `moz-fx-data-shared-prod.telemetry.events` e
-        WHERE
-            e.event_category = 'normandy'
-            AND e.event_method = 'enroll'
-            AND e.submission_date
-                BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
-            AND e.event_string_value = '{self.experiment_slug}'
-            AND e.sample_id < {sample_size}
-        GROUP BY e.client_id, branch
-            """  # noqa:E501
+        if self.analysis_unit == AnalysisUnit.CLIENT_ID:
+            return f"""
+            SELECT
+                e.client_id,
+                `mozfun.map.get_key`(e.event_map_values, 'branch')
+                    AS branch,
+                MIN(e.submission_date) AS enrollment_date,
+                COUNT(e.submission_date) AS num_enrollment_events
+            FROM
+                `moz-fx-data-shared-prod.telemetry.events` e
+            WHERE
+                e.event_category = 'normandy'
+                AND e.event_method = 'enroll'
+                AND e.submission_date
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                AND e.event_string_value = '{self.experiment_slug}'
+                AND e.sample_id < {sample_size}
+            GROUP BY e.client_id, branch
+                """  # noqa:E501
+        elif self.analysis_unit == AnalysisUnit.GROUP_ID:
+            # TODO: update this based on the final structure of the group_id
+            # within the events ping
+            return f"""
+            SELECT
+                e.profile_group_id,
+                `mozfun.map.get_key`(e.event_map_values, 'branch')
+                    AS branch,
+                MIN(e.submission_date) AS enrollment_date,
+                COUNT(e.submission_date) AS num_enrollment_events
+            FROM
+                `moz-fx-data-shared-prod.telemetry.events` e
+            WHERE
+                e.event_category = 'normandy'
+                AND e.event_method = 'enroll'
+                AND e.submission_date
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                AND e.event_string_value = '{self.experiment_slug}'
+                AND e.sample_id < {sample_size}
+            GROUP BY e.profile_group_id, branch
+                """  # noqa:E501
+        else:
+            assert_never(self.analysis_unit)
 
     def _build_enrollments_query_fenix_baseline(
         self, time_limits: TimeLimits, sample_size: int = 100
@@ -699,6 +776,7 @@ class Experiment:
         """
         # Try to ignore users who enrolled early - but only consider a
         # 7 day window
+
         return """
         SELECT
             b.client_info.client_id AS client_id,
@@ -741,6 +819,7 @@ class Experiment:
         ``ping_info.experiments`` to get a list of who is in what branch
         and when they enrolled.
         """
+
         return f"""
             SELECT events.client_info.client_id AS client_id,
                 mozfun.map.get_key(
@@ -774,6 +853,7 @@ class Experiment:
         ``ping_info.experiments`` to get a list of who is in what branch
         and when they enrolled.
         """
+
         return f"""
             SELECT
                 mozfun.map.get_key(e.extra, "user_id") AS client_id,
@@ -798,32 +878,62 @@ class Experiment:
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query exposures for a normandy experiment"""
-        return f"""
-        SELECT
-            e.client_id,
-            e.branch,
-            min(e.submission_date) AS exposure_date,
-            COUNT(e.submission_date) AS num_exposure_events
-        FROM raw_enrollments re
-        LEFT JOIN (
+        if self.analysis_unit == AnalysisUnit.CLIENT_ID:
+            return f"""
             SELECT
-                client_id,
-                `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
-                submission_date
-            FROM
-                `moz-fx-data-shared-prod.telemetry.events`
-            WHERE
-                event_category = 'normandy'
-                AND (event_method = 'exposure' OR event_method = 'expose')
-                AND submission_date
-                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
-                AND event_string_value = '{self.experiment_slug}'
-        ) e
-        ON re.client_id = e.client_id AND
-            re.branch = e.branch AND
-            e.submission_date >= re.enrollment_date
-        GROUP BY e.client_id, e.branch
-            """  # noqa: E501
+                e.client_id,
+                e.branch,
+                min(e.submission_date) AS exposure_date,
+                COUNT(e.submission_date) AS num_exposure_events
+            FROM raw_enrollments re
+            LEFT JOIN (
+                SELECT
+                    client_id,
+                    `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
+                    submission_date
+                FROM
+                    `moz-fx-data-shared-prod.telemetry.events`
+                WHERE
+                    event_category = 'normandy'
+                    AND (event_method = 'exposure' OR event_method = 'expose')
+                    AND submission_date
+                        BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                    AND event_string_value = '{self.experiment_slug}'
+            ) e
+            ON re.client_id = e.client_id AND
+                re.branch = e.branch AND
+                e.submission_date >= re.enrollment_date
+            GROUP BY e.client_id, e.branch
+                """  # noqa: E501
+        elif self.analysis_unit == AnalysisUnit.GROUP_ID:
+            return f"""
+            SELECT
+                e.profile_group_id,
+                e.branch,
+                min(e.submission_date) AS exposure_date,
+                COUNT(e.submission_date) AS num_exposure_events
+            FROM raw_enrollments re
+            LEFT JOIN (
+                SELECT
+                    profile_group_id,
+                    `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
+                    submission_date
+                FROM
+                    `moz-fx-data-shared-prod.telemetry.events`
+                WHERE
+                    event_category = 'normandy'
+                    AND (event_method = 'exposure' OR event_method = 'expose')
+                    AND submission_date
+                        BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                    AND event_string_value = '{self.experiment_slug}'
+            ) e
+            ON re.profile_group_id = e.profile_group_id AND
+                re.branch = e.branch AND
+                e.submission_date >= re.enrollment_date
+            GROUP BY e.profile_group_id, e.branch
+                """  # noqa: E501
+        else:
+            assert_never(self.analysis_unit)
 
     def _build_exposure_query_glean_event(
         self,
@@ -894,13 +1004,15 @@ class Experiment:
                 self.experiment_slug,
                 self.app_id,
                 analysis_basis,
+                self.analysis_unit,
                 exposure_signal,
             )
+
             metrics_joins.append(
                 f"""    LEFT JOIN (
-        {query_for_metrics}
-        ) ds_{i} USING (client_id, branch, analysis_window_start, analysis_window_end)
-                """
+            {query_for_metrics}
+            ) ds_{i} USING ({self.analysis_unit.value}, branch, analysis_window_start, analysis_window_end)
+                    """
             )
 
             for m in ds_metrics[ds]:
@@ -920,7 +1032,9 @@ class Experiment:
         }
 
     def _build_segments_query(
-        self, segment_list: list[Segment], time_limits: TimeLimits
+        self,
+        segment_list: list[Segment],
+        time_limits: TimeLimits,
     ) -> str:
         """Build a query adding segment columns to the enrollments view.
 
@@ -950,12 +1064,14 @@ class Experiment:
         )
 
     def _build_segments_query_bits(
-        self, segment_list: list[Segment], time_limits: TimeLimits
+        self,
+        segment_list: list[Segment | str],
+        time_limits: TimeLimits,
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to segments."""
 
         # resolve segment slugs
-        segments = []
+        segments: list[Segment] = []
         for segment in segment_list:
             if isinstance(segment, str):
                 segments.append(ConfigLoader.get_segment(segment, self.get_app_name()))
@@ -974,7 +1090,7 @@ class Experiment:
             segments_joins.append(
                 f"""    LEFT JOIN (
         {query_for_segments}
-        ) ds_{i} USING (client_id, branch)
+        ) ds_{i} USING ({self.analysis_unit.value}, branch)
                 """
             )
 
@@ -1245,6 +1361,7 @@ class TimeSeriesResult:
 
     fully_qualified_table_name = attr.ib(type=str)
     analysis_windows = attr.ib(type=list)
+    analysis_unit = attr.ib(type=AnalysisUnit, default=AnalysisUnit.CLIENT_ID)
 
     def get(self, bq_context: BigQueryContext, analysis_window) -> DataFrame:
         """Get the DataFrame for a specific analysis window.
@@ -1354,7 +1471,7 @@ class TimeSeriesResult:
         in "the standard format" for a single analysis window.
         """
         return f"""
-            SELECT * EXCEPT (client_id, analysis_window_start, analysis_window_end)
+            SELECT * EXCEPT ({self.analysis_unit.value}, analysis_window_start, analysis_window_end)
             FROM {self.fully_qualified_table_name}
             WHERE analysis_window_start = {analysis_window.start}
             AND analysis_window_end = {analysis_window.end}

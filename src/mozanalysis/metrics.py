@@ -5,6 +5,8 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import TYPE_CHECKING
+from typing_extensions import assert_never
+from mozanalysis.types import AnalysisUnit
 
 if TYPE_CHECKING:
     from mozanalysis.experiment import TimeLimits
@@ -69,8 +71,9 @@ class DataSource:
     submission_date_column = attr.ib(default="submission_date", type=str)
     default_dataset = attr.ib(default=None, type=str | None)
     app_name = attr.ib(default=None, type=str | None)
+    group_id_column = attr.ib(default="profile_group_id", type=str)
 
-    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean")
+    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean", "main_v5")
 
     @experiments_column_type.validator
     def _check_experiments_column_type(self, attribute, value):
@@ -141,6 +144,7 @@ class DataSource:
         experiment_slug: str,
         from_expr_dataset: str | None = None,
         analysis_basis: str = AnalysisBasis.ENROLLMENTS,
+        analysis_unit: AnalysisUnit = AnalysisUnit.CLIENT_ID,
         exposure_signal=None,
     ) -> str:
         """Return a nearly-self contained SQL query.
@@ -148,9 +152,15 @@ class DataSource:
         This query does not define ``enrollments`` but otherwise could
         be executed to query all metrics from this data source.
         """
+        if analysis_unit == AnalysisUnit.CLIENT_ID:
+            ds_id = self.client_id_column or "client_id"
+        elif analysis_unit == AnalysisUnit.GROUP_ID:
+            ds_id = self.group_id_column or "profile_group_id"
+        else:
+            assert_never(analysis_unit)
         return """
         SELECT
-            e.client_id,
+            e.{id_column},
             e.branch,
             e.analysis_window_start,
             e.analysis_window_end,
@@ -159,20 +169,20 @@ class DataSource:
             {metrics}
         FROM enrollments e
             LEFT JOIN {from_expr} ds
-                ON ds.{client_id} = e.client_id
+                ON ds.{ds_id} = e.{id_column}
                 AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
                 AND ds.{submission_date} BETWEEN
                     DATE_ADD(e.{date}, interval e.analysis_window_start day)
                     AND DATE_ADD(e.{date}, interval e.analysis_window_end day)
                 {ignore_pre_enroll_first_day}
         GROUP BY
-            e.client_id,
+            e.{id_column},
             e.branch,
             e.num_exposure_events,
             e.exposure_date,
             e.analysis_window_start,
             e.analysis_window_end""".format(
-            client_id=self.client_id_column or "client_id",
+            ds_id=ds_id,
             submission_date=self.submission_date_column or "submission_date",
             from_expr=self.from_expr_for(from_expr_dataset),
             fddr=time_limits.first_date_data_required,
@@ -181,13 +191,16 @@ class DataSource:
                 f"{m.select_expr.format(experiment_slug=experiment_slug)} AS {m.name}"
                 for m in metric_list
             ),
-            date="exposure_date"
-            if analysis_basis == AnalysisBasis.EXPOSURES and exposure_signal is None
-            else "enrollment_date",
+            date=(
+                "exposure_date"
+                if analysis_basis == AnalysisBasis.EXPOSURES and exposure_signal is None
+                else "enrollment_date"
+            ),
             ignore_pre_enroll_first_day=self.experiments_column_expr.format(
                 submission_date=self.submission_date_column or "submission_date",
                 experiment_slug=experiment_slug,
             ),
+            id_column=analysis_unit.value,
         )
 
     def build_query_targets(
@@ -198,6 +211,7 @@ class DataSource:
         analysis_length: int,
         from_expr_dataset: str | None = None,
         continuous_enrollment: bool = False,
+        analysis_unit: AnalysisUnit = AnalysisUnit.CLIENT_ID,
     ) -> str:
         """Return a nearly-self contained SQL query that constructs
         the metrics query for targeting historical data without
@@ -206,6 +220,11 @@ class DataSource:
         This query does not define ``targets`` but otherwise could
         be executed to query all metrics from this data source.
         """
+        if analysis_unit != AnalysisUnit.CLIENT_ID:
+            raise ValueError(
+                "`build_query_targets` currently supports client_id analysis"
+            )
+
         return """
         SELECT
             t.client_id,
@@ -228,22 +247,24 @@ class DataSource:
                 f"{m.select_expr.format(experiment_name=experiment_name)} AS {m.name}"
                 for m in metric_list
             ),
-            date_clause="""
+            date_clause=(
+                """
         AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
         AND ds.{submission_date} BETWEEN
             DATE_ADD(t.enrollment_date, interval t.analysis_window_start day) AND
             DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)""".format(
-                submission_date=self.submission_date_column or "submission_date",
-                fddr=time_limits.first_date_data_required,
-                lddr=time_limits.last_date_data_required,
-            )
-            if not continuous_enrollment
-            else """AND ds.{submission_date} BETWEEN
+                    submission_date=self.submission_date_column or "submission_date",
+                    fddr=time_limits.first_date_data_required,
+                    lddr=time_limits.last_date_data_required,
+                )
+                if not continuous_enrollment
+                else """AND ds.{submission_date} BETWEEN
             t.enrollment_date AND
             DATE_ADD(t.enrollment_date, interval {analysis_length} day)
             """.format(
-                submission_date=self.submission_date_column or "submission_date",
-                analysis_length=analysis_length,
+                    submission_date=self.submission_date_column or "submission_date",
+                    analysis_length=analysis_length,
+                )
             ),
         )
 
