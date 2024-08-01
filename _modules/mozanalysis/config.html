@@ -85,6 +85,41 @@
 <span class="n">METRIC_HUB_JETSTREAM_REPO</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/mozilla/metric-hub/tree/main/jetstream&quot;</span>
 
 
+<div class="viewcode-block" id="ApplicationNotFound">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config.ApplicationNotFound">[docs]</a>
+<span class="k">class</span> <span class="nc">ApplicationNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="MetricNotFound">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config.MetricNotFound">[docs]</a>
+<span class="k">class</span> <span class="nc">MetricNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="DataSourceNotFound">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config.DataSourceNotFound">[docs]</a>
+<span class="k">class</span> <span class="nc">DataSourceNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="SegmentNotFound">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config.SegmentNotFound">[docs]</a>
+<span class="k">class</span> <span class="nc">SegmentNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="SegmentDataSourceNotFound">
+<a class="viewcode-back" href="../../api/config.html#mozanalysis.config.SegmentDataSourceNotFound">[docs]</a>
+<span class="k">class</span> <span class="nc">SegmentDataSourceNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+
 <div class="viewcode-block" id="_ConfigLoader">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader">[docs]</a>
 <span class="k">class</span> <span class="nc">_ConfigLoader</span><span class="p">:</span>
@@ -123,6 +158,12 @@
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
+    <span class="k">def</span> <span class="nf">check_configs_for_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">definition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">definitions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">app_name</span> <span class="o">==</span> <span class="n">definition</span><span class="o">.</span><span class="n">platform</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
 <div class="viewcode-block" id="_ConfigLoader.get_metric">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_metric">[docs]</a>
     <span class="k">def</span> <span class="nf">get_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -134,7 +175,14 @@
 
         <span class="n">metric_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get_metric_definition</span><span class="p">(</span><span class="n">metric_slug</span><span class="p">,</span> <span class="n">app_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">metric_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find definition for metric </span><span class="si">{</span><span class="n">metric_slug</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_configs_for_app</span><span class="p">(</span><span class="n">app_name</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">MetricNotFound</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find definition for metric </span><span class="si">{</span><span class="n">metric_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa:E501</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ApplicationNotFound</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so metric </span><span class="si">{</span><span class="n">metric_slug</span><span class="si">}</span><span class="s2"> could not be resolved&quot;</span>  <span class="c1"># noqa:E501</span>
+                <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Metric</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">metric_definition</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -164,9 +212,14 @@
             <span class="n">data_source_slug</span><span class="p">,</span> <span class="n">app_name</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">data_source_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Could not find definition for data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_configs_for_app</span><span class="p">(</span><span class="n">app_name</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">DataSourceNotFound</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find definition for data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa:E501</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ApplicationNotFound</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> could not be resolved&quot;</span>  <span class="c1"># noqa:E501</span>
+                <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">DataSource</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -194,7 +247,14 @@
 
         <span class="n">segment_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get_segment_definition</span><span class="p">(</span><span class="n">segment_slug</span><span class="p">,</span> <span class="n">app_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">segment_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find definition for segment </span><span class="si">{</span><span class="n">segment_slug</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_configs_for_app</span><span class="p">(</span><span class="n">app_name</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">SegmentNotFound</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find definition for segment </span><span class="si">{</span><span class="n">segment_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa:E501</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ApplicationNotFound</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so segment </span><span class="si">{</span><span class="n">segment_slug</span><span class="si">}</span><span class="s2"> could not be resolved&quot;</span>  <span class="c1"># noqa:E501</span>
+                <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Segment</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">segment_definition</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -223,9 +283,14 @@
             <span class="n">data_source_slug</span><span class="p">,</span> <span class="n">app_name</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">data_source_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Could not find definition for segment data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_configs_for_app</span><span class="p">(</span><span class="n">app_name</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">SegmentDataSourceNotFound</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find definition for segment data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa:E501</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ApplicationNotFound</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so segment data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> could not be resolved&quot;</span>  <span class="c1"># noqa:E501</span>
+                <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">SegmentDataSource</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
