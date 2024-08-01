@@ -75,7 +75,7 @@ class DataSource:
     app_name = attr.ib(default=None, type=str | None)
     group_id_column = attr.ib(default="profile_group_id", type=str)
 
-    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean", "main_v5")
+    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean")
 
     @experiments_column_type.validator
     def _check_experiments_column_type(self, attribute, value):

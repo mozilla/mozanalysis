@@ -1152,6 +1152,103 @@ FROM raw_enrollments
     assert dedent(enrollments_sql) == expected
 
 
+def test_metrics_query_explicit_group_id():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.GROUP_ID)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type=EnrollmentsQueryType.NORMANDY
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=[
+            metric for metric in desktop_metrics if metric.name == "active_hours"
+        ],
+        time_limits=tl,
+        enrollments_table="enrollments",
+    )
+
+    sql_lint(metrics_sql)
+
+    expected = """
+WITH analysis_windows AS (
+    (SELECT 0 AS analysis_window_start, 6 AS analysis_window_end)
+UNION ALL
+(SELECT 7 AS analysis_window_start, 13 AS analysis_window_end)
+UNION ALL
+(SELECT 14 AS analysis_window_start, 20 AS analysis_window_end)
+UNION ALL
+(SELECT 21 AS analysis_window_start, 27 AS analysis_window_end)
+UNION ALL
+(SELECT 28 AS analysis_window_start, 34 AS analysis_window_end)
+UNION ALL
+(SELECT 35 AS analysis_window_start, 41 AS analysis_window_end)
+UNION ALL
+(SELECT 42 AS analysis_window_start, 48 AS analysis_window_end)
+),
+raw_enrollments AS (
+    -- needed by "exposures" sub query
+    SELECT
+        e.*,
+        aw.*
+    FROM `enrollments` e
+    CROSS JOIN analysis_windows aw
+),
+exposures AS (
+        SELECT
+            *
+        FROM raw_enrollments e
+    ),
+enrollments AS (
+    SELECT
+        e.* EXCEPT (exposure_date, num_exposure_events),
+        x.exposure_date,
+        x.num_exposure_events
+    FROM exposures x
+        RIGHT JOIN raw_enrollments e
+        USING (profile_group_id, branch)
+)
+SELECT
+    enrollments.*,
+    ds_0.active_hours
+FROM enrollments
+    LEFT JOIN (
+    SELECT
+    e.profile_group_id,
+    e.branch,
+    e.analysis_window_start,
+    e.analysis_window_end,
+    e.num_exposure_events,
+    e.exposure_date,
+    COALESCE(SUM(active_hours_sum), 0) AS active_hours
+FROM enrollments e
+    LEFT JOIN mozdata.telemetry.clients_daily ds
+        ON ds.profile_group_id = e.profile_group_id
+        AND ds.submission_date BETWEEN '2019-01-01' AND '2019-02-25'
+        AND ds.submission_date BETWEEN
+            DATE_ADD(e.enrollment_date, interval e.analysis_window_start day)
+            AND DATE_ADD(e.enrollment_date, interval e.analysis_window_end day)
+
+GROUP BY
+    e.profile_group_id,
+    e.branch,
+    e.num_exposure_events,
+    e.exposure_date,
+    e.analysis_window_start,
+    e.analysis_window_end
+    ) ds_0 USING (profile_group_id, branch, analysis_window_start, analysis_window_end)"""  # noqa: E501
+
+    assert expected == dedent(metrics_sql.rstrip())
+
+
 def test_glean_group_id_incompatible():
     exp = Experiment(
         "slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.GROUP_ID, app_id="test_app"
