@@ -71,7 +71,7 @@ docutils==0.21.2
     # via
     #   -c requirements.txt
     #   readme-renderer
-exceptiongroup==1.2.1
+exceptiongroup==1.2.2
     # via
     #   -c requirements.txt
     #   cattrs
