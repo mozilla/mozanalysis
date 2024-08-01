@@ -120,11 +120,11 @@ class Experiment:
             dataset derived from its app ID, like `org_mozilla_firefox`.
         app_name (str, optional): The Glean app name, like `fenix`.
         experimental_unit (ExperimentalUnit, optional):  the "unit" of analysis,
-            which defines an experimental unit. For example: `client_id`
-            for mobile experiments or `group_id` for desktop experiments.  Is used
+            which defines an experimental unit. For example: `CLIENT`
+            for mobile experiments or `GROUP` for desktop experiments.  Is used
             as the join key when building queries and sub-unit level data is
-            aggregated up to that level. Defaults to client_id unless specified
-            (ExperimentalUnit.CLIENT)
+            aggregated up to that level. Defaults to `ExperimentalUnit.CLIENT`
+            unless specified
 
     Attributes:
         experiment_slug (str): Name of the study, used to identify
