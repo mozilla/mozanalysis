@@ -35,6 +35,10 @@ AggregatorType = Metric | Segment
 DataSourceType = DataSource | SegmentDataSource
 
 
+class IncompatibleAnalysisUnit(ValueError):
+    pass
+
+
 @attr.s(frozen=True, slots=True)
 class Experiment:
     """Query experiment data; store experiment metadata.
@@ -644,7 +648,7 @@ class Experiment:
                     "App ID must be defined for building Glean enrollments query"
                 )
             if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise ValueError(
+                raise IncompatibleAnalysisUnit(
                     "Glean enrollments currently only support client_id analysis units"
                 )
             return self._build_enrollments_query_glean_event(
@@ -652,20 +656,20 @@ class Experiment:
             )
         elif enrollments_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
             if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise ValueError(
+                raise IncompatibleAnalysisUnit(
                     "Fenix fallback enrollments currently only support client_id analysis units"  # noqa: E501
                 )
             return self._build_enrollments_query_fenix_baseline(
                 time_limits, sample_size
             )
         elif enrollments_query_type == EnrollmentsQueryType.CIRRUS:
-            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise ValueError(
-                    "Cirrus enrollments currently only support client_id analysis units"
-                )
             if not self.app_id:
                 raise ValueError(
                     "App ID must be defined for building Cirrus enrollments query"
+                )
+            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
+                raise IncompatibleAnalysisUnit(
+                    "Cirrus enrollments currently only support client_id analysis units"
                 )
             return self._build_enrollments_query_cirrus(time_limits, self.app_id)
         else:
@@ -685,26 +689,26 @@ class Experiment:
                     "App ID must be defined for building Glean exposures query"
                 )
             if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise ValueError(
+                raise IncompatibleAnalysisUnit(
                     "Glean exposures currently only support client_id analysis units"
                 )
             return self._build_exposure_query_glean_event(time_limits, self.app_id)
         elif exposure_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
             if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise ValueError(
+                raise IncompatibleAnalysisUnit(
                     "Fenix fallback exposures currently only support client_id analysis units"  # noqa: E501
                 )
             return self._build_exposure_query_glean_event(
                 time_limits, "org_mozilla_firefox"
             )
         elif exposure_query_type == EnrollmentsQueryType.CIRRUS:
-            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise ValueError(
-                    "Cirrus exposures currently only support client_id analysis units"
-                )
             if not self.app_id:
                 raise ValueError(
                     "App ID must be defined for building Cirrus exposures query"
+                )
+            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
+                raise IncompatibleAnalysisUnit(
+                    "Cirrus exposures currently only support client_id analysis units"
                 )
             return self._build_exposure_query_glean_event(
                 time_limits,

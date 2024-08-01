@@ -15,6 +15,7 @@ from mozanalysis.experiment import (
     AnalysisWindow,
     EnrollmentsQueryType,
     Experiment,
+    IncompatibleAnalysisUnit,
     TimeLimits,
 )
 from mozanalysis.exposure import ExposureSignal
@@ -1149,3 +1150,91 @@ FROM raw_enrollments
 """
 
     assert dedent(enrollments_sql) == expected
+
+
+def test_glean_group_id_incompatible():
+    exp = Experiment(
+        "slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.GROUP_ID, app_id="test_app"
+    )
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(IncompatibleAnalysisUnit):
+        exp.build_enrollments_query(
+            time_limits=tl, enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT
+        )
+
+
+def test_glean_missing_app_id():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.GROUP_ID)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(
+        ValueError, match="App ID must be defined for building Glean enrollments query"
+    ):
+        exp.build_enrollments_query(
+            time_limits=tl, enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT
+        )
+
+
+def test_cirrus_group_id_incompatible():
+    exp = Experiment(
+        "slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.GROUP_ID, app_id="test_app"
+    )
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(IncompatibleAnalysisUnit):
+        exp.build_enrollments_query(
+            time_limits=tl, enrollments_query_type=EnrollmentsQueryType.CIRRUS
+        )
+
+
+def test_cirrus_missing_app_id():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.GROUP_ID)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(
+        ValueError, match="App ID must be defined for building Cirrus enrollments query"
+    ):
+        exp.build_enrollments_query(
+            time_limits=tl, enrollments_query_type=EnrollmentsQueryType.CIRRUS
+        )
+
+
+def test_fenix_group_id_incompatible():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.GROUP_ID)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(IncompatibleAnalysisUnit):
+        exp.build_enrollments_query(
+            time_limits=tl, enrollments_query_type=EnrollmentsQueryType.FENIX_FALLBACK
+        )
