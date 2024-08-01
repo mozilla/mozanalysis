@@ -40,7 +40,7 @@ exceptiongroup==1.2.1
     # via
     #   cattrs
     #   pytest
-faker==25.9.1
+faker==26.0.0
     # via polyfactory
 fonttools==4.53.0
     # via matplotlib
