@@ -83,7 +83,7 @@ grpcio-status==1.62.2
     # via google-api-core
 idna==3.7
     # via requests
-importlib-metadata==7.2.0
+importlib-metadata==8.2.0
     # via
     #   keyring
     #   twine
