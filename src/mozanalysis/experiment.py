@@ -715,48 +715,28 @@ class Experiment:
         sample_size: int = 100,
     ) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
-        if self.experimental_unit == ExperimentalUnit.CLIENT:
-            return f"""
-            SELECT
-                e.client_id,
-                `mozfun.map.get_key`(e.event_map_values, 'branch')
-                    AS branch,
-                MIN(e.submission_date) AS enrollment_date,
-                COUNT(e.submission_date) AS num_enrollment_events
-            FROM
-                `moz-fx-data-shared-prod.telemetry.events` e
-            WHERE
-                e.event_category = 'normandy'
-                AND e.event_method = 'enroll'
-                AND e.submission_date
-                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
-                AND e.event_string_value = '{self.experiment_slug}'
-                AND e.sample_id < {sample_size}
-            GROUP BY e.client_id, branch
-                """  # noqa:E501
-        elif self.experimental_unit == ExperimentalUnit.GROUP:
-            # TODO: update this based on the final structure of the group_id
-            # within the events ping
-            return f"""
-            SELECT
-                e.profile_group_id,
-                `mozfun.map.get_key`(e.event_map_values, 'branch')
-                    AS branch,
-                MIN(e.submission_date) AS enrollment_date,
-                COUNT(e.submission_date) AS num_enrollment_events
-            FROM
-                `moz-fx-data-shared-prod.telemetry.events` e
-            WHERE
-                e.event_category = 'normandy'
-                AND e.event_method = 'enroll'
-                AND e.submission_date
-                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
-                AND e.event_string_value = '{self.experiment_slug}'
-                AND e.sample_id < {sample_size}
-            GROUP BY e.profile_group_id, branch
-                """  # noqa:E501
-        else:
-            assert_never(self.experimental_unit)
+        if (self.experimental_unit == ExperimentalUnit.GROUP) and (sample_size < 100):
+            raise ValueError(
+                "Downsampling is not yet supported for group-level experiments"
+            )
+        return f"""
+        SELECT
+            e.{self.experimental_unit.value},
+            `mozfun.map.get_key`(e.event_map_values, 'branch')
+                AS branch,
+            MIN(e.submission_date) AS enrollment_date,
+            COUNT(e.submission_date) AS num_enrollment_events
+        FROM
+            `moz-fx-data-shared-prod.telemetry.events` e
+        WHERE
+            e.event_category = 'normandy'
+            AND e.event_method = 'enroll'
+            AND e.submission_date
+                BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+            AND e.event_string_value = '{self.experiment_slug}'
+            AND e.sample_id < {sample_size}
+        GROUP BY e.{self.experimental_unit.value}, branch
+            """  # noqa:E501
 
     def _build_enrollments_query_fenix_baseline(
         self, time_limits: TimeLimits, sample_size: int = 100
@@ -873,62 +853,32 @@ class Experiment:
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query exposures for a normandy experiment"""
-        if self.experimental_unit == ExperimentalUnit.CLIENT:
-            return f"""
+        return f"""
+        SELECT
+            e.{self.experimental_unit.value},
+            e.branch,
+            min(e.submission_date) AS exposure_date,
+            COUNT(e.submission_date) AS num_exposure_events
+        FROM raw_enrollments re
+        LEFT JOIN (
             SELECT
-                e.client_id,
-                e.branch,
-                min(e.submission_date) AS exposure_date,
-                COUNT(e.submission_date) AS num_exposure_events
-            FROM raw_enrollments re
-            LEFT JOIN (
-                SELECT
-                    client_id,
-                    `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
-                    submission_date
-                FROM
-                    `moz-fx-data-shared-prod.telemetry.events`
-                WHERE
-                    event_category = 'normandy'
-                    AND (event_method = 'exposure' OR event_method = 'expose')
-                    AND submission_date
-                        BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
-                    AND event_string_value = '{self.experiment_slug}'
-            ) e
-            ON re.client_id = e.client_id AND
-                re.branch = e.branch AND
-                e.submission_date >= re.enrollment_date
-            GROUP BY e.client_id, e.branch
-                """  # noqa: E501
-        elif self.experimental_unit == ExperimentalUnit.GROUP:
-            return f"""
-            SELECT
-                e.profile_group_id,
-                e.branch,
-                min(e.submission_date) AS exposure_date,
-                COUNT(e.submission_date) AS num_exposure_events
-            FROM raw_enrollments re
-            LEFT JOIN (
-                SELECT
-                    profile_group_id,
-                    `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
-                    submission_date
-                FROM
-                    `moz-fx-data-shared-prod.telemetry.events`
-                WHERE
-                    event_category = 'normandy'
-                    AND (event_method = 'exposure' OR event_method = 'expose')
-                    AND submission_date
-                        BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
-                    AND event_string_value = '{self.experiment_slug}'
-            ) e
-            ON re.profile_group_id = e.profile_group_id AND
-                re.branch = e.branch AND
-                e.submission_date >= re.enrollment_date
-            GROUP BY e.profile_group_id, e.branch
-                """  # noqa: E501
-        else:
-            assert_never(self.experimental_unit)
+                {self.experimental_unit.value},
+                `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
+                submission_date
+            FROM
+                `moz-fx-data-shared-prod.telemetry.events`
+            WHERE
+                event_category = 'normandy'
+                AND (event_method = 'exposure' OR event_method = 'expose')
+                AND submission_date
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                AND event_string_value = '{self.experiment_slug}'
+        ) e
+        ON re.{self.experimental_unit.value} = e.{self.experimental_unit.value} AND
+            re.branch = e.branch AND
+            e.submission_date >= re.enrollment_date
+        GROUP BY e.{self.experimental_unit.value}, e.branch
+            """  # noqa: E501
 
     def _build_exposure_query_glean_event(
         self,

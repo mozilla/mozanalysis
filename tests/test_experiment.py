@@ -903,23 +903,23 @@ def test_enrollments_query_explicit_client_id():
 
     expected = """
     WITH raw_enrollments AS (
-    SELECT
-        e.client_id,
-        `mozfun.map.get_key`(e.event_map_values, 'branch')
-            AS branch,
-        MIN(e.submission_date) AS enrollment_date,
-        COUNT(e.submission_date) AS num_enrollment_events
-    FROM
-        `moz-fx-data-shared-prod.telemetry.events` e
-    WHERE
-        e.event_category = 'normandy'
-        AND e.event_method = 'enroll'
-        AND e.submission_date
-            BETWEEN '2019-01-01' AND '2019-01-08'
-        AND e.event_string_value = 'slug'
-        AND e.sample_id < 100
-    GROUP BY e.client_id, branch
-        ),
+SELECT
+    e.client_id,
+    `mozfun.map.get_key`(e.event_map_values, 'branch')
+        AS branch,
+    MIN(e.submission_date) AS enrollment_date,
+    COUNT(e.submission_date) AS num_enrollment_events
+FROM
+    `moz-fx-data-shared-prod.telemetry.events` e
+WHERE
+    e.event_category = 'normandy'
+    AND e.event_method = 'enroll'
+    AND e.submission_date
+        BETWEEN '2019-01-01' AND '2019-01-08'
+    AND e.event_string_value = 'slug'
+    AND e.sample_id < 100
+GROUP BY e.client_id, branch
+    ),
     segmented_enrollments AS (
 SELECT
     raw_enrollments.*,
@@ -928,31 +928,31 @@ FROM raw_enrollments
 
 ),
     exposures AS (
+SELECT
+    e.client_id,
+    e.branch,
+    min(e.submission_date) AS exposure_date,
+    COUNT(e.submission_date) AS num_exposure_events
+FROM raw_enrollments re
+LEFT JOIN (
     SELECT
-        e.client_id,
-        e.branch,
-        min(e.submission_date) AS exposure_date,
-        COUNT(e.submission_date) AS num_exposure_events
-    FROM raw_enrollments re
-    LEFT JOIN (
-        SELECT
-            client_id,
-            `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
-            submission_date
-        FROM
-            `moz-fx-data-shared-prod.telemetry.events`
-        WHERE
-            event_category = 'normandy'
-            AND (event_method = 'exposure' OR event_method = 'expose')
-            AND submission_date
-                BETWEEN '2019-01-01' AND '2019-01-08'
-            AND event_string_value = 'slug'
-    ) e
-    ON re.client_id = e.client_id AND
-        re.branch = e.branch AND
-        e.submission_date >= re.enrollment_date
-    GROUP BY e.client_id, e.branch
-        )
+        client_id,
+        `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
+        submission_date
+    FROM
+        `moz-fx-data-shared-prod.telemetry.events`
+    WHERE
+        event_category = 'normandy'
+        AND (event_method = 'exposure' OR event_method = 'expose')
+        AND submission_date
+            BETWEEN '2019-01-01' AND '2019-01-08'
+        AND event_string_value = 'slug'
+) e
+ON re.client_id = e.client_id AND
+    re.branch = e.branch AND
+    e.submission_date >= re.enrollment_date
+GROUP BY e.client_id, e.branch
+    )
 
     SELECT
         se.*,
@@ -1090,23 +1090,23 @@ def test_enrollments_query_explicit_group_id():
 
     expected = """
     WITH raw_enrollments AS (
-    SELECT
-        e.profile_group_id,
-        `mozfun.map.get_key`(e.event_map_values, 'branch')
-            AS branch,
-        MIN(e.submission_date) AS enrollment_date,
-        COUNT(e.submission_date) AS num_enrollment_events
-    FROM
-        `moz-fx-data-shared-prod.telemetry.events` e
-    WHERE
-        e.event_category = 'normandy'
-        AND e.event_method = 'enroll'
-        AND e.submission_date
-            BETWEEN '2019-01-01' AND '2019-01-08'
-        AND e.event_string_value = 'slug'
-        AND e.sample_id < 100
-    GROUP BY e.profile_group_id, branch
-        ),
+SELECT
+    e.profile_group_id,
+    `mozfun.map.get_key`(e.event_map_values, 'branch')
+        AS branch,
+    MIN(e.submission_date) AS enrollment_date,
+    COUNT(e.submission_date) AS num_enrollment_events
+FROM
+    `moz-fx-data-shared-prod.telemetry.events` e
+WHERE
+    e.event_category = 'normandy'
+    AND e.event_method = 'enroll'
+    AND e.submission_date
+        BETWEEN '2019-01-01' AND '2019-01-08'
+    AND e.event_string_value = 'slug'
+    AND e.sample_id < 100
+GROUP BY e.profile_group_id, branch
+    ),
     segmented_enrollments AS (
 SELECT
     raw_enrollments.*,
@@ -1115,31 +1115,31 @@ FROM raw_enrollments
 
 ),
     exposures AS (
+SELECT
+    e.profile_group_id,
+    e.branch,
+    min(e.submission_date) AS exposure_date,
+    COUNT(e.submission_date) AS num_exposure_events
+FROM raw_enrollments re
+LEFT JOIN (
     SELECT
-        e.profile_group_id,
-        e.branch,
-        min(e.submission_date) AS exposure_date,
-        COUNT(e.submission_date) AS num_exposure_events
-    FROM raw_enrollments re
-    LEFT JOIN (
-        SELECT
-            profile_group_id,
-            `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
-            submission_date
-        FROM
-            `moz-fx-data-shared-prod.telemetry.events`
-        WHERE
-            event_category = 'normandy'
-            AND (event_method = 'exposure' OR event_method = 'expose')
-            AND submission_date
-                BETWEEN '2019-01-01' AND '2019-01-08'
-            AND event_string_value = 'slug'
-    ) e
-    ON re.profile_group_id = e.profile_group_id AND
-        re.branch = e.branch AND
-        e.submission_date >= re.enrollment_date
-    GROUP BY e.profile_group_id, e.branch
-        )
+        profile_group_id,
+        `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
+        submission_date
+    FROM
+        `moz-fx-data-shared-prod.telemetry.events`
+    WHERE
+        event_category = 'normandy'
+        AND (event_method = 'exposure' OR event_method = 'expose')
+        AND submission_date
+            BETWEEN '2019-01-01' AND '2019-01-08'
+        AND event_string_value = 'slug'
+) e
+ON re.profile_group_id = e.profile_group_id AND
+    re.branch = e.branch AND
+    e.submission_date >= re.enrollment_date
+GROUP BY e.profile_group_id, e.branch
+    )
 
     SELECT
         se.*,
@@ -1438,4 +1438,25 @@ def test_fenix_group_id_incompatible_exposures():
     with pytest.raises(IncompatibleExperimentalUnit):
         exp._build_exposure_query(
             time_limits=tl, exposure_query_type=EnrollmentsQueryType.FENIX_FALLBACK
+        )
+
+
+def test_group_id_no_downsampling():
+    exp = Experiment("slug", "2019-01-01", 8, experimental_unit=ExperimentalUnit.GROUP)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Downsampling is not yet supported for group-level experiments",
+    ):
+        exp.build_enrollments_query(
+            time_limits=tl,
+            enrollments_query_type=EnrollmentsQueryType.NORMANDY,
+            sample_size=99,
         )
