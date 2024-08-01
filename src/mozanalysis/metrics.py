@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from typing_extensions import assert_never
 
-from mozanalysis.types import AnalysisUnit
+from mozanalysis.types import ExperimentalUnit
 
 if TYPE_CHECKING:
     from mozanalysis.experiment import TimeLimits
@@ -146,7 +146,7 @@ class DataSource:
         experiment_slug: str,
         from_expr_dataset: str | None = None,
         analysis_basis: str = AnalysisBasis.ENROLLMENTS,
-        analysis_unit: AnalysisUnit = AnalysisUnit.CLIENT_ID,
+        experimental_unit: ExperimentalUnit = ExperimentalUnit.CLIENT_ID,
         exposure_signal=None,
     ) -> str:
         """Return a nearly-self contained SQL query.
@@ -154,12 +154,12 @@ class DataSource:
         This query does not define ``enrollments`` but otherwise could
         be executed to query all metrics from this data source.
         """
-        if analysis_unit == AnalysisUnit.CLIENT_ID:
+        if experimental_unit == ExperimentalUnit.CLIENT_ID:
             ds_id = self.client_id_column or "client_id"
-        elif analysis_unit == AnalysisUnit.GROUP_ID:
+        elif experimental_unit == ExperimentalUnit.GROUP_ID:
             ds_id = self.group_id_column or "profile_group_id"
         else:
-            assert_never(analysis_unit)
+            assert_never(experimental_unit)
         return """SELECT
             e.{id_column},
             e.branch,
@@ -201,7 +201,7 @@ class DataSource:
                 submission_date=self.submission_date_column or "submission_date",
                 experiment_slug=experiment_slug,
             ),
-            id_column=analysis_unit.value,
+            id_column=experimental_unit.value,
         )
 
     def build_query_targets(
@@ -212,7 +212,7 @@ class DataSource:
         analysis_length: int,
         from_expr_dataset: str | None = None,
         continuous_enrollment: bool = False,
-        analysis_unit: AnalysisUnit = AnalysisUnit.CLIENT_ID,
+        experimental_unit: ExperimentalUnit = ExperimentalUnit.CLIENT_ID,
     ) -> str:
         """Return a nearly-self contained SQL query that constructs
         the metrics query for targeting historical data without
@@ -221,7 +221,7 @@ class DataSource:
         This query does not define ``targets`` but otherwise could
         be executed to query all metrics from this data source.
         """
-        if analysis_unit != AnalysisUnit.CLIENT_ID:
+        if experimental_unit != ExperimentalUnit.CLIENT_ID:
             raise ValueError(
                 "`build_query_targets` currently supports client_id analysis"
             )

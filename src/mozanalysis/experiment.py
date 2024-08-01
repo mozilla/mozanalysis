@@ -15,7 +15,7 @@ from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
-from mozanalysis.types import AnalysisUnit
+from mozanalysis.types import ExperimentalUnit
 from mozanalysis.utils import add_days, date_sub, hash_ish
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ class EnrollmentsQueryType(str, Enum):
     GLEAN_EVENT = "glean-event"
 
 
-class IncompatibleAnalysisUnit(ValueError):
+class IncompatibleExperimentalUnit(ValueError):
     pass
 
 
@@ -119,12 +119,12 @@ class Experiment:
         app_id (str, optional): For a Glean app, the name of the BigQuery
             dataset derived from its app ID, like `org_mozilla_firefox`.
         app_name (str, optional): The Glean app name, like `fenix`.
-        analysis_unit (AnalysisUnit, optional):  the "unit" of analysis, namely the
-            id that defines an experimental unit. For example: `client_id`
+        experimental_unit (ExperimentalUnit, optional):  the "unit" of analysis,
+            which defines an experimental unit. For example: `client_id`
             for mobile experiments or `group_id` for desktop experiments.  Is used
             as the join key when building queries and sub-unit level data is
             aggregated up to that level. Defaults to client_id unless specified
-            (AnalysisUnit.CLIENT_ID)
+            (ExperimentalUnit.CLIENT_ID)
 
     Attributes:
         experiment_slug (str): Name of the study, used to identify
@@ -145,7 +145,9 @@ class Experiment:
     num_dates_enrollment = attr.ib(default=None)
     app_id = attr.ib(default=None)
     app_name = attr.ib(default=None)
-    analysis_unit = attr.ib(type=AnalysisUnit, default=AnalysisUnit.CLIENT_ID)
+    experimental_unit = attr.ib(
+        type=ExperimentalUnit, default=ExperimentalUnit.CLIENT_ID
+    )
 
     def get_app_name(self):
         """
@@ -504,10 +506,10 @@ class Experiment:
 
             SELECT
                 se.*,
-                e.* EXCEPT ({self.analysis_unit}, branch)
+                e.* EXCEPT ({self.experimental_unit}, branch)
             FROM segmented_enrollments se
             LEFT JOIN exposures e
-            USING ({self.analysis_unit.value}, branch)
+            USING ({self.experimental_unit.value}, branch)
         """
 
     def build_metrics_query(
@@ -602,7 +604,7 @@ class Experiment:
             metrics_columns=",\n        ".join(metrics_columns),
             metrics_joins="\n".join(metrics_joins),
             enrollments_table=enrollments_table,
-            id_column=self.analysis_unit.value,
+            id_column=self.experimental_unit.value,
         )
 
     @staticmethod
@@ -637,16 +639,16 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Glean enrollments query"
                 )
-            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise IncompatibleAnalysisUnit(
+            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+                raise IncompatibleExperimentalUnit(
                     "Glean enrollments currently only support client_id analysis units"
                 )
             return self._build_enrollments_query_glean_event(
                 time_limits, self.app_id, sample_size
             )
         elif enrollments_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
-            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise IncompatibleAnalysisUnit(
+            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+                raise IncompatibleExperimentalUnit(
                     "Fenix fallback enrollments currently only support client_id analysis units"  # noqa: E501
                 )
             return self._build_enrollments_query_fenix_baseline(
@@ -657,8 +659,8 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Cirrus enrollments query"
                 )
-            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise IncompatibleAnalysisUnit(
+            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+                raise IncompatibleExperimentalUnit(
                     "Cirrus enrollments currently only support client_id analysis units"
                 )
             return self._build_enrollments_query_cirrus(time_limits, self.app_id)
@@ -678,14 +680,14 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Glean exposures query"
                 )
-            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise IncompatibleAnalysisUnit(
+            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+                raise IncompatibleExperimentalUnit(
                     "Glean exposures currently only support client_id analysis units"
                 )
             return self._build_exposure_query_glean_event(time_limits, self.app_id)
         elif exposure_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
-            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise IncompatibleAnalysisUnit(
+            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+                raise IncompatibleExperimentalUnit(
                     "Fenix fallback exposures currently only support client_id analysis units"  # noqa: E501
                 )
             return self._build_exposure_query_glean_event(
@@ -696,8 +698,8 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Cirrus exposures query"
                 )
-            if not self.analysis_unit == AnalysisUnit.CLIENT_ID:
-                raise IncompatibleAnalysisUnit(
+            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+                raise IncompatibleExperimentalUnit(
                     "Cirrus exposures currently only support client_id analysis units"
                 )
             return self._build_exposure_query_glean_event(
@@ -715,7 +717,7 @@ class Experiment:
         sample_size: int = 100,
     ) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
-        if self.analysis_unit == AnalysisUnit.CLIENT_ID:
+        if self.experimental_unit == ExperimentalUnit.CLIENT_ID:
             return f"""
             SELECT
                 e.client_id,
@@ -734,7 +736,7 @@ class Experiment:
                 AND e.sample_id < {sample_size}
             GROUP BY e.client_id, branch
                 """  # noqa:E501
-        elif self.analysis_unit == AnalysisUnit.GROUP_ID:
+        elif self.experimental_unit == ExperimentalUnit.GROUP_ID:
             # TODO: update this based on the final structure of the group_id
             # within the events ping
             return f"""
@@ -756,7 +758,7 @@ class Experiment:
             GROUP BY e.profile_group_id, branch
                 """  # noqa:E501
         else:
-            assert_never(self.analysis_unit)
+            assert_never(self.experimental_unit)
 
     def _build_enrollments_query_fenix_baseline(
         self, time_limits: TimeLimits, sample_size: int = 100
@@ -873,7 +875,7 @@ class Experiment:
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query exposures for a normandy experiment"""
-        if self.analysis_unit == AnalysisUnit.CLIENT_ID:
+        if self.experimental_unit == ExperimentalUnit.CLIENT_ID:
             return f"""
             SELECT
                 e.client_id,
@@ -900,7 +902,7 @@ class Experiment:
                 e.submission_date >= re.enrollment_date
             GROUP BY e.client_id, e.branch
                 """  # noqa: E501
-        elif self.analysis_unit == AnalysisUnit.GROUP_ID:
+        elif self.experimental_unit == ExperimentalUnit.GROUP_ID:
             return f"""
             SELECT
                 e.profile_group_id,
@@ -928,7 +930,7 @@ class Experiment:
             GROUP BY e.profile_group_id, e.branch
                 """  # noqa: E501
         else:
-            assert_never(self.analysis_unit)
+            assert_never(self.experimental_unit)
 
     def _build_exposure_query_glean_event(
         self,
@@ -1000,14 +1002,14 @@ class Experiment:
                 self.experiment_slug,
                 self.app_id,
                 analysis_basis,
-                self.analysis_unit,
+                self.experimental_unit,
                 exposure_signal,
             )
 
             metrics_joins.append(
                 f"""    LEFT JOIN (
             {query_for_metrics}
-            ) ds_{i} USING ({self.analysis_unit.value}, branch, analysis_window_start, analysis_window_end)
+            ) ds_{i} USING ({self.experimental_unit.value}, branch, analysis_window_start, analysis_window_end)
                     """  # noqa: E501
             )
 
@@ -1097,7 +1099,7 @@ class Experiment:
             segments_joins.append(
                 f"""    LEFT JOIN (
         {query_for_segments}
-        ) ds_{i} USING ({self.analysis_unit.value}, branch)
+        ) ds_{i} USING ({self.experimental_unit.value}, branch)
                 """
             )
 
@@ -1370,7 +1372,9 @@ class TimeSeriesResult:
 
     fully_qualified_table_name = attr.ib(type=str)
     analysis_windows = attr.ib(type=list)
-    analysis_unit = attr.ib(type=AnalysisUnit, default=AnalysisUnit.CLIENT_ID)
+    experimental_unit = attr.ib(
+        type=ExperimentalUnit, default=ExperimentalUnit.CLIENT_ID
+    )
 
     def get(self, bq_context: BigQueryContext, analysis_window) -> DataFrame:
         """Get the DataFrame for a specific analysis window.
@@ -1480,7 +1484,7 @@ class TimeSeriesResult:
         in "the standard format" for a single analysis window.
         """
         return f"""
-            SELECT * EXCEPT ({self.analysis_unit.value}, analysis_window_start, analysis_window_end)
+            SELECT * EXCEPT ({self.experimental_unit.value}, analysis_window_start, analysis_window_end)
             FROM {self.fully_qualified_table_name}
             WHERE analysis_window_start = {analysis_window.start}
             AND analysis_window_end = {analysis_window.end}
