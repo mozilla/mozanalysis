@@ -75,9 +75,3 @@ select = [
 
 [tool.pytest.ini_options]
 norecursedirs = "tests/helpers"
-
-[tool.coverage.report]
-exclude_also = [
-    'assert_never\(.*?\)',
-]
-
