@@ -44,7 +44,7 @@ faker==25.9.1
     # via polyfactory
 fonttools==4.53.0
     # via matplotlib
-formulaic==1.0.1
+formulaic==1.0.2
     # via mozanalysis
 gitdb==4.0.11
     # via gitpython

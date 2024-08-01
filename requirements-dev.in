@@ -88,7 +88,7 @@ fonttools==4.53.0
     # via
     #   -c requirements.txt
     #   matplotlib
-formulaic==1.0.1
+formulaic==1.0.2
     # via
     #   -c requirements.txt
     #   mozanalysis
