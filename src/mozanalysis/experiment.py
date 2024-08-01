@@ -31,10 +31,6 @@ class EnrollmentsQueryType(str, Enum):
     GLEAN_EVENT = "glean-event"
 
 
-AggregatorType = Metric | Segment
-DataSourceType = DataSource | SegmentDataSource
-
-
 class IncompatibleAnalysisUnit(ValueError):
     pass
 
@@ -123,6 +119,12 @@ class Experiment:
         app_id (str, optional): For a Glean app, the name of the BigQuery
             dataset derived from its app ID, like `org_mozilla_firefox`.
         app_name (str, optional): The Glean app name, like `fenix`.
+        analysis_unit (AnalysisUnit, optional):  the "unit" of analysis, namely the
+            id that defines an experimental unit. For example: `client_id`
+            for mobile experiments or `group_id` for desktop experiments.  Is used
+            as the join key when building queries and sub-unit level data is
+            aggregated up to that level. Defaults to client_id unless specified
+            (AnalysisUnit.CLIENT_ID)
 
     Attributes:
         experiment_slug (str): Name of the study, used to identify
@@ -199,10 +201,6 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            analysis_unit (AnalysisUnit):  the "unit" of analysis, namely the
-                id that defines an experimental unit. For example: `client_id`
-                for mobile experiments or `group_id` for desktop experiments. Can be
-                overridden through a ``custom_enrollments_query``, but shouldn't.
             custom_enrollments_query (str): A full SQL query that
                 will generate the `enrollments` common table expression
                 used in the main query. The query must produce the columns
@@ -331,10 +329,6 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            analysis_unit (AnalysisUnit):  the "unit" of analysis, namely the
-                id that defines an experimental unit. For example: `client_id`
-                for mobile experiments or `group_id` for desktop experiments. Can be
-                overridden through a ``custom_enrollments_query``, but shouldn't.
             custom_enrollments_query (str): A full SQL query that
                 will generate the `enrollments` common table expression
                 used in the main query. The query must produce the columns
@@ -455,10 +449,6 @@ class Experiment:
                 Specifies the query type to use to get the experiment's
                 enrollments, unless overridden by
                 ``custom_enrollments_query``.
-            analysis_unit (AnalysisUnit):  the "unit" of analysis, namely the
-                id that defines an experimental unit. For example: `client_id`
-                for mobile experiments or `group_id` for desktop experiments. Can be
-                overridden through a ``custom_enrollments_query``, but shouldn't.
             custom_enrollments_query (str): A full SQL query that
                 will generate the `enrollments` common table expression
                 used in the main query. The query must produce the columns
