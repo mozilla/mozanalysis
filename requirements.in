@@ -129,7 +129,7 @@ mozilla-metric-config-parser==2024.6.1
     # via mozanalysis
 mozilla-nimbus-schemas==2023.10.3
     # via mozilla-metric-config-parser
-nh3==0.2.17
+nh3==0.2.18
     # via readme-renderer
 numpy==1.26.4
     # via
