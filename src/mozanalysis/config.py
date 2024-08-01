@@ -79,10 +79,10 @@ class _ConfigLoader:
         if metric_definition is None:
             if self.check_configs_for_app(app_name):
                 raise MetricNotFound(
-                    f"Could not find definition for metric {metric_slug}"
+                    f"Could not find definition for metric {metric_slug} in application {app_name}"
                 )
             else:
-                raise ApplicationNotFound(f"Could not find application {app_name}")
+                raise ApplicationNotFound(f"Could not find application {app_name}, so metric {metric_slug} could not be resolved")
 
         return Metric(
             name=metric_definition.name,
