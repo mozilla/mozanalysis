@@ -208,7 +208,7 @@ pyparsing==3.1.2
     # via matplotlib
 pyproject-hooks==1.1.0
     # via build
-pytest==8.2.2
+pytest==8.3.2
     # via
     #   mozanalysis
     #   pytest-cov

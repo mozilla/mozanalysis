@@ -358,7 +358,7 @@ pyproject-hooks==1.1.0
     #   -c requirements.txt
     #   build
     #   pip-tools
-pytest==8.2.2
+pytest==8.3.2
     # via
     #   -c requirements.txt
     #   mozanalysis
