@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 import pytest
 from helpers.cheap_lint import sql_lint  # local helper file
 from helpers.config_loader_lists import (
@@ -899,67 +901,67 @@ def test_enrollments_query_explicit_client_id():
     sql_lint(enrollments_sql)
 
     expected = """
-            WITH raw_enrollments AS (
-            SELECT
-                e.client_id,
-                `mozfun.map.get_key`(e.event_map_values, 'branch')
-                    AS branch,
-                MIN(e.submission_date) AS enrollment_date,
-                COUNT(e.submission_date) AS num_enrollment_events
-            FROM
-                `moz-fx-data-shared-prod.telemetry.events` e
-            WHERE
-                e.event_category = 'normandy'
-                AND e.event_method = 'enroll'
-                AND e.submission_date
-                    BETWEEN '2019-01-01' AND '2019-01-08'
-                AND e.event_string_value = 'slug'
-                AND e.sample_id < 100
-            GROUP BY e.client_id, branch
-                ),
-            segmented_enrollments AS (
-        SELECT
-            raw_enrollments.*,
-            
-        FROM raw_enrollments
-        
+    WITH raw_enrollments AS (
+    SELECT
+        e.client_id,
+        `mozfun.map.get_key`(e.event_map_values, 'branch')
+            AS branch,
+        MIN(e.submission_date) AS enrollment_date,
+        COUNT(e.submission_date) AS num_enrollment_events
+    FROM
+        `moz-fx-data-shared-prod.telemetry.events` e
+    WHERE
+        e.event_category = 'normandy'
+        AND e.event_method = 'enroll'
+        AND e.submission_date
+            BETWEEN '2019-01-01' AND '2019-01-08'
+        AND e.event_string_value = 'slug'
+        AND e.sample_id < 100
+    GROUP BY e.client_id, branch
         ),
-            exposures AS (
-            SELECT
-                e.client_id,
-                e.branch,
-                min(e.submission_date) AS exposure_date,
-                COUNT(e.submission_date) AS num_exposure_events
-            FROM raw_enrollments re
-            LEFT JOIN (
-                SELECT
-                    client_id,
-                    `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
-                    submission_date
-                FROM
-                    `moz-fx-data-shared-prod.telemetry.events`
-                WHERE
-                    event_category = 'normandy'
-                    AND (event_method = 'exposure' OR event_method = 'expose')
-                    AND submission_date
-                        BETWEEN '2019-01-01' AND '2019-01-08'
-                    AND event_string_value = 'slug'
-            ) e
-            ON re.client_id = e.client_id AND
-                re.branch = e.branch AND
-                e.submission_date >= re.enrollment_date
-            GROUP BY e.client_id, e.branch
-                )
+    segmented_enrollments AS (
+SELECT
+    raw_enrollments.*,
 
-            SELECT
-                se.*,
-                e.* EXCEPT (client_id, branch)
-            FROM segmented_enrollments se
-            LEFT JOIN exposures e
-            USING (client_id, branch)
-        """
+FROM raw_enrollments
 
-    assert enrollments_sql == expected
+),
+    exposures AS (
+    SELECT
+        e.client_id,
+        e.branch,
+        min(e.submission_date) AS exposure_date,
+        COUNT(e.submission_date) AS num_exposure_events
+    FROM raw_enrollments re
+    LEFT JOIN (
+        SELECT
+            client_id,
+            `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
+            submission_date
+        FROM
+            `moz-fx-data-shared-prod.telemetry.events`
+        WHERE
+            event_category = 'normandy'
+            AND (event_method = 'exposure' OR event_method = 'expose')
+            AND submission_date
+                BETWEEN '2019-01-01' AND '2019-01-08'
+            AND event_string_value = 'slug'
+    ) e
+    ON re.client_id = e.client_id AND
+        re.branch = e.branch AND
+        e.submission_date >= re.enrollment_date
+    GROUP BY e.client_id, e.branch
+        )
+
+    SELECT
+        se.*,
+        e.* EXCEPT (client_id, branch)
+    FROM segmented_enrollments se
+    LEFT JOIN exposures e
+    USING (client_id, branch)
+"""
+
+    assert dedent(enrollments_sql) == expected
 
     metrics_sql = exp.build_metrics_query(
         metric_list=[
@@ -999,74 +1001,74 @@ def test_metrics_query_explicit_client_id():
     sql_lint(metrics_sql)
 
     expected = """
-        WITH analysis_windows AS (
-            (SELECT 0 AS analysis_window_start, 6 AS analysis_window_end)
-        UNION ALL
-        (SELECT 7 AS analysis_window_start, 13 AS analysis_window_end)
-        UNION ALL
-        (SELECT 14 AS analysis_window_start, 20 AS analysis_window_end)
-        UNION ALL
-        (SELECT 21 AS analysis_window_start, 27 AS analysis_window_end)
-        UNION ALL
-        (SELECT 28 AS analysis_window_start, 34 AS analysis_window_end)
-        UNION ALL
-        (SELECT 35 AS analysis_window_start, 41 AS analysis_window_end)
-        UNION ALL
-        (SELECT 42 AS analysis_window_start, 48 AS analysis_window_end)
-        ),
-        raw_enrollments AS (
-            -- needed by "exposures" sub query
-            SELECT
-                e.*,
-                aw.*
-            FROM `enrollments` e
-            CROSS JOIN analysis_windows aw
-        ),
-        exposures AS (
-                SELECT
-                    *
-                FROM raw_enrollments e
-            ),
-        enrollments AS (
-            SELECT
-                e.* EXCEPT (exposure_date, num_exposure_events),
-                x.exposure_date,
-                x.num_exposure_events
-            FROM exposures x
-                RIGHT JOIN raw_enrollments e
-                USING (client_id, branch)
-        )
+WITH analysis_windows AS (
+    (SELECT 0 AS analysis_window_start, 6 AS analysis_window_end)
+UNION ALL
+(SELECT 7 AS analysis_window_start, 13 AS analysis_window_end)
+UNION ALL
+(SELECT 14 AS analysis_window_start, 20 AS analysis_window_end)
+UNION ALL
+(SELECT 21 AS analysis_window_start, 27 AS analysis_window_end)
+UNION ALL
+(SELECT 28 AS analysis_window_start, 34 AS analysis_window_end)
+UNION ALL
+(SELECT 35 AS analysis_window_start, 41 AS analysis_window_end)
+UNION ALL
+(SELECT 42 AS analysis_window_start, 48 AS analysis_window_end)
+),
+raw_enrollments AS (
+    -- needed by "exposures" sub query
+    SELECT
+        e.*,
+        aw.*
+    FROM `enrollments` e
+    CROSS JOIN analysis_windows aw
+),
+exposures AS (
         SELECT
-            enrollments.*,
-            ds_0.active_hours
-        FROM enrollments
-            LEFT JOIN (
-            SELECT
-            e.client_id,
-            e.branch,
-            e.analysis_window_start,
-            e.analysis_window_end,
-            e.num_exposure_events,
-            e.exposure_date,
-            COALESCE(SUM(active_hours_sum), 0) AS active_hours
-        FROM enrollments e
-            LEFT JOIN mozdata.telemetry.clients_daily ds
-                ON ds.client_id = e.client_id
-                AND ds.submission_date BETWEEN '2019-01-01' AND '2019-02-25'
-                AND ds.submission_date BETWEEN
-                    DATE_ADD(e.enrollment_date, interval e.analysis_window_start day)
-                    AND DATE_ADD(e.enrollment_date, interval e.analysis_window_end day)
-                
-        GROUP BY
-            e.client_id,
-            e.branch,
-            e.num_exposure_events,
-            e.exposure_date,
-            e.analysis_window_start,
-            e.analysis_window_end
-            ) ds_0 USING (client_id, branch, analysis_window_start, analysis_window_end)"""
+            *
+        FROM raw_enrollments e
+    ),
+enrollments AS (
+    SELECT
+        e.* EXCEPT (exposure_date, num_exposure_events),
+        x.exposure_date,
+        x.num_exposure_events
+    FROM exposures x
+        RIGHT JOIN raw_enrollments e
+        USING (client_id, branch)
+)
+SELECT
+    enrollments.*,
+    ds_0.active_hours
+FROM enrollments
+    LEFT JOIN (
+    SELECT
+    e.client_id,
+    e.branch,
+    e.analysis_window_start,
+    e.analysis_window_end,
+    e.num_exposure_events,
+    e.exposure_date,
+    COALESCE(SUM(active_hours_sum), 0) AS active_hours
+FROM enrollments e
+    LEFT JOIN mozdata.telemetry.clients_daily ds
+        ON ds.client_id = e.client_id
+        AND ds.submission_date BETWEEN '2019-01-01' AND '2019-02-25'
+        AND ds.submission_date BETWEEN
+            DATE_ADD(e.enrollment_date, interval e.analysis_window_start day)
+            AND DATE_ADD(e.enrollment_date, interval e.analysis_window_end day)
 
-    assert expected == metrics_sql.rstrip()
+GROUP BY
+    e.client_id,
+    e.branch,
+    e.num_exposure_events,
+    e.exposure_date,
+    e.analysis_window_start,
+    e.analysis_window_end
+    ) ds_0 USING (client_id, branch, analysis_window_start, analysis_window_end)"""
+
+    assert expected == dedent(metrics_sql.rstrip())
 
 
 def test_enrollments_query_explicit_group_id():
@@ -1086,64 +1088,64 @@ def test_enrollments_query_explicit_group_id():
     sql_lint(enrollments_sql)
 
     expected = """
-            WITH raw_enrollments AS (
-            SELECT
-                e.profile_group_id,
-                `mozfun.map.get_key`(e.event_map_values, 'branch')
-                    AS branch,
-                MIN(e.submission_date) AS enrollment_date,
-                COUNT(e.submission_date) AS num_enrollment_events
-            FROM
-                `moz-fx-data-shared-prod.telemetry.events` e
-            WHERE
-                e.event_category = 'normandy'
-                AND e.event_method = 'enroll'
-                AND e.submission_date
-                    BETWEEN '2019-01-01' AND '2019-01-08'
-                AND e.event_string_value = 'slug'
-                AND e.sample_id < 100
-            GROUP BY e.profile_group_id, branch
-                ),
-            segmented_enrollments AS (
-        SELECT
-            raw_enrollments.*,
-            
-        FROM raw_enrollments
-        
+    WITH raw_enrollments AS (
+    SELECT
+        e.profile_group_id,
+        `mozfun.map.get_key`(e.event_map_values, 'branch')
+            AS branch,
+        MIN(e.submission_date) AS enrollment_date,
+        COUNT(e.submission_date) AS num_enrollment_events
+    FROM
+        `moz-fx-data-shared-prod.telemetry.events` e
+    WHERE
+        e.event_category = 'normandy'
+        AND e.event_method = 'enroll'
+        AND e.submission_date
+            BETWEEN '2019-01-01' AND '2019-01-08'
+        AND e.event_string_value = 'slug'
+        AND e.sample_id < 100
+    GROUP BY e.profile_group_id, branch
         ),
-            exposures AS (
-            SELECT
-                e.profile_group_id,
-                e.branch,
-                min(e.submission_date) AS exposure_date,
-                COUNT(e.submission_date) AS num_exposure_events
-            FROM raw_enrollments re
-            LEFT JOIN (
-                SELECT
-                    profile_group_id,
-                    `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
-                    submission_date
-                FROM
-                    `moz-fx-data-shared-prod.telemetry.events`
-                WHERE
-                    event_category = 'normandy'
-                    AND (event_method = 'exposure' OR event_method = 'expose')
-                    AND submission_date
-                        BETWEEN '2019-01-01' AND '2019-01-08'
-                    AND event_string_value = 'slug'
-            ) e
-            ON re.profile_group_id = e.profile_group_id AND
-                re.branch = e.branch AND
-                e.submission_date >= re.enrollment_date
-            GROUP BY e.profile_group_id, e.branch
-                )
+    segmented_enrollments AS (
+SELECT
+    raw_enrollments.*,
 
-            SELECT
-                se.*,
-                e.* EXCEPT (profile_group_id, branch)
-            FROM segmented_enrollments se
-            LEFT JOIN exposures e
-            USING (profile_group_id, branch)
-        """
+FROM raw_enrollments
 
-    assert enrollments_sql == expected
+),
+    exposures AS (
+    SELECT
+        e.profile_group_id,
+        e.branch,
+        min(e.submission_date) AS exposure_date,
+        COUNT(e.submission_date) AS num_exposure_events
+    FROM raw_enrollments re
+    LEFT JOIN (
+        SELECT
+            profile_group_id,
+            `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
+            submission_date
+        FROM
+            `moz-fx-data-shared-prod.telemetry.events`
+        WHERE
+            event_category = 'normandy'
+            AND (event_method = 'exposure' OR event_method = 'expose')
+            AND submission_date
+                BETWEEN '2019-01-01' AND '2019-01-08'
+            AND event_string_value = 'slug'
+    ) e
+    ON re.profile_group_id = e.profile_group_id AND
+        re.branch = e.branch AND
+        e.submission_date >= re.enrollment_date
+    GROUP BY e.profile_group_id, e.branch
+        )
+
+    SELECT
+        se.*,
+        e.* EXCEPT (profile_group_id, branch)
+    FROM segmented_enrollments se
+    LEFT JOIN exposures e
+    USING (profile_group_id, branch)
+"""
+
+    assert dedent(enrollments_sql) == expected
