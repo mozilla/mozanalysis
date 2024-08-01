@@ -79,10 +79,12 @@ class _ConfigLoader:
         if metric_definition is None:
             if self.check_configs_for_app(app_name):
                 raise MetricNotFound(
-                    f"Could not find definition for metric {metric_slug} in application {app_name}"
+                    f"Could not find definition for metric {metric_slug} in application {app_name}"  # noqa:E501
                 )
             else:
-                raise ApplicationNotFound(f"Could not find application {app_name}, so metric {metric_slug} could not be resolved")
+                raise ApplicationNotFound(
+                    f"Could not find application {app_name}, so metric {metric_slug} could not be resolved"  # noqa:E501
+                )
 
         return Metric(
             name=metric_definition.name,
@@ -111,10 +113,12 @@ class _ConfigLoader:
         if data_source_definition is None:
             if self.check_configs_for_app(app_name):
                 raise DataSourceNotFound(
-                    f"Could not find definition for data source {data_source_slug}"
+                    f"Could not find definition for data source {data_source_slug} in application {app_name}"  # noqa:E501
                 )
             else:
-                raise ApplicationNotFound(f"Could not find application {app_name}")
+                raise ApplicationNotFound(
+                    f"Could not find application {app_name}, so data source {data_source_slug} could not be resolved"  # noqa:E501
+                )
 
         return DataSource(
             name=data_source_definition.name,
@@ -141,10 +145,12 @@ class _ConfigLoader:
         if segment_definition is None:
             if self.check_configs_for_app(app_name):
                 raise SegmentNotFound(
-                    f"Could not find definition for segment {segment_slug}"
+                    f"Could not find definition for segment {segment_slug} in application {app_name}"  # noqa:E501
                 )
             else:
-                raise ApplicationNotFound(f"Could not find application {app_name}")
+                raise ApplicationNotFound(
+                    f"Could not find application {app_name}, so segment {segment_slug} could not be resolved"  # noqa:E501
+                )
 
         return Segment(
             name=segment_definition.name,
@@ -172,10 +178,12 @@ class _ConfigLoader:
         if data_source_definition is None:
             if self.check_configs_for_app(app_name):
                 raise SegmentDataSourceNotFound(
-                    f"Could not find definition for segment data source {data_source_slug}"  # noqa:E501
+                    f"Could not find definition for segment data source {data_source_slug} in application {app_name}"  # noqa:E501
                 )
             else:
-                raise ApplicationNotFound(f"Could not find application {app_name}")
+                raise ApplicationNotFound(
+                    f"Could not find application {app_name}, so segment data source {data_source_slug} could not be resolved"  # noqa:E501
+                )
 
         return SegmentDataSource(
             name=data_source_definition.name,
