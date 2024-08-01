@@ -389,7 +389,7 @@ pytz==2024.1
     #   -c requirements.txt
     #   mozilla-metric-config-parser
     #   pandas
-readme-renderer==43.0
+readme-renderer==44.0
     # via
     #   -c requirements.txt
     #   twine
