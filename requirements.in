@@ -36,7 +36,7 @@ cycler==0.12.1
     # via matplotlib
 docutils==0.21.2
     # via readme-renderer
-exceptiongroup==1.2.1
+exceptiongroup==1.2.2
     # via
     #   cattrs
     #   pytest
