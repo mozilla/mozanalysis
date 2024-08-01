@@ -216,7 +216,7 @@ pytest==8.2.2
     #   pytest-timeout
 pytest-cov==5.0.0
     # via mozanalysis
-pytest-ruff==0.3.2
+pytest-ruff==0.4.1
     # via mozanalysis
 pytest-timeout==2.3.1
     # via mozanalysis

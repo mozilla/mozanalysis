@@ -369,7 +369,7 @@ pytest-cov==5.0.0
     # via
     #   -c requirements.txt
     #   mozanalysis
-pytest-ruff==0.3.2
+pytest-ruff==0.4.1
     # via
     #   -c requirements.txt
     #   mozanalysis
