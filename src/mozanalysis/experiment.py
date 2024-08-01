@@ -124,7 +124,7 @@ class Experiment:
             for mobile experiments or `group_id` for desktop experiments.  Is used
             as the join key when building queries and sub-unit level data is
             aggregated up to that level. Defaults to client_id unless specified
-            (ExperimentalUnit.CLIENT_ID)
+            (ExperimentalUnit.CLIENT)
 
     Attributes:
         experiment_slug (str): Name of the study, used to identify
@@ -145,9 +145,7 @@ class Experiment:
     num_dates_enrollment = attr.ib(default=None)
     app_id = attr.ib(default=None)
     app_name = attr.ib(default=None)
-    experimental_unit = attr.ib(
-        type=ExperimentalUnit, default=ExperimentalUnit.CLIENT_ID
-    )
+    experimental_unit = attr.ib(type=ExperimentalUnit, default=ExperimentalUnit.CLIENT)
 
     def get_app_name(self):
         """
@@ -639,7 +637,7 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Glean enrollments query"
                 )
-            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+            if not self.experimental_unit == ExperimentalUnit.CLIENT:
                 raise IncompatibleExperimentalUnit(
                     "Glean enrollments currently only support client_id analysis units"
                 )
@@ -647,7 +645,7 @@ class Experiment:
                 time_limits, self.app_id, sample_size
             )
         elif enrollments_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
-            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+            if not self.experimental_unit == ExperimentalUnit.CLIENT:
                 raise IncompatibleExperimentalUnit(
                     "Fenix fallback enrollments currently only support client_id analysis units"  # noqa: E501
                 )
@@ -659,7 +657,7 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Cirrus enrollments query"
                 )
-            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+            if not self.experimental_unit == ExperimentalUnit.CLIENT:
                 raise IncompatibleExperimentalUnit(
                     "Cirrus enrollments currently only support client_id analysis units"
                 )
@@ -680,13 +678,13 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Glean exposures query"
                 )
-            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+            if not self.experimental_unit == ExperimentalUnit.CLIENT:
                 raise IncompatibleExperimentalUnit(
                     "Glean exposures currently only support client_id analysis units"
                 )
             return self._build_exposure_query_glean_event(time_limits, self.app_id)
         elif exposure_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
-            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+            if not self.experimental_unit == ExperimentalUnit.CLIENT:
                 raise IncompatibleExperimentalUnit(
                     "Fenix fallback exposures currently only support client_id analysis units"  # noqa: E501
                 )
@@ -698,7 +696,7 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Cirrus exposures query"
                 )
-            if not self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+            if not self.experimental_unit == ExperimentalUnit.CLIENT:
                 raise IncompatibleExperimentalUnit(
                     "Cirrus exposures currently only support client_id analysis units"
                 )
@@ -717,7 +715,7 @@ class Experiment:
         sample_size: int = 100,
     ) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
-        if self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+        if self.experimental_unit == ExperimentalUnit.CLIENT:
             return f"""
             SELECT
                 e.client_id,
@@ -736,7 +734,7 @@ class Experiment:
                 AND e.sample_id < {sample_size}
             GROUP BY e.client_id, branch
                 """  # noqa:E501
-        elif self.experimental_unit == ExperimentalUnit.GROUP_ID:
+        elif self.experimental_unit == ExperimentalUnit.GROUP:
             # TODO: update this based on the final structure of the group_id
             # within the events ping
             return f"""
@@ -875,7 +873,7 @@ class Experiment:
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query exposures for a normandy experiment"""
-        if self.experimental_unit == ExperimentalUnit.CLIENT_ID:
+        if self.experimental_unit == ExperimentalUnit.CLIENT:
             return f"""
             SELECT
                 e.client_id,
@@ -902,7 +900,7 @@ class Experiment:
                 e.submission_date >= re.enrollment_date
             GROUP BY e.client_id, e.branch
                 """  # noqa: E501
-        elif self.experimental_unit == ExperimentalUnit.GROUP_ID:
+        elif self.experimental_unit == ExperimentalUnit.GROUP:
             return f"""
             SELECT
                 e.profile_group_id,
@@ -1372,9 +1370,7 @@ class TimeSeriesResult:
 
     fully_qualified_table_name = attr.ib(type=str)
     analysis_windows = attr.ib(type=list)
-    experimental_unit = attr.ib(
-        type=ExperimentalUnit, default=ExperimentalUnit.CLIENT_ID
-    )
+    experimental_unit = attr.ib(type=ExperimentalUnit, default=ExperimentalUnit.CLIENT)
 
     def get(self, bq_context: BigQueryContext, analysis_window) -> DataFrame:
         """Get the DataFrame for a specific analysis window.

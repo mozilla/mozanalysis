@@ -22,5 +22,5 @@ CompareBranchesOutput = dict[ComparativeOption, EstimatesByBranch]
 
 
 class ExperimentalUnit(str, Enum):
-    CLIENT_ID = "client_id"
-    GROUP_ID = "profile_group_id"
+    CLIENT = "client_id"
+    GROUP = "profile_group_id"

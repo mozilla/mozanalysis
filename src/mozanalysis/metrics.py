@@ -146,7 +146,7 @@ class DataSource:
         experiment_slug: str,
         from_expr_dataset: str | None = None,
         analysis_basis: str = AnalysisBasis.ENROLLMENTS,
-        experimental_unit: ExperimentalUnit = ExperimentalUnit.CLIENT_ID,
+        experimental_unit: ExperimentalUnit = ExperimentalUnit.CLIENT,
         exposure_signal=None,
     ) -> str:
         """Return a nearly-self contained SQL query.
@@ -154,9 +154,9 @@ class DataSource:
         This query does not define ``enrollments`` but otherwise could
         be executed to query all metrics from this data source.
         """
-        if experimental_unit == ExperimentalUnit.CLIENT_ID:
+        if experimental_unit == ExperimentalUnit.CLIENT:
             ds_id = self.client_id_column or "client_id"
-        elif experimental_unit == ExperimentalUnit.GROUP_ID:
+        elif experimental_unit == ExperimentalUnit.GROUP:
             ds_id = self.group_id_column or "profile_group_id"
         else:
             assert_never(experimental_unit)
@@ -212,7 +212,7 @@ class DataSource:
         analysis_length: int,
         from_expr_dataset: str | None = None,
         continuous_enrollment: bool = False,
-        experimental_unit: ExperimentalUnit = ExperimentalUnit.CLIENT_ID,
+        experimental_unit: ExperimentalUnit = ExperimentalUnit.CLIENT,
     ) -> str:
         """Return a nearly-self contained SQL query that constructs
         the metrics query for targeting historical data without
@@ -221,7 +221,7 @@ class DataSource:
         This query does not define ``targets`` but otherwise could
         be executed to query all metrics from this data source.
         """
-        if experimental_unit != ExperimentalUnit.CLIENT_ID:
+        if experimental_unit != ExperimentalUnit.CLIENT:
             raise ValueError(
                 "`build_query_targets` currently supports client_id analysis"
             )
