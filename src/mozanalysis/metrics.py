@@ -222,8 +222,8 @@ class DataSource:
         be executed to query all metrics from this data source.
         """
         if experimental_unit != ExperimentalUnit.CLIENT:
-            raise ValueError(
-                "`build_query_targets` currently supports client_id analysis"
+            raise IncompatibleExperimentalUnit(
+                "`build_query_targets` currently only supports client_id analysis"
             )
 
         return """
