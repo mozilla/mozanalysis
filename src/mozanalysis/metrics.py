@@ -160,6 +160,7 @@ class DataSource:
             ds_id = self.group_id_column or "profile_group_id"
         else:
             assert_never(experimental_unit)
+
         return """SELECT
             e.{id_column},
             e.branch,
