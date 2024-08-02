@@ -711,7 +711,9 @@ class Experiment:
         sample_size: int = 100,
     ) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
-        if (self.experimental_unit == ExperimentalUnit.GROUP) and (sample_size < 100):
+        if (self.experimental_unit == ExperimentalUnit.PROFILE_GROUP) and (
+            sample_size < 100
+        ):
             raise ValueError(
                 "Downsampling is not yet supported for group-level experiments"
             )

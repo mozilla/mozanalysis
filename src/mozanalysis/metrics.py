@@ -156,7 +156,7 @@ class DataSource:
         """
         if experimental_unit == ExperimentalUnit.CLIENT:
             ds_id = self.client_id_column or "client_id"
-        elif experimental_unit == ExperimentalUnit.GROUP:
+        elif experimental_unit == ExperimentalUnit.PROFILE_GROUP:
             ds_id = self.group_id_column or "profile_group_id"
         else:
             assert_never(experimental_unit)
