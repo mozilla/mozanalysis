@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from metric_config_parser.config import ConfigCollection
 
 from mozanalysis.metrics import DataSource, Metric
+from mozanalysis.segments import Segment, SegmentDataSource
 
 METRIC_HUB_JETSTREAM_REPO = "https://github.com/mozilla/metric-hub/tree/main/jetstream"
 
@@ -122,12 +123,11 @@ class _ConfigLoader:
 
         return DataSource.from_mcp_data_source(data_source_definition, app_name)
 
-    def get_segment(self, segment_slug: str, app_name: str):
+    def get_segment(self, segment_slug: str, app_name: str) -> Segment:
         """Load a segment definition for the given app.
 
         Returns a :class:`mozanalysis.segments.Segment` instance.
         """
-        from mozanalysis.segments import Segment
 
         segment_definition = self.configs.get_segment_definition(segment_slug, app_name)
         if segment_definition is None:
@@ -153,12 +153,13 @@ class _ConfigLoader:
             app_name=app_name,
         )
 
-    def get_segment_data_source(self, data_source_slug: str, app_name: str):
+    def get_segment_data_source(
+        self, data_source_slug: str, app_name: str
+    ) -> SegmentDataSource:
         """Load a segment data source definition for the given app.
 
         Returns a :class:`mozanalysis.segments.SegmentDataSource` instance.
         """
-        from mozanalysis.segments import SegmentDataSource
 
         data_source_definition = self.configs.get_segment_data_source_definition(
             data_source_slug, app_name
@@ -184,7 +185,9 @@ class _ConfigLoader:
             app_name=app_name,
         )
 
-    def get_outcome_metric(self, metric_slug: str, outcome_slug: str, app_name: str):
+    def get_outcome_metric(
+        self, metric_slug: str, outcome_slug: str, app_name: str
+    ) -> Metric:
         """Load a metric definition from an outcome defined for the given app.
 
         Parametrized metrics are not supported, since they may not be defined outside
@@ -232,7 +235,7 @@ class _ConfigLoader:
 
     def get_outcome_data_source(
         self, data_source_slug: str, outcome_slug: str, app_name: str
-    ):
+    ) -> DataSource:
         """Load a data source definition from an outcome defined for the given app.
 
         Returns a :class:`mozanalysis.metrics.DataSource` instance.

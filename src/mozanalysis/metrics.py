@@ -29,6 +29,29 @@ class AnalysisBasis(Enum):
     EXPOSURES = "exposures"
 
 
+# attr.s converters aren't compatible with mypy, define our own
+# see: https://mypy.readthedocs.io/en/stable/additional_features.html#id1
+def client_id_column_converter(client_id_column: str | None) -> str:
+    if client_id_column is None:
+        return ExperimentalUnit.CLIENT.value
+    else:
+        return client_id_column
+
+
+def group_id_column_converter(group_id_column: str | None) -> str:
+    if group_id_column is None:
+        return ExperimentalUnit.PROFILE_GROUP.value
+    else:
+        return group_id_column
+
+
+def submission_date_column_converter(submission_date_column: str | None) -> str:
+    if submission_date_column is None:
+        return "submission_date"
+    else:
+        return submission_date_column
+
+
 @attr.s(frozen=True, slots=True)
 class DataSource:
     """Represents a table or view, from which Metrics may be defined.
@@ -75,13 +98,13 @@ class DataSource:
         default=ExperimentalUnit.CLIENT.value,
         type=str,
         validator=[attr.validators.instance_of(str), attr.validators.min_len(1)],
-        converter=attr.converters.default_if_none(ExperimentalUnit.CLIENT.value),
+        converter=client_id_column_converter,
     )
     submission_date_column = attr.ib(
         default="submission_date",
         type=str,
         validator=[attr.validators.instance_of(str), attr.validators.min_len(1)],
-        converter=attr.converters.default_if_none("submission_date"),
+        converter=group_id_column_converter,
     )
     default_dataset = attr.ib(default=None, type=str | None)
     app_name = attr.ib(default=None, type=str | None)
@@ -89,7 +112,7 @@ class DataSource:
         default=ExperimentalUnit.PROFILE_GROUP.value,
         type=str,
         validator=[attr.validators.instance_of(str), attr.validators.min_len(1)],
-        converter=attr.converters.default_if_none(ExperimentalUnit.PROFILE_GROUP.value),
+        converter=group_id_column_converter,
     )
 
     EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean")
@@ -162,7 +185,7 @@ class DataSource:
         time_limits: TimeLimits,
         experiment_slug: str,
         from_expr_dataset: str | None = None,
-        analysis_basis: str = AnalysisBasis.ENROLLMENTS,
+        analysis_basis: AnalysisBasis = AnalysisBasis.ENROLLMENTS,
         experimental_unit: ExperimentalUnit = ExperimentalUnit.CLIENT,
         exposure_signal=None,
     ) -> str:
