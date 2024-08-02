@@ -967,13 +967,13 @@ class Experiment:
         return metrics_columns, metrics_joins
 
     def _partition_segments_by_data_source(
-        self, metric_or_segment_list: list[Segment]
+        self, segment_list: list[Segment]
     ) -> dict[SegmentDataSource, list[Segment]]:
-        """Return a dict mapping data sources to metric/segment lists."""
-        data_sources = {m.data_source for m in metric_or_segment_list}
+        """Return a dict mapping segment data sources to segment lists."""
+        data_sources = {s.data_source for s in segment_list}
 
         return {
-            ds: [m for m in metric_or_segment_list if m.data_source == ds]
+            ds: [s for s in segment_list if s.data_source == ds]
             for ds in data_sources
         }
 
