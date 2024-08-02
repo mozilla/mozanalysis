@@ -11,13 +11,13 @@ from typing_extensions import assert_never
 from mozanalysis.types import ExperimentalUnit, IncompatibleExperimentalUnit
 
 if TYPE_CHECKING:
+    from metric_config_parser.data_source import DataSource as ParserDataSource
+
     from mozanalysis.experiment import TimeLimits
 
 import logging
 
 import attr
-
-from metric_config_parser.data_source import DataSource as ParserDataSource
 
 logger = logging.getLogger(__name__)
 
@@ -267,23 +267,16 @@ class DataSource:
                 for m in metric_list
             ),
             date_clause=(
-                """
-        AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
-        AND ds.{submission_date} BETWEEN
+                f"""
+        AND ds.{self.submission_date_column} BETWEEN '{time_limits.first_date_data_required}' AND '{time_limits.last_date_data_required}'
+        AND ds.{self.submission_date_column} BETWEEN
             DATE_ADD(t.enrollment_date, interval t.analysis_window_start day) AND
-            DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)""".format(
-                    submission_date=self.submission_date_column,
-                    fddr=time_limits.first_date_data_required,
-                    lddr=time_limits.last_date_data_required,
-                )
+            DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)"""  # noqa: E501
                 if not continuous_enrollment
-                else """AND ds.{submission_date} BETWEEN
+                else f"""AND ds.{self.submission_date_column} BETWEEN
             t.enrollment_date AND
             DATE_ADD(t.enrollment_date, interval {analysis_length} day)
-            """.format(
-                    submission_date=self.submission_date_column,
-                    analysis_length=analysis_length,
-                )
+            """
             ),
         )
 
@@ -366,7 +359,7 @@ class DataSource:
         parser_data_source: ParserDataSource,
         app_name: str | None = None,
         group_id_column: str | None = ExperimentalUnit.PROFILE_GROUP.value,
-    ) -> "DataSource":
+    ) -> DataSource:
         """metric-config-parser DataSource objects do not have an `app_name`
         and do not, yet, have a group_id_column"""
         return cls(
