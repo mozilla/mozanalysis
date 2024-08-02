@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from metric_config_parser.config import ConfigCollection
 
-from mozanalysis.metrics import Metric
+from mozanalysis.metrics import Metric, DataSource
 
 METRIC_HUB_JETSTREAM_REPO = "https://github.com/mozilla/metric-hub/tree/main/jetstream"
 
@@ -101,12 +101,11 @@ class _ConfigLoader:
             app_name=app_name,
         )
 
-    def get_data_source(self, data_source_slug: str, app_name: str):
+    def get_data_source(self, data_source_slug: str, app_name: str) -> DataSource:
         """Load a data source definition for the given app.
 
         Returns a :class:`mozanalysis.metrics.DataSource` instance.
         """
-        from mozanalysis.metrics import DataSource
 
         data_source_definition = self.configs.get_data_source_definition(
             data_source_slug, app_name
@@ -121,19 +120,7 @@ class _ConfigLoader:
                     f"Could not find application {app_name}, so data source {data_source_slug} could not be resolved"  # noqa:E501
                 )
 
-        return DataSource(
-            name=data_source_definition.name,
-            from_expr=data_source_definition.from_expression,
-            client_id_column=data_source_definition.client_id_column,
-            submission_date_column=data_source_definition.submission_date_column,
-            experiments_column_type=(
-                None
-                if data_source_definition.experiments_column_type == "none"
-                else data_source_definition.experiments_column_type
-            ),
-            default_dataset=data_source_definition.default_dataset,
-            app_name=app_name,
-        )
+        return DataSource.from_mcp_data_source(data_source_definition, app_name)
 
     def get_segment(self, segment_slug: str, app_name: str):
         """Load a segment definition for the given app.
@@ -231,12 +218,15 @@ class _ConfigLoader:
         summaries = metric_definition.resolve(outcome_spec, conf, self.configs)
         metric = summaries[0].metric
 
+        if metric.data_source is None:
+            raise ValueError(f"Unable to resolve DataSource for Metric {metric.name}")
+
         return Metric(
             name=metric.name,
             select_expr=metric.select_expression,
             friendly_name=metric.friendly_name,
             description=metric.description,
-            data_source=metric.data_source,
+            data_source=DataSource.from_mcp_data_source(metric.data_source, app_name),
             bigger_is_better=metric.bigger_is_better,
         )
 
@@ -267,17 +257,8 @@ class _ConfigLoader:
                 + f" in outcome {outcome_slug}"
             )
 
-        return DataSource(
-            name=data_source_definition.name,
-            from_expr=data_source_definition.from_expression,
-            client_id_column=data_source_definition.client_id_column,
-            submission_date_column=data_source_definition.submission_date_column,
-            experiments_column_type=(
-                None
-                if data_source_definition.experiments_column_type == "none"
-                else data_source_definition.experiments_column_type
-            ),
-            default_dataset=data_source_definition.default_dataset,
+        return DataSource.from_mcp_data_source(
+            data_source_definition, app_name=app_name
         )
 
 

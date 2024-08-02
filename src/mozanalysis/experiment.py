@@ -136,12 +136,16 @@ class Experiment:
             before UTC midnight.
     """
 
-    experiment_slug = attr.ib(type=str)
+    experiment_slug = attr.ib(type=str, validator=attr.validators.instance_of(str))
     start_date = attr.ib()
     num_dates_enrollment = attr.ib(default=None)
     app_id = attr.ib(default=None)
     app_name = attr.ib(default=None)
-    experimental_unit = attr.ib(type=ExperimentalUnit, default=ExperimentalUnit.CLIENT)
+    experimental_unit = attr.ib(
+        type=ExperimentalUnit,
+        default=ExperimentalUnit.CLIENT,
+        converter=lambda s: ExperimentalUnit(s), # allows callers to pass a string
+    )
 
     def get_app_name(self):
         """

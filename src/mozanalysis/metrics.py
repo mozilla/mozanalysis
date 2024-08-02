@@ -17,6 +17,8 @@ import logging
 
 import attr
 
+from metric_config_parser.data_source import DataSource as ParserDataSource
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,12 +70,27 @@ class DataSource:
 
     name = attr.ib(validator=attr.validators.instance_of(str))
     _from_expr = attr.ib(validator=attr.validators.instance_of(str))
-    experiments_column_type = attr.ib(default="simple", type=str)
-    client_id_column = attr.ib(default="client_id", type=str)
-    submission_date_column = attr.ib(default="submission_date", type=str)
+    experiments_column_type = attr.ib(default="simple", type=str | None)
+    client_id_column = attr.ib(
+        default=ExperimentalUnit.CLIENT.value,
+        type=str,
+        validator=[attr.validators.instance_of(str), attr.validators.min_len(1)],
+        converter=attr.converters.default_if_none(ExperimentalUnit.CLIENT.value),
+    )
+    submission_date_column = attr.ib(
+        default="submission_date",
+        type=str,
+        validator=[attr.validators.instance_of(str), attr.validators.min_len(1)],
+        converter=attr.converters.default_if_none("submission_date"),
+    )
     default_dataset = attr.ib(default=None, type=str | None)
     app_name = attr.ib(default=None, type=str | None)
-    group_id_column = attr.ib(default="profile_group_id", type=str)
+    group_id_column = attr.ib(
+        default=ExperimentalUnit.PROFILE_GROUP.value,
+        type=str,
+        validator=[attr.validators.instance_of(str), attr.validators.min_len(1)],
+        converter=attr.converters.default_if_none(ExperimentalUnit.PROFILE_GROUP.value),
+    )
 
     EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean")
 
@@ -155,9 +172,9 @@ class DataSource:
         be executed to query all metrics from this data source.
         """
         if experimental_unit == ExperimentalUnit.CLIENT:
-            ds_id = self.client_id_column or "client_id"
+            ds_id = self.client_id_column
         elif experimental_unit == ExperimentalUnit.PROFILE_GROUP:
-            ds_id = self.group_id_column or "profile_group_id"
+            ds_id = self.group_id_column
         else:
             assert_never(experimental_unit)
 
@@ -185,7 +202,7 @@ class DataSource:
             e.analysis_window_start,
             e.analysis_window_end""".format(
             ds_id=ds_id,
-            submission_date=self.submission_date_column or "submission_date",
+            submission_date=self.submission_date_column,
             from_expr=self.from_expr_for(from_expr_dataset),
             fddr=time_limits.first_date_data_required,
             lddr=time_limits.last_date_data_required,
@@ -199,7 +216,7 @@ class DataSource:
                 else "enrollment_date"
             ),
             ignore_pre_enroll_first_day=self.experiments_column_expr.format(
-                submission_date=self.submission_date_column or "submission_date",
+                submission_date=self.submission_date_column,
                 experiment_slug=experiment_slug,
             ),
             id_column=experimental_unit.value,
@@ -243,7 +260,7 @@ class DataSource:
             t.enrollment_date,
             t.analysis_window_start,
             t.analysis_window_end""".format(
-            client_id=self.client_id_column or "client_id",
+            client_id=self.client_id_column,
             from_expr=self.from_expr_for(from_expr_dataset),
             metrics=",\n            ".join(
                 f"{m.select_expr.format(experiment_name=experiment_name)} AS {m.name}"
@@ -255,7 +272,7 @@ class DataSource:
         AND ds.{submission_date} BETWEEN
             DATE_ADD(t.enrollment_date, interval t.analysis_window_start day) AND
             DATE_ADD(t.enrollment_date, interval t.analysis_window_end day)""".format(
-                    submission_date=self.submission_date_column or "submission_date",
+                    submission_date=self.submission_date_column,
                     fddr=time_limits.first_date_data_required,
                     lddr=time_limits.last_date_data_required,
                 )
@@ -264,7 +281,7 @@ class DataSource:
             t.enrollment_date AND
             DATE_ADD(t.enrollment_date, interval {analysis_length} day)
             """.format(
-                    submission_date=self.submission_date_column or "submission_date",
+                    submission_date=self.submission_date_column,
                     analysis_length=analysis_length,
                 )
             ),
@@ -343,6 +360,30 @@ class DataSource:
         else:
             raise ValueError
 
+    @classmethod
+    def from_mcp_data_source(
+        cls,
+        parser_data_source: ParserDataSource,
+        app_name: str | None = None,
+        group_id_column: str | None = ExperimentalUnit.PROFILE_GROUP.value,
+    ) -> "DataSource":
+        """metric-config-parser DataSource objects do not have an `app_name`
+        and do not, yet, have a group_id_column"""
+        return cls(
+            name=parser_data_source.name,
+            from_expr=parser_data_source.from_expression,
+            client_id_column=parser_data_source.client_id_column,
+            submission_date_column=parser_data_source.submission_date_column,
+            experiments_column_type=(
+                None
+                if parser_data_source.experiments_column_type == "none"
+                else parser_data_source.experiments_column_type
+            ),
+            default_dataset=parser_data_source.default_dataset,
+            app_name=app_name,
+            group_id_column=group_id_column,
+        )
+
 
 @attr.s(frozen=True, slots=True)
 class Metric:
@@ -364,9 +405,11 @@ class Metric:
             used for validation
     """
 
-    name = attr.ib(type=str)
-    data_source = attr.ib(type=DataSource)
-    select_expr = attr.ib(type=str)
+    name = attr.ib(type=str, validator=attr.validators.instance_of(str))
+    data_source = attr.ib(
+        type=DataSource, validator=attr.validators.instance_of(DataSource)
+    )
+    select_expr = attr.ib(type=str, validator=attr.validators.instance_of(str))
     friendly_name = attr.ib(type=str | None, default=None)
     description = attr.ib(type=str | None, default=None)
     bigger_is_better = attr.ib(type=bool, default=True)
