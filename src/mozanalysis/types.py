@@ -24,3 +24,7 @@ CompareBranchesOutput = dict[ComparativeOption, EstimatesByBranch]
 class ExperimentalUnit(str, Enum):
     CLIENT = "client_id"
     GROUP = "profile_group_id"
+
+
+class IncompatibleExperimentalUnit(ValueError):
+    pass

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from typing_extensions import assert_never
 
-from mozanalysis.types import ExperimentalUnit
+from mozanalysis.types import ExperimentalUnit, IncompatibleExperimentalUnit
 
 if TYPE_CHECKING:
     from mozanalysis.experiment import TimeLimits

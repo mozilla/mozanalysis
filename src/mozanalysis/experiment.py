@@ -15,7 +15,7 @@ from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
-from mozanalysis.types import ExperimentalUnit
+from mozanalysis.types import ExperimentalUnit, IncompatibleExperimentalUnit
 from mozanalysis.utils import add_days, date_sub, hash_ish
 
 if TYPE_CHECKING:
@@ -29,10 +29,6 @@ class EnrollmentsQueryType(str, Enum):
     FENIX_FALLBACK = "fenix-fallback"
     NORMANDY = "normandy"
     GLEAN_EVENT = "glean-event"
-
-
-class IncompatibleExperimentalUnit(ValueError):
-    pass
 
 
 @attr.s(frozen=True, slots=True)
@@ -973,19 +969,17 @@ class Experiment:
         data_sources = {s.data_source for s in segment_list}
 
         return {
-            ds: [s for s in segment_list if s.data_source == ds]
-            for ds in data_sources
+            ds: [s for s in segment_list if s.data_source == ds] for ds in data_sources
         }
 
     def _partition_metrics_by_data_source(
         self, metric_list: list[Metric]
     ) -> dict[DataSource, list[Metric]]:
         """Return a dict mapping data sources to metric/segment lists."""
-        data_sources = {m.data_source for m in metric_or_segment_list}
+        data_sources = {m.data_source for m in metric_list}
 
         return {
-            ds: [m for m in metric_or_segment_list if m.data_source == ds]
-            for ds in data_sources
+            ds: [m for m in metric_list if m.data_source == ds] for ds in data_sources
         }
 
     def _build_segments_query(
