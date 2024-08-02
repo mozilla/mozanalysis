@@ -978,7 +978,7 @@ class Experiment:
         }
 
     def _partition_metrics_by_data_source(
-        self, metric_or_segment_list: list[Metric]
+        self, metric_list: list[Metric]
     ) -> dict[DataSource, list[Metric]]:
         """Return a dict mapping data sources to metric/segment lists."""
         data_sources = {m.data_source for m in metric_or_segment_list}
