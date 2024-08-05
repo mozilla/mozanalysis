@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from typing_extensions import assert_never
 
-from mozanalysis.types import ExperimentalUnit, IncompatibleExperimentalUnit
+from mozanalysis.types import AnalysisUnit, IncompatibleAnalysisUnit
 
 if TYPE_CHECKING:
     from metric_config_parser.data_source import DataSource as ParserDataSource
@@ -33,14 +33,14 @@ class AnalysisBasis(Enum):
 # see: https://mypy.readthedocs.io/en/stable/additional_features.html#id1
 def client_id_column_converter(client_id_column: str | None) -> str:
     if client_id_column is None:
-        return ExperimentalUnit.CLIENT.value
+        return AnalysisUnit.CLIENT.value
     else:
         return client_id_column
 
 
 def group_id_column_converter(group_id_column: str | None) -> str:
     if group_id_column is None:
-        return ExperimentalUnit.PROFILE_GROUP.value
+        return AnalysisUnit.PROFILE_GROUP.value
     else:
         return group_id_column
 
@@ -95,7 +95,7 @@ class DataSource:
     _from_expr = attr.ib(validator=attr.validators.instance_of(str))
     experiments_column_type = attr.ib(default="simple", type=str | None)
     client_id_column = attr.ib(
-        default=ExperimentalUnit.CLIENT.value,
+        default=AnalysisUnit.CLIENT.value,
         type=str,
         validator=[attr.validators.instance_of(str), attr.validators.min_len(1)],
         converter=client_id_column_converter,
@@ -109,7 +109,7 @@ class DataSource:
     default_dataset = attr.ib(default=None, type=str | None)
     app_name = attr.ib(default=None, type=str | None)
     group_id_column = attr.ib(
-        default=ExperimentalUnit.PROFILE_GROUP.value,
+        default=AnalysisUnit.PROFILE_GROUP.value,
         type=str,
         validator=[attr.validators.instance_of(str), attr.validators.min_len(1)],
         converter=group_id_column_converter,
@@ -186,7 +186,7 @@ class DataSource:
         experiment_slug: str,
         from_expr_dataset: str | None = None,
         analysis_basis: AnalysisBasis = AnalysisBasis.ENROLLMENTS,
-        experimental_unit: ExperimentalUnit = ExperimentalUnit.CLIENT,
+        experimental_unit: AnalysisUnit = AnalysisUnit.CLIENT,
         exposure_signal=None,
     ) -> str:
         """Return a nearly-self contained SQL query.
@@ -194,9 +194,9 @@ class DataSource:
         This query does not define ``enrollments`` but otherwise could
         be executed to query all metrics from this data source.
         """
-        if experimental_unit == ExperimentalUnit.CLIENT:
+        if experimental_unit == AnalysisUnit.CLIENT:
             ds_id = self.client_id_column
-        elif experimental_unit == ExperimentalUnit.PROFILE_GROUP:
+        elif experimental_unit == AnalysisUnit.PROFILE_GROUP:
             ds_id = self.group_id_column
         else:
             assert_never(experimental_unit)
@@ -253,7 +253,7 @@ class DataSource:
         analysis_length: int,
         from_expr_dataset: str | None = None,
         continuous_enrollment: bool = False,
-        experimental_unit: ExperimentalUnit = ExperimentalUnit.CLIENT,
+        experimental_unit: AnalysisUnit = AnalysisUnit.CLIENT,
     ) -> str:
         """Return a nearly-self contained SQL query that constructs
         the metrics query for targeting historical data without
@@ -262,8 +262,8 @@ class DataSource:
         This query does not define ``targets`` but otherwise could
         be executed to query all metrics from this data source.
         """
-        if experimental_unit != ExperimentalUnit.CLIENT:
-            raise IncompatibleExperimentalUnit(
+        if experimental_unit != AnalysisUnit.CLIENT:
+            raise IncompatibleAnalysisUnit(
                 "`build_query_targets` currently only supports client_id analysis"
             )
 
@@ -381,7 +381,7 @@ class DataSource:
         cls,
         parser_data_source: ParserDataSource,
         app_name: str | None = None,
-        group_id_column: str | None = ExperimentalUnit.PROFILE_GROUP.value,
+        group_id_column: str | None = AnalysisUnit.PROFILE_GROUP.value,
     ) -> DataSource:
         """metric-config-parser DataSource objects do not have an `app_name`
         and do not, yet, have a group_id_column"""

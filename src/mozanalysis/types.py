@@ -21,10 +21,10 @@ EstimatesByBranch = dict[BranchLabel, Estimates]
 CompareBranchesOutput = dict[ComparativeOption, EstimatesByBranch]
 
 
-class ExperimentalUnit(str, Enum):
+class AnalysisUnit(str, Enum):
     CLIENT = "client_id"
     PROFILE_GROUP = "profile_group_id"
 
 
-class IncompatibleExperimentalUnit(ValueError):
+class IncompatibleAnalysisUnit(ValueError):
     pass

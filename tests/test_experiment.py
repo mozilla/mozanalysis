@@ -15,13 +15,13 @@ from mozanalysis.experiment import (
     AnalysisWindow,
     EnrollmentsQueryType,
     Experiment,
-    IncompatibleExperimentalUnit,
+    IncompatibleAnalysisUnit,
     TimeLimits,
 )
 from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
-from mozanalysis.types import ExperimentalUnit
+from mozanalysis.types import AnalysisUnit
 
 
 def test_time_limits_validates():
@@ -282,10 +282,10 @@ def test_analysis_window_validates_end():
 
 
 @pytest.mark.parametrize(
-    "experimental_unit", [ExperimentalUnit.CLIENT, ExperimentalUnit.PROFILE_GROUP]
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
 )
-def test_query_not_detectably_malformed(experimental_unit: ExperimentalUnit):
-    exp = Experiment("slug", "2019-01-01", 8, experimental_unit=experimental_unit)
+def test_query_not_detectably_malformed(analysis_unit: AnalysisUnit):
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -303,9 +303,9 @@ def test_query_not_detectably_malformed(experimental_unit: ExperimentalUnit):
     sql_lint(enrollments_sql)
     assert "sample_id < None" not in enrollments_sql
 
-    if experimental_unit == ExperimentalUnit.CLIENT:
+    if analysis_unit == AnalysisUnit.CLIENT:
         assert "client_id" in enrollments_sql
-    elif experimental_unit == ExperimentalUnit.PROFILE_GROUP:
+    elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
         assert "profile_group_id" in enrollments_sql
 
     metrics_sql = exp.build_metrics_query(
@@ -316,17 +316,17 @@ def test_query_not_detectably_malformed(experimental_unit: ExperimentalUnit):
 
     sql_lint(metrics_sql)
 
-    if experimental_unit == ExperimentalUnit.CLIENT:
+    if analysis_unit == AnalysisUnit.CLIENT:
         assert "client_id" in metrics_sql
-    elif experimental_unit == ExperimentalUnit.PROFILE_GROUP:
+    elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
         assert "profile_group_id" in metrics_sql
 
 
 @pytest.mark.parametrize(
-    "experimental_unit", [ExperimentalUnit.CLIENT, ExperimentalUnit.PROFILE_GROUP]
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
 )
-def test_megaquery_not_detectably_malformed(experimental_unit: ExperimentalUnit):
-    exp = Experiment("slug", "2019-01-01", 8, experimental_unit=experimental_unit)
+def test_megaquery_not_detectably_malformed(analysis_unit: AnalysisUnit):
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -341,9 +341,9 @@ def test_megaquery_not_detectably_malformed(experimental_unit: ExperimentalUnit)
 
     sql_lint(enrollments_sql)
 
-    if experimental_unit == ExperimentalUnit.CLIENT:
+    if analysis_unit == AnalysisUnit.CLIENT:
         assert "client_id" in enrollments_sql
-    elif experimental_unit == ExperimentalUnit.PROFILE_GROUP:
+    elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
         assert "profile_group_id" in enrollments_sql
 
     metrics_sql = exp.build_metrics_query(
@@ -354,19 +354,19 @@ def test_megaquery_not_detectably_malformed(experimental_unit: ExperimentalUnit)
 
     sql_lint(metrics_sql)
 
-    if experimental_unit == ExperimentalUnit.CLIENT:
+    if analysis_unit == AnalysisUnit.CLIENT:
         assert "client_id" in metrics_sql
-    elif experimental_unit == ExperimentalUnit.PROFILE_GROUP:
+    elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
         assert "profile_group_id" in metrics_sql
 
 
 @pytest.mark.parametrize(
-    "experimental_unit", [ExperimentalUnit.CLIENT, ExperimentalUnit.PROFILE_GROUP]
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
 )
 def test_segments_megaquery_not_detectably_malformed(
-    experimental_unit: ExperimentalUnit,
+    analysis_unit: AnalysisUnit,
 ):
-    exp = Experiment("slug", "2019-01-01", 8, experimental_unit=experimental_unit)
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -1073,9 +1073,7 @@ GROUP BY
 
 
 def test_enrollments_query_explicit_group_id():
-    exp = Experiment(
-        "slug", "2019-01-01", 8, experimental_unit=ExperimentalUnit.PROFILE_GROUP
-    )
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -1155,9 +1153,7 @@ GROUP BY e.profile_group_id, e.branch
 
 
 def test_metrics_query_explicit_group_id():
-    exp = Experiment(
-        "slug", "2019-01-01", 8, experimental_unit=ExperimentalUnit.PROFILE_GROUP
-    )
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -1258,7 +1254,7 @@ def test_glean_group_id_incompatible():
         "slug",
         "2019-01-01",
         8,
-        experimental_unit=ExperimentalUnit.PROFILE_GROUP,
+        analysis_unit=AnalysisUnit.PROFILE_GROUP,
         app_id="test_app",
     )
 
@@ -1269,7 +1265,7 @@ def test_glean_group_id_incompatible():
         num_dates_enrollment=8,
     )
 
-    with pytest.raises(IncompatibleExperimentalUnit):
+    with pytest.raises(IncompatibleAnalysisUnit):
         exp.build_enrollments_query(
             time_limits=tl, enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT
         )
@@ -1280,7 +1276,7 @@ def test_glean_group_id_incompatible_exposures():
         "slug",
         "2019-01-01",
         8,
-        experimental_unit=ExperimentalUnit.PROFILE_GROUP,
+        analysis_unit=AnalysisUnit.PROFILE_GROUP,
         app_id="test_app",
     )
 
@@ -1291,16 +1287,14 @@ def test_glean_group_id_incompatible_exposures():
         num_dates_enrollment=8,
     )
 
-    with pytest.raises(IncompatibleExperimentalUnit):
+    with pytest.raises(IncompatibleAnalysisUnit):
         exp._build_exposure_query(
             time_limits=tl, exposure_query_type=EnrollmentsQueryType.GLEAN_EVENT
         )
 
 
 def test_glean_missing_app_id():
-    exp = Experiment(
-        "slug", "2019-01-01", 8, experimental_unit=ExperimentalUnit.PROFILE_GROUP
-    )
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -1318,9 +1312,7 @@ def test_glean_missing_app_id():
 
 
 def test_glean_exposures_missing_app_id():
-    exp = Experiment(
-        "slug", "2019-01-01", 8, experimental_unit=ExperimentalUnit.PROFILE_GROUP
-    )
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -1342,7 +1334,7 @@ def test_cirrus_group_id_incompatible():
         "slug",
         "2019-01-01",
         8,
-        experimental_unit=ExperimentalUnit.PROFILE_GROUP,
+        analysis_unit=AnalysisUnit.PROFILE_GROUP,
         app_id="test_app",
     )
 
@@ -1353,7 +1345,7 @@ def test_cirrus_group_id_incompatible():
         num_dates_enrollment=8,
     )
 
-    with pytest.raises(IncompatibleExperimentalUnit):
+    with pytest.raises(IncompatibleAnalysisUnit):
         exp.build_enrollments_query(
             time_limits=tl, enrollments_query_type=EnrollmentsQueryType.CIRRUS
         )
@@ -1364,7 +1356,7 @@ def test_cirrus_group_id_incompatible_exposures():
         "slug",
         "2019-01-01",
         8,
-        experimental_unit=ExperimentalUnit.PROFILE_GROUP,
+        analysis_unit=AnalysisUnit.PROFILE_GROUP,
         app_id="test_app",
     )
 
@@ -1375,16 +1367,14 @@ def test_cirrus_group_id_incompatible_exposures():
         num_dates_enrollment=8,
     )
 
-    with pytest.raises(IncompatibleExperimentalUnit):
+    with pytest.raises(IncompatibleAnalysisUnit):
         exp._build_exposure_query(
             time_limits=tl, exposure_query_type=EnrollmentsQueryType.CIRRUS
         )
 
 
 def test_cirrus_missing_app_id():
-    exp = Experiment(
-        "slug", "2019-01-01", 8, experimental_unit=ExperimentalUnit.PROFILE_GROUP
-    )
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -1402,9 +1392,7 @@ def test_cirrus_missing_app_id():
 
 
 def test_cirrus_missing_app_id_exposures():
-    exp = Experiment(
-        "slug", "2019-01-01", 8, experimental_unit=ExperimentalUnit.PROFILE_GROUP
-    )
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -1422,9 +1410,7 @@ def test_cirrus_missing_app_id_exposures():
 
 
 def test_fenix_group_id_incompatible():
-    exp = Experiment(
-        "slug", "2019-01-01", 8, experimental_unit=ExperimentalUnit.PROFILE_GROUP
-    )
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -1433,16 +1419,14 @@ def test_fenix_group_id_incompatible():
         num_dates_enrollment=8,
     )
 
-    with pytest.raises(IncompatibleExperimentalUnit):
+    with pytest.raises(IncompatibleAnalysisUnit):
         exp.build_enrollments_query(
             time_limits=tl, enrollments_query_type=EnrollmentsQueryType.FENIX_FALLBACK
         )
 
 
 def test_fenix_group_id_incompatible_exposures():
-    exp = Experiment(
-        "slug", "2019-01-01", 8, experimental_unit=ExperimentalUnit.PROFILE_GROUP
-    )
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -1451,16 +1435,14 @@ def test_fenix_group_id_incompatible_exposures():
         num_dates_enrollment=8,
     )
 
-    with pytest.raises(IncompatibleExperimentalUnit):
+    with pytest.raises(IncompatibleAnalysisUnit):
         exp._build_exposure_query(
             time_limits=tl, exposure_query_type=EnrollmentsQueryType.FENIX_FALLBACK
         )
 
 
 def test_group_id_no_downsampling():
-    exp = Experiment(
-        "slug", "2019-01-01", 8, experimental_unit=ExperimentalUnit.PROFILE_GROUP
-    )
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
