@@ -1427,12 +1427,15 @@ class TimeSeriesResult:
         This method returns SQL to query this table to obtain results
         in "the standard format" for a single analysis window.
         """
+        except_clause = (
+            f"{self.analysis_unit.value}, analysis_window_start, analysis_window_end"
+        )
         return f"""
-            SELECT * EXCEPT ({self.analysis_unit.value}, analysis_window_start, analysis_window_end)
+            SELECT * EXCEPT ({except_clause})
             FROM {self.fully_qualified_table_name}
             WHERE analysis_window_start = {analysis_window.start}
             AND analysis_window_end = {analysis_window.end}
-        """  # noqa: E501
+        """
 
     def _build_aggregated_data_query(
         self, metric_list: list[Metric], aggregate_function: str
