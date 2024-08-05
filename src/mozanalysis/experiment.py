@@ -426,7 +426,7 @@ class Experiment:
             fully_qualified_table_name=bq_context.fully_qualify_table_name(
                 full_res_table_name
             ),
-            analysis_windows=list(time_limits.analysis_windows),
+            analysis_windows=time_limits.analysis_windows,
         )
 
     def build_enrollments_query(
@@ -1315,7 +1315,7 @@ class TimeSeriesResult:
     """
 
     fully_qualified_table_name = attr.ib(type=str)
-    analysis_windows = attr.ib(type=list)
+    analysis_windows = attr.ib(type=tuple[AnalysisWindow, ...])
     analysis_unit = attr.ib(type=AnalysisUnit, default=AnalysisUnit.CLIENT)
 
     def get(self, bq_context: BigQueryContext, analysis_window) -> DataFrame:
