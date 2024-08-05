@@ -1098,7 +1098,7 @@ class TimeLimits:
     first_date_data_required = attr.ib(type=str)
     last_date_data_required = attr.ib(type=str)
 
-    analysis_windows = attr.ib()  # type: tuple[AnalysisWindow]
+    analysis_windows = attr.ib()  # type: tuple[AnalysisWindow,...]
 
     @classmethod
     def for_single_analysis_window(
@@ -1211,8 +1211,6 @@ class TimeLimits:
                 for i in range(num_periods)
             ]
         )
-
-        analysis_windows = cast(tuple[AnalysisWindow], analysis_windows)
 
         last_date_data_required = add_days(
             last_enrollment_date, analysis_windows[-1].end
