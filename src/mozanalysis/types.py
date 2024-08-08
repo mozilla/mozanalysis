@@ -1,7 +1,8 @@
 from enum import Enum
-from typing import NewType, Any, TypeAlias
+from typing import TypeAlias
 
 import pandas as pd
+import numpy as np
 
 
 class ComparativeOption(str, Enum):
@@ -14,7 +15,8 @@ class Uplift(str, Enum):
     RELATIVE = "rel_uplift"
 
 
-Estimates: TypeAlias = "pd.Series[Any]"
+Numeric: TypeAlias = bool | int | float
+Estimates: TypeAlias = "pd.Series[float]"
 BranchLabel: TypeAlias = str
 EstimatesByBranch: TypeAlias = dict[BranchLabel, Estimates]
 

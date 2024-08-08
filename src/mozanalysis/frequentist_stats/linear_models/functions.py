@@ -10,7 +10,7 @@ import pandas as pd
 import polars as pl
 from marginaleffects import avg_comparisons, datagrid
 from pandas.api.types import is_integer_dtype
-from typing import Any, cast
+from typing import cast
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
 
@@ -20,6 +20,7 @@ from mozanalysis.types import (
     CompareBranchesOutput,
     Estimates,
     EstimatesByBranch,
+    Numeric,
     Uplift,
 )
 
@@ -71,7 +72,9 @@ def _make_univariate_output(alphas: list[float]) -> Estimates:
     return res
 
 
-def summarize_one_branch(branch_data: pd.Series[Any], alphas: list[float]) -> Estimates:
+def summarize_one_branch(
+    branch_data: pd.Series[Numeric], alphas: list[float]
+) -> Estimates:
     """Inferences (point estimate and confidence intervals) for
     the mean of a single branch's data. Constructs confidence
     intervals from central limit theory (uses the t-distribution)
@@ -117,7 +120,7 @@ def _infer_branch_list(
 
 
 def summarize_univariate(
-    data: pd.Series[Any],
+    data: pd.Series[Numeric],
     branches: pd.Series[BranchLabel],
     alphas: list[float],
     branch_list: list[BranchLabel] | None = None,
