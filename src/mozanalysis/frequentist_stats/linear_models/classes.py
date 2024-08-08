@@ -10,13 +10,12 @@ from statsmodels.regression.linear_model import (
     RegressionResults,
     RegressionResultsWrapper,
 )
+from typing import Any
 
 
-class MozOLS(OLS):
+class MozOLS(OLS):  # type: ignore[misc]
     @classmethod
-    def from_formula(
-        cls, formula: str, data: pd.DataFrame, *args, **kwargs
-    ) -> "MozOLS":
+    def from_formula(cls, formula: str, data: pd.DataFrame, **kwargs: Any) -> "MozOLS":
         """
         Create a Model from a formula and dataframe. This uses Formulaic instead
         of Patsy to create sparse design matrices which can dramatically reduce
@@ -28,8 +27,6 @@ class MozOLS(OLS):
             The formula specifying the model.
         data : pd.DataFrame
             The data for the model.
-        *args
-            Additional positional argument that are passed to the model.
         **kwargs
             Additional positional argument that are passed to the model. `missing`
         and `hasconst` are overridden.
@@ -50,7 +47,7 @@ class MozOLS(OLS):
             }
         )
 
-        mod = cls(mm.lhs, mm.rhs, *args, **kwargs)
+        mod: "MozOLS" = cls(mm.lhs, mm.rhs, **kwargs)
         mod.formula = formula
         mod.data.frame = data
         mod.k_constant = 1
@@ -72,7 +69,7 @@ class MozOLS(OLS):
             "hac-groupsum",
             "cluster",
         ] = "nonrobust",
-        cov_kwds=None,
+        cov_kwds: dict[str, Any] | None = None,
         use_t: bool | None = None,
     ) -> RegressionResults:
         """
@@ -119,6 +116,8 @@ class MozOLS(OLS):
         sol = np.linalg.solve(L, d)
         beta = np.linalg.solve(L.T, sol)
 
+        self.rank: float
+        self._df_model: float
         if self.rank is None:
             self.rank = np.linalg.matrix_rank(C)
         if self._df_model is None:
