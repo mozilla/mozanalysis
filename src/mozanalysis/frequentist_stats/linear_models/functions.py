@@ -106,7 +106,7 @@ def summarize_one_branch(branch_data: pd.Series[Any], alphas: list[float]) -> Es
 
 
 def _infer_branch_list(
-    branches: pd.Series[str], branch_list: list[str] | None
+    branches: pd.Series[str], branch_list: list[BranchLabel] | None
 ) -> list[BranchLabel]:
     """Determine the list of distinct branches. Used so that `summarize_univariate`
     and `summarize_joint` can take an optional `branch_list` parameter."""
@@ -118,9 +118,9 @@ def _infer_branch_list(
 
 def summarize_univariate(
     data: pd.Series[Any],
-    branches: pd.Series[str],
+    branches: pd.Series[BranchLabel],
     alphas: list[float],
-    branch_list: list[str] | None = None,
+    branch_list: list[BranchLabel] | None = None,
 ) -> EstimatesByBranch:
     """Univariate inferences (point estimates and confidence intervals) for the
     mean of each branch's data.
@@ -146,7 +146,9 @@ def summarize_univariate(
     }
 
 
-def make_formula(target: str, ref_branch: str, covariate: str | None = None) -> str:
+def make_formula(
+    target: str, ref_branch: BranchLabel, covariate: str | None = None
+) -> str:
     """Makes a formula which defines the model to build. Includes terms for
     treatment branch and, optionally, a main effect for a (generally pre-experiment)
     covariate.
@@ -224,7 +226,10 @@ def _make_joint_output(alphas: list[float], uplift: Uplift) -> Estimates:
 
 
 def _extract_absolute_uplifts(
-    results: RegressionResults, branch: str, ref_branch: str, alphas: list[float]
+    results: RegressionResults,
+    branch: BranchLabel,
+    ref_branch: BranchLabel,
+    alphas: list[float],
 ) -> Estimates:
     """Extracts inferences on absolute differences between branches from a fitted
     linear model. These are simply the point estimates and confidence intervals of the
@@ -257,7 +262,7 @@ def _extract_absolute_uplifts(
 
 def _create_datagrid(
     results: RegressionResults,
-    branches: list[str],
+    branches: list[BranchLabel],
     covariate_col_label: str | None = None,
 ) -> pl.DataFrame:
     """
@@ -293,8 +298,8 @@ def _create_datagrid(
 
 def _extract_relative_uplifts(
     results: RegressionResults,
-    branch: str,
-    ref_branch: str,
+    branch: BranchLabel,
+    ref_branch: BranchLabel,
     alphas: list[float],
     treatment_branches: list[str],
     covariate_col_label: str | None = None,
@@ -357,8 +362,8 @@ def _extract_relative_uplifts(
 def fit_model(
     df: pd.DataFrame,
     target: str,
-    ref_branch: str,
-    treatment_branches: list[str],
+    ref_branch: BranchLabel,
+    treatment_branches: list[BranchLabel],
     covariate: str | None = None,
     deallocate_aggressively: bool = False,
 ) -> RegressionResults:
@@ -457,8 +462,8 @@ def summarize_joint(
     df: pd.DataFrame,
     col_label: str,
     alphas: list[float],
-    branch_list: list[str] | None = None,
-    ref_branch_label: str = "control",
+    branch_list: list[BranchLabel] | None = None,
+    ref_branch_label: BranchLabel = "control",
     covariate_col_label: str | None = None,
     deallocate_aggressively: bool = False,
 ) -> EstimatesByBranch:
@@ -586,10 +591,10 @@ def prepare_df_for_modeling(
 
 
 def _make_empty_compare_branches_output(
-    ref_branch_label: str,
-    branches: pd.Series[str],
+    ref_branch_label: BranchLabel,
+    branches: pd.Series[BranchLabel],
     alphas: list[float],
-    branch_list: list[str] | None = None,
+    branch_list: list[BranchLabel] | None = None,
 ) -> CompareBranchesOutput:
     """
     Constructs an empty output to be returned to Jetstream in the case of an
@@ -616,7 +621,7 @@ def _make_empty_compare_branches_output(
 def _validate_parameters(
     df: pd.DataFrame,
     col_label: str,
-    ref_branch_label: str = "control",
+    ref_branch_label: BranchLabel = "control",
     covariate_col_label: str | None = None,
     threshold_quantile: float | None = None,
     alphas: list[float] | None = None,
@@ -679,7 +684,7 @@ def _validate_parameters(
 def compare_branches_lm(
     df: pd.DataFrame,
     col_label: str,
-    ref_branch_label: str = "control",
+    ref_branch_label: BranchLabel = "control",
     covariate_col_label: str | None = None,
     threshold_quantile: float | None = None,
     alphas: list[float] | None = None,
