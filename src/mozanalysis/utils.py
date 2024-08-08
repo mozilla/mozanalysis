@@ -3,60 +3,64 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import datetime
 import hashlib
-from functools import reduce
-
+from typing import TYPE_CHECKING, Any
 import numpy as np
+import numpy.typing as npt
+
+if TYPE_CHECKING:
+    from numpy.typing import ArrayLike
+
+# def all_(l):
+#     """Return the element-wise logical AND of `Column`s.
+
+#     Think of this as a vector-friendly version of the built-in function
+#     `all()`.
+
+#     Args:
+#         l: A list of `Column`s of booleans. Or, more generally,
+#             an iterable of items to reduce over.
+
+#     Returns:
+#         A `Column` of booleans representing the logical AND. Or,
+#             more generally, the result of the logical AND.
+#     """
+#     return reduce(lambda x, y: x & y, l)
 
 
-def all_(l):
-    """Return the element-wise logical AND of `Column`s.
+# def any_(l):
+#     """Return the element-wise logical OR of `Column`s.
 
-    Think of this as a vector-friendly version of the built-in function
-    `all()`.
+#     Think of this as a vector-friendly version of the built-in function
+#     `any()`.
 
-    Args:
-        l: A list of `Column`s of booleans. Or, more generally,
-            an iterable of items to reduce over.
+#     Args:
+#         l: A list of `Column`s of booleans. Or, more generally,
+#             an iterable of items to reduce over.
 
-    Returns:
-        A `Column` of booleans representing the logical AND. Or,
-            more generally, the result of the logical AND.
-    """
-    return reduce(lambda x, y: x & y, l)
-
-
-def any_(l):
-    """Return the element-wise logical OR of `Column`s.
-
-    Think of this as a vector-friendly version of the built-in function
-    `any()`.
-
-    Args:
-        l: A list of `Column`s of booleans. Or, more generally,
-            an iterable of items to reduce over.
-
-    Returns:
-        A `Column` of booleans representing the logical OR. Or,
-            more generally, the result of the logical OR.
-    """
-    return reduce(lambda x, y: x | y, l)
+#     Returns:
+#         A `Column` of booleans representing the logical OR. Or,
+#             more generally, the result of the logical OR.
+#     """
+#     return reduce(lambda x, y: x | y, l)
 
 
-def add_days(date_string, n_days):
+def add_days(date_string: str, n_days: int) -> str:
     """Add `n_days` days to a date string like '2019-01-01'."""
     original_date = datetime.datetime.strptime(date_string, "%Y-%m-%d")
     new_date = original_date + datetime.timedelta(days=n_days)
     return datetime.datetime.strftime(new_date, "%Y-%m-%d")
 
 
-def date_sub(date_string_l, date_string_r):
+def date_sub(date_string_l: str, date_string_r: str) -> int:
     """Return the number of days between two date strings like '2019-01-01'"""
     date_l = datetime.datetime.strptime(date_string_l, "%Y-%m-%d")
     date_r = datetime.datetime.strptime(date_string_r, "%Y-%m-%d")
     return (date_l - date_r).days
 
 
-def filter_outliers(branch_data, threshold_quantile):
+def filter_outliers(
+    branch_data: npt.NDArray[Any], threshold_quantile: float
+) -> npt.NDArray[Any]:
     """Return branch_data with outliers capped.
 
     N.B. `branch_data` is for an individual branch: if you do it for
@@ -81,7 +85,7 @@ def filter_outliers(branch_data, threshold_quantile):
     return np.clip(branch_data, min_threshold, max_threshold)
 
 
-def hash_ish(string, hex_chars=12):
+def hash_ish(string: str, hex_chars: int = 12) -> str:
     """Return a crude hash of a string."""
     return hashlib.sha256(string.encode("utf-8")).hexdigest()[:hex_chars]
 
@@ -90,7 +94,7 @@ def get_time_intervals(
     start_date: str | datetime.datetime,
     interval: int,
     max_num_dates_enrollment: int,
-) -> list[datetime.datetime]:
+) -> list[datetime.date]:
     """Use a start date and create end dates for enrollment intervals.
     Used to generate intervals of enrollment to calculate metrics over
     variable enrollment lengths.
