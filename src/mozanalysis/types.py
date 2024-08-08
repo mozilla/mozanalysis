@@ -19,3 +19,12 @@ BranchLabel = str
 EstimatesByBranch = dict[BranchLabel, Estimates]
 
 CompareBranchesOutput = dict[ComparativeOption, EstimatesByBranch]
+
+
+class AnalysisUnit(str, Enum):
+    CLIENT = "client_id"
+    PROFILE_GROUP = "profile_group_id"
+
+
+class IncompatibleAnalysisUnit(ValueError):
+    pass
