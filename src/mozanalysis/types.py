@@ -14,7 +14,7 @@ class Uplift(str, Enum):
     RELATIVE = "rel_uplift"
 
 
-Estimates: TypeAlias = pd.Series[Any]
+Estimates: TypeAlias = "pd.Series[Any]"
 BranchLabel: TypeAlias = str
 EstimatesByBranch: TypeAlias = dict[BranchLabel, Estimates]
 
