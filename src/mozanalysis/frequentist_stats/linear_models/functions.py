@@ -10,10 +10,12 @@ import pandas as pd
 import polars as pl
 from marginaleffects import avg_comparisons, datagrid
 from pandas.api.types import is_integer_dtype
+from typing import Any, cast
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.stats.weightstats import DescrStatsW
 
 from mozanalysis.types import (
+    BranchLabel,
     ComparativeOption,
     CompareBranchesOutput,
     Estimates,
@@ -69,7 +71,7 @@ def _make_univariate_output(alphas: list[float]) -> Estimates:
     return res
 
 
-def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> Estimates:
+def summarize_one_branch(branch_data: pd.Series[Any], alphas: list[float]) -> Estimates:
     """Inferences (point estimate and confidence intervals) for
     the mean of a single branch's data. Constructs confidence
     intervals from central limit theory (uses the t-distribution)
@@ -103,7 +105,9 @@ def summarize_one_branch(branch_data: pd.Series, alphas: list[float]) -> Estimat
     return res
 
 
-def _infer_branch_list(branches: pd.Series, branch_list: list[str] | None) -> list[str]:
+def _infer_branch_list(
+    branches: pd.Series[str], branch_list: list[str] | None
+) -> list[BranchLabel]:
     """Determine the list of distinct branches. Used so that `summarize_univariate`
     and `summarize_joint` can take an optional `branch_list` parameter."""
     if branch_list:
@@ -113,8 +117,8 @@ def _infer_branch_list(branches: pd.Series, branch_list: list[str] | None) -> li
 
 
 def summarize_univariate(
-    data: pd.Series,
-    branches: pd.Series,
+    data: pd.Series[Any],
+    branches: pd.Series[str],
     alphas: list[float],
     branch_list: list[str] | None = None,
 ) -> EstimatesByBranch:
@@ -282,7 +286,9 @@ def _create_datagrid(
             **{covariate_col_label: q},
             branch=branches,
         )
-    return newdata
+    # in some cases, datagrid can return a function, therefore assert that in this case
+    # it has in fact returned a polars dataframe
+    return cast(pl.DataFrame, newdata)
 
 
 def _extract_relative_uplifts(
@@ -581,7 +587,7 @@ def prepare_df_for_modeling(
 
 def _make_empty_compare_branches_output(
     ref_branch_label: str,
-    branches: pd.Series,
+    branches: pd.Series[str],
     alphas: list[float],
     branch_list: list[str] | None = None,
 ) -> CompareBranchesOutput:
@@ -610,7 +616,7 @@ def _make_empty_compare_branches_output(
 def _validate_parameters(
     df: pd.DataFrame,
     col_label: str,
-    ref_branch_label="control",
+    ref_branch_label: str = "control",
     covariate_col_label: str | None = None,
     threshold_quantile: float | None = None,
     alphas: list[float] | None = None,
@@ -673,7 +679,7 @@ def _validate_parameters(
 def compare_branches_lm(
     df: pd.DataFrame,
     col_label: str,
-    ref_branch_label="control",
+    ref_branch_label: str = "control",
     covariate_col_label: str | None = None,
     threshold_quantile: float | None = None,
     alphas: list[float] | None = None,

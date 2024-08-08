@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import NewType, Any
+from typing import NewType, Any, TypeAlias
 
 import pandas as pd
 
@@ -14,11 +14,11 @@ class Uplift(str, Enum):
     RELATIVE = "rel_uplift"
 
 
-Estimates = NewType("Estimates", pd.Series[Any])
-BranchLabel = NewType("BranchLabel", str)
-EstimatesByBranch = dict[BranchLabel, Estimates]
+Estimates: TypeAlias = pd.Series[Any]
+BranchLabel: TypeAlias = str
+EstimatesByBranch: TypeAlias = dict[BranchLabel, Estimates]
 
-CompareBranchesOutput = dict[ComparativeOption, EstimatesByBranch]
+CompareBranchesOutput: TypeAlias = dict[ComparativeOption, EstimatesByBranch]
 
 
 class AnalysisUnit(str, Enum):
