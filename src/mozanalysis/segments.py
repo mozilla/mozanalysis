@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import attr
+from mozanalysis.experiment import TimeLimits
 
 
 @attr.s(frozen=True, slots=True)
@@ -41,8 +42,8 @@ class SegmentDataSource:
             used for validation
     """
 
-    name = attr.ib(validator=attr.validators.instance_of(str))
-    _from_expr = attr.ib(validator=attr.validators.instance_of(str))
+    name = attr.ib(type=str, validator=attr.validators.instance_of(str))
+    _from_expr = attr.ib(type=str, validator=attr.validators.instance_of(str))
     window_start = attr.ib(default=0, type=int)
     window_end = attr.ib(default=0, type=int)
     client_id_column = attr.ib(default="client_id", type=str)
@@ -51,8 +52,17 @@ class SegmentDataSource:
     app_name = attr.ib(default=None, type=str | None)
 
     @default_dataset.validator
-    def _check_default_dataset_provided_if_needed(self, attribute, value):
+    def _check_default_dataset_provided_if_needed(
+        self, attribute: "attr.Attribute[str | None]", value: str | None
+    ) -> None:
         self.from_expr_for(None)
+
+    @window_start.validator
+    def window_start_lte_window_end(
+        self, attribute: "attr.Attribute[int]", value: int
+    ) -> None:
+        if value > self.window_end:
+            raise ValueError("window_start must be <= window_end")
 
     def from_expr_for(self, dataset: str | None) -> str:
         """Expands the ``from_expr`` template for the given dataset.
@@ -74,11 +84,11 @@ class SegmentDataSource:
 
     def build_query(
         self,
-        segment_list,
-        time_limits,
-        experiment_slug,
-        from_expr_dataset=None,
-    ):
+        segment_list: list["Segment"],
+        time_limits: TimeLimits,
+        experiment_slug: str,
+        from_expr_dataset: str | None = None,
+    ) -> str:
         """Return a nearly self contained SQL query.
 
         The query takes a list of ``client_id``s from
@@ -113,10 +123,10 @@ class SegmentDataSource:
 
     def build_query_target(
         self,
-        target,
-        time_limits,
-        from_expr_dataset=None,
-    ):
+        target: "Segment",
+        time_limits: TimeLimits,
+        from_expr_dataset: str | None = None,
+    ) -> str:
         """
         Return a nearly-self contained SQL query, for use with
         mozanalysis.sizing.HistoricalTarget.
@@ -149,11 +159,6 @@ class SegmentDataSource:
             target_name=target.name,
         )
 
-    @window_start.validator
-    def window_start_lte_window_end(self, attribute, value):
-        if value > self.window_end:
-            raise ValueError("window_start must be <= window_end")
-
 
 @attr.s(frozen=True, slots=True)
 class Segment:
@@ -175,7 +180,9 @@ class Segment:
     """
 
     name = attr.ib(type=str)
-    data_source = attr.ib(validator=attr.validators.instance_of(SegmentDataSource))
+    data_source = attr.ib(
+        type=SegmentDataSource, validator=attr.validators.instance_of(SegmentDataSource)
+    )
     select_expr = attr.ib(type=str)
     friendly_name = attr.ib(type=str | None, default=None)
     description = attr.ib(type=str | None, default=None)
