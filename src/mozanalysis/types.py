@@ -15,12 +15,28 @@ class Uplift(str, Enum):
     RELATIVE = "rel_uplift"
 
 
+# generic
 Numeric: TypeAlias = bool | int | float
+NumericNDArray: TypeAlias = np.ndarray[bool] | np.ndarray[int] | np.ndarray[float]
 Estimates: TypeAlias = "pd.Series[float]"
 BranchLabel: TypeAlias = str
 EstimatesByBranch: TypeAlias = dict[BranchLabel, Estimates]
 
 CompareBranchesOutput: TypeAlias = dict[ComparativeOption, EstimatesByBranch]
+
+# bootstrapping specific
+
+QuantilesType: TypeAlias = tuple[float, ...]
+BootstrapSamples: TypeAlias = pd.Series[Numeric]
+
+# each column is a parameter
+# used when bootstrapping deciles or empirical cdf
+ParameterizedBootstrapSamples: TypeAlias = pd.DataFrame
+ParameterizedEstimates: TypeAlias = pd.DataFrame
+ParameterizedEstimatesByBranch: TypeAlias = dict[BranchLabel, ParameterizedEstimates]
+ParameterizedCompareBranchesOutput: TypeAlias = dict[
+    ComparativeOption, ParameterizedEstimatesByBranch
+]
 
 
 class AnalysisUnit(str, Enum):
