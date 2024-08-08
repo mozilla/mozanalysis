@@ -3,12 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import datetime
 import hashlib
-from typing import TYPE_CHECKING, Any
+from typing import Any
 import numpy as np
-import numpy.typing as npt
-
-if TYPE_CHECKING:
-    from numpy.typing import ArrayLike
+import mozanalysis.types as types
 
 # def all_(l):
 #     """Return the element-wise logical AND of `Column`s.
@@ -59,8 +56,8 @@ def date_sub(date_string_l: str, date_string_r: str) -> int:
 
 
 def filter_outliers(
-    branch_data: npt.NDArray[Any], threshold_quantile: float
-) -> npt.NDArray[Any]:
+    branch_data: types.NumericNDArray, threshold_quantile: float
+) -> types.NumericNDArray:
     """Return branch_data with outliers capped.
 
     N.B. `branch_data` is for an individual branch: if you do it for

@@ -8,18 +8,20 @@ import pandas as pd
 
 import mozanalysis.bayesian_stats as mabs
 from mozanalysis.utils import filter_outliers
+from typing import cast
+import mozanalysis.types as types
 
 
 def compare_branches(
-    df,
-    col_label,
-    ref_branch_label="control",
-    stat_fn=np.mean,
-    num_samples=10000,
-    threshold_quantile=None,
-    individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
-    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES,
-):
+    df: pd.DataFrame,
+    col_label: str,
+    ref_branch_label: types.BranchLabel = "control",
+    stat_fn: types.StatFunctionType = np.mean,
+    num_samples: int = 10000,
+    threshold_quantile: float | None = None,
+    individual_summary_quantiles: types.QuantilesType = mabs.DEFAULT_QUANTILES,
+    comparative_summary_quantiles: types.QuantilesType = mabs.DEFAULT_QUANTILES,
+) -> types.CompareBranchesOutput | types.ParameterizedCompareBranchesOutput:
     """Jointly sample bootstrapped statistics then compare them.
 
     Performs a percentile bootstrap, which, according to Efron,
@@ -74,23 +76,26 @@ def compare_branches(
         of `stat_fn`, and is the Series that would be returned if ``stat_fn``
         computed only this statistic.
     """
-    branch_list = df.branch.unique()
+    branch_list = cast(pd.Series[types.BranchLabel], df.branch.unique())
 
     if ref_branch_label not in branch_list:
         raise ValueError(
             f"Branch label '{ref_branch_label}' not in branch list '{branch_list}"
         )
 
-    samples = {
-        # TODO: do we need to control seed_start? If so then we must be careful here
-        b: get_bootstrap_samples(
-            df[col_label][df.branch == b],
-            stat_fn,
-            num_samples,
-            threshold_quantile=threshold_quantile,
-        )
-        for b in branch_list
-    }
+    samples = cast(
+        types.AnySamplesByBranch,
+        {
+            # TODO: do we need to control seed_start? If so then we must be careful here
+            b: get_bootstrap_samples(
+                df[col_label][df.branch == b],
+                stat_fn,
+                num_samples,
+                threshold_quantile=threshold_quantile,
+            )
+            for b in branch_list
+        },
+    )
 
     return mabs.compare_samples(
         samples,
@@ -101,13 +106,13 @@ def compare_branches(
 
 
 def bootstrap_one_branch(
-    data,
-    stat_fn=np.mean,
-    num_samples=10000,
-    seed_start=None,
-    threshold_quantile=None,
-    summary_quantiles=mabs.DEFAULT_QUANTILES,
-):
+    data: pd.Series[types.Numeric],
+    stat_fn: types.StatFunctionType = np.mean,
+    num_samples: int = 10000,
+    seed_start: int | None = None,
+    threshold_quantile: float | None = None,
+    summary_quantiles: types.QuantilesType = mabs.DEFAULT_QUANTILES,
+) -> types.Estimates | types.ParameterizedEstimates:
     """Run a bootstrap for one branch on its own.
 
     Resamples the data ``num_samples`` times, computes ``stat_fn`` for
@@ -139,12 +144,12 @@ def bootstrap_one_branch(
 
 
 def get_bootstrap_samples(
-    data,
-    stat_fn=np.mean,
-    num_samples=10000,
-    seed_start=None,
-    threshold_quantile=None,
-):
+    data: pd.Series[types.Numeric] | pd.DataFrame | types.NumericNDArray,
+    stat_fn: types.StatFunctionType = np.mean,
+    num_samples: int = 10000,
+    seed_start: int | None = None,
+    threshold_quantile: float | None = None,
+) -> types.BootstrapSamples | types.ParameterizedBootstrapSamples:
     """Return ``stat_fn`` evaluated on resampled and original data.
 
     Do the resampling in parallel over the cluster.
@@ -176,8 +181,10 @@ def get_bootstrap_samples(
             * if ``stat_fn`` returns a dict, a pandas DataFrame
               with columns set to the dict keys.
     """
-    if type(data) is not np.ndarray:
+    if isinstance(data, pd.Series) or isinstance(data, pd.DataFrame):
         data = np.array(data.to_numpy(dtype="float", na_value=np.nan))
+
+    data = cast(types.NumericNDArray, data)
 
     if np.isnan(data).any():
         raise ValueError("'data' contains null values")
@@ -205,7 +212,11 @@ def get_bootstrap_samples(
     return summary_df
 
 
-def _resample_and_agg_once(data, stat_fn, unique_seed=None):
+def _resample_and_agg_once(
+    data: types.NumericNDArray,
+    stat_fn: types.StatFunctionType,
+    unique_seed: int | None = None,
+) -> types.StatFunctionReturnType:
     random_state = np.random.RandomState(unique_seed)
 
     n = len(data)
@@ -218,15 +229,15 @@ def _resample_and_agg_once(data, stat_fn, unique_seed=None):
 
 
 def compare_branches_quantiles(
-    df,
-    col_label,
-    ref_branch_label="control",
-    quantiles_of_interest=None,
-    num_samples=10000,
-    threshold_quantile=None,
-    individual_summary_quantiles=mabs.DEFAULT_QUANTILES,
-    comparative_summary_quantiles=mabs.DEFAULT_QUANTILES,
-):
+    df: pd.DataFrame,
+    col_label: str,
+    ref_branch_label: types.BranchLabel = "control",
+    quantiles_of_interest: list[float] | None = None,
+    num_samples: int = 10000,
+    threshold_quantile: float | None = None,
+    individual_summary_quantiles: types.QuantilesType = mabs.DEFAULT_QUANTILES,
+    comparative_summary_quantiles: types.QuantilesType = mabs.DEFAULT_QUANTILES,
+) -> types.ParameterizedCompareBranchesOutput:
     """
     Performs inferences on the metric quantiles inspired by Spotify's
     "Resampling-free bootstrap inference for quantiles" approach
@@ -241,7 +252,7 @@ def compare_branches_quantiles(
 
     if quantiles_of_interest is None:
         quantiles_of_interest = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    branch_list = df.branch.unique()
+    branch_list = cast(pd.Series[types.BranchLabel], df.branch.unique())
 
     if ref_branch_label not in branch_list:
         raise ValueError(
@@ -258,32 +269,40 @@ def compare_branches_quantiles(
         for b in branch_list
     }
 
-    return mabs.compare_samples(
-        samples,
-        ref_branch_label,
-        individual_summary_quantiles,
-        comparative_summary_quantiles,
+    return cast(
+        types.ParameterizedCompareBranchesOutput,
+        mabs.compare_samples(
+            samples,
+            ref_branch_label,
+            individual_summary_quantiles,
+            comparative_summary_quantiles,
+        ),
     )
 
 
 def get_quantile_bootstrap_samples(
-    data, quantiles_of_interest, num_samples=10000, threshold_quantile=None
-):
+    data: "pd.Series[types.Numeric]",
+    quantiles_of_interest: list[float],
+    num_samples: int = 10000,
+    threshold_quantile: float | None = None,
+) -> types.ParameterizedBootstrapSamples:
     """Params are similar to `get_bootstrap_samples`"""
-    if type(data) is not np.ndarray:
-        data = np.array(data.to_numpy(dtype="float", na_value=np.nan))
+    # if type(data) is not np.ndarray:
+    data_arr = cast(
+        types.NumericNDArray, np.array(data.to_numpy(dtype="float", na_value=np.nan))
+    )
 
-    if np.isnan(data).any():
+    if np.isnan(data_arr).any():
         raise ValueError("'data' contains null values")
 
     if threshold_quantile:
-        data = filter_outliers(data, threshold_quantile)
+        data_arr = filter_outliers(data_arr, threshold_quantile)
 
-    data = np.sort(data)
+    data_arr = cast(types.NumericNDArray, np.sort(data_arr))
 
-    sample_size = data.shape[0]
+    sample_size = data_arr.shape[0]
     samples = {
-        f"{quantile:.1}": data[
+        f"{quantile:.1}": data_arr[
             np.random.binomial(sample_size - 1, quantile, num_samples)
         ]
         for quantile in quantiles_of_interest

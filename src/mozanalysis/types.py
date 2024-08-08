@@ -1,8 +1,9 @@
 from enum import Enum
-from typing import TypeAlias
+from typing import TypeAlias, Callable
 
 import pandas as pd
 import numpy as np
+import numpy.typing as npt
 
 
 class ComparativeOption(str, Enum):
@@ -17,7 +18,9 @@ class Uplift(str, Enum):
 
 # generic
 Numeric: TypeAlias = bool | int | float
-NumericNDArray: TypeAlias = np.ndarray[bool] | np.ndarray[int] | np.ndarray[float]
+NumericNDArray: TypeAlias = (
+    npt.NDArray[np.bool_] | npt.NDArray[np.int_] | npt.NDArray[np.float_]
+)
 Estimates: TypeAlias = "pd.Series[float]"
 BranchLabel: TypeAlias = str
 EstimatesByBranch: TypeAlias = dict[BranchLabel, Estimates]
@@ -27,7 +30,7 @@ CompareBranchesOutput: TypeAlias = dict[ComparativeOption, EstimatesByBranch]
 # bootstrapping specific
 
 QuantilesType: TypeAlias = tuple[float, ...]
-BootstrapSamples: TypeAlias = pd.Series[Numeric]
+BootstrapSamples: TypeAlias = "pd.Series[Numeric]"
 
 # each column is a parameter
 # used when bootstrapping deciles or empirical cdf
@@ -37,6 +40,15 @@ ParameterizedEstimatesByBranch: TypeAlias = dict[BranchLabel, ParameterizedEstim
 ParameterizedCompareBranchesOutput: TypeAlias = dict[
     ComparativeOption, ParameterizedEstimatesByBranch
 ]
+
+StatFunctionReturnType: TypeAlias = Numeric | dict[str, Numeric]
+StatFunctionType: TypeAlias = Callable[[BootstrapSamples], StatFunctionReturnType]
+
+SamplesByBranch: TypeAlias = dict[BranchLabel, BootstrapSamples]
+ParameterizedSamplesByBranch: TypeAlias = dict[
+    BranchLabel, ParameterizedBootstrapSamples
+]
+AnySamplesByBranch = SamplesByBranch | ParameterizedSamplesByBranch
 
 
 class AnalysisUnit(str, Enum):

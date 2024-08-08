@@ -3,28 +3,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import numpy as np
 import pandas as pd
-from mozanalysis.types import (
-    BranchLabel,
-    Estimates,
-    CompareBranchesOutput,
-    ComparativeOption,
-    QuantilesType,
-    BootstrapSamples,
-    ParameterizedEstimates,
-    ParameterizedBootstrapSamples,
-    ParameterizedCompareBranchesOutput,
-)
+import mozanalysis.types as types
 from typing import cast
 
 DEFAULT_QUANTILES = (0.005, 0.025, 0.5, 0.975, 0.995)
 
 
 def compare_samples(
-    samples: dict[BranchLabel, BootstrapSamples | ParameterizedBootstrapSamples],
-    ref_branch_label: BranchLabel,
-    individual_summary_quantiles: QuantilesType = DEFAULT_QUANTILES,
-    comparative_summary_quantiles: QuantilesType = DEFAULT_QUANTILES,
-) -> CompareBranchesOutput | ParameterizedCompareBranchesOutput:
+    samples: types.SamplesByBranch | types.ParameterizedSamplesByBranch,
+    ref_branch_label: types.BranchLabel,
+    individual_summary_quantiles: types.QuantilesType = DEFAULT_QUANTILES,
+    comparative_summary_quantiles: types.QuantilesType = DEFAULT_QUANTILES,
+) -> types.CompareBranchesOutput | types.ParameterizedCompareBranchesOutput:
     """Return descriptive statistics for branch stats and uplifts.
 
     Given per-branch samples for some quantity, return summary
@@ -69,15 +59,15 @@ def compare_samples(
     branch_list = list(samples.keys())
 
     return cast(
-        CompareBranchesOutput | ParameterizedCompareBranchesOutput,
+        types.CompareBranchesOutput | types.ParameterizedCompareBranchesOutput,
         {
-            ComparativeOption.INDIVIDUAL: {
+            types.ComparativeOption.INDIVIDUAL: {
                 b: summarize_one_branch_samples(
                     samples[b], quantiles=individual_summary_quantiles
                 )
                 for b in branch_list
             },
-            ComparativeOption.COMPARATIVE: {
+            types.ComparativeOption.COMPARATIVE: {
                 b: summarize_joint_samples(
                     samples[b],
                     samples[ref_branch_label],
@@ -90,9 +80,9 @@ def compare_samples(
 
 
 def summarize_one_branch_samples(
-    samples: BootstrapSamples | ParameterizedBootstrapSamples,
-    quantiles: QuantilesType = DEFAULT_QUANTILES,
-) -> Estimates | ParameterizedEstimates:
+    samples: types.BootstrapSamples | types.ParameterizedBootstrapSamples,
+    quantiles: types.QuantilesType = DEFAULT_QUANTILES,
+) -> types.Estimates | types.ParameterizedEstimates:
     """Return descriptive statistics for sampled population-level stats.
 
     Given samples from one or more distributions, calculate some
@@ -124,19 +114,19 @@ def summarize_one_branch_samples(
     """
     if isinstance(samples, pd.DataFrame) or not np.isscalar(samples[0]):
         return _summarize_one_branch_samples_batch(
-            cast(ParameterizedBootstrapSamples, samples), quantiles
+            cast(types.ParameterizedBootstrapSamples, samples), quantiles
         )
     else:
         return _summarize_one_branch_samples_single(
-            cast(BootstrapSamples, samples), quantiles
+            cast(types.BootstrapSamples, samples), quantiles
         )
 
 
 def summarize_joint_samples(
-    focus: BootstrapSamples | ParameterizedBootstrapSamples,
-    reference: BootstrapSamples | ParameterizedBootstrapSamples,
-    quantiles: QuantilesType = DEFAULT_QUANTILES,
-) -> Estimates | ParameterizedEstimates:
+    focus: types.BootstrapSamples | types.ParameterizedBootstrapSamples,
+    reference: types.BootstrapSamples | types.ParameterizedBootstrapSamples,
+    quantiles: types.QuantilesType = DEFAULT_QUANTILES,
+) -> types.Estimates | types.ParameterizedEstimates:
     """Return descriptive statistics for uplifts.
 
     The intended use case of this function is to compare a 'focus'
@@ -201,22 +191,22 @@ def summarize_joint_samples(
     """
     if isinstance(focus, pd.DataFrame) or not np.isscalar(focus[0]):
         return _summarize_joint_samples_batch(
-            cast(ParameterizedBootstrapSamples, focus),
-            cast(ParameterizedBootstrapSamples, reference),
+            cast(types.ParameterizedBootstrapSamples, focus),
+            cast(types.ParameterizedBootstrapSamples, reference),
             quantiles,
         )
     else:
         return _summarize_joint_samples_single(
-            cast(Estimates, focus),
-            cast(Estimates, reference),
+            cast(types.Estimates, focus),
+            cast(types.Estimates, reference),
             quantiles,
         )
 
 
 def _summarize_one_branch_samples_single(
-    samples: BootstrapSamples,
+    samples: types.BootstrapSamples,
     quantiles: tuple[float, ...] = DEFAULT_QUANTILES,
-) -> Estimates:
+) -> types.Estimates:
     if not isinstance(samples, pd.Series | np.ndarray | list):
         # Hey pd.Series.agg - don't apply me elementwise!
         # Raising this error allows ``_summarize_one_branch_samples_batch``
@@ -233,19 +223,20 @@ def _summarize_one_branch_samples_single(
 
 
 def _summarize_one_branch_samples_batch(
-    samples: ParameterizedBootstrapSamples, quantiles: QuantilesType = DEFAULT_QUANTILES
-) -> ParameterizedEstimates:
+    samples: types.ParameterizedBootstrapSamples,
+    quantiles: types.QuantilesType = DEFAULT_QUANTILES,
+) -> types.ParameterizedEstimates:
     return cast(
-        ParameterizedEstimates,
+        types.ParameterizedEstimates,
         samples.agg(summarize_one_branch_samples, quantiles=quantiles).T,
     )
 
 
 def _summarize_joint_samples_single(
-    focus: BootstrapSamples,
-    reference: BootstrapSamples,
-    quantiles: QuantilesType = DEFAULT_QUANTILES,
-) -> Estimates:
+    focus: types.BootstrapSamples,
+    reference: types.BootstrapSamples,
+    quantiles: types.QuantilesType = DEFAULT_QUANTILES,
+) -> types.Estimates:
     str_quantiles = [str(q) for q in quantiles]
 
     index = pd.MultiIndex.from_tuples(
@@ -280,10 +271,10 @@ def _summarize_joint_samples_single(
 
 
 def _summarize_joint_samples_batch(
-    focus: ParameterizedBootstrapSamples,
-    reference: ParameterizedBootstrapSamples,
-    quantiles: QuantilesType = DEFAULT_QUANTILES,
-) -> ParameterizedEstimates:
+    focus: types.ParameterizedBootstrapSamples,
+    reference: types.ParameterizedBootstrapSamples,
+    quantiles: types.QuantilesType = DEFAULT_QUANTILES,
+) -> types.ParameterizedEstimates:
     if set(focus.columns) != set(reference.columns):
         raise ValueError()
 
