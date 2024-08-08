@@ -104,7 +104,7 @@ class DataSource:
         default="submission_date",
         type=str,
         validator=[attr.validators.instance_of(str), attr.validators.min_len(1)],
-        converter=group_id_column_converter,
+        converter=submission_date_column_converter,
     )
     default_dataset = attr.ib(default=None, type=str | None)
     app_name = attr.ib(default=None, type=str | None)
