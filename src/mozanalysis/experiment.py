@@ -505,7 +505,7 @@ class Experiment:
 
             SELECT
                 se.*,
-                e.* EXCEPT ({self.analysis_unit}, branch)
+                e.* EXCEPT ({self.analysis_unit.value}, branch)
             FROM segmented_enrollments se
             LEFT JOIN exposures e
             USING ({self.analysis_unit.value}, branch)
