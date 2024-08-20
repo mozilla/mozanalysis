@@ -8,6 +8,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, cast
 
 import attr
+from metric_config_parser import AnalysisUnit
 from typing_extensions import assert_never
 
 from mozanalysis import APPS
@@ -15,7 +16,7 @@ from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
-from mozanalysis.types import AnalysisUnit, IncompatibleAnalysisUnit
+from mozanalysis.types import IncompatibleAnalysisUnit
 from mozanalysis.utils import add_days, date_sub, hash_ish
 
 if TYPE_CHECKING:

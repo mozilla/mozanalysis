@@ -6,9 +6,10 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING
 
+from metric_config_parser import AnalysisUnit
 from typing_extensions import assert_never
 
-from mozanalysis.types import AnalysisUnit, IncompatibleAnalysisUnit
+from mozanalysis.types import IncompatibleAnalysisUnit
 
 if TYPE_CHECKING:
     from metric_config_parser.data_source import DataSource as ParserDataSource
