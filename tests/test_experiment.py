@@ -10,6 +10,7 @@ from helpers.config_loader_lists import (
     klar_android_metrics,
     klar_ios_metrics,
 )
+from metric_config_parser import AnalysisUnit
 from mozanalysis.config import ApplicationNotFound, ConfigLoader
 from mozanalysis.experiment import (
     AnalysisWindow,
@@ -21,7 +22,6 @@ from mozanalysis.experiment import (
 from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
-from metric_config_parser import AnalysisUnit
 
 
 def test_time_limits_validates():
