@@ -82,6 +82,9 @@
 
 <span class="kn">from</span> <span class="nn">metric_config_parser.config</span> <span class="kn">import</span> <span class="n">ConfigCollection</span>
 
+<span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">DataSource</span><span class="p">,</span> <span class="n">Metric</span>
+<span class="kn">from</span> <span class="nn">mozanalysis.segments</span> <span class="kn">import</span> <span class="n">Segment</span><span class="p">,</span> <span class="n">SegmentDataSource</span>
+
 <span class="n">METRIC_HUB_JETSTREAM_REPO</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/mozilla/metric-hub/tree/main/jetstream&quot;</span>
 
 
@@ -166,12 +169,11 @@
 
 <div class="viewcode-block" id="_ConfigLoader.get_metric">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_metric">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a metric definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.Metric` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
 
         <span class="n">metric_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get_metric_definition</span><span class="p">(</span><span class="n">metric_slug</span><span class="p">,</span> <span class="n">app_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">metric_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -201,12 +203,11 @@
 
 <div class="viewcode-block" id="_ConfigLoader.get_data_source">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_data_source">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSource</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a data source definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.DataSource` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">DataSource</span>
 
         <span class="n">data_source_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get_data_source_definition</span><span class="p">(</span>
             <span class="n">data_source_slug</span><span class="p">,</span> <span class="n">app_name</span>
@@ -221,29 +222,16 @@
                     <span class="sa">f</span><span class="s2">&quot;Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> could not be resolved&quot;</span>  <span class="c1"># noqa:E501</span>
                 <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">DataSource</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">from_expr</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">from_expression</span><span class="p">,</span>
-            <span class="n">client_id_column</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">client_id_column</span><span class="p">,</span>
-            <span class="n">submission_date_column</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">submission_date_column</span><span class="p">,</span>
-            <span class="n">experiments_column_type</span><span class="o">=</span><span class="p">(</span>
-                <span class="kc">None</span>
-                <span class="k">if</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span>
-                <span class="k">else</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span>
-            <span class="p">),</span>
-            <span class="n">default_dataset</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">default_dataset</span><span class="p">,</span>
-            <span class="n">app_name</span><span class="o">=</span><span class="n">app_name</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">DataSource</span><span class="o">.</span><span class="n">from_mcp_data_source</span><span class="p">(</span><span class="n">data_source_definition</span><span class="p">,</span> <span class="n">app_name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="_ConfigLoader.get_segment">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_segment">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Segment</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a segment definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.segments.Segment` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">mozanalysis.segments</span> <span class="kn">import</span> <span class="n">Segment</span>
 
         <span class="n">segment_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get_segment_definition</span><span class="p">(</span><span class="n">segment_slug</span><span class="p">,</span> <span class="n">app_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">segment_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -272,12 +260,13 @@
 
 <div class="viewcode-block" id="_ConfigLoader.get_segment_data_source">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_segment_data_source">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_segment_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_segment_data_source</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SegmentDataSource</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a segment data source definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.segments.SegmentDataSource` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">mozanalysis.segments</span> <span class="kn">import</span> <span class="n">SegmentDataSource</span>
 
         <span class="n">data_source_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get_segment_data_source_definition</span><span class="p">(</span>
             <span class="n">data_source_slug</span><span class="p">,</span> <span class="n">app_name</span>
@@ -306,7 +295,9 @@
 
 <div class="viewcode-block" id="_ConfigLoader.get_outcome_metric">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_outcome_metric">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_outcome_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_outcome_metric</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a metric definition from an outcome defined for the given app.</span>
 
 <span class="sd">        Parametrized metrics are not supported, since they may not be defined outside</span>
@@ -340,12 +331,15 @@
         <span class="n">summaries</span> <span class="o">=</span> <span class="n">metric_definition</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">outcome_spec</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="p">)</span>
         <span class="n">metric</span> <span class="o">=</span> <span class="n">summaries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">metric</span>
 
+        <span class="k">if</span> <span class="n">metric</span><span class="o">.</span><span class="n">data_source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to resolve DataSource for Metric </span><span class="si">{</span><span class="n">metric</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">Metric</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">metric</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
             <span class="n">select_expr</span><span class="o">=</span><span class="n">metric</span><span class="o">.</span><span class="n">select_expression</span><span class="p">,</span>
             <span class="n">friendly_name</span><span class="o">=</span><span class="n">metric</span><span class="o">.</span><span class="n">friendly_name</span><span class="p">,</span>
             <span class="n">description</span><span class="o">=</span><span class="n">metric</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
-            <span class="n">data_source</span><span class="o">=</span><span class="n">metric</span><span class="o">.</span><span class="n">data_source</span><span class="p">,</span>
+            <span class="n">data_source</span><span class="o">=</span><span class="n">DataSource</span><span class="o">.</span><span class="n">from_mcp_data_source</span><span class="p">(</span><span class="n">metric</span><span class="o">.</span><span class="n">data_source</span><span class="p">,</span> <span class="n">app_name</span><span class="p">),</span>
             <span class="n">bigger_is_better</span><span class="o">=</span><span class="n">metric</span><span class="o">.</span><span class="n">bigger_is_better</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -354,7 +348,7 @@
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_outcome_data_source">[docs]</a>
     <span class="k">def</span> <span class="nf">get_outcome_data_source</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSource</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a data source definition from an outcome defined for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.DataSource` instance.</span>
@@ -379,17 +373,8 @@
                 <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; in outcome </span><span class="si">{</span><span class="n">outcome_slug</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">DataSource</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">from_expr</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">from_expression</span><span class="p">,</span>
-            <span class="n">client_id_column</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">client_id_column</span><span class="p">,</span>
-            <span class="n">submission_date_column</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">submission_date_column</span><span class="p">,</span>
-            <span class="n">experiments_column_type</span><span class="o">=</span><span class="p">(</span>
-                <span class="kc">None</span>
-                <span class="k">if</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span>
-                <span class="k">else</span> <span class="n">data_source_definition</span><span class="o">.</span><span class="n">experiments_column_type</span>
-            <span class="p">),</span>
-            <span class="n">default_dataset</span><span class="o">=</span><span class="n">data_source_definition</span><span class="o">.</span><span class="n">default_dataset</span><span class="p">,</span>
+        <span class="k">return</span> <span class="n">DataSource</span><span class="o">.</span><span class="n">from_mcp_data_source</span><span class="p">(</span>
+            <span class="n">data_source_definition</span><span class="p">,</span> <span class="n">app_name</span><span class="o">=</span><span class="n">app_name</span>
         <span class="p">)</span></div>
 </div>
 
