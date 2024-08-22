@@ -145,7 +145,7 @@ class Experiment:
     analysis_unit = attr.ib(
         type=AnalysisUnit,
         default=AnalysisUnit.CLIENT,
-        converter=lambda s: AnalysisUnit(s),  # allows callers to pass a string
+        validator=attr.validators.instance_of(AnalysisUnit),
     )
 
     def get_app_name(self):
