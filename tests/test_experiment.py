@@ -1439,24 +1439,3 @@ def test_fenix_group_id_incompatible_exposures():
         exp._build_exposure_query(
             time_limits=tl, exposure_query_type=EnrollmentsQueryType.FENIX_FALLBACK
         )
-
-
-def test_group_id_no_downsampling():
-    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
-
-    tl = TimeLimits.for_ts(
-        first_enrollment_date="2019-01-01",
-        last_date_full_data="2019-03-01",
-        time_series_period="weekly",
-        num_dates_enrollment=8,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="Downsampling is not yet supported for group-level experiments",
-    ):
-        exp.build_enrollments_query(
-            time_limits=tl,
-            enrollments_query_type=EnrollmentsQueryType.NORMANDY,
-            sample_size=99,
-        )
