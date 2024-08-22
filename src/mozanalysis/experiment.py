@@ -5,20 +5,22 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import attr
+from metric_config_parser import AnalysisUnit
+from typing_extensions import assert_never
 
 from mozanalysis import APPS
 from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
+from mozanalysis.segments import Segment, SegmentDataSource
+from mozanalysis.types import IncompatibleAnalysisUnit
 from mozanalysis.utils import add_days, date_sub, hash_ish
 
 if TYPE_CHECKING:
     from pandas import DataFrame
-
-    from mozanalysis.segments import Segment, SegmentDataSource
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +116,12 @@ class Experiment:
         app_id (str, optional): For a Glean app, the name of the BigQuery
             dataset derived from its app ID, like `org_mozilla_firefox`.
         app_name (str, optional): The Glean app name, like `fenix`.
+        analysis_unit (AnalysisUnit, optional):  the "unit" of analysis,
+            which defines an experimental unit. For example: `CLIENT`
+            for mobile experiments or `GROUP` for desktop experiments.  Is used
+            as the join key when building queries and sub-unit level data is
+            aggregated up to that level. Defaults to `AnalysisUnit.CLIENT`
+            unless specified
 
     Attributes:
         experiment_slug (str): Name of the study, used to identify
@@ -129,11 +137,16 @@ class Experiment:
             before UTC midnight.
     """
 
-    experiment_slug = attr.ib()
+    experiment_slug = attr.ib(type=str, validator=attr.validators.instance_of(str))
     start_date = attr.ib()
     num_dates_enrollment = attr.ib(default=None)
     app_id = attr.ib(default=None)
     app_name = attr.ib(default=None)
+    analysis_unit = attr.ib(
+        type=AnalysisUnit,
+        default=AnalysisUnit.CLIENT,
+        validator=attr.validators.instance_of(AnalysisUnit),
+    )
 
     def get_app_name(self):
         """
@@ -465,7 +478,9 @@ class Experiment:
         sample_size = sample_size or 100
 
         enrollments_query = custom_enrollments_query or self._build_enrollments_query(
-            time_limits, enrollments_query_type, sample_size
+            time_limits,
+            enrollments_query_type,
+            sample_size,
         )
 
         if exposure_signal:
@@ -474,10 +489,14 @@ class Experiment:
             )
         else:
             exposure_query = custom_exposure_query or self._build_exposure_query(
-                time_limits, enrollments_query_type
+                time_limits,
+                enrollments_query_type,
             )
 
-        segments_query = self._build_segments_query(segment_list, time_limits)
+        segments_query = self._build_segments_query(
+            segment_list,
+            time_limits,
+        )
 
         return f"""
             WITH raw_enrollments AS ({enrollments_query}),
@@ -486,10 +505,10 @@ class Experiment:
 
             SELECT
                 se.*,
-                e.* EXCEPT (client_id, branch)
+                e.* EXCEPT ({self.analysis_unit.value}, branch)
             FROM segmented_enrollments se
             LEFT JOIN exposures e
-            USING (client_id, branch)
+            USING ({self.analysis_unit.value}, branch)
         """
 
     def build_metrics_query(
@@ -563,9 +582,7 @@ class Experiment:
             FROM `{enrollments_table}` e
             CROSS JOIN analysis_windows aw
         ),
-        exposures AS (
-            {exposure_query}
-        ),
+        exposures AS ({exposure_query}),
         enrollments AS (
             SELECT
                 e.* EXCEPT (exposure_date, num_exposure_events),
@@ -573,7 +590,7 @@ class Experiment:
                 x.num_exposure_events
             FROM exposures x
                 RIGHT JOIN raw_enrollments e
-                USING (client_id, branch)
+                USING ({id_column}, branch)
         )
         SELECT
             enrollments.*,
@@ -586,6 +603,7 @@ class Experiment:
             metrics_columns=",\n        ".join(metrics_columns),
             metrics_joins="\n".join(metrics_joins),
             enrollments_table=enrollments_table,
+            id_column=self.analysis_unit.value,
         )
 
     @staticmethod
@@ -611,16 +629,27 @@ class Experiment:
     ) -> str:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == EnrollmentsQueryType.NORMANDY:
-            return self._build_enrollments_query_normandy(time_limits, sample_size)
+            return self._build_enrollments_query_normandy(
+                time_limits,
+                sample_size,
+            )
         elif enrollments_query_type == EnrollmentsQueryType.GLEAN_EVENT:
             if not self.app_id:
                 raise ValueError(
                     "App ID must be defined for building Glean enrollments query"
                 )
+            if not self.analysis_unit == AnalysisUnit.CLIENT:
+                raise IncompatibleAnalysisUnit(
+                    "Glean enrollments currently only support client_id analysis units"
+                )
             return self._build_enrollments_query_glean_event(
                 time_limits, self.app_id, sample_size
             )
         elif enrollments_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
+            if not self.analysis_unit == AnalysisUnit.CLIENT:
+                raise IncompatibleAnalysisUnit(
+                    "Fenix fallback enrollments currently only support client_id analysis units"  # noqa: E501
+                )
             return self._build_enrollments_query_fenix_baseline(
                 time_limits, sample_size
             )
@@ -629,12 +658,18 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Cirrus enrollments query"
                 )
+            if not self.analysis_unit == AnalysisUnit.CLIENT:
+                raise IncompatibleAnalysisUnit(
+                    "Cirrus enrollments currently only support client_id analysis units"
+                )
             return self._build_enrollments_query_cirrus(time_limits, self.app_id)
         else:
-            raise ValueError
+            assert_never(enrollments_query_type)
 
     def _build_exposure_query(
-        self, time_limits: TimeLimits, exposure_query_type: EnrollmentsQueryType
+        self,
+        time_limits: TimeLimits,
+        exposure_query_type: EnrollmentsQueryType,
     ) -> str:
         """Return SQL to query a list of exposures and their branches"""
         if exposure_query_type == EnrollmentsQueryType.NORMANDY:
@@ -644,8 +679,16 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Glean exposures query"
                 )
+            if not self.analysis_unit == AnalysisUnit.CLIENT:
+                raise IncompatibleAnalysisUnit(
+                    "Glean exposures currently only support client_id analysis units"
+                )
             return self._build_exposure_query_glean_event(time_limits, self.app_id)
         elif exposure_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
+            if not self.analysis_unit == AnalysisUnit.CLIENT:
+                raise IncompatibleAnalysisUnit(
+                    "Fenix fallback exposures currently only support client_id analysis units"  # noqa: E501
+                )
             return self._build_exposure_query_glean_event(
                 time_limits, "org_mozilla_firefox"
             )
@@ -654,6 +697,10 @@ class Experiment:
                 raise ValueError(
                     "App ID must be defined for building Cirrus exposures query"
                 )
+            if not self.analysis_unit == AnalysisUnit.CLIENT:
+                raise IncompatibleAnalysisUnit(
+                    "Cirrus exposures currently only support client_id analysis units"
+                )
             return self._build_exposure_query_glean_event(
                 time_limits,
                 self.app_id,
@@ -661,15 +708,21 @@ class Experiment:
                 event_category="cirrus_events",
             )
         else:
-            raise ValueError
+            assert_never(exposure_query_type)
 
     def _build_enrollments_query_normandy(
-        self, time_limits: TimeLimits, sample_size: int = 100
+        self,
+        time_limits: TimeLimits,
+        sample_size: int = 100,
     ) -> str:
         """Return SQL to query enrollments for a normandy experiment"""
+        if (self.analysis_unit == AnalysisUnit.PROFILE_GROUP) and (sample_size < 100):
+            raise ValueError(
+                "Downsampling is not yet supported for group-level experiments"
+            )
         return f"""
         SELECT
-            e.client_id,
+            e.{self.analysis_unit.value},
             `mozfun.map.get_key`(e.event_map_values, 'branch')
                 AS branch,
             MIN(e.submission_date) AS enrollment_date,
@@ -683,7 +736,7 @@ class Experiment:
                 BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
             AND e.event_string_value = '{self.experiment_slug}'
             AND e.sample_id < {sample_size}
-        GROUP BY e.client_id, branch
+        GROUP BY e.{self.analysis_unit.value}, branch
             """  # noqa:E501
 
     def _build_enrollments_query_fenix_baseline(
@@ -699,6 +752,7 @@ class Experiment:
         """
         # Try to ignore users who enrolled early - but only consider a
         # 7 day window
+
         return """
         SELECT
             b.client_info.client_id AS client_id,
@@ -741,6 +795,7 @@ class Experiment:
         ``ping_info.experiments`` to get a list of who is in what branch
         and when they enrolled.
         """
+
         return f"""
             SELECT events.client_info.client_id AS client_id,
                 mozfun.map.get_key(
@@ -774,6 +829,7 @@ class Experiment:
         ``ping_info.experiments`` to get a list of who is in what branch
         and when they enrolled.
         """
+
         return f"""
             SELECT
                 mozfun.map.get_key(e.extra, "user_id") AS client_id,
@@ -800,14 +856,14 @@ class Experiment:
         """Return SQL to query exposures for a normandy experiment"""
         return f"""
         SELECT
-            e.client_id,
+            e.{self.analysis_unit.value},
             e.branch,
             min(e.submission_date) AS exposure_date,
             COUNT(e.submission_date) AS num_exposure_events
         FROM raw_enrollments re
         LEFT JOIN (
             SELECT
-                client_id,
+                {self.analysis_unit.value},
                 `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
                 submission_date
             FROM
@@ -819,10 +875,10 @@ class Experiment:
                     BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                 AND event_string_value = '{self.experiment_slug}'
         ) e
-        ON re.client_id = e.client_id AND
+        ON re.{self.analysis_unit.value} = e.{self.analysis_unit.value} AND
             re.branch = e.branch AND
             e.submission_date >= re.enrollment_date
-        GROUP BY e.client_id, e.branch
+        GROUP BY e.{self.analysis_unit.value}, e.branch
             """  # noqa: E501
 
     def _build_exposure_query_glean_event(
@@ -865,20 +921,21 @@ class Experiment:
 
     def _build_metrics_query_bits(
         self,
-        metric_list: list[Metric],
+        metric_list: list[Metric | str],
         time_limits: TimeLimits,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal=None,
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
-        metrics = []
+        metrics: list[Metric] = []
         for metric in metric_list:
             if isinstance(metric, str):
                 metrics.append(ConfigLoader.get_metric(metric, self.get_app_name()))
             else:
                 metrics.append(metric)
 
-        ds_metrics = self._partition_by_data_source(metrics)
+        ds_metrics = self._partition_metrics_by_data_source(metrics)
+        ds_metrics = cast(dict[DataSource, list[Metric]], ds_metrics)
         ds_metrics = {
             ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
             for ds, metrics in ds_metrics.items()
@@ -894,13 +951,15 @@ class Experiment:
                 self.experiment_slug,
                 self.app_id,
                 analysis_basis,
+                self.analysis_unit,
                 exposure_signal,
             )
+
             metrics_joins.append(
                 f"""    LEFT JOIN (
-        {query_for_metrics}
-        ) ds_{i} USING (client_id, branch, analysis_window_start, analysis_window_end)
-                """
+            {query_for_metrics}
+            ) ds_{i} USING ({self.analysis_unit.value}, branch, analysis_window_start, analysis_window_end)
+                    """  # noqa: E501
             )
 
             for m in ds_metrics[ds]:
@@ -908,19 +967,30 @@ class Experiment:
 
         return metrics_columns, metrics_joins
 
-    def _partition_by_data_source(
-        self, metric_or_segment_list: list[Metric] | list[Segment]
-    ) -> dict[DataSource | SegmentDataSource, list[Metric | Segment]]:
-        """Return a dict mapping data sources to metric/segment lists."""
-        data_sources = {m.data_source for m in metric_or_segment_list}
+    def _partition_segments_by_data_source(
+        self, segment_list: list[Segment]
+    ) -> dict[SegmentDataSource, list[Segment]]:
+        """Return a dict mapping segment data sources to segment lists."""
+        data_sources = {s.data_source for s in segment_list}
 
         return {
-            ds: [m for m in metric_or_segment_list if m.data_source == ds]
-            for ds in data_sources
+            ds: [s for s in segment_list if s.data_source == ds] for ds in data_sources
+        }
+
+    def _partition_metrics_by_data_source(
+        self, metric_list: list[Metric]
+    ) -> dict[DataSource, list[Metric]]:
+        """Return a dict mapping data sources to metric/segment lists."""
+        data_sources = {m.data_source for m in metric_list}
+
+        return {
+            ds: [m for m in metric_list if m.data_source == ds] for ds in data_sources
         }
 
     def _build_segments_query(
-        self, segment_list: list[Segment], time_limits: TimeLimits
+        self,
+        segment_list: list[Segment],
+        time_limits: TimeLimits,
     ) -> str:
         """Build a query adding segment columns to the enrollments view.
 
@@ -935,7 +1005,7 @@ class Experiment:
         # arrive with "how segments work" as their first question.
 
         segments_columns, segments_joins = self._build_segments_query_bits(
-            segment_list or [], time_limits
+            cast(list[Segment | str], segment_list) or [], time_limits
         )
 
         return """
@@ -950,19 +1020,21 @@ class Experiment:
         )
 
     def _build_segments_query_bits(
-        self, segment_list: list[Segment], time_limits: TimeLimits
+        self,
+        segment_list: list[Segment | str],
+        time_limits: TimeLimits,
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to segments."""
 
         # resolve segment slugs
-        segments = []
+        segments: list[Segment] = []
         for segment in segment_list:
             if isinstance(segment, str):
                 segments.append(ConfigLoader.get_segment(segment, self.get_app_name()))
             else:
                 segments.append(segment)
 
-        ds_segments = self._partition_by_data_source(segments)
+        ds_segments = self._partition_segments_by_data_source(segments)
 
         segments_columns = []
         segments_joins = []
@@ -974,7 +1046,7 @@ class Experiment:
             segments_joins.append(
                 f"""    LEFT JOIN (
         {query_for_segments}
-        ) ds_{i} USING (client_id, branch)
+        ) ds_{i} USING ({self.analysis_unit.value}, branch)
                 """
             )
 
@@ -1027,7 +1099,7 @@ class TimeLimits:
     first_date_data_required = attr.ib(type=str)
     last_date_data_required = attr.ib(type=str)
 
-    analysis_windows = attr.ib()  # type: tuple[AnalysisWindow]
+    analysis_windows = attr.ib()  # type: tuple[AnalysisWindow,...]
 
     @classmethod
     def for_single_analysis_window(
@@ -1244,7 +1316,8 @@ class TimeSeriesResult:
     """
 
     fully_qualified_table_name = attr.ib(type=str)
-    analysis_windows = attr.ib(type=list)
+    analysis_windows = attr.ib(type=tuple[AnalysisWindow, ...])
+    analysis_unit = attr.ib(type=AnalysisUnit, default=AnalysisUnit.CLIENT)
 
     def get(self, bq_context: BigQueryContext, analysis_window) -> DataFrame:
         """Get the DataFrame for a specific analysis window.
@@ -1353,8 +1426,11 @@ class TimeSeriesResult:
         This method returns SQL to query this table to obtain results
         in "the standard format" for a single analysis window.
         """
+        except_clause = (
+            f"{self.analysis_unit.value}, analysis_window_start, analysis_window_end"
+        )
         return f"""
-            SELECT * EXCEPT (client_id, analysis_window_start, analysis_window_end)
+            SELECT * EXCEPT ({except_clause})
             FROM {self.fully_qualified_table_name}
             WHERE analysis_window_start = {analysis_window.start}
             AND analysis_window_end = {analysis_window.end}

@@ -124,7 +124,7 @@ more-itertools==10.4.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-mozilla-metric-config-parser==2024.7.1
+mozilla-metric-config-parser==2024.8.1
     # via mozanalysis
 mozilla-nimbus-schemas==2023.10.3
     # via mozilla-metric-config-parser

@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 import pytest
 from helpers.cheap_lint import sql_lint  # local helper file
 from helpers.config_loader_lists import (
@@ -8,11 +10,13 @@ from helpers.config_loader_lists import (
     klar_android_metrics,
     klar_ios_metrics,
 )
+from metric_config_parser import AnalysisUnit
 from mozanalysis.config import ApplicationNotFound, ConfigLoader
 from mozanalysis.experiment import (
     AnalysisWindow,
     EnrollmentsQueryType,
     Experiment,
+    IncompatibleAnalysisUnit,
     TimeLimits,
 )
 from mozanalysis.exposure import ExposureSignal
@@ -277,8 +281,11 @@ def test_analysis_window_validates_end():
         AnalysisWindow(5, 4)
 
 
-def test_query_not_detectably_malformed():
-    exp = Experiment("slug", "2019-01-01", 8)
+@pytest.mark.parametrize(
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+)
+def test_query_not_detectably_malformed(analysis_unit: AnalysisUnit):
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -296,6 +303,11 @@ def test_query_not_detectably_malformed():
     sql_lint(enrollments_sql)
     assert "sample_id < None" not in enrollments_sql
 
+    if analysis_unit == AnalysisUnit.CLIENT:
+        assert "client_id" in enrollments_sql
+    elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
+        assert "profile_group_id" in enrollments_sql
+
     metrics_sql = exp.build_metrics_query(
         metric_list=[],
         time_limits=tl,
@@ -304,9 +316,17 @@ def test_query_not_detectably_malformed():
 
     sql_lint(metrics_sql)
 
+    if analysis_unit == AnalysisUnit.CLIENT:
+        assert "client_id" in metrics_sql
+    elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
+        assert "profile_group_id" in metrics_sql
 
-def test_megaquery_not_detectably_malformed():
-    exp = Experiment("slug", "2019-01-01", 8)
+
+@pytest.mark.parametrize(
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+)
+def test_megaquery_not_detectably_malformed(analysis_unit: AnalysisUnit):
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -321,6 +341,11 @@ def test_megaquery_not_detectably_malformed():
 
     sql_lint(enrollments_sql)
 
+    if analysis_unit == AnalysisUnit.CLIENT:
+        assert "client_id" in enrollments_sql
+    elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
+        assert "profile_group_id" in enrollments_sql
+
     metrics_sql = exp.build_metrics_query(
         metric_list=desktop_metrics,
         time_limits=tl,
@@ -329,9 +354,19 @@ def test_megaquery_not_detectably_malformed():
 
     sql_lint(metrics_sql)
 
+    if analysis_unit == AnalysisUnit.CLIENT:
+        assert "client_id" in metrics_sql
+    elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
+        assert "profile_group_id" in metrics_sql
 
-def test_segments_megaquery_not_detectably_malformed():
-    exp = Experiment("slug", "2019-01-01", 8)
+
+@pytest.mark.parametrize(
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+)
+def test_segments_megaquery_not_detectably_malformed(
+    analysis_unit: AnalysisUnit,
+):
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -848,3 +883,580 @@ def test_resolve_missing_column_names():
     )
 
     assert "None" not in metric_sql
+
+
+def test_enrollments_query_explicit_client_id():
+    exp = Experiment("slug", "2019-01-01", 8)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type=EnrollmentsQueryType.NORMANDY
+    )
+
+    sql_lint(enrollments_sql)
+
+    expected = """
+    WITH raw_enrollments AS (
+SELECT
+    e.client_id,
+    `mozfun.map.get_key`(e.event_map_values, 'branch')
+        AS branch,
+    MIN(e.submission_date) AS enrollment_date,
+    COUNT(e.submission_date) AS num_enrollment_events
+FROM
+    `moz-fx-data-shared-prod.telemetry.events` e
+WHERE
+    e.event_category = 'normandy'
+    AND e.event_method = 'enroll'
+    AND e.submission_date
+        BETWEEN '2019-01-01' AND '2019-01-08'
+    AND e.event_string_value = 'slug'
+    AND e.sample_id < 100
+GROUP BY e.client_id, branch
+    ),
+    segmented_enrollments AS (
+SELECT
+    raw_enrollments.*,
+
+FROM raw_enrollments
+
+),
+    exposures AS (
+SELECT
+    e.client_id,
+    e.branch,
+    min(e.submission_date) AS exposure_date,
+    COUNT(e.submission_date) AS num_exposure_events
+FROM raw_enrollments re
+LEFT JOIN (
+    SELECT
+        client_id,
+        `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
+        submission_date
+    FROM
+        `moz-fx-data-shared-prod.telemetry.events`
+    WHERE
+        event_category = 'normandy'
+        AND (event_method = 'exposure' OR event_method = 'expose')
+        AND submission_date
+            BETWEEN '2019-01-01' AND '2019-01-08'
+        AND event_string_value = 'slug'
+) e
+ON re.client_id = e.client_id AND
+    re.branch = e.branch AND
+    e.submission_date >= re.enrollment_date
+GROUP BY e.client_id, e.branch
+    )
+
+    SELECT
+        se.*,
+        e.* EXCEPT (client_id, branch)
+    FROM segmented_enrollments se
+    LEFT JOIN exposures e
+    USING (client_id, branch)
+"""
+
+    assert dedent(enrollments_sql) == expected
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=[
+            metric for metric in desktop_metrics if metric.name == "active_hours"
+        ],
+        time_limits=tl,
+        enrollments_table="enrollments",
+    )
+
+    sql_lint(metrics_sql)
+
+
+def test_metrics_query_explicit_client_id():
+    exp = Experiment("slug", "2019-01-01", 8)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type=EnrollmentsQueryType.NORMANDY
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=[
+            metric for metric in desktop_metrics if metric.name == "active_hours"
+        ],
+        time_limits=tl,
+        enrollments_table="enrollments",
+    )
+
+    sql_lint(metrics_sql)
+
+    expected = """
+WITH analysis_windows AS (
+    (SELECT 0 AS analysis_window_start, 6 AS analysis_window_end)
+UNION ALL
+(SELECT 7 AS analysis_window_start, 13 AS analysis_window_end)
+UNION ALL
+(SELECT 14 AS analysis_window_start, 20 AS analysis_window_end)
+UNION ALL
+(SELECT 21 AS analysis_window_start, 27 AS analysis_window_end)
+UNION ALL
+(SELECT 28 AS analysis_window_start, 34 AS analysis_window_end)
+UNION ALL
+(SELECT 35 AS analysis_window_start, 41 AS analysis_window_end)
+UNION ALL
+(SELECT 42 AS analysis_window_start, 48 AS analysis_window_end)
+),
+raw_enrollments AS (
+    -- needed by "exposures" sub query
+    SELECT
+        e.*,
+        aw.*
+    FROM `enrollments` e
+    CROSS JOIN analysis_windows aw
+),
+exposures AS (
+        SELECT
+            *
+        FROM raw_enrollments e
+    ),
+enrollments AS (
+    SELECT
+        e.* EXCEPT (exposure_date, num_exposure_events),
+        x.exposure_date,
+        x.num_exposure_events
+    FROM exposures x
+        RIGHT JOIN raw_enrollments e
+        USING (client_id, branch)
+)
+SELECT
+    enrollments.*,
+    ds_0.active_hours
+FROM enrollments
+    LEFT JOIN (
+    SELECT
+    e.client_id,
+    e.branch,
+    e.analysis_window_start,
+    e.analysis_window_end,
+    e.num_exposure_events,
+    e.exposure_date,
+    COALESCE(SUM(active_hours_sum), 0) AS active_hours
+FROM enrollments e
+    LEFT JOIN mozdata.telemetry.clients_daily ds
+        ON ds.client_id = e.client_id
+        AND ds.submission_date BETWEEN '2019-01-01' AND '2019-02-25'
+        AND ds.submission_date BETWEEN
+            DATE_ADD(e.enrollment_date, interval e.analysis_window_start day)
+            AND DATE_ADD(e.enrollment_date, interval e.analysis_window_end day)
+
+GROUP BY
+    e.client_id,
+    e.branch,
+    e.num_exposure_events,
+    e.exposure_date,
+    e.analysis_window_start,
+    e.analysis_window_end
+    ) ds_0 USING (client_id, branch, analysis_window_start, analysis_window_end)"""
+
+    assert expected == dedent(metrics_sql.rstrip())
+
+
+def test_enrollments_query_explicit_group_id():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type=EnrollmentsQueryType.NORMANDY
+    )
+
+    sql_lint(enrollments_sql)
+
+    expected = """
+    WITH raw_enrollments AS (
+SELECT
+    e.profile_group_id,
+    `mozfun.map.get_key`(e.event_map_values, 'branch')
+        AS branch,
+    MIN(e.submission_date) AS enrollment_date,
+    COUNT(e.submission_date) AS num_enrollment_events
+FROM
+    `moz-fx-data-shared-prod.telemetry.events` e
+WHERE
+    e.event_category = 'normandy'
+    AND e.event_method = 'enroll'
+    AND e.submission_date
+        BETWEEN '2019-01-01' AND '2019-01-08'
+    AND e.event_string_value = 'slug'
+    AND e.sample_id < 100
+GROUP BY e.profile_group_id, branch
+    ),
+    segmented_enrollments AS (
+SELECT
+    raw_enrollments.*,
+
+FROM raw_enrollments
+
+),
+    exposures AS (
+SELECT
+    e.profile_group_id,
+    e.branch,
+    min(e.submission_date) AS exposure_date,
+    COUNT(e.submission_date) AS num_exposure_events
+FROM raw_enrollments re
+LEFT JOIN (
+    SELECT
+        profile_group_id,
+        `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
+        submission_date
+    FROM
+        `moz-fx-data-shared-prod.telemetry.events`
+    WHERE
+        event_category = 'normandy'
+        AND (event_method = 'exposure' OR event_method = 'expose')
+        AND submission_date
+            BETWEEN '2019-01-01' AND '2019-01-08'
+        AND event_string_value = 'slug'
+) e
+ON re.profile_group_id = e.profile_group_id AND
+    re.branch = e.branch AND
+    e.submission_date >= re.enrollment_date
+GROUP BY e.profile_group_id, e.branch
+    )
+
+    SELECT
+        se.*,
+        e.* EXCEPT (profile_group_id, branch)
+    FROM segmented_enrollments se
+    LEFT JOIN exposures e
+    USING (profile_group_id, branch)
+"""
+
+    assert dedent(enrollments_sql) == expected
+
+
+def test_metrics_query_explicit_group_id():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type=EnrollmentsQueryType.NORMANDY
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=[
+            metric for metric in desktop_metrics if metric.name == "active_hours"
+        ],
+        time_limits=tl,
+        enrollments_table="enrollments",
+    )
+
+    sql_lint(metrics_sql)
+
+    expected = """
+WITH analysis_windows AS (
+    (SELECT 0 AS analysis_window_start, 6 AS analysis_window_end)
+UNION ALL
+(SELECT 7 AS analysis_window_start, 13 AS analysis_window_end)
+UNION ALL
+(SELECT 14 AS analysis_window_start, 20 AS analysis_window_end)
+UNION ALL
+(SELECT 21 AS analysis_window_start, 27 AS analysis_window_end)
+UNION ALL
+(SELECT 28 AS analysis_window_start, 34 AS analysis_window_end)
+UNION ALL
+(SELECT 35 AS analysis_window_start, 41 AS analysis_window_end)
+UNION ALL
+(SELECT 42 AS analysis_window_start, 48 AS analysis_window_end)
+),
+raw_enrollments AS (
+    -- needed by "exposures" sub query
+    SELECT
+        e.*,
+        aw.*
+    FROM `enrollments` e
+    CROSS JOIN analysis_windows aw
+),
+exposures AS (
+        SELECT
+            *
+        FROM raw_enrollments e
+    ),
+enrollments AS (
+    SELECT
+        e.* EXCEPT (exposure_date, num_exposure_events),
+        x.exposure_date,
+        x.num_exposure_events
+    FROM exposures x
+        RIGHT JOIN raw_enrollments e
+        USING (profile_group_id, branch)
+)
+SELECT
+    enrollments.*,
+    ds_0.active_hours
+FROM enrollments
+    LEFT JOIN (
+    SELECT
+    e.profile_group_id,
+    e.branch,
+    e.analysis_window_start,
+    e.analysis_window_end,
+    e.num_exposure_events,
+    e.exposure_date,
+    COALESCE(SUM(active_hours_sum), 0) AS active_hours
+FROM enrollments e
+    LEFT JOIN mozdata.telemetry.clients_daily ds
+        ON ds.profile_group_id = e.profile_group_id
+        AND ds.submission_date BETWEEN '2019-01-01' AND '2019-02-25'
+        AND ds.submission_date BETWEEN
+            DATE_ADD(e.enrollment_date, interval e.analysis_window_start day)
+            AND DATE_ADD(e.enrollment_date, interval e.analysis_window_end day)
+
+GROUP BY
+    e.profile_group_id,
+    e.branch,
+    e.num_exposure_events,
+    e.exposure_date,
+    e.analysis_window_start,
+    e.analysis_window_end
+    ) ds_0 USING (profile_group_id, branch, analysis_window_start, analysis_window_end)"""  # noqa: E501
+
+    assert expected == dedent(metrics_sql.rstrip())
+
+
+def test_glean_group_id_incompatible():
+    exp = Experiment(
+        "slug",
+        "2019-01-01",
+        8,
+        analysis_unit=AnalysisUnit.PROFILE_GROUP,
+        app_id="test_app",
+    )
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(IncompatibleAnalysisUnit):
+        exp.build_enrollments_query(
+            time_limits=tl, enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT
+        )
+
+
+def test_glean_group_id_incompatible_exposures():
+    exp = Experiment(
+        "slug",
+        "2019-01-01",
+        8,
+        analysis_unit=AnalysisUnit.PROFILE_GROUP,
+        app_id="test_app",
+    )
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(IncompatibleAnalysisUnit):
+        exp._build_exposure_query(
+            time_limits=tl, exposure_query_type=EnrollmentsQueryType.GLEAN_EVENT
+        )
+
+
+def test_glean_missing_app_id():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(
+        ValueError, match="App ID must be defined for building Glean enrollments query"
+    ):
+        exp.build_enrollments_query(
+            time_limits=tl, enrollments_query_type=EnrollmentsQueryType.GLEAN_EVENT
+        )
+
+
+def test_glean_exposures_missing_app_id():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(
+        ValueError, match="App ID must be defined for building Glean exposures query"
+    ):
+        exp._build_exposure_query(
+            time_limits=tl, exposure_query_type=EnrollmentsQueryType.GLEAN_EVENT
+        )
+
+
+def test_cirrus_group_id_incompatible():
+    exp = Experiment(
+        "slug",
+        "2019-01-01",
+        8,
+        analysis_unit=AnalysisUnit.PROFILE_GROUP,
+        app_id="test_app",
+    )
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(IncompatibleAnalysisUnit):
+        exp.build_enrollments_query(
+            time_limits=tl, enrollments_query_type=EnrollmentsQueryType.CIRRUS
+        )
+
+
+def test_cirrus_group_id_incompatible_exposures():
+    exp = Experiment(
+        "slug",
+        "2019-01-01",
+        8,
+        analysis_unit=AnalysisUnit.PROFILE_GROUP,
+        app_id="test_app",
+    )
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(IncompatibleAnalysisUnit):
+        exp._build_exposure_query(
+            time_limits=tl, exposure_query_type=EnrollmentsQueryType.CIRRUS
+        )
+
+
+def test_cirrus_missing_app_id():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(
+        ValueError, match="App ID must be defined for building Cirrus enrollments query"
+    ):
+        exp.build_enrollments_query(
+            time_limits=tl, enrollments_query_type=EnrollmentsQueryType.CIRRUS
+        )
+
+
+def test_cirrus_missing_app_id_exposures():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(
+        ValueError, match="App ID must be defined for building Cirrus exposures query"
+    ):
+        exp._build_exposure_query(
+            time_limits=tl, exposure_query_type=EnrollmentsQueryType.CIRRUS
+        )
+
+
+def test_fenix_group_id_incompatible():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(IncompatibleAnalysisUnit):
+        exp.build_enrollments_query(
+            time_limits=tl, enrollments_query_type=EnrollmentsQueryType.FENIX_FALLBACK
+        )
+
+
+def test_fenix_group_id_incompatible_exposures():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(IncompatibleAnalysisUnit):
+        exp._build_exposure_query(
+            time_limits=tl, exposure_query_type=EnrollmentsQueryType.FENIX_FALLBACK
+        )
+
+
+def test_group_id_no_downsampling():
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=AnalysisUnit.PROFILE_GROUP)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Downsampling is not yet supported for group-level experiments",
+    ):
+        exp.build_enrollments_query(
+            time_limits=tl,
+            enrollments_query_type=EnrollmentsQueryType.NORMANDY,
+            sample_size=99,
+        )

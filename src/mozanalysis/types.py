@@ -19,3 +19,7 @@ BranchLabel = str
 EstimatesByBranch = dict[BranchLabel, Estimates]
 
 CompareBranchesOutput = dict[ComparativeOption, EstimatesByBranch]
+
+
+class IncompatibleAnalysisUnit(ValueError):
+    pass
