@@ -106,7 +106,7 @@ google-api-core[grpc]==2.19.1
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-auth==2.33.0
+google-auth==2.34.0
     # via
     #   -c requirements.txt
     #   google-api-core
