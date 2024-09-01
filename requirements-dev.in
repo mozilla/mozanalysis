@@ -409,7 +409,7 @@ rfc3986==2.0.0
     # via
     #   -c requirements.txt
     #   twine
-rich==13.7.1
+rich==13.8.0
     # via
     #   -c requirements.txt
     #   twine
