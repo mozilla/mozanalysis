@@ -24,7 +24,7 @@ cachetools==5.4.0
     #   -c requirements.txt
     #   google-auth
     #   tox
-cattrs==23.2.3
+cattrs==24.1.0
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
