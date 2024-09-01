@@ -338,7 +338,7 @@ pycparser==2.22
     # via
     #   -c requirements.txt
     #   cffi
-pydantic==1.10.17
+pydantic==1.10.18
     # via
     #   -c requirements.txt
     #   mozilla-nimbus-schemas
