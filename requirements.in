@@ -203,7 +203,7 @@ pygments==2.18.0
     # via
     #   readme-renderer
     #   rich
-pyparsing==3.1.2
+pyparsing==3.1.4
     # via matplotlib
 pyproject-hooks==1.1.0
     # via build
