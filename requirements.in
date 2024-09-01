@@ -126,7 +126,7 @@ more-itertools==10.4.0
     #   jaraco-functools
 mozilla-metric-config-parser==2024.8.1
     # via mozanalysis
-mozilla-nimbus-schemas==2023.10.3
+mozilla-nimbus-schemas==2024.8.2
     # via mozilla-metric-config-parser
 nh3==0.2.18
     # via readme-renderer
