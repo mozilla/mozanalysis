@@ -138,7 +138,7 @@ googleapis-common-protos==1.63.2
     #   -c requirements.txt
     #   google-api-core
     #   grpcio-status
-grpcio==1.65.4
+grpcio==1.66.1
     # via
     #   -c requirements.txt
     #   google-api-core
