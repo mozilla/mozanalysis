@@ -492,7 +492,7 @@ wrapt==1.16.0
     # via
     #   -c requirements.txt
     #   formulaic
-zipp==3.20.0
+zipp==3.20.1
     # via
     #   -c requirements.txt
     #   importlib-metadata

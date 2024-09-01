@@ -293,5 +293,5 @@ urllib3==2.2.2
     #   twine
 wrapt==1.16.0
     # via formulaic
-zipp==3.20.0
+zipp==3.20.1
     # via importlib-metadata
