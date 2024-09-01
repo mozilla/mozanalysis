@@ -100,7 +100,7 @@ gitpython==3.1.43
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-google-api-core[grpc]==2.19.1
+google-api-core[grpc]==2.19.2
     # via
     #   -c requirements.txt
     #   google-cloud-bigquery
