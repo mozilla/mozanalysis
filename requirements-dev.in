@@ -19,7 +19,7 @@ build==1.2.1
     #   -c requirements.txt
     #   mozanalysis
     #   pip-tools
-cachetools==5.4.0
+cachetools==5.5.0
     # via
     #   -c requirements.txt
     #   google-auth
