@@ -2,7 +2,7 @@ import pytest
 from mozanalysis.metrics import DataSource
 
 
-@pytest.mark.parametrize("experiments_column_type", [None, "simple", "native"])
+@pytest.mark.parametrize("experiments_column_type", [None, "simple", "native", "glean"])
 def test_datasource_constructor_succeeds(experiments_column_type):
     DataSource(
         name="foo",

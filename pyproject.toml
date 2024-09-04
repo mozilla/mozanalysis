@@ -1,10 +1,5 @@
 [build-system]
-requires = [
-    "setuptools>=64",
-    "setuptools_scm>=8",
-    "pytest-runner",
-    "setuptools_scm",
-]
+requires = ["setuptools>=64", "setuptools_scm>=8", "pytest-runner"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -16,17 +11,17 @@ requires-python = ">=3.10,<=3.11"
 dependencies = [
     "attrs",
     "formulaic",
+    "google-cloud-bigquery",
+    "google-cloud-bigquery-storage",
+    "marginaleffects==0.0.12",
+    "matplotlib",
     "mozilla-metric-config-parser>=2024.4.1",
     "numpy",
     "pandas",
     "pyarrow",
     "scipy",
-    "google-cloud-bigquery",
-    "google-cloud-bigquery-storage",
-    "statsmodels",
-    "marginaleffects==0.0.12",
-    "matplotlib",
     "SecretStorage",
+    "statsmodels",
 ]
 readme = "README.md"
 
@@ -39,14 +34,12 @@ docs = ["Sphinx", "sphinx-autobuild", "sphinx-rtd-theme"]
 testing = [
     "mock",
     "pytest",
-    "pytest-ruff",
     "pytest-cov",
+    "pytest-ruff",
     "pytest-timeout",
     "ruff",
-    'build',
-    'twine',
 ]
-dev = ['pip-tools', 'tox', "mozanalysis[testing]"]
+dev = ["build", "mozanalysis[testing]", "pip-tools", "tox", "twine"]
 
 [tool.setuptools_scm]
 
