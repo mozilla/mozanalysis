@@ -14,6 +14,7 @@ from typing_extensions import assert_never
 from mozanalysis import APPS
 from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
+from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
 from mozanalysis.types import IncompatibleAnalysisUnit
@@ -175,7 +176,7 @@ class Experiment:
         enrollments_query_type: EnrollmentsQueryType = EnrollmentsQueryType.NORMANDY,
         custom_enrollments_query: str | None = None,
         custom_exposure_query: str | None = None,
-        exposure_signal=None,
+        exposure_signal: ExposureSignal | None = None,
         segment_list=None,
     ) -> DataFrame:
         """Return a DataFrame containing per-client metric values.
@@ -307,7 +308,7 @@ class Experiment:
         enrollments_query_type: EnrollmentsQueryType = EnrollmentsQueryType.NORMANDY,
         custom_enrollments_query: str | None = None,
         custom_exposure_query: str | None = None,
-        exposure_signal=None,
+        exposure_signal: ExposureSignal | None = None,
         segment_list=None,
     ) -> TimeSeriesResult:
         """Return a TimeSeriesResult with per-client metric values.
@@ -436,7 +437,7 @@ class Experiment:
         enrollments_query_type: EnrollmentsQueryType = EnrollmentsQueryType.NORMANDY,
         custom_enrollments_query: str | None = None,
         custom_exposure_query: str | None = None,
-        exposure_signal=None,
+        exposure_signal: ExposureSignal | None = None,
         segment_list=None,
         sample_size: int = 100,
     ) -> str:
@@ -517,7 +518,7 @@ class Experiment:
         time_limits: TimeLimits,
         enrollments_table: str,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
-        exposure_signal=None,
+        exposure_signal: ExposureSignal | None = None,
     ) -> str:
         """Return a SQL query for querying metric data.
 
@@ -920,7 +921,7 @@ class Experiment:
         metric_list: list[Metric | str],
         time_limits: TimeLimits,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
-        exposure_signal=None,
+        exposure_signal: ExposureSignal | None = None,
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
         metrics: list[Metric] = []
