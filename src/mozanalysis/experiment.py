@@ -14,7 +14,6 @@ from typing_extensions import assert_never
 from mozanalysis import APPS
 from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
-from mozanalysis.exposure import ExposureSignal
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
 from mozanalysis.types import IncompatibleAnalysisUnit
@@ -22,6 +21,8 @@ from mozanalysis.utils import add_days, date_sub, hash_ish
 
 if TYPE_CHECKING:
     from pandas import DataFrame
+
+    from mozanalysis.exposure import ExposureSignal
 
 logger = logging.getLogger(__name__)
 
