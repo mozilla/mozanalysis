@@ -6,9 +6,11 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING
 
+
+from metric_config_parser import AnalysisUnit
 from typing_extensions import assert_never
 
-from mozanalysis.types import AnalysisUnit, IncompatibleAnalysisUnit
+from mozanalysis.types import IncompatibleAnalysisUnit
 
 if TYPE_CHECKING:
     from metric_config_parser.data_source import DataSource as ParserDataSource
@@ -185,8 +187,7 @@ class DataSource:
         time_limits: TimeLimits,
         experiment_slug: str,
         from_expr_dataset: str | None = None,
-        analysis_basis: AnalysisBasis = AnalysisBasis.ENROLLMENTS,
-        experimental_unit: AnalysisUnit = AnalysisUnit.CLIENT,
+        analysis_basis: str = AnalysisBasis.ENROLLMENTS,
         exposure_signal=None,
     ) -> str:
         """Return a nearly-self contained SQL query.
@@ -194,15 +195,9 @@ class DataSource:
         This query does not define ``enrollments`` but otherwise could
         be executed to query all metrics from this data source.
         """
-        if experimental_unit == AnalysisUnit.CLIENT:
-            ds_id = self.client_id_column
-        elif experimental_unit == AnalysisUnit.PROFILE_GROUP:
-            ds_id = self.group_id_column
-        else:
-            assert_never(experimental_unit)
-
-        return """SELECT
-            e.{id_column},
+        return """
+        SELECT
+            e.client_id,
             e.branch,
             e.analysis_window_start,
             e.analysis_window_end,
@@ -242,7 +237,6 @@ class DataSource:
                 submission_date=self.submission_date_column,
                 experiment_slug=experiment_slug,
             ),
-            id_column=experimental_unit.value,
         )
 
     def build_query_targets(
@@ -253,7 +247,6 @@ class DataSource:
         analysis_length: int,
         from_expr_dataset: str | None = None,
         continuous_enrollment: bool = False,
-        experimental_unit: AnalysisUnit = AnalysisUnit.CLIENT,
     ) -> str:
         """Return a nearly-self contained SQL query that constructs
         the metrics query for targeting historical data without
@@ -262,11 +255,6 @@ class DataSource:
         This query does not define ``targets`` but otherwise could
         be executed to query all metrics from this data source.
         """
-        if experimental_unit != AnalysisUnit.CLIENT:
-            raise IncompatibleAnalysisUnit(
-                "`build_query_targets` currently only supports client_id analysis"
-            )
-
         return """
         SELECT
             t.client_id,

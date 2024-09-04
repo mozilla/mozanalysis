@@ -8,6 +8,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, cast
 
 import attr
+from metric_config_parser import AnalysisUnit
 from typing_extensions import assert_never
 
 from mozanalysis import APPS
@@ -144,7 +145,7 @@ class Experiment:
     analysis_unit = attr.ib(
         type=AnalysisUnit,
         default=AnalysisUnit.CLIENT,
-        converter=lambda s: AnalysisUnit(s),  # allows callers to pass a string
+        validator=attr.validators.instance_of(AnalysisUnit),
     )
 
     def get_app_name(self):
@@ -504,7 +505,7 @@ class Experiment:
 
             SELECT
                 se.*,
-                e.* EXCEPT ({self.analysis_unit}, branch)
+                e.* EXCEPT (client_id, branch)
             FROM segmented_enrollments se
             LEFT JOIN exposures e
             USING ({self.analysis_unit.value}, branch)

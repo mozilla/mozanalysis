@@ -26,15 +26,12 @@ test_settings: &test_settings
           chmod +x codecov
           ./codecov -F "$(basename $PWD | sed s/[^a-z]/_/g)"
 
-
-
 ####################
 # Jobs: see https://circleci.com/docs/2.0/jobs-steps/
 ####################
 
 version: 2
 jobs:
-
   py310:
     <<: *test_settings
     docker:
@@ -44,12 +41,12 @@ jobs:
     docker:
       - image: cimg/python:3.10
     steps:
-    - checkout
-    - run:
-        name: Run linting
-        command: |
-          pip install ruff
-          ruff check src/ tests/
+      - checkout
+      - run:
+          name: Run linting
+          command: |
+            pip install -r requirements.txt
+            ruff check src/ tests/
 
   # Runs when the repository is tagged for release; see the workflows section
   # below for trigger logic.
@@ -133,7 +130,7 @@ workflows:
       - deploy:
           filters:
             tags:
-              only: /[0-9]{4}.[0-9]{1,2}.[0-9]+/  # Calver: YYYY.M.MINOR
+              only: /[0-9]{4}.[0-9]{1,2}.[0-9]+/ # Calver: YYYY.M.MINOR
             branches:
               # Ignore all branches; this workflow should only run for tags.
               ignore: /.*/
