@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 from helpers.cheap_lint import sql_lint  # local helper file
 from helpers.config_loader_lists import desktop_metrics, desktop_segments
+
 from mozanalysis.config import ConfigLoader
 from mozanalysis.experiment import TimeLimits
 from mozanalysis.metrics import DataSource, Metric

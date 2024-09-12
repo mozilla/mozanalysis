@@ -1,10 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import mozanalysis.bayesian_stats as mabs
-import mozanalysis.bayesian_stats.binary as mabsb
 import pandas as pd
 import pytest
+
+import mozanalysis.bayesian_stats as mabs
+import mozanalysis.bayesian_stats.binary as mabsb
 
 
 def test_aggregate_col():

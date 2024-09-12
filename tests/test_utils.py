@@ -4,6 +4,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+
 from mozanalysis.utils import add_days, all_, any_, date_sub, filter_outliers
 
 

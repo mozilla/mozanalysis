@@ -1,4 +1,5 @@
 import pytest
+
 from mozanalysis.metrics import DataSource
 
 

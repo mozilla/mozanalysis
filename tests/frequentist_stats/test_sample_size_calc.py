@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import pytest
+
 from mozanalysis.config import ConfigLoader
 from mozanalysis.frequentist_stats.sample_size import (
     empirical_effect_size_sample_size_calc,
@@ -19,7 +20,7 @@ search_clients_daily = ConfigLoader.get_data_source(
 uri_count = ConfigLoader.get_metric("uri_count", "firefox_desktop")
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_ts_result():
     class FakeTimeSeriesResult:
         def get_aggregated_data(self, metric_list, aggregate_function, **kwargs):
