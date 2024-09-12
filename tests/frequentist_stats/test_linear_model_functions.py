@@ -3,21 +3,22 @@ import re
 from copy import deepcopy
 from itertools import product
 
-import mozanalysis.frequentist_stats.bootstrap as mafsb
-import mozanalysis.frequentist_stats.linear_models as mafslm
-import mozanalysis.frequentist_stats.linear_models.functions as func
-import mozanalysis.types as types
 import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
 import statsmodels.formula.api as smf
+from polars.testing import assert_frame_equal as pl_assert_frame_equal
+from statsmodels.stats.weightstats import CompareMeans
+
+import mozanalysis.frequentist_stats.bootstrap as mafsb
+import mozanalysis.frequentist_stats.linear_models as mafslm
+import mozanalysis.frequentist_stats.linear_models.functions as func
+import mozanalysis.types as types
 from mozanalysis.frequentist_stats.linear_models.functions import (
     FailedToFitModel,
     MissingModelParameter,
 )
-from polars.testing import assert_frame_equal as pl_assert_frame_equal
-from statsmodels.stats.weightstats import CompareMeans
 
 from .helpers import test_model, test_model_covariate
 

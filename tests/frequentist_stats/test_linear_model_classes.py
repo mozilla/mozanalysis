@@ -1,10 +1,11 @@
 from string import ascii_letters
 from unittest.mock import MagicMock
 
-import mozanalysis.frequentist_stats.linear_models as mafslm
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
+
+import mozanalysis.frequentist_stats.linear_models as mafslm
 
 from .test_linear_model_functions import test_model, test_model_covariate
 

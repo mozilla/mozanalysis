@@ -11,6 +11,7 @@ from helpers.config_loader_lists import (
     klar_ios_metrics,
 )
 from metric_config_parser import AnalysisUnit
+
 from mozanalysis.config import ApplicationNotFound, ConfigLoader
 from mozanalysis.experiment import (
     AnalysisWindow,
