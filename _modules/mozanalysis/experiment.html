@@ -1135,7 +1135,11 @@
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ds_segments</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">query_for_segments</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
-                <span class="n">ds_segments</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span>
+                <span class="n">ds_segments</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                <span class="n">time_limits</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">segments_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;&quot;&quot;    LEFT JOIN (</span>
