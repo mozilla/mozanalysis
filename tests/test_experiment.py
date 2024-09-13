@@ -393,8 +393,13 @@ def test_segments_megaquery_not_detectably_malformed(
     sql_lint(metrics_sql)
 
 
-def test_app_id_propagates():
-    exp = Experiment("slug", "2019-01-01", 8, app_id="my_cool_app")
+@pytest.mark.parametrize(
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+)
+def test_app_id_propagates(analysis_unit: AnalysisUnit):
+    exp = Experiment(
+        "slug", "2019-01-01", 8, app_id="my_cool_app", analysis_unit=analysis_unit
+    )
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -433,6 +438,9 @@ def test_app_id_propagates():
 
     assert "org_mozilla_firefox" not in enrollments_sql
     assert "my_cool_app" in enrollments_sql
+    assert analysis_unit.value in enrollments_sql
+    for unit in [x for x in AnalysisUnit if x != analysis_unit]:
+        assert unit not in enrollments_sql
 
     sql_lint(metrics_sql)
 
