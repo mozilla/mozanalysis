@@ -1039,7 +1039,11 @@ class Experiment:
 
         for i, ds in enumerate(ds_segments.keys()):
             query_for_segments = ds.build_query(
-                ds_segments[ds], time_limits, self.experiment_slug, self.app_id
+                ds_segments[ds],
+                time_limits,
+                self.experiment_slug,
+                self.app_id,
+                self.analysis_unit,
             )
             segments_joins.append(
                 f"""    LEFT JOIN (

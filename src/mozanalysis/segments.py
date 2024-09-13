@@ -3,6 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import attr
+from metric_config_parser import AnalysisUnit
+from typing_extensions import assert_never
+
+from mozanalysis.types import IncompatibleAnalysisUnit
 
 
 @attr.s(frozen=True, slots=True)
@@ -45,10 +49,11 @@ class SegmentDataSource:
     _from_expr = attr.ib(validator=attr.validators.instance_of(str))
     window_start = attr.ib(default=0, type=int)
     window_end = attr.ib(default=0, type=int)
-    client_id_column = attr.ib(default="client_id", type=str)
+    client_id_column = attr.ib(default=AnalysisUnit.CLIENT.value, type=str)
     submission_date_column = attr.ib(default="submission_date", type=str)
     default_dataset = attr.ib(default=None, type=str | None)
     app_name = attr.ib(default=None, type=str | None)
+    group_id_column = attr.ib(default=AnalysisUnit.PROFILE_GROUP.value, type=str)
 
     @default_dataset.validator
     def _check_default_dataset_provided_if_needed(self, attribute, value):
@@ -78,28 +83,35 @@ class SegmentDataSource:
         time_limits,
         experiment_slug,
         from_expr_dataset=None,
+        analysis_unit: AnalysisUnit = AnalysisUnit.CLIENT,
     ):
         """Return a nearly self contained SQL query.
 
-        The query takes a list of ``client_id``s from
+        The query takes a list of ``{analysis_id}``s from
         ``raw_enrollments``, and adds one non-NULL boolean column per
         segment: True if the client is in the segment, False otherwise.
         """
+        if analysis_unit == AnalysisUnit.CLIENT:
+            ds_id = self.client_id_column
+        elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
+            ds_id = self.group_id_column
+        else:
+            assert_never(analysis_unit)
         return """SELECT
-            e.client_id,
+            e.{ds_id},
             e.branch,
             {segments}
         FROM raw_enrollments e
             LEFT JOIN {from_expr} ds
-                ON ds.{client_id} = e.client_id
+                ON ds.{ds_id} = e.{analysis_id}
                 AND ds.{submission_date} BETWEEN
                     DATE_ADD('{first_enrollment}', interval {window_start} day)
                     AND DATE_ADD('{last_enrollment}', interval {window_end} day)
                 AND ds.{submission_date} BETWEEN
                     DATE_ADD(e.enrollment_date, interval {window_start} day)
                     AND DATE_ADD(e.enrollment_date, interval {window_end} day)
-        GROUP BY e.client_id, e.branch""".format(
-            client_id=self.client_id_column or "client_id",
+        GROUP BY e.{ds_id}, e.branch""".format(
+            ds_id=ds_id,
             submission_date=self.submission_date_column or "submission_date",
             from_expr=self.from_expr_for(from_expr_dataset),
             first_enrollment=time_limits.first_enrollment_date,
@@ -109,6 +121,7 @@ class SegmentDataSource:
             segments=",\n            ".join(
                 f"{m.select_expr} AS {m.name}" for m in segment_list
             ),
+            analysis_id=analysis_unit.value,
         )
 
     def build_query_target(
@@ -116,6 +129,7 @@ class SegmentDataSource:
         target,
         time_limits,
         from_expr_dataset=None,
+        analysis_unit: AnalysisUnit = AnalysisUnit.CLIENT,
     ):
         """
         Return a nearly-self contained SQL query, for use with
@@ -126,6 +140,11 @@ class SegmentDataSource:
         Separate sub-queries are constructed for each additional Segment
         in the analysis.
         """
+        if analysis_unit != AnalysisUnit.CLIENT:
+            raise IncompatibleAnalysisUnit(
+                "`build_query_targets` currently only supports client_id analysis"
+            )
+
         return """
         SELECT
             {client_id} as client_id,
@@ -164,7 +183,7 @@ class Segment:
         data_source (SegmentDataSource): Data source that provides
             the columns referenced in ``select_expr``.
         select_expr (str): A SQL select expression that includes
-            an aggregation function (we ``GROUP BY client_id``).
+            an aggregation function (we ``GROUP BY {analysis_unit}``).
             Returns a non-NULL ``BOOL``: ``True`` if the user is in the
             segment, ``False`` otherwise.
         friendly_name (str): A human-readable dashboard title for this segment
