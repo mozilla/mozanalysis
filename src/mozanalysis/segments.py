@@ -43,6 +43,9 @@ class SegmentDataSource:
             `{dataset}` parameter.
         app_name: (str, optional): app_name used with metric-hub,
             used for validation
+        group_id_column (str, optional): Name of the column that
+            contains the ``group_id`` (join key). Defaults to
+            'profile_group_id'.
     """
 
     name = attr.ib(validator=attr.validators.instance_of(str))
@@ -98,7 +101,7 @@ class SegmentDataSource:
         else:
             assert_never(analysis_unit)
         return """SELECT
-            e.{ds_id},
+            e.{analysis_id},
             e.branch,
             {segments}
         FROM raw_enrollments e
@@ -110,7 +113,7 @@ class SegmentDataSource:
                 AND ds.{submission_date} BETWEEN
                     DATE_ADD(e.enrollment_date, interval {window_start} day)
                     AND DATE_ADD(e.enrollment_date, interval {window_end} day)
-        GROUP BY e.{ds_id}, e.branch""".format(
+        GROUP BY e.{analysis_id}, e.branch""".format(
             ds_id=ds_id,
             submission_date=self.submission_date_column or "submission_date",
             from_expr=self.from_expr_for(from_expr_dataset),

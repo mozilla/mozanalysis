@@ -487,7 +487,7 @@ class Experiment:
 
         if exposure_signal:
             exposure_query = custom_exposure_query or exposure_signal.build_query(
-                time_limits
+                time_limits, self.analysis_unit
             )
         else:
             exposure_query = custom_exposure_query or self._build_exposure_query(
@@ -561,7 +561,7 @@ class Experiment:
         if exposure_signal and analysis_basis != AnalysisBasis.ENROLLMENTS:
             exposure_query = f"""
             SELECT * FROM (
-                {exposure_signal.build_query(time_limits)}
+                {exposure_signal.build_query(time_limits, self.analysis_unit)}
             )
             WHERE num_exposure_events > 0
             """
@@ -1459,7 +1459,9 @@ class TimeSeriesResult:
             full_table_name=self.fully_qualified_table_name,
         )
 
-    def _table_sample_size_query(self, client_id_column: str = "client_id") -> str:
+    def _table_sample_size_query(
+        self, client_id_column: str = AnalysisUnit.CLIENT.value
+    ) -> str:
         return f"""
         SELECT
             COUNT(*) as population_size
