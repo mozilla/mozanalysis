@@ -203,7 +203,7 @@ class DataSource:
             assert_never(analysis_unit)
 
         return """SELECT
-            e.{id_column},
+            e.{analysis_id},
             e.branch,
             e.analysis_window_start,
             e.analysis_window_end,
@@ -212,14 +212,14 @@ class DataSource:
             {metrics}
         FROM enrollments e
             LEFT JOIN {from_expr} ds
-                ON ds.{ds_id} = e.{id_column}
+                ON ds.{ds_id} = e.{analysis_id}
                 AND ds.{submission_date} BETWEEN '{fddr}' AND '{lddr}'
                 AND ds.{submission_date} BETWEEN
                     DATE_ADD(e.{date}, interval e.analysis_window_start day)
                     AND DATE_ADD(e.{date}, interval e.analysis_window_end day)
                 {ignore_pre_enroll_first_day}
         GROUP BY
-            e.{id_column},
+            e.{analysis_id},
             e.branch,
             e.num_exposure_events,
             e.exposure_date,
@@ -243,7 +243,7 @@ class DataSource:
                 submission_date=self.submission_date_column,
                 experiment_slug=experiment_slug,
             ),
-            id_column=analysis_unit.value,
+            analysis_id=analysis_unit.value,
         )
 
     def build_query_targets(
@@ -413,7 +413,7 @@ class Metric:
         data_source (DataSource): where to find the metric
         select_expr (str): a SQL snippet representing a clause of a SELECT
             expression describing how to compute the metric; must include an
-            aggregation function since it will be GROUPed BY client_id
+            aggregation function since it will be GROUPed BY the analysis unit
             and branch
         friendly_name (str): A human-readable dashboard title for this metric
         description (str): A paragraph of Markdown-formatted text describing
