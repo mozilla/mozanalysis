@@ -210,7 +210,7 @@ and do not, yet, have a group_id_column</p>
 <li><p><strong>data_source</strong> (<a class="reference internal" href="#mozanalysis.metrics.DataSource" title="mozanalysis.metrics.DataSource"><em>DataSource</em></a>) – where to find the metric</p></li>
 <li><p><strong>select_expr</strong> (<em>str</em>) – a SQL snippet representing a clause of a SELECT
 expression describing how to compute the metric; must include an
-aggregation function since it will be GROUPed BY client_id
+aggregation function since it will be GROUPed BY the analysis unit
 and branch</p></li>
 <li><p><strong>friendly_name</strong> (<em>str</em>) – A human-readable dashboard title for this metric</p></li>
 <li><p><strong>description</strong> (<em>str</em>) – A paragraph of Markdown-formatted text describing

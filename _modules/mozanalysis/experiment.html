@@ -579,7 +579,7 @@
 
         <span class="k">if</span> <span class="n">exposure_signal</span><span class="p">:</span>
             <span class="n">exposure_query</span> <span class="o">=</span> <span class="n">custom_exposure_query</span> <span class="ow">or</span> <span class="n">exposure_signal</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
-                <span class="n">time_limits</span>
+                <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">exposure_query</span> <span class="o">=</span> <span class="n">custom_exposure_query</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query</span><span class="p">(</span>
@@ -656,7 +656,7 @@
         <span class="k">if</span> <span class="n">exposure_signal</span> <span class="ow">and</span> <span class="n">analysis_basis</span> <span class="o">!=</span> <span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">:</span>
             <span class="n">exposure_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT * FROM (</span>
-<span class="s2">                </span><span class="si">{</span><span class="n">exposure_signal</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">exposure_signal</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span><span class="n">time_limits</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="p">)</span><span class="si">}</span>
 <span class="s2">            )</span>
 <span class="s2">            WHERE num_exposure_events &gt; 0</span>
 <span class="s2">            &quot;&quot;&quot;</span>
@@ -1579,7 +1579,9 @@
             <span class="n">full_table_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fully_qualified_table_name</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_table_sample_size_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client_id_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;client_id&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_table_sample_size_query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">client_id_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">CLIENT</span><span class="o">.</span><span class="n">value</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        SELECT</span>
 <span class="s2">            COUNT(*) as population_size</span>
