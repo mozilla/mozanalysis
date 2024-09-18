@@ -34,7 +34,7 @@ def test_datasource_build_query_analysis_units(analysis_unit):
     lddr = tl.last_date_data_required
 
     expected_query = f"""SELECT
-            e.{analysis_unit.value},
+            e.analysis_id,
             e.branch,
             e.analysis_window_start,
             e.analysis_window_end,
@@ -43,14 +43,14 @@ def test_datasource_build_query_analysis_units(analysis_unit):
             {empty_str}
         FROM enrollments e
             LEFT JOIN my_table.name ds
-                ON ds.{analysis_unit.value} = e.{analysis_unit.value}
+                ON ds.{analysis_unit.value} = e.analysis_id
                 AND ds.submission_date BETWEEN '{fddr}' AND '{lddr}'
                 AND ds.submission_date BETWEEN
                     DATE_ADD(e.enrollment_date, interval e.analysis_window_start day)
                     AND DATE_ADD(e.enrollment_date, interval e.analysis_window_end day)
                 {empty_str}
         GROUP BY
-            e.{analysis_unit.value},
+            e.analysis_id,
             e.branch,
             e.num_exposure_events,
             e.exposure_date,

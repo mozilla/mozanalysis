@@ -61,14 +61,14 @@ class ExposureSignal:
         else:
             assert_never(analysis_unit)
         return """SELECT
-            e.{analysis_id},
+            e.analysis_id,
             e.branch,
             MIN(ds.submission_date) AS exposure_date,
             COUNT(ds.submission_date) AS num_exposure_events
         FROM raw_enrollments e
             LEFT JOIN (
                 SELECT
-                    {ds_id} AS {analysis_id},
+                    {ds_id} AS analysis_id,
                     {submission_date} AS submission_date
                 FROM {from_expr}
                 WHERE {submission_date}
@@ -76,10 +76,10 @@ class ExposureSignal:
                     AND DATE_ADD('{date_end}', INTERVAL {window_end} DAY)
                     AND {exposure_signal}
             ) AS ds
-            ON ds.{analysis_id} = e.{analysis_id} AND
+            ON ds.analysis_id = e.analysis_id AND
                 ds.submission_date >= e.enrollment_date
         GROUP BY
-            e.{analysis_id},
+            e.analysis_id,
             e.branch""".format(
             ds_id=ds_id,
             submission_date=self.data_source.submission_date_column,
@@ -91,5 +91,4 @@ class ExposureSignal:
             window_start=self.window_start or 0,
             window_end=self.window_end or 0,
             exposure_signal=self.select_expr,
-            analysis_id=analysis_unit.value,
         )
