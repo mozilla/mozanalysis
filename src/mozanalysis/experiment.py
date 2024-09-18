@@ -455,15 +455,19 @@ class Experiment:
             custom_enrollments_query (str): A full SQL query that
                 will generate the `enrollments` common table expression
                 used in the main query. The query must produce the columns
-                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
+                `analysis_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
+                `analysis_id` should be an alias for the `client_id` or
+                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).
 
                 WARNING: this query's results must be uniquely keyed by
-                (client_id, branch), or else your results will be subtly
+                (analysis_id, branch), or else your results will be subtly
                 wrong.
             custom_exposure_query (str): A full SQL query that
                 will generate the `exposures` common table expression
                 used in the main query. The query must produce the columns
-                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
+                `analysis_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
+                `analysis_id` should be an alias for the `client_id` or
+                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).
 
             exposure_signal (ExposureSignal): Optional signal definition of when a
                 client has been exposed to the experiment
@@ -770,7 +774,7 @@ class Experiment:
                 '{experiment_slug}'
             ).branch IS NOT NULL
             AND b.sample_id < {sample_size}
-        GROUP BY client_id, branch
+        GROUP BY b.client_info.client_id, branch
         HAVING enrollment_date >= '{first_enrollment_date}'
             """.format(
             experiment_slug=self.experiment_slug,
@@ -811,7 +815,7 @@ class Experiment:
                 AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND sample_id < {sample_size}
-            GROUP BY client_id, branch
+            GROUP BY events.client_info.client_id, branch
             """  # noqa:E501
 
     def _build_enrollments_query_cirrus(
@@ -846,7 +850,7 @@ class Experiment:
                 AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND client_info.app_channel = 'production'
-            GROUP BY client_id, branch
+            GROUP BY mozfun.map.get_key(e.extra, "user_id"), branch
             """  # noqa:E501
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
@@ -888,7 +892,7 @@ class Experiment:
         """Return SQL to query exposures for a Glean no-event experiment"""
         return f"""
             SELECT
-                exposures.client_id AS analysis_id,
+                exposures.analysis_id AS analysis_id,
                 exposures.branch,
                 DATE(MIN(exposures.submission_date)) AS exposure_date,
                 COUNT(exposures.submission_date) AS num_exposure_events
@@ -913,7 +917,7 @@ class Experiment:
             ON re.analysis_id = exposures.analysis_id AND
                 re.branch = exposures.branch AND
                 exposures.submission_date >= re.enrollment_date
-            GROUP BY client_id, branch
+            GROUP BY analysis_id, branch
             """  # noqa: E501
 
     def _build_metrics_query_bits(
