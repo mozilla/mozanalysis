@@ -101,19 +101,19 @@ class SegmentDataSource:
         else:
             assert_never(analysis_unit)
         return """SELECT
-            e.{analysis_id},
+            e.analysis_id,
             e.branch,
             {segments}
         FROM raw_enrollments e
             LEFT JOIN {from_expr} ds
-                ON ds.{ds_id} = e.{analysis_id}
+                ON ds.{ds_id} = e.analysis_id
                 AND ds.{submission_date} BETWEEN
                     DATE_ADD('{first_enrollment}', interval {window_start} day)
                     AND DATE_ADD('{last_enrollment}', interval {window_end} day)
                 AND ds.{submission_date} BETWEEN
                     DATE_ADD(e.enrollment_date, interval {window_start} day)
                     AND DATE_ADD(e.enrollment_date, interval {window_end} day)
-        GROUP BY e.{analysis_id}, e.branch""".format(
+        GROUP BY e.analysis_id, e.branch""".format(
             ds_id=ds_id,
             submission_date=self.submission_date_column or "submission_date",
             from_expr=self.from_expr_for(from_expr_dataset),
@@ -124,7 +124,6 @@ class SegmentDataSource:
             segments=",\n            ".join(
                 f"{m.select_expr} AS {m.name}" for m in segment_list
             ),
-            analysis_id=analysis_unit.value,
         )
 
     def build_query_target(

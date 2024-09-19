@@ -455,15 +455,19 @@ class Experiment:
             custom_enrollments_query (str): A full SQL query that
                 will generate the `enrollments` common table expression
                 used in the main query. The query must produce the columns
-                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
+                `analysis_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
+                `analysis_id` should be an alias for the `client_id` or
+                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).
 
                 WARNING: this query's results must be uniquely keyed by
-                (client_id, branch), or else your results will be subtly
+                (analysis_id, branch), or else your results will be subtly
                 wrong.
             custom_exposure_query (str): A full SQL query that
                 will generate the `exposures` common table expression
                 used in the main query. The query must produce the columns
-                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
+                `analysis_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
+                `analysis_id` should be an alias for the `client_id` or
+                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).
 
             exposure_signal (ExposureSignal): Optional signal definition of when a
                 client has been exposed to the experiment
@@ -507,10 +511,10 @@ class Experiment:
 
             SELECT
                 se.*,
-                e.* EXCEPT ({self.analysis_unit.value}, branch)
+                e.* EXCEPT (analysis_id, branch)
             FROM segmented_enrollments se
             LEFT JOIN exposures e
-            USING ({self.analysis_unit.value}, branch)
+            USING (analysis_id, branch)
         """
 
     def build_metrics_query(
@@ -592,7 +596,7 @@ class Experiment:
                 x.num_exposure_events
             FROM exposures x
                 RIGHT JOIN raw_enrollments e
-                USING ({id_column}, branch)
+                USING (analysis_id, branch)
         )
         SELECT
             enrollments.*,
@@ -605,7 +609,6 @@ class Experiment:
             metrics_columns=",\n        ".join(metrics_columns),
             metrics_joins="\n".join(metrics_joins),
             enrollments_table=enrollments_table,
-            id_column=self.analysis_unit.value,
         )
 
     @staticmethod
@@ -720,7 +723,7 @@ class Experiment:
         """Return SQL to query enrollments for a normandy experiment"""
         return f"""
         SELECT
-            e.{self.analysis_unit.value},
+            e.{self.analysis_unit.value} AS analysis_id,
             `mozfun.map.get_key`(e.event_map_values, 'branch')
                 AS branch,
             MIN(e.submission_date) AS enrollment_date,
@@ -753,7 +756,7 @@ class Experiment:
 
         return """
         SELECT
-            b.client_info.client_id AS client_id,
+            b.client_info.client_id AS analysis_id,
             mozfun.map.get_key(
                 b.ping_info.experiments,
                 '{experiment_slug}'
@@ -771,7 +774,7 @@ class Experiment:
                 '{experiment_slug}'
             ).branch IS NOT NULL
             AND b.sample_id < {sample_size}
-        GROUP BY client_id, branch
+        GROUP BY b.client_info.client_id, branch
         HAVING enrollment_date >= '{first_enrollment_date}'
             """.format(
             experiment_slug=self.experiment_slug,
@@ -795,7 +798,7 @@ class Experiment:
         """
 
         return f"""
-            SELECT events.client_info.client_id AS client_id,
+            SELECT events.client_info.client_id AS analysis_id,
                 mozfun.map.get_key(
                     e.extra,
                     'branch'
@@ -812,7 +815,7 @@ class Experiment:
                 AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND sample_id < {sample_size}
-            GROUP BY client_id, branch
+            GROUP BY events.client_info.client_id, branch
             """  # noqa:E501
 
     def _build_enrollments_query_cirrus(
@@ -830,7 +833,7 @@ class Experiment:
 
         return f"""
             SELECT
-                mozfun.map.get_key(e.extra, "user_id") AS client_id,
+                mozfun.map.get_key(e.extra, "user_id") AS analysis_id,
                 mozfun.map.get_key(
                     e.extra,
                     'branch'
@@ -847,21 +850,21 @@ class Experiment:
                 AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND client_info.app_channel = 'production'
-            GROUP BY client_id, branch
+            GROUP BY mozfun.map.get_key(e.extra, "user_id"), branch
             """  # noqa:E501
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query exposures for a normandy experiment"""
         return f"""
         SELECT
-            e.{self.analysis_unit.value},
+            e.analysis_id,
             e.branch,
             min(e.submission_date) AS exposure_date,
             COUNT(e.submission_date) AS num_exposure_events
         FROM raw_enrollments re
         LEFT JOIN (
             SELECT
-                {self.analysis_unit.value},
+                {self.analysis_unit.value} AS analysis_id,
                 `mozfun.map.get_key`(event_map_values, 'branchSlug') AS branch,
                 submission_date
             FROM
@@ -873,10 +876,10 @@ class Experiment:
                     BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                 AND event_string_value = '{self.experiment_slug}'
         ) e
-        ON re.{self.analysis_unit.value} = e.{self.analysis_unit.value} AND
+        ON re.analysis_id = e.analysis_id AND
             re.branch = e.branch AND
             e.submission_date >= re.enrollment_date
-        GROUP BY e.{self.analysis_unit.value}, e.branch
+        GROUP BY e.analysis_id, e.branch
             """  # noqa: E501
 
     def _build_exposure_query_glean_event(
@@ -889,14 +892,14 @@ class Experiment:
         """Return SQL to query exposures for a Glean no-event experiment"""
         return f"""
             SELECT
-                exposures.client_id,
+                exposures.analysis_id AS analysis_id,
                 exposures.branch,
                 DATE(MIN(exposures.submission_date)) AS exposure_date,
                 COUNT(exposures.submission_date) AS num_exposure_events
             FROM raw_enrollments re
             LEFT JOIN (
                 SELECT
-                    {client_id_field} AS client_id,
+                    {client_id_field} AS analysis_id,
                     mozfun.map.get_key(event.extra, 'branch') AS branch,
                     DATE(events.submission_timestamp) AS submission_date
                 FROM
@@ -911,10 +914,10 @@ class Experiment:
                         "experiment") = '{self.experiment_slug}'
                     AND (event.name = 'expose' OR event.name = 'exposure')
             ) exposures
-            ON re.client_id = exposures.client_id AND
+            ON re.analysis_id = exposures.analysis_id AND
                 re.branch = exposures.branch AND
                 exposures.submission_date >= re.enrollment_date
-            GROUP BY client_id, branch
+            GROUP BY analysis_id, branch
             """  # noqa: E501
 
     def _build_metrics_query_bits(
@@ -956,7 +959,7 @@ class Experiment:
             metrics_joins.append(
                 f"""    LEFT JOIN (
             {query_for_metrics}
-            ) ds_{i} USING ({self.analysis_unit.value}, branch, analysis_window_start, analysis_window_end)
+            ) ds_{i} USING (analysis_id, branch, analysis_window_start, analysis_window_end)
                     """  # noqa: E501
             )
 
@@ -1048,7 +1051,7 @@ class Experiment:
             segments_joins.append(
                 f"""    LEFT JOIN (
         {query_for_segments}
-        ) ds_{i} USING ({self.analysis_unit.value}, branch)
+        ) ds_{i} USING (analysis_id, branch)
                 """
             )
 
