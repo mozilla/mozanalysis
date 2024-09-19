@@ -207,16 +207,19 @@ class Experiment:
             custom_enrollments_query (str): A full SQL query that
                 will generate the `enrollments` common table expression
                 used in the main query. The query must produce the columns
-                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
+                `analysis_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
+                `analysis_id` should be an alias for the `client_id` or
+                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).
 
                 WARNING: this query's results must be uniquely keyed by
-                (client_id, branch), or else your results will be subtly
+                (analysis_id, branch), or else your results will be subtly
                 wrong.
-
-            custom_exposure_query (str):  A full SQL query that
+            custom_exposure_query (str): A full SQL query that
                 will generate the `exposures` common table expression
                 used in the main query. The query must produce the columns
-                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
+                `analysis_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
+                `analysis_id` should be an alias for the `client_id` or
+                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).
 
                 If not provided, the exposure will be determined based on
                 `exposure_signal`, if provided, or Normandy and Nimbus exposure events.
@@ -335,16 +338,19 @@ class Experiment:
             custom_enrollments_query (str): A full SQL query that
                 will generate the `enrollments` common table expression
                 used in the main query. The query must produce the columns
-                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
+                `analysis_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.
+                `analysis_id` should be an alias for the `client_id` or
+                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).
 
                 WARNING: this query's results must be uniquely keyed by
-                (client_id, branch), or else your results will be subtly
+                (analysis_id, branch), or else your results will be subtly
                 wrong.
-
             custom_exposure_query (str): A full SQL query that
                 will generate the `exposures` common table expression
                 used in the main query. The query must produce the columns
-                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
+                `analysis_id`, `branch`, `enrollment_date`, and `num_exposure_events`.
+                `analysis_id` should be an alias for the `client_id` or
+                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).
 
                 If not provided, the exposure will be determined based on
                 `exposure_signal`, if provided, or Normandy and Nimbus exposure events.
@@ -482,6 +488,49 @@ class Experiment:
             A string containing a BigQuery SQL expression.
         """
         sample_size = sample_size or 100
+
+        # Validate custom_enrollments_query and custom_exposures_query
+        if custom_enrollments_query and (
+            (
+                self.analysis_unit == AnalysisUnit.CLIENT
+                and AnalysisUnit.PROFILE_GROUP.value in custom_enrollments_query
+            )
+            or (
+                self.analysis_unit == AnalysisUnit.PROFILE_GROUP
+                and AnalysisUnit.CLIENT.value in custom_enrollments_query
+            )
+        ):
+            wrong_value = (
+                AnalysisUnit.CLIENT.value
+                if self.analysis_unit == AnalysisUnit.PROFILE_GROUP
+                else AnalysisUnit.PROFILE_GROUP.value
+            )
+            logger.warning(
+                f"custom_enrollments_query contains {wrong_value}, but experiment uses"
+                + f"{self.analysis_unit.value}. This could indicate a problem with the"
+                + "custom enrollments query."
+            )
+
+        if custom_exposure_query and (
+            (
+                self.analysis_unit == AnalysisUnit.CLIENT
+                and AnalysisUnit.PROFILE_GROUP.value in custom_exposure_query
+            )
+            or (
+                self.analysis_unit == AnalysisUnit.PROFILE_GROUP
+                and AnalysisUnit.CLIENT.value in custom_exposure_query
+            )
+        ):
+            wrong_value = (
+                AnalysisUnit.CLIENT.value
+                if self.analysis_unit == AnalysisUnit.PROFILE_GROUP
+                else AnalysisUnit.PROFILE_GROUP.value
+            )
+            logger.warning(
+                f"custom_exposure_query contains {wrong_value}, but experiment uses"
+                + f"{self.analysis_unit.value}. This could indicate a problem with the"
+                + "custom exposure query."
+            )
 
         enrollments_query = custom_enrollments_query or self._build_enrollments_query(
             time_limits,
