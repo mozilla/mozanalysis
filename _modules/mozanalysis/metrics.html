@@ -289,7 +289,7 @@
             <span class="n">assert_never</span><span class="p">(</span><span class="n">analysis_unit</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;SELECT</span>
-<span class="s2">            e.</span><span class="si">{analysis_id}</span><span class="s2">,</span>
+<span class="s2">            e.analysis_id,</span>
 <span class="s2">            e.branch,</span>
 <span class="s2">            e.analysis_window_start,</span>
 <span class="s2">            e.analysis_window_end,</span>
@@ -298,14 +298,14 @@
 <span class="s2">            </span><span class="si">{metrics}</span>
 <span class="s2">        FROM enrollments e</span>
 <span class="s2">            LEFT JOIN </span><span class="si">{from_expr}</span><span class="s2"> ds</span>
-<span class="s2">                ON ds.</span><span class="si">{ds_id}</span><span class="s2"> = e.</span><span class="si">{analysis_id}</span>
+<span class="s2">                ON ds.</span><span class="si">{ds_id}</span><span class="s2"> = e.analysis_id</span>
 <span class="s2">                AND ds.</span><span class="si">{submission_date}</span><span class="s2"> BETWEEN &#39;</span><span class="si">{fddr}</span><span class="s2">&#39; AND &#39;</span><span class="si">{lddr}</span><span class="s2">&#39;</span>
 <span class="s2">                AND ds.</span><span class="si">{submission_date}</span><span class="s2"> BETWEEN</span>
 <span class="s2">                    DATE_ADD(e.</span><span class="si">{date}</span><span class="s2">, interval e.analysis_window_start day)</span>
 <span class="s2">                    AND DATE_ADD(e.</span><span class="si">{date}</span><span class="s2">, interval e.analysis_window_end day)</span>
 <span class="s2">                </span><span class="si">{ignore_pre_enroll_first_day}</span>
 <span class="s2">        GROUP BY</span>
-<span class="s2">            e.</span><span class="si">{analysis_id}</span><span class="s2">,</span>
+<span class="s2">            e.analysis_id,</span>
 <span class="s2">            e.branch,</span>
 <span class="s2">            e.num_exposure_events,</span>
 <span class="s2">            e.exposure_date,</span>
@@ -329,7 +329,6 @@
                 <span class="n">submission_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_date_column</span><span class="p">,</span>
                 <span class="n">experiment_slug</span><span class="o">=</span><span class="n">experiment_slug</span><span class="p">,</span>
             <span class="p">),</span>
-            <span class="n">analysis_id</span><span class="o">=</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 

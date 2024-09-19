@@ -184,19 +184,19 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">assert_never</span><span class="p">(</span><span class="n">analysis_unit</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;SELECT</span>
-<span class="s2">            e.</span><span class="si">{analysis_id}</span><span class="s2">,</span>
+<span class="s2">            e.analysis_id,</span>
 <span class="s2">            e.branch,</span>
 <span class="s2">            </span><span class="si">{segments}</span>
 <span class="s2">        FROM raw_enrollments e</span>
 <span class="s2">            LEFT JOIN </span><span class="si">{from_expr}</span><span class="s2"> ds</span>
-<span class="s2">                ON ds.</span><span class="si">{ds_id}</span><span class="s2"> = e.</span><span class="si">{analysis_id}</span>
+<span class="s2">                ON ds.</span><span class="si">{ds_id}</span><span class="s2"> = e.analysis_id</span>
 <span class="s2">                AND ds.</span><span class="si">{submission_date}</span><span class="s2"> BETWEEN</span>
 <span class="s2">                    DATE_ADD(&#39;</span><span class="si">{first_enrollment}</span><span class="s2">&#39;, interval </span><span class="si">{window_start}</span><span class="s2"> day)</span>
 <span class="s2">                    AND DATE_ADD(&#39;</span><span class="si">{last_enrollment}</span><span class="s2">&#39;, interval </span><span class="si">{window_end}</span><span class="s2"> day)</span>
 <span class="s2">                AND ds.</span><span class="si">{submission_date}</span><span class="s2"> BETWEEN</span>
 <span class="s2">                    DATE_ADD(e.enrollment_date, interval </span><span class="si">{window_start}</span><span class="s2"> day)</span>
 <span class="s2">                    AND DATE_ADD(e.enrollment_date, interval </span><span class="si">{window_end}</span><span class="s2"> day)</span>
-<span class="s2">        GROUP BY e.</span><span class="si">{analysis_id}</span><span class="s2">, e.branch&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+<span class="s2">        GROUP BY e.analysis_id, e.branch&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">ds_id</span><span class="o">=</span><span class="n">ds_id</span><span class="p">,</span>
             <span class="n">submission_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_date_column</span> <span class="ow">or</span> <span class="s2">&quot;submission_date&quot;</span><span class="p">,</span>
             <span class="n">from_expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">from_expr_for</span><span class="p">(</span><span class="n">from_expr_dataset</span><span class="p">),</span>
@@ -207,7 +207,6 @@
             <span class="n">segments</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">            &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">select_expr</span><span class="si">}</span><span class="s2"> AS </span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">segment_list</span>
             <span class="p">),</span>
-            <span class="n">analysis_id</span><span class="o">=</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 

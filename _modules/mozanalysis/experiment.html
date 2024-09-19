@@ -547,15 +547,19 @@
 <span class="sd">            custom_enrollments_query (str): A full SQL query that</span>
 <span class="sd">                will generate the `enrollments` common table expression</span>
 <span class="sd">                used in the main query. The query must produce the columns</span>
-<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.</span>
+<span class="sd">                `analysis_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.</span>
+<span class="sd">                `analysis_id` should be an alias for the `client_id` or</span>
+<span class="sd">                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).</span>
 
 <span class="sd">                WARNING: this query&#39;s results must be uniquely keyed by</span>
-<span class="sd">                (client_id, branch), or else your results will be subtly</span>
+<span class="sd">                (analysis_id, branch), or else your results will be subtly</span>
 <span class="sd">                wrong.</span>
 <span class="sd">            custom_exposure_query (str): A full SQL query that</span>
 <span class="sd">                will generate the `exposures` common table expression</span>
 <span class="sd">                used in the main query. The query must produce the columns</span>
-<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.</span>
+<span class="sd">                `analysis_id`, `branch`, `enrollment_date`, and `num_exposure_events`.</span>
+<span class="sd">                `analysis_id` should be an alias for the `client_id` or</span>
+<span class="sd">                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).</span>
 
 <span class="sd">            exposure_signal (ExposureSignal): Optional signal definition of when a</span>
 <span class="sd">                client has been exposed to the experiment</span>
@@ -599,10 +603,10 @@
 
 <span class="s2">            SELECT</span>
 <span class="s2">                se.*,</span>
-<span class="s2">                e.* EXCEPT (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, branch)</span>
+<span class="s2">                e.* EXCEPT (analysis_id, branch)</span>
 <span class="s2">            FROM segmented_enrollments se</span>
 <span class="s2">            LEFT JOIN exposures e</span>
-<span class="s2">            USING (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, branch)</span>
+<span class="s2">            USING (analysis_id, branch)</span>
 <span class="s2">        &quot;&quot;&quot;</span></div>
 
 
@@ -687,7 +691,7 @@
 <span class="s2">                x.num_exposure_events</span>
 <span class="s2">            FROM exposures x</span>
 <span class="s2">                RIGHT JOIN raw_enrollments e</span>
-<span class="s2">                USING (</span><span class="si">{id_column}</span><span class="s2">, branch)</span>
+<span class="s2">                USING (analysis_id, branch)</span>
 <span class="s2">        )</span>
 <span class="s2">        SELECT</span>
 <span class="s2">            enrollments.*,</span>
@@ -700,7 +704,6 @@
             <span class="n">metrics_columns</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_columns</span><span class="p">),</span>
             <span class="n">metrics_joins</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">),</span>
             <span class="n">enrollments_table</span><span class="o">=</span><span class="n">enrollments_table</span><span class="p">,</span>
-            <span class="n">id_column</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -816,7 +819,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a normandy experiment&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        SELECT</span>
-<span class="s2">            e.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">            e.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> AS analysis_id,</span>
 <span class="s2">            `mozfun.map.get_key`(e.event_map_values, &#39;branch&#39;)</span>
 <span class="s2">                AS branch,</span>
 <span class="s2">            MIN(e.submission_date) AS enrollment_date,</span>
@@ -849,7 +852,7 @@
 
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        SELECT</span>
-<span class="s2">            b.client_info.client_id AS client_id,</span>
+<span class="s2">            b.client_info.client_id AS analysis_id,</span>
 <span class="s2">            mozfun.map.get_key(</span>
 <span class="s2">                b.ping_info.experiments,</span>
 <span class="s2">                &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
@@ -867,7 +870,7 @@
 <span class="s2">                &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">            ).branch IS NOT NULL</span>
 <span class="s2">            AND b.sample_id &lt; </span><span class="si">{sample_size}</span>
-<span class="s2">        GROUP BY client_id, branch</span>
+<span class="s2">        GROUP BY b.client_info.client_id, branch</span>
 <span class="s2">        HAVING enrollment_date &gt;= &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39;</span>
 <span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
@@ -891,7 +894,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">            SELECT events.client_info.client_id AS client_id,</span>
+<span class="s2">            SELECT events.client_info.client_id AS analysis_id,</span>
 <span class="s2">                mozfun.map.get_key(</span>
 <span class="s2">                    e.extra,</span>
 <span class="s2">                    &#39;branch&#39;</span>
@@ -908,7 +911,7 @@
 <span class="s2">                AND mozfun.map.get_key(e.extra, &quot;experiment&quot;) = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">                AND e.name = &#39;enrollment&#39;</span>
 <span class="s2">                AND sample_id &lt; </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span>
-<span class="s2">            GROUP BY client_id, branch</span>
+<span class="s2">            GROUP BY events.client_info.client_id, branch</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
 
     <span class="k">def</span> <span class="nf">_build_enrollments_query_cirrus</span><span class="p">(</span>
@@ -926,7 +929,7 @@
 
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT</span>
-<span class="s2">                mozfun.map.get_key(e.extra, &quot;user_id&quot;) AS client_id,</span>
+<span class="s2">                mozfun.map.get_key(e.extra, &quot;user_id&quot;) AS analysis_id,</span>
 <span class="s2">                mozfun.map.get_key(</span>
 <span class="s2">                    e.extra,</span>
 <span class="s2">                    &#39;branch&#39;</span>
@@ -943,21 +946,21 @@
 <span class="s2">                AND mozfun.map.get_key(e.extra, &quot;experiment&quot;) = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">                AND e.name = &#39;enrollment&#39;</span>
 <span class="s2">                AND client_info.app_channel = &#39;production&#39;</span>
-<span class="s2">            GROUP BY client_id, branch</span>
+<span class="s2">            GROUP BY mozfun.map.get_key(e.extra, &quot;user_id&quot;), branch</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
 
     <span class="k">def</span> <span class="nf">_build_exposure_query_normandy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query exposures for a normandy experiment&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        SELECT</span>
-<span class="s2">            e.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">            e.analysis_id,</span>
 <span class="s2">            e.branch,</span>
 <span class="s2">            min(e.submission_date) AS exposure_date,</span>
 <span class="s2">            COUNT(e.submission_date) AS num_exposure_events</span>
 <span class="s2">        FROM raw_enrollments re</span>
 <span class="s2">        LEFT JOIN (</span>
 <span class="s2">            SELECT</span>
-<span class="s2">                </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">                </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> AS analysis_id,</span>
 <span class="s2">                `mozfun.map.get_key`(event_map_values, &#39;branchSlug&#39;) AS branch,</span>
 <span class="s2">                submission_date</span>
 <span class="s2">            FROM</span>
@@ -969,10 +972,10 @@
 <span class="s2">                    BETWEEN &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2">&#39; AND &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">                AND event_string_value = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">        ) e</span>
-<span class="s2">        ON re.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> = e.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> AND</span>
+<span class="s2">        ON re.analysis_id = e.analysis_id AND</span>
 <span class="s2">            re.branch = e.branch AND</span>
 <span class="s2">            e.submission_date &gt;= re.enrollment_date</span>
-<span class="s2">        GROUP BY e.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, e.branch</span>
+<span class="s2">        GROUP BY e.analysis_id, e.branch</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
 
     <span class="k">def</span> <span class="nf">_build_exposure_query_glean_event</span><span class="p">(</span>
@@ -985,14 +988,14 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query exposures for a Glean no-event experiment&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT</span>
-<span class="s2">                exposures.client_id,</span>
+<span class="s2">                exposures.analysis_id AS analysis_id,</span>
 <span class="s2">                exposures.branch,</span>
 <span class="s2">                DATE(MIN(exposures.submission_date)) AS exposure_date,</span>
 <span class="s2">                COUNT(exposures.submission_date) AS num_exposure_events</span>
 <span class="s2">            FROM raw_enrollments re</span>
 <span class="s2">            LEFT JOIN (</span>
 <span class="s2">                SELECT</span>
-<span class="s2">                    </span><span class="si">{</span><span class="n">client_id_field</span><span class="si">}</span><span class="s2"> AS client_id,</span>
+<span class="s2">                    </span><span class="si">{</span><span class="n">client_id_field</span><span class="si">}</span><span class="s2"> AS analysis_id,</span>
 <span class="s2">                    mozfun.map.get_key(event.extra, &#39;branch&#39;) AS branch,</span>
 <span class="s2">                    DATE(events.submission_timestamp) AS submission_date</span>
 <span class="s2">                FROM</span>
@@ -1007,10 +1010,10 @@
 <span class="s2">                        &quot;experiment&quot;) = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">                    AND (event.name = &#39;expose&#39; OR event.name = &#39;exposure&#39;)</span>
 <span class="s2">            ) exposures</span>
-<span class="s2">            ON re.client_id = exposures.client_id AND</span>
+<span class="s2">            ON re.analysis_id = exposures.analysis_id AND</span>
 <span class="s2">                re.branch = exposures.branch AND</span>
 <span class="s2">                exposures.submission_date &gt;= re.enrollment_date</span>
-<span class="s2">            GROUP BY client_id, branch</span>
+<span class="s2">            GROUP BY analysis_id, branch</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
 
     <span class="k">def</span> <span class="nf">_build_metrics_query_bits</span><span class="p">(</span>
@@ -1052,7 +1055,7 @@
             <span class="n">metrics_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;&quot;&quot;    LEFT JOIN (</span>
 <span class="s2">            </span><span class="si">{</span><span class="n">query_for_metrics</span><span class="si">}</span>
-<span class="s2">            ) ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> USING (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, branch, analysis_window_start, analysis_window_end)</span>
+<span class="s2">            ) ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> USING (analysis_id, branch, analysis_window_start, analysis_window_end)</span>
 <span class="s2">                    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
             <span class="p">)</span>
 
@@ -1144,7 +1147,7 @@
             <span class="n">segments_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;&quot;&quot;    LEFT JOIN (</span>
 <span class="s2">        </span><span class="si">{</span><span class="n">query_for_segments</span><span class="si">}</span>
-<span class="s2">        ) ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> USING (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, branch)</span>
+<span class="s2">        ) ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> USING (analysis_id, branch)</span>
 <span class="s2">                &quot;&quot;&quot;</span>
             <span class="p">)</span>
 

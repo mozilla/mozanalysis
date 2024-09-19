@@ -141,14 +141,14 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">assert_never</span><span class="p">(</span><span class="n">analysis_unit</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;SELECT</span>
-<span class="s2">            e.</span><span class="si">{analysis_id}</span><span class="s2">,</span>
+<span class="s2">            e.analysis_id,</span>
 <span class="s2">            e.branch,</span>
 <span class="s2">            MIN(ds.submission_date) AS exposure_date,</span>
 <span class="s2">            COUNT(ds.submission_date) AS num_exposure_events</span>
 <span class="s2">        FROM raw_enrollments e</span>
 <span class="s2">            LEFT JOIN (</span>
 <span class="s2">                SELECT</span>
-<span class="s2">                    </span><span class="si">{ds_id}</span><span class="s2"> AS </span><span class="si">{analysis_id}</span><span class="s2">,</span>
+<span class="s2">                    </span><span class="si">{ds_id}</span><span class="s2"> AS analysis_id,</span>
 <span class="s2">                    </span><span class="si">{submission_date}</span><span class="s2"> AS submission_date</span>
 <span class="s2">                FROM </span><span class="si">{from_expr}</span>
 <span class="s2">                WHERE </span><span class="si">{submission_date}</span>
@@ -156,10 +156,10 @@
 <span class="s2">                    AND DATE_ADD(&#39;</span><span class="si">{date_end}</span><span class="s2">&#39;, INTERVAL </span><span class="si">{window_end}</span><span class="s2"> DAY)</span>
 <span class="s2">                    AND </span><span class="si">{exposure_signal}</span>
 <span class="s2">            ) AS ds</span>
-<span class="s2">            ON ds.</span><span class="si">{analysis_id}</span><span class="s2"> = e.</span><span class="si">{analysis_id}</span><span class="s2"> AND</span>
+<span class="s2">            ON ds.analysis_id = e.analysis_id AND</span>
 <span class="s2">                ds.submission_date &gt;= e.enrollment_date</span>
 <span class="s2">        GROUP BY</span>
-<span class="s2">            e.</span><span class="si">{analysis_id}</span><span class="s2">,</span>
+<span class="s2">            e.analysis_id,</span>
 <span class="s2">            e.branch&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">ds_id</span><span class="o">=</span><span class="n">ds_id</span><span class="p">,</span>
             <span class="n">submission_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">submission_date_column</span><span class="p">,</span>
@@ -171,7 +171,6 @@
             <span class="n">window_start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_start</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
             <span class="n">window_end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_end</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
             <span class="n">exposure_signal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">select_expr</span><span class="p">,</span>
-            <span class="n">analysis_id</span><span class="o">=</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
         <span class="p">)</span></div>
 </div>
 
