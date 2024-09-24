@@ -447,6 +447,7 @@ class Experiment:
         exposure_signal: ExposureSignal | None = None,
         segment_list=None,
         sample_size: int = 100,
+        suppress_custom_query_validation: bool = False,
     ) -> str:
         """Return a SQL query for querying enrollment and exposure data.
 
@@ -505,11 +506,19 @@ class Experiment:
                 if self.analysis_unit == AnalysisUnit.PROFILE_GROUP
                 else AnalysisUnit.PROFILE_GROUP.value
             )
-            logger.warning(
-                f"custom_enrollments_query contains {wrong_value}, but experiment uses"
-                + f"{self.analysis_unit.value}. This could indicate a problem with the"
-                + "custom enrollments query."
-            )
+
+            if not suppress_custom_query_validation:
+                raise ValueError(
+                    f"custom_enrollments_query contains {wrong_value}, but experiment "
+                    + f"uses {self.analysis_unit.value}. This could indicate a problem "
+                    + "with the custom enrollments query."
+                )
+            else:
+                logger.warning(
+                    f"custom_enrollments_query contains {wrong_value}, but experiment "
+                    + f"uses {self.analysis_unit.value}. This could indicate a problem "
+                    + "with the custom enrollments query."
+                )
 
         if custom_exposure_query and (
             (
@@ -526,11 +535,18 @@ class Experiment:
                 if self.analysis_unit == AnalysisUnit.PROFILE_GROUP
                 else AnalysisUnit.PROFILE_GROUP.value
             )
-            logger.warning(
-                f"custom_exposure_query contains {wrong_value}, but experiment uses"
-                + f"{self.analysis_unit.value}. This could indicate a problem with the"
-                + "custom exposure query."
-            )
+            if not suppress_custom_query_validation:
+                raise ValueError(
+                    f"custom_exposure_query contains {wrong_value}, but experiment "
+                    + f"uses {self.analysis_unit.value}. This could indicate a problem "
+                    + "with the custom exposure query."
+                )
+            else:
+                logger.warning(
+                    f"custom_exposure_query contains {wrong_value}, but experiment "
+                    + f"uses {self.analysis_unit.value}. This could indicate a problem "
+                    + "with the custom exposure query."
+                )
 
         enrollments_query = custom_enrollments_query or self._build_enrollments_query(
             time_limits,
