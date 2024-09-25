@@ -879,6 +879,150 @@ def test_resolve_missing_column_names():
 @pytest.mark.parametrize(
     "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
 )
+def test_enrollments_query_with_valid_custom_enrollments(analysis_unit):
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    exp.build_enrollments_query(
+        time_limits=tl,
+        enrollments_query_type=EnrollmentsQueryType.NORMANDY,
+        custom_enrollments_query=f"SELECT {analysis_unit.value} AS analysis_id",
+    )
+
+
+@pytest.mark.parametrize(
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+)
+def test_enrollments_query_with_valid_custom_exposure(analysis_unit):
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    # should not raise ValueError
+    exp.build_enrollments_query(
+        time_limits=tl,
+        enrollments_query_type=EnrollmentsQueryType.NORMANDY,
+        custom_exposure_query=f"SELECT {analysis_unit.value} AS analysis_id",
+    )
+
+
+@pytest.mark.parametrize(
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+)
+def test_enrollments_query_with_invalid_custom_enrollments(analysis_unit):
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    wrong_analysis_unit = (
+        AnalysisUnit.CLIENT.value
+        if analysis_unit == AnalysisUnit.PROFILE_GROUP
+        else AnalysisUnit.PROFILE_GROUP.value
+    )
+
+    error_msg = (
+        f"custom_enrollments_query contains {wrong_analysis_unit}, but experiment "
+        + f"uses {analysis_unit.value}. This could indicate a problem "
+        + "with the custom enrollments query."
+    )
+
+    with pytest.raises(ValueError, match=error_msg):
+        exp.build_enrollments_query(
+            time_limits=tl,
+            enrollments_query_type=EnrollmentsQueryType.NORMANDY,
+            custom_enrollments_query=f"SELECT {wrong_analysis_unit} AS analysis_id",
+        )
+
+
+@pytest.mark.parametrize(
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+)
+def test_enrollments_query_with_invalid_custom_exposure(analysis_unit):
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    wrong_analysis_unit = (
+        AnalysisUnit.CLIENT.value
+        if analysis_unit == AnalysisUnit.PROFILE_GROUP
+        else AnalysisUnit.PROFILE_GROUP.value
+    )
+
+    error_msg = (
+        f"custom_exposure_query contains {wrong_analysis_unit}, but experiment "
+        + f"uses {analysis_unit.value}. This could indicate a problem "
+        + "with the custom exposure query."
+    )
+
+    with pytest.raises(ValueError, match=error_msg):
+        exp.build_enrollments_query(
+            time_limits=tl,
+            enrollments_query_type=EnrollmentsQueryType.NORMANDY,
+            custom_exposure_query=f"SELECT {wrong_analysis_unit} AS analysis_id",
+        )
+
+
+@pytest.mark.parametrize(
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+)
+def test_enrollments_query_with_invalid_custom_exposure_suppress_errors(
+    caplog, analysis_unit
+):
+    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    wrong_analysis_unit = (
+        AnalysisUnit.CLIENT.value
+        if analysis_unit == AnalysisUnit.PROFILE_GROUP
+        else AnalysisUnit.PROFILE_GROUP.value
+    )
+
+    error_msg = (
+        f"custom_exposure_query contains {wrong_analysis_unit}, but experiment "
+        + f"uses {analysis_unit.value}. This could indicate a problem "
+        + "with the custom exposure query."
+    )
+
+    exp.build_enrollments_query(
+        time_limits=tl,
+        enrollments_query_type=EnrollmentsQueryType.NORMANDY,
+        custom_exposure_query=f"SELECT {wrong_analysis_unit} AS analysis_id",
+        suppress_custom_query_validation=True,
+    )
+
+    assert error_msg in caplog.text
+
+
+@pytest.mark.parametrize(
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+)
 def test_enrollments_query_analysis_unit(analysis_unit):
     exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
 
