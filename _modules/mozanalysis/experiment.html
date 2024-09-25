@@ -293,16 +293,19 @@
 <span class="sd">            custom_enrollments_query (str): A full SQL query that</span>
 <span class="sd">                will generate the `enrollments` common table expression</span>
 <span class="sd">                used in the main query. The query must produce the columns</span>
-<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.</span>
+<span class="sd">                `analysis_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.</span>
+<span class="sd">                `analysis_id` should be an alias for the `client_id` or</span>
+<span class="sd">                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).</span>
 
 <span class="sd">                WARNING: this query&#39;s results must be uniquely keyed by</span>
-<span class="sd">                (client_id, branch), or else your results will be subtly</span>
+<span class="sd">                (analysis_id, branch), or else your results will be subtly</span>
 <span class="sd">                wrong.</span>
-
-<span class="sd">            custom_exposure_query (str):  A full SQL query that</span>
+<span class="sd">            custom_exposure_query (str): A full SQL query that</span>
 <span class="sd">                will generate the `exposures` common table expression</span>
 <span class="sd">                used in the main query. The query must produce the columns</span>
-<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.</span>
+<span class="sd">                `analysis_id`, `branch`, `enrollment_date`, and `num_exposure_events`.</span>
+<span class="sd">                `analysis_id` should be an alias for the `client_id` or</span>
+<span class="sd">                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).</span>
 
 <span class="sd">                If not provided, the exposure will be determined based on</span>
 <span class="sd">                `exposure_signal`, if provided, or Normandy and Nimbus exposure events.</span>
@@ -424,16 +427,19 @@
 <span class="sd">            custom_enrollments_query (str): A full SQL query that</span>
 <span class="sd">                will generate the `enrollments` common table expression</span>
 <span class="sd">                used in the main query. The query must produce the columns</span>
-<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.</span>
+<span class="sd">                `analysis_id`, `branch`, `enrollment_date`, and `num_enrolled_events`.</span>
+<span class="sd">                `analysis_id` should be an alias for the `client_id` or</span>
+<span class="sd">                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).</span>
 
 <span class="sd">                WARNING: this query&#39;s results must be uniquely keyed by</span>
-<span class="sd">                (client_id, branch), or else your results will be subtly</span>
+<span class="sd">                (analysis_id, branch), or else your results will be subtly</span>
 <span class="sd">                wrong.</span>
-
 <span class="sd">            custom_exposure_query (str): A full SQL query that</span>
 <span class="sd">                will generate the `exposures` common table expression</span>
 <span class="sd">                used in the main query. The query must produce the columns</span>
-<span class="sd">                `client_id`, `branch`, `enrollment_date`, and `num_exposure_events`.</span>
+<span class="sd">                `analysis_id`, `branch`, `enrollment_date`, and `num_exposure_events`.</span>
+<span class="sd">                `analysis_id` should be an alias for the `client_id` or</span>
+<span class="sd">                `profile_group_id` (e.g., `SELECT client_id AS analysis_id`).</span>
 
 <span class="sd">                If not provided, the exposure will be determined based on</span>
 <span class="sd">                `exposure_signal`, if provided, or Normandy and Nimbus exposure events.</span>
@@ -533,6 +539,7 @@
         <span class="n">exposure_signal</span><span class="p">:</span> <span class="n">ExposureSignal</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">suppress_custom_query_validation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a SQL query for querying enrollment and exposure data.</span>
 
@@ -574,6 +581,64 @@
 <span class="sd">            A string containing a BigQuery SQL expression.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">sample_size</span> <span class="o">=</span> <span class="n">sample_size</span> <span class="ow">or</span> <span class="mi">100</span>
+
+        <span class="c1"># Validate custom_enrollments_query and custom_exposures_query</span>
+        <span class="k">if</span> <span class="n">custom_enrollments_query</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span> <span class="o">==</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">CLIENT</span>
+                <span class="ow">and</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">PROFILE_GROUP</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">custom_enrollments_query</span>
+            <span class="p">)</span>
+            <span class="ow">or</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span> <span class="o">==</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">PROFILE_GROUP</span>
+                <span class="ow">and</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">CLIENT</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">custom_enrollments_query</span>
+            <span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">wrong_value</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">CLIENT</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span> <span class="o">==</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">PROFILE_GROUP</span>
+                <span class="k">else</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">PROFILE_GROUP</span><span class="o">.</span><span class="n">value</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">suppress_custom_query_validation</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;custom_enrollments_query contains </span><span class="si">{</span><span class="n">wrong_value</span><span class="si">}</span><span class="s2">, but experiment &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;uses </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. This could indicate a problem &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;with the custom enrollments query.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;custom_enrollments_query contains </span><span class="si">{</span><span class="n">wrong_value</span><span class="si">}</span><span class="s2">, but experiment &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;uses </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. This could indicate a problem &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;with the custom enrollments query.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">custom_exposure_query</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span> <span class="o">==</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">CLIENT</span>
+                <span class="ow">and</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">PROFILE_GROUP</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">custom_exposure_query</span>
+            <span class="p">)</span>
+            <span class="ow">or</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span> <span class="o">==</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">PROFILE_GROUP</span>
+                <span class="ow">and</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">CLIENT</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">custom_exposure_query</span>
+            <span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">wrong_value</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">CLIENT</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span> <span class="o">==</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">PROFILE_GROUP</span>
+                <span class="k">else</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">PROFILE_GROUP</span><span class="o">.</span><span class="n">value</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">suppress_custom_query_validation</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;custom_exposure_query contains </span><span class="si">{</span><span class="n">wrong_value</span><span class="si">}</span><span class="s2">, but experiment &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;uses </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. This could indicate a problem &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;with the custom exposure query.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;custom_exposure_query contains </span><span class="si">{</span><span class="n">wrong_value</span><span class="si">}</span><span class="s2">, but experiment &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;uses </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. This could indicate a problem &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;with the custom exposure query.&quot;</span>
+                <span class="p">)</span>
 
         <span class="n">enrollments_query</span> <span class="o">=</span> <span class="n">custom_enrollments_query</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query</span><span class="p">(</span>
             <span class="n">time_limits</span><span class="p">,</span>
