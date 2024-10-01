@@ -449,7 +449,7 @@ typing-extensions==4.12.2
     #   polyfactory
     #   pydantic
     #   pydantic-core
-tzdata==2024.1
+tzdata==2024.2
     # via
     #   -c requirements.txt
     #   pandas
