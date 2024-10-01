@@ -203,7 +203,7 @@ requests==2.32.3
     #   mozilla-metric-config-parser
 rsa==4.9
     # via google-auth
-ruff==0.6.4
+ruff==0.6.8
     # via
     #   mozanalysis
     #   pytest-ruff
