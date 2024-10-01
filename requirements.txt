@@ -395,9 +395,9 @@ exceptiongroup==1.2.2 \
     #   -r requirements.in
     #   cattrs
     #   pytest
-faker==28.4.1 \
-    --hash=sha256:4294d169255a045990720d6f3fa4134b764a4cdf46ef0d3c7553d2506f1adaa1 \
-    --hash=sha256:e59c01d1e8b8e20a83255ab8232c143cb2af3b4f5ab6a3f5ce495f385ad8ab4c
+faker==30.1.0 \
+    --hash=sha256:dbf81295c948270a9e96cd48a9a3ebec73acac9a153d0c854fbbd0294557609f \
+    --hash=sha256:e0593931bd7be9a9ea984b5d8c302ef1cec19392585d1e90d444199271d0a94d
     # via
     #   -r requirements.in
     #   polyfactory
@@ -1455,6 +1455,7 @@ typing-extensions==4.12.2 \
     # via
     #   -r requirements.in
     #   cattrs
+    #   faker
     #   formulaic
     #   polyfactory
     #   pydantic
