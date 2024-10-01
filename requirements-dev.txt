@@ -688,6 +688,7 @@ jeepney==0.8.0 \
     --hash=sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755
     # via
     #   -r requirements-dev.in
+    #   keyring
     #   secretstorage
 jinja2==3.1.4 \
     --hash=sha256:4a3aee7acbbe7303aede8e9648d13b8bf88a429282aa6122a993f0ac800cb369 \
@@ -1421,9 +1422,9 @@ pyparsing==3.1.4 \
     # via
     #   -r requirements-dev.in
     #   matplotlib
-pyproject-api==1.7.1 \
-    --hash=sha256:2dc1654062c2b27733d8fd4cdda672b22fe8741ef1dde8e3a998a9547b071eeb \
-    --hash=sha256:7ebc6cd10710f89f4cf2a2731710a98abce37ebff19427116ff2174c9236a827
+pyproject-api==1.8.0 \
+    --hash=sha256:3d7d347a047afe796fd5d1885b1e391ba29be7169bd2f102fcd378f04273d228 \
+    --hash=sha256:77b8049f2feb5d33eefcc21b57f1e279636277a8ac8ad6b5871037b243778496
     # via
     #   -r requirements-dev.in
     #   tox
@@ -1576,7 +1577,9 @@ scipy==1.14.1 \
 secretstorage==3.3.3 \
     --hash=sha256:2403533ef369eca6d2ba81718576c5e0f564d5cca1b58f73a8b23e7d4eeebd77 \
     --hash=sha256:f356e6628222568e3af06f2eba8df495efa13b3b63081dafd4f7d9a7b7bc9f99
-    # via -r requirements-dev.in
+    # via
+    #   -r requirements-dev.in
+    #   keyring
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
     --hash=sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254
