@@ -124,7 +124,7 @@ packaging==24.1
     #   matplotlib
     #   pytest
     #   statsmodels
-pandas==2.2.2
+pandas==2.2.3
     # via
     #   formulaic
     #   mizani
