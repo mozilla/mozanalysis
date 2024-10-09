@@ -106,7 +106,7 @@ jobs:
             git config user.email "fx-data-platform@mozilla.com"
             git config user.name "CircleCI docs-deploy job"
             npm install -g --silent gh-pages@^2.0.0
-            gh-pages --dotfiles --message "[skip ci] Updates" --dist docs/_build/html --no-push
+            gh-pages --dotfiles --message "[skip ci] Updates" --dist docs/_build/html
 
 ####################
 # Workflows: see https://circleci.com/docs/2.0/workflows/
@@ -122,9 +122,9 @@ workflows:
       - docs-deploy:
           requires:
             - docs
-          # filters:
-          #   branches:
-          #     only: main
+          filters:
+            branches:
+              only: main
   tagged-deploy:
     jobs:
       - deploy:
