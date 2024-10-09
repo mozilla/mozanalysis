@@ -146,7 +146,7 @@ grpcio-status==1.66.1
     # via
     #   -c requirements.txt
     #   google-api-core
-idna==3.8
+idna==3.10
     # via
     #   -c requirements.txt
     #   requests
