@@ -688,6 +688,7 @@ jeepney==0.8.0 \
     --hash=sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755
     # via
     #   -r requirements-dev.in
+    #   keyring
     #   secretstorage
 jinja2==3.1.4 \
     --hash=sha256:4a3aee7acbbe7303aede8e9648d13b8bf88a429282aa6122a993f0ac800cb369 \
@@ -1188,9 +1189,9 @@ pkginfo==1.10.0 \
     # via
     #   -r requirements-dev.in
     #   twine
-platformdirs==4.3.2 \
-    --hash=sha256:9e5e27a08aa095dd127b9f2e764d74254f482fef22b0970773bfba79d091ab8c \
-    --hash=sha256:eb1c8582560b34ed4ba105009a4badf7f6f85768b30126f351328507b2beb617
+platformdirs==4.3.6 \
+    --hash=sha256:357fb2acbc885b0419afd3ce3ed34564c13c9b95c89360cd9563f73aa5e2b907 \
+    --hash=sha256:73e575e1408ab8103900836b97580d5307456908a03e92031bab39e4554cc3fb
     # via
     #   -r requirements-dev.in
     #   tox
@@ -1576,7 +1577,9 @@ scipy==1.14.1 \
 secretstorage==3.3.3 \
     --hash=sha256:2403533ef369eca6d2ba81718576c5e0f564d5cca1b58f73a8b23e7d4eeebd77 \
     --hash=sha256:f356e6628222568e3af06f2eba8df495efa13b3b63081dafd4f7d9a7b7bc9f99
-    # via -r requirements-dev.in
+    # via
+    #   -r requirements-dev.in
+    #   keyring
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
     --hash=sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254
