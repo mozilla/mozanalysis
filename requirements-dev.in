@@ -79,7 +79,7 @@ faker==28.4.1
     # via
     #   -c requirements.txt
     #   polyfactory
-filelock==3.16.0
+filelock==3.16.1
     # via
     #   tox
     #   virtualenv
