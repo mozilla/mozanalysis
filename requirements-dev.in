@@ -16,7 +16,7 @@ attrs==24.2.0
     #   mozilla-metric-config-parser
 backports-tarfile==1.2.0
     # via jaraco-context
-build==1.2.2
+build==1.2.2.post1
     # via
     #   mozanalysis
     #   pip-tools
