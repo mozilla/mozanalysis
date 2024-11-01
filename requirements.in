@@ -172,7 +172,7 @@ pydantic==2.9.1
     # via mozilla-nimbus-schemas
 pydantic-core==2.23.3
     # via pydantic
-pyparsing==3.1.4
+pyparsing==3.2.0
     # via matplotlib
 pytest==8.3.3
     # via
