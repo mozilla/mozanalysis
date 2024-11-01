@@ -288,7 +288,7 @@ polyfactory==2.16.2
     # via
     #   -c requirements.txt
     #   mozilla-nimbus-schemas
-proto-plus==1.24.0
+proto-plus==1.25.0
     # via
     #   -c requirements.txt
     #   google-api-core
