@@ -229,7 +229,7 @@ statsmodels==0.14.2
     #   plotnine
 toml==0.10.2
     # via mozilla-metric-config-parser
-tomli==2.0.1
+tomli==2.0.2
     # via
     #   coverage
     #   pytest
