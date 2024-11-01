@@ -865,8 +865,8 @@ mock==5.1.0 \
     --hash=sha256:18c694e5ae8a208cdb3d2c20a993ca1a7b0efa258c247a1e565150f477f83744 \
     --hash=sha256:5e96aad5ccda4718e0a229ed94b2024df75cc2d55575ba5762d31f5767b8767d
     # via -r requirements.in
-mozilla-metric-config-parser==2024.9.6 \
-    --hash=sha256:a3e83d4d39f5b2363dfb156214f6d442e217a8b82bbfc2070267edc1820384cb
+mozilla-metric-config-parser==2024.10.2 \
+    --hash=sha256:f66540ce807718a0fa329207982eeb00d1b10e2937789d88872849b4271ff043
     # via -r requirements.in
 mozilla-nimbus-schemas==2024.9.3 \
     --hash=sha256:5e1196637308fb0241a209eee027a436e986fc6220ad416eebb06b7162e226bc \
