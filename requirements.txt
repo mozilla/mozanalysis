@@ -463,9 +463,9 @@ gitpython==3.1.43 \
     # via
     #   -r requirements.in
     #   mozilla-metric-config-parser
-google-api-core[grpc]==2.19.2 \
-    --hash=sha256:53ec0258f2837dd53bbd3d3df50f5359281b3cc13f800c941dd15a9b5a415af4 \
-    --hash=sha256:ca07de7e8aa1c98a8bfca9321890ad2340ef7f2eb136e558cee68f24b94b0a8f
+google-api-core[grpc]==2.22.0 \
+    --hash=sha256:26f8d76b96477db42b55fd02a33aae4a42ec8b86b98b94969b7333a2c828bf35 \
+    --hash=sha256:a6652b6bd51303902494998626653671703c420f6f4c88cfd3f50ed723e9d021
     # via
     #   -r requirements.in
     #   google-cloud-bigquery

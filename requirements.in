@@ -45,7 +45,7 @@ gitdb==4.0.11
     # via gitpython
 gitpython==3.1.43
     # via mozilla-metric-config-parser
-google-api-core[grpc]==2.19.2
+google-api-core[grpc]==2.22.0
     # via
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
