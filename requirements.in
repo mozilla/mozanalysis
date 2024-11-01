@@ -88,7 +88,7 @@ jinja2==3.1.4
     # via mozilla-metric-config-parser
 kiwisolver==1.4.7
     # via matplotlib
-marginaleffects==0.0.12
+marginaleffects==0.0.14
     # via mozanalysis
 markupsafe==2.1.5
     # via jinja2
