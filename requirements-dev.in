@@ -176,7 +176,7 @@ jinja2==3.1.4
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-keyring==25.3.0
+keyring==25.5.0
     # via twine
 kiwisolver==1.4.7
     # via
