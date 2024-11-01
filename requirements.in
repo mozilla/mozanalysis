@@ -180,7 +180,7 @@ pytest==8.3.3
     #   pytest-cov
     #   pytest-ruff
     #   pytest-timeout
-pytest-cov==5.0.0
+pytest-cov==6.0.0
     # via mozanalysis
 pytest-ruff==0.4.1
     # via mozanalysis
