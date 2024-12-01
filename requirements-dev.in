@@ -219,7 +219,7 @@ mozilla-nimbus-schemas==2024.9.3
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-nh3==0.2.18
+nh3==0.2.19
     # via readme-renderer
 numpy==1.26.4
     # via
