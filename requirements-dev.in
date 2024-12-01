@@ -466,7 +466,7 @@ wrapt==1.16.0
     # via
     #   -c requirements.txt
     #   formulaic
-zipp==3.20.1
+zipp==3.21.0
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
