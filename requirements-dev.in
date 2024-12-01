@@ -428,7 +428,7 @@ toml==0.10.2
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-tomli==2.0.1
+tomli==2.2.1
     # via
     #   -c requirements.txt
     #   build
