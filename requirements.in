@@ -131,7 +131,7 @@ pandas==2.2.2
     #   mozanalysis
     #   plotnine
     #   statsmodels
-patsy==0.5.6
+patsy==1.0.1
     # via
     #   marginaleffects
     #   statsmodels
