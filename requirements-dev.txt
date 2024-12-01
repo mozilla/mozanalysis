@@ -688,6 +688,7 @@ jeepney==0.8.0 \
     --hash=sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755
     # via
     #   -r requirements-dev.in
+    #   keyring
     #   secretstorage
 jinja2==3.1.4 \
     --hash=sha256:4a3aee7acbbe7303aede8e9648d13b8bf88a429282aa6122a993f0ac800cb369 \
@@ -1498,9 +1499,9 @@ rfc3986==2.0.0 \
     # via
     #   -r requirements-dev.in
     #   twine
-rich==13.8.1 \
-    --hash=sha256:1760a3c0848469b97b558fc61c85233e3dafb69c7a071b4d60c38099d3cd4c06 \
-    --hash=sha256:8260cda28e3db6bf04d2d1ef4dbc03ba80a824c88b0e7668a0f23126a424844a
+rich==13.9.4 \
+    --hash=sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098 \
+    --hash=sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90
     # via
     #   -r requirements-dev.in
     #   twine
@@ -1576,7 +1577,9 @@ scipy==1.14.1 \
 secretstorage==3.3.3 \
     --hash=sha256:2403533ef369eca6d2ba81718576c5e0f564d5cca1b58f73a8b23e7d4eeebd77 \
     --hash=sha256:f356e6628222568e3af06f2eba8df495efa13b3b63081dafd4f7d9a7b7bc9f99
-    # via -r requirements-dev.in
+    # via
+    #   -r requirements-dev.in
+    #   keyring
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
     --hash=sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254
@@ -1653,6 +1656,7 @@ typing-extensions==4.12.2 \
     #   polyfactory
     #   pydantic
     #   pydantic-core
+    #   rich
 tzdata==2024.1 \
     --hash=sha256:2674120f8d891909751c38abcdfd386ac0a5a1127954fbc332af6b5ceae07efd \
     --hash=sha256:9068bc196136463f5245e51efda838afa15aaeca9903f49050dfa2679db4d252
