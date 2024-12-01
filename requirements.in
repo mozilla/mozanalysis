@@ -118,7 +118,7 @@ numpy==1.26.4
     #   pyarrow
     #   scipy
     #   statsmodels
-packaging==24.1
+packaging==24.2
     # via
     #   google-cloud-bigquery
     #   matplotlib
