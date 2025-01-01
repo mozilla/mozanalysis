@@ -184,7 +184,7 @@ jsonschema-specifications==2024.10.1
     # via
     #   -c requirements.txt
     #   jsonschema
-keyring==25.5.0
+keyring==25.6.0
     # via twine
 kiwisolver==1.4.7
     # via
