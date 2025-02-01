@@ -39,7 +39,7 @@ exceptiongroup==1.2.2
     #   pytest
 faker==33.1.0
     # via polyfactory
-fonttools==4.55.3
+fonttools==4.55.8
     # via matplotlib
 formulaic==1.1.1
     # via mozanalysis
