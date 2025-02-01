@@ -37,7 +37,7 @@ exceptiongroup==1.2.2
     # via
     #   cattrs
     #   pytest
-faker==33.1.0
+faker==35.2.0
     # via polyfactory
 fonttools==4.55.3
     # via matplotlib
