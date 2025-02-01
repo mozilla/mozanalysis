@@ -700,6 +700,7 @@ jeepney==0.8.0 \
     --hash=sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755
     # via
     #   -r requirements-dev.in
+    #   keyring
     #   secretstorage
 jinja2==3.1.5 \
     --hash=sha256:8fefff8dc3034e27bb80d67c671eb8a9bc424c0ef4c0826edbff304cceff43bb \
@@ -1738,7 +1739,9 @@ scipy==1.14.1 \
 secretstorage==3.3.3 \
     --hash=sha256:2403533ef369eca6d2ba81718576c5e0f564d5cca1b58f73a8b23e7d4eeebd77 \
     --hash=sha256:f356e6628222568e3af06f2eba8df495efa13b3b63081dafd4f7d9a7b7bc9f99
-    # via -r requirements-dev.in
+    # via
+    #   -r requirements-dev.in
+    #   keyring
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
@@ -1867,9 +1870,9 @@ urllib3==2.3.0 \
     #   -r requirements-dev.in
     #   requests
     #   twine
-virtualenv==20.28.0 \
-    --hash=sha256:23eae1b4516ecd610481eda647f3a7c09aea295055337331bb4e6892ecce47b0 \
-    --hash=sha256:2c9c3262bb8e7b87ea801d715fae4495e6032450c71d2309be9550e7364049aa
+virtualenv==20.29.1 \
+    --hash=sha256:4e4cb403c0b0da39e13b46b1b2476e505cb0046b25f242bee80f62bf990b2779 \
+    --hash=sha256:b8b8970138d32fb606192cb97f6cd4bb644fa486be9308fb9b63f81091b5dc35
     # via
     #   -r requirements-dev.in
     #   tox
