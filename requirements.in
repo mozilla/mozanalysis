@@ -151,7 +151,7 @@ polars==1.17.1
     # via marginaleffects
 polyfactory==2.18.1
     # via mozilla-nimbus-schemas
-proto-plus==1.25.0
+proto-plus==1.26.0
     # via
     #   google-api-core
     #   google-cloud-bigquery-storage
