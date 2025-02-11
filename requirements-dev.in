@@ -302,7 +302,7 @@ proto-plus==1.25.0
     #   -c requirements.txt
     #   google-api-core
     #   google-cloud-bigquery-storage
-protobuf==5.29.2
+protobuf==5.29.3
     # via
     #   -c requirements.txt
     #   google-api-core
