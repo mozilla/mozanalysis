@@ -45,7 +45,7 @@ formulaic==1.1.1
     # via mozanalysis
 gitdb==4.0.12
     # via gitpython
-gitpython==3.1.43
+gitpython==3.1.44
     # via mozilla-metric-config-parser
 google-api-core[grpc]==2.24.0
     # via
