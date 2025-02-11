@@ -383,7 +383,7 @@ pytz==2025.1
     #   pandas
 readme-renderer==44.0
     # via twine
-referencing==0.35.1
+referencing==0.36.2
     # via
     #   -c requirements.txt
     #   jsonschema
