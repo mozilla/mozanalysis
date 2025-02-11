@@ -433,7 +433,7 @@ six==1.17.0
     # via
     #   -c requirements.txt
     #   python-dateutil
-smmap==5.0.1
+smmap==5.0.2
     # via
     #   -c requirements.txt
     #   gitdb
