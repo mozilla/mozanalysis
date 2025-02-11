@@ -1835,9 +1835,9 @@ tomli==2.2.1 \
     #   pyproject-api
     #   pytest
     #   tox
-tox==4.23.2 \
-    --hash=sha256:452bc32bb031f2282881a2118923176445bac783ab97c874b8770ab4c3b76c38 \
-    --hash=sha256:86075e00e555df6e82e74cfc333917f91ecb47ffbc868dcafbd2672e332f4a2c
+tox==4.24.1 \
+    --hash=sha256:083a720adbc6166fff0b7d1df9d154f9d00bfccb9403b8abf6bc0ee435d6a62e \
+    --hash=sha256:57ba7df7d199002c6df8c2db9e6484f3de6ca8f42013c083ea2d4d1e5c6bdc75
     # via -r requirements-dev.in
 twine==6.0.1 \
     --hash=sha256:36158b09df5406e1c9c1fb8edb24fc2be387709443e7376689b938531582ee27 \
