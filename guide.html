@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Guide &mdash; mozanalysis  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
@@ -93,15 +93,15 @@
 </pre></div>
 </div>
 <p>We take the per-notebook daily trudge:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">auth</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">google.colab</span><span class="w"> </span><span class="kn">import</span> <span class="n">auth</span>
 <span class="n">auth</span><span class="o">.</span><span class="n">authenticate_user</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Authenticated&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Then we import the necessary classes for getting the data, and for analysing the data, and for interacting with BigQuery:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.binary</span> <span class="k">as</span> <span class="nn">mabsbin</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">Experiment</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">BigQueryContext</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">mozanalysis.bayesian_stats.binary</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mabsbin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.experiment</span><span class="w"> </span><span class="kn">import</span> <span class="n">Experiment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.bq</span><span class="w"> </span><span class="kn">import</span> <span class="n">BigQueryContext</span>
 </pre></div>
 </div>
 <p>And get a <a class="reference internal" href="api/bq.html#mozanalysis.bq.BigQueryContext" title="mozanalysis.bq.BigQueryContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">mozanalysis.bq.BigQueryContext</span></code></a> (a client, and some config)</p>
@@ -125,7 +125,7 @@
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">start_date</span></code> is the <code class="docutils literal notranslate"><span class="pre">submission_date</span></code> of the first enrollment (<code class="docutils literal notranslate"><span class="pre">submission_date</span></code> is in UTC). If you intended to study one week’s worth of enrollments, then set <code class="docutils literal notranslate"><span class="pre">num_dates_enrollment=8</span></code>: Normandy experiments typically go live in the evening UTC-time, so 8 days of data is a better approximation than 7.</p>
 <p>We now gather a list of who was enrolled in what branch and when, and try to quantify what happened to each client. In many cases, the metrics in which you’re interested will already be in a metrics library, <a class="reference external" href="https://github.com/mozilla/metric-hub">metric-hub</a>. If not, then you can define your own—see <a class="reference internal" href="api/metrics.html#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">mozanalysis.metrics.Metric</span></code></a> for examples—and ideally submit a PR to add them to metric-hub for the next experiment. To load a Metric from metric-hub, for example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mozanalysis.config</span> <span class="kn">import</span> <span class="n">ConfigLoader</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigLoader</span>
 <span class="n">active_hours</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="n">slug</span><span class="o">=</span><span class="s2">&quot;active_hours&quot;</span><span class="p">,</span> <span class="n">app_name</span><span class="o">=</span><span class="s2">&quot;firefox_desktop&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -262,13 +262,13 @@
 <p>(output re-wrapped for clarity)</p>
 <p><code class="docutils literal notranslate"><span class="pre">rel_uplift</span></code> contains quantities related to the relative uplift of a branch with respect to the reference branch (as given by <code class="docutils literal notranslate"><span class="pre">ref_branch_label</span></code>); for example, assuming a uniform prior, there is a 95% probability that Cohort_3 had between 0.457% fewer and 0.028% more users with &gt;0 active hours in the second week, compared to Cohort_1. <code class="docutils literal notranslate"><span class="pre">abs_uplift</span></code> refers to the absolute uplifts, and <code class="docutils literal notranslate"><span class="pre">prob_win</span></code> gives the probability that the branch is better than the reference branch.</p>
 <p>Since <code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis</span></code> is designed around this “standard format”, you can pass any of the values in <code class="docutils literal notranslate"><span class="pre">res</span></code> to any of the statistics functions, as long as the statistics are suited to the column’s type (i.e. binary vs real-valued data):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.binary</span> <span class="k">as</span> <span class="nn">mabsbin</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">mozanalysis.bayesian_stats.binary</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mabsbin</span>
 <span class="n">retention_week_2</span> <span class="o">=</span> <span class="n">mabsbin</span><span class="o">.</span><span class="n">compare_branches</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;active_hours_gt_0&#39;</span><span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">mozanalysis.frequentist_stats.bootstrap</span> <span class="k">as</span> <span class="nn">mafsboot</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mozanalysis.frequentist_stats.bootstrap</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mafsboot</span>
 <span class="n">boot_uri_week_1</span> <span class="o">=</span> <span class="n">mafsboot</span><span class="o">.</span><span class="n">compare_branches</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;uri_count&#39;</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="o">=</span><span class="mf">0.9999</span><span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.survival_func</span> <span class="k">as</span> <span class="nn">mabssf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mozanalysis.bayesian_stats.survival_func</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mabssf</span>
 <span class="n">sf_search_week_2</span> <span class="o">=</span> <span class="n">mabssf</span><span class="o">.</span><span class="n">compare_branches</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;search_count&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -348,10 +348,10 @@ res = exp.get_single_window_data(
 <section id="crunch-the-stats">
 <h2>Crunch the stats<a class="headerlink" href="#crunch-the-stats" title="Link to this heading"></a></h2>
 <p>Each stats technique has a module in <a class="reference internal" href="api/bayesian_stats.html#module-mozanalysis.bayesian_stats" title="mozanalysis.bayesian_stats"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats</span></code></a> or <code class="xref py py-mod docutils literal notranslate"><span class="pre">mozanalysis.frequentist_stats</span></code>, and a function <code class="docutils literal notranslate"><span class="pre">compare_branches()</span></code>; for example <a class="reference internal" href="api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.compare_branches" title="mozanalysis.bayesian_stats.binary.compare_branches"><code class="xref py py-func docutils literal notranslate"><span class="pre">mozanalysis.bayesian_stats.binary.compare_branches()</span></code></a>. This function accepts a pandas DataFrame in “the standard format”, and must be passed the name of the column containing the metric to be studied.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.binary</span> <span class="k">as</span> <span class="nn">mabsbin</span>
-<span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.bayesian_bootstrap</span> <span class="k">as</span> <span class="nn">mabsboot</span>
-<span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.survival_func</span> <span class="k">as</span> <span class="nn">mabssf</span>
-<span class="kn">import</span> <span class="nn">mozanalysis.frequentist_stats.bootstrap</span> <span class="k">as</span> <span class="nn">mafsboot</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">mozanalysis.bayesian_stats.binary</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mabsbin</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mozanalysis.bayesian_stats.bayesian_bootstrap</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mabsboot</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mozanalysis.bayesian_stats.survival_func</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mabssf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mozanalysis.frequentist_stats.bootstrap</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mafsboot</span>
 
 <span class="n">res_from_ts</span><span class="p">[</span><span class="mi">7</span><span class="p">][</span><span class="s1">&#39;active_hours_gt_0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_from_ts</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="o">.</span><span class="n">active_hours_gt_0</span> <span class="o">&gt;</span> <span class="mi">0</span>
 <span class="n">mabsbin</span><span class="o">.</span><span class="n">compare_branches</span><span class="p">(</span><span class="n">res_from_ts</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;active_hours_gt_0&#39;</span><span class="p">)</span>

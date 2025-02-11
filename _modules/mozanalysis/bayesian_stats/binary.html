@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mozanalysis.bayesian_stats.binary &mdash; mozanalysis  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -76,16 +76,16 @@
 <span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="nn">st</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
 
-<span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats</span> <span class="k">as</span> <span class="nn">mabs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mozanalysis.bayesian_stats</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mabs</span>
 
 
 <div class="viewcode-block" id="compare_branches">
 <a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.compare_branches">[docs]</a>
-<span class="k">def</span> <span class="nf">compare_branches</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_branches</span><span class="p">(</span>
     <span class="n">df</span><span class="p">,</span>
     <span class="n">col_label</span><span class="p">,</span>
     <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span>
@@ -140,7 +140,7 @@
 
 <div class="viewcode-block" id="aggregate_col">
 <a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.aggregate_col">[docs]</a>
-<span class="k">def</span> <span class="nf">aggregate_col</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">aggregate_col</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the number of enrollments and conversions per branch.</span>
 
 <span class="sd">    Args:</span>
@@ -172,7 +172,7 @@
 
 <div class="viewcode-block" id="summarize_one_branch_from_agg">
 <a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.summarize_one_branch_from_agg">[docs]</a>
-<span class="k">def</span> <span class="nf">summarize_one_branch_from_agg</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">summarize_one_branch_from_agg</span><span class="p">(</span>
     <span class="n">s</span><span class="p">,</span>
     <span class="n">num_enrollments_label</span><span class="o">=</span><span class="s2">&quot;num_enrollments&quot;</span><span class="p">,</span>
     <span class="n">num_conversions_label</span><span class="o">=</span><span class="s2">&quot;num_conversions&quot;</span><span class="p">,</span>
@@ -215,7 +215,7 @@
 
 <div class="viewcode-block" id="compare_branches_from_agg">
 <a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.compare_branches_from_agg">[docs]</a>
-<span class="k">def</span> <span class="nf">compare_branches_from_agg</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_branches_from_agg</span><span class="p">(</span>
     <span class="n">df</span><span class="p">,</span>
     <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span>
     <span class="n">num_enrollments_label</span><span class="o">=</span><span class="s2">&quot;num_enrollments&quot;</span><span class="p">,</span>
@@ -287,7 +287,7 @@
 
 <div class="viewcode-block" id="get_samples">
 <a class="viewcode-back" href="../../../api/bayesian_stats/binary.html#mozanalysis.bayesian_stats.binary.get_samples">[docs]</a>
-<span class="k">def</span> <span class="nf">get_samples</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">num_enrollments_label</span><span class="p">,</span> <span class="n">num_conversions_label</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_samples</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">num_enrollments_label</span><span class="p">,</span> <span class="n">num_conversions_label</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return samples from Beta distributions.</span>
 
 <span class="sd">    Assumes a Beta(1, 1) prior.</span>

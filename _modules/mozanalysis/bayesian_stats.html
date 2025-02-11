@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mozanalysis.bayesian_stats &mdash; mozanalysis  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -75,15 +75,15 @@
 <span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="n">DEFAULT_QUANTILES</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">,</span> <span class="mf">0.995</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="compare_samples">
 <a class="viewcode-back" href="../../api/bayesian_stats.html#mozanalysis.bayesian_stats.compare_samples">[docs]</a>
-<span class="k">def</span> <span class="nf">compare_samples</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_samples</span><span class="p">(</span>
     <span class="n">samples</span><span class="p">,</span>
     <span class="n">ref_branch_label</span><span class="p">,</span>
     <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
@@ -153,7 +153,7 @@
 
 <div class="viewcode-block" id="summarize_one_branch_samples">
 <a class="viewcode-back" href="../../api/bayesian_stats.html#mozanalysis.bayesian_stats.summarize_one_branch_samples">[docs]</a>
-<span class="k">def</span> <span class="nf">summarize_one_branch_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">summarize_one_branch_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return descriptive statistics for sampled population-level stats.</span>
 
 <span class="sd">    Given samples from one or more distributions, calculate some</span>
@@ -192,7 +192,7 @@
 
 <div class="viewcode-block" id="summarize_joint_samples">
 <a class="viewcode-back" href="../../api/bayesian_stats.html#mozanalysis.bayesian_stats.summarize_joint_samples">[docs]</a>
-<span class="k">def</span> <span class="nf">summarize_joint_samples</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">summarize_joint_samples</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return descriptive statistics for uplifts.</span>
 
 <span class="sd">    The intended use case of this function is to compare a &#39;focus&#39;</span>
@@ -262,7 +262,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_summarize_one_branch_samples_single</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_summarize_one_branch_samples_single</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">list</span><span class="p">):</span>
         <span class="c1"># Hey pd.Series.agg - don&#39;t apply me elementwise!</span>
         <span class="c1"># Raising this error allows ``_summarize_one_branch_samples_batch``</span>
@@ -278,11 +278,11 @@
     <span class="k">return</span> <span class="n">res</span>
 
 
-<span class="k">def</span> <span class="nf">_summarize_one_branch_samples_batch</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_summarize_one_branch_samples_batch</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">samples</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">summarize_one_branch_samples</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">quantiles</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
 
-<span class="k">def</span> <span class="nf">_summarize_joint_samples_single</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_summarize_joint_samples_single</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
     <span class="n">str_quantiles</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quantiles</span><span class="p">]</span>
 
     <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
@@ -314,7 +314,7 @@
     <span class="k">return</span> <span class="n">res</span>
 
 
-<span class="k">def</span> <span class="nf">_summarize_joint_samples_batch</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_summarize_joint_samples_batch</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="n">DEFAULT_QUANTILES</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">focus</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span>
 

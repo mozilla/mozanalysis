@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mozanalysis.config &mdash; mozanalysis  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -76,54 +76,54 @@
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
 
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 
-<span class="kn">from</span> <span class="nn">metric_config_parser.config</span> <span class="kn">import</span> <span class="n">ConfigCollection</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">metric_config_parser.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigCollection</span>
 
-<span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">DataSource</span><span class="p">,</span> <span class="n">Metric</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.segments</span> <span class="kn">import</span> <span class="n">Segment</span><span class="p">,</span> <span class="n">SegmentDataSource</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataSource</span><span class="p">,</span> <span class="n">Metric</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.segments</span><span class="w"> </span><span class="kn">import</span> <span class="n">Segment</span><span class="p">,</span> <span class="n">SegmentDataSource</span>
 
 <span class="n">METRIC_HUB_JETSTREAM_REPO</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/mozilla/metric-hub/tree/main/jetstream&quot;</span>
 
 
 <div class="viewcode-block" id="ApplicationNotFound">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config.ApplicationNotFound">[docs]</a>
-<span class="k">class</span> <span class="nc">ApplicationNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ApplicationNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
 
 
 <div class="viewcode-block" id="MetricNotFound">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config.MetricNotFound">[docs]</a>
-<span class="k">class</span> <span class="nc">MetricNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
 
 
 <div class="viewcode-block" id="DataSourceNotFound">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config.DataSourceNotFound">[docs]</a>
-<span class="k">class</span> <span class="nc">DataSourceNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DataSourceNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
 
 
 <div class="viewcode-block" id="SegmentNotFound">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config.SegmentNotFound">[docs]</a>
-<span class="k">class</span> <span class="nc">SegmentNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SegmentNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
 
 
 <div class="viewcode-block" id="SegmentDataSourceNotFound">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config.SegmentDataSourceNotFound">[docs]</a>
-<span class="k">class</span> <span class="nc">SegmentDataSourceNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SegmentDataSourceNotFound</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
 
 
 <div class="viewcode-block" id="_ConfigLoader">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader">[docs]</a>
-<span class="k">class</span> <span class="nc">_ConfigLoader</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_ConfigLoader</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loads config files from an external repository.</span>
 
@@ -133,7 +133,7 @@
     <span class="n">config_collection</span><span class="p">:</span> <span class="n">ConfigCollection</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">configs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConfigCollection</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConfigCollection</span><span class="p">:</span>
         <span class="n">configs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_configs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">configs</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">configs</span>
@@ -145,7 +145,7 @@
 
 <div class="viewcode-block" id="_ConfigLoader.with_configs_from">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.with_configs_from">[docs]</a>
-    <span class="k">def</span> <span class="nf">with_configs_from</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_configs_from</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">repo_urls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_private</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_ConfigLoader&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load configs from another repository and merge with default configs.&quot;&quot;&quot;</span>
@@ -159,7 +159,7 @@
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
-    <span class="k">def</span> <span class="nf">check_configs_for_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_configs_for_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">definition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">definitions</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">app_name</span> <span class="o">==</span> <span class="n">definition</span><span class="o">.</span><span class="n">platform</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
@@ -167,7 +167,7 @@
 
 <div class="viewcode-block" id="_ConfigLoader.get_metric">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_metric">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a metric definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.Metric` instance.</span>
@@ -201,7 +201,7 @@
 
 <div class="viewcode-block" id="_ConfigLoader.get_data_source">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_data_source">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSource</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSource</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a data source definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.DataSource` instance.</span>
@@ -225,7 +225,7 @@
 
 <div class="viewcode-block" id="_ConfigLoader.get_segment">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_segment">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Segment</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Segment</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a segment definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.segments.Segment` instance.</span>
@@ -258,7 +258,7 @@
 
 <div class="viewcode-block" id="_ConfigLoader.get_segment_data_source">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_segment_data_source">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_segment_data_source</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_segment_data_source</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SegmentDataSource</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a segment data source definition for the given app.</span>
@@ -293,7 +293,7 @@
 
 <div class="viewcode-block" id="_ConfigLoader.get_outcome_metric">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_outcome_metric">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_outcome_metric</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_outcome_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a metric definition from an outcome defined for the given app.</span>
@@ -303,7 +303,7 @@
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.Metric` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metric</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">outcomes</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">with_configs_from</span><span class="p">([</span><span class="n">METRIC_HUB_JETSTREAM_REPO</span><span class="p">])</span>
@@ -322,7 +322,7 @@
             <span class="p">)</span>
 
         <span class="nd">@dataclass</span>
-        <span class="k">class</span> <span class="nc">MinimalConfiguration</span><span class="p">:</span>
+        <span class="k">class</span><span class="w"> </span><span class="nc">MinimalConfiguration</span><span class="p">:</span>
             <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
 
         <span class="n">conf</span> <span class="o">=</span> <span class="n">MinimalConfiguration</span><span class="p">(</span><span class="n">app_name</span><span class="p">)</span>
@@ -344,14 +344,14 @@
 
 <div class="viewcode-block" id="_ConfigLoader.get_outcome_data_source">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_outcome_data_source">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_outcome_data_source</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_outcome_data_source</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSource</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a data source definition from an outcome defined for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.DataSource` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">DataSource</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataSource</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">outcomes</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">with_configs_from</span><span class="p">([</span><span class="n">METRIC_HUB_JETSTREAM_REPO</span><span class="p">])</span>

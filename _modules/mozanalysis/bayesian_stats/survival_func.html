@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mozanalysis.bayesian_stats.survival_func &mdash; mozanalysis  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -76,15 +76,15 @@
 <span></span><span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="kn">import</span> <span class="nn">mozanalysis.bayesian_stats.binary</span> <span class="k">as</span> <span class="nn">mabsb</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mozanalysis.bayesian_stats.binary</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mabsb</span>
 
 
 <div class="viewcode-block" id="compare_branches">
 <a class="viewcode-back" href="../../../api/bayesian_stats/survival_func.html#mozanalysis.bayesian_stats.survival_func.compare_branches">[docs]</a>
-<span class="k">def</span> <span class="nf">compare_branches</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span> <span class="n">thresholds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_branches</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span> <span class="n">thresholds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the survival functions and relative uplifts thereupon.</span>
 
 <span class="sd">    This function generates data for a metric&#39;s survival function</span>
@@ -165,7 +165,7 @@
 
 <div class="viewcode-block" id="get_thresholds">
 <a class="viewcode-back" href="../../../api/bayesian_stats/survival_func.html#mozanalysis.bayesian_stats.survival_func.get_thresholds">[docs]</a>
-<span class="k">def</span> <span class="nf">get_thresholds</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">max_num_thresholds</span><span class="o">=</span><span class="mi">101</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_thresholds</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">max_num_thresholds</span><span class="o">=</span><span class="mi">101</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a set of interesting thresholds for the dataset ``col``</span>
 
 <span class="sd">    Assumes that the values are non-negative, with zero as a special case.</span>
@@ -201,7 +201,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_one_thresh</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_one_thresh</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_label</span><span class="p">,</span> <span class="n">ref_branch_label</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run stats on the fraction of clients above ``threshold``.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">col_label</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;df&#39; contains null values for &#39;</span><span class="si">{</span><span class="n">col_label</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>

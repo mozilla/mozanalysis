@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mozanalysis.frequentist_stats.sample_size &mdash; mozanalysis  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -77,29 +77,29 @@
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
 <span class="sd">&quot;&quot;&quot;module for sample size calculations&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">UserDict</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">pi</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">pandas.io.formats.style</span> <span class="kn">import</span> <span class="n">Styler</span>
-<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">norm</span>
-<span class="kn">from</span> <span class="nn">statsmodels.stats.power</span> <span class="kn">import</span> <span class="n">tt_ind_solve_power</span><span class="p">,</span> <span class="n">zt_ind_solve_power</span>
-<span class="kn">from</span> <span class="nn">statsmodels.stats.proportion</span> <span class="kn">import</span> <span class="n">samplesize_proportions_2indep_onetail</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pandas.io.formats.style</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">norm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.power</span><span class="w"> </span><span class="kn">import</span> <span class="n">tt_ind_solve_power</span><span class="p">,</span> <span class="n">zt_ind_solve_power</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.proportion</span><span class="w"> </span><span class="kn">import</span> <span class="n">samplesize_proportions_2indep_onetail</span>
 
-<span class="kn">from</span> <span class="nn">mozanalysis.bq</span> <span class="kn">import</span> <span class="n">BigQueryContext</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.experiment</span> <span class="kn">import</span> <span class="n">TimeSeriesResult</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.segments</span> <span class="kn">import</span> <span class="n">Segment</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.sizing</span> <span class="kn">import</span> <span class="n">HistoricalTarget</span>
-<span class="kn">from</span> <span class="nn">mozanalysis.utils</span> <span class="kn">import</span> <span class="n">get_time_intervals</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.bq</span><span class="w"> </span><span class="kn">import</span> <span class="n">BigQueryContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.experiment</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeSeriesResult</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metric</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.segments</span><span class="w"> </span><span class="kn">import</span> <span class="n">Segment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.sizing</span><span class="w"> </span><span class="kn">import</span> <span class="n">HistoricalTarget</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_time_intervals</span>
 
 
 <div class="viewcode-block" id="ResultsHolder">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.ResultsHolder">[docs]</a>
-<span class="k">class</span> <span class="nc">ResultsHolder</span><span class="p">(</span><span class="n">UserDict</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ResultsHolder</span><span class="p">(</span><span class="n">UserDict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Object to hold results from different methods.  It extends</span>
 <span class="sd">    the dictionary objects so that users can interact with it</span>
@@ -107,7 +107,7 @@
 <span class="sd">    it backward compatible.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -128,19 +128,19 @@
         <span class="p">}</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;List of metrics used to generate the results. Defaults to None&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Parameters used to generated the results.  Defaults to None&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span>
 
 <div class="viewcode-block" id="ResultsHolder.make_friendly_name">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.ResultsHolder.make_friendly_name">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">make_friendly_name</span><span class="p">(</span><span class="n">ugly_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_friendly_name</span><span class="p">(</span><span class="n">ugly_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Turns a name into a friendly name</span>
 <span class="sd">        by replacing underscores with spaces and</span>
 <span class="sd">        capitlizing words other than ones like &quot;per&quot;, &quot;of&quot;, etc</span>
@@ -164,7 +164,7 @@
 
 <div class="viewcode-block" id="SampleSizeResultsHolder">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.SampleSizeResultsHolder">[docs]</a>
-<span class="k">class</span> <span class="nc">SampleSizeResultsHolder</span><span class="p">(</span><span class="n">ResultsHolder</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SampleSizeResultsHolder</span><span class="p">(</span><span class="n">ResultsHolder</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Object to hold results from different methods.  It extends</span>
 <span class="sd">    the dictionary objects so that users can interact with it</span>
@@ -175,7 +175,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;dataframe property</span>
 
 <span class="sd">        returns data as a dataframe rather than a dict</span>
@@ -184,7 +184,7 @@
 
 <div class="viewcode-block" id="SampleSizeResultsHolder.plot_results">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.SampleSizeResultsHolder.plot_results">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sample_size_per_branch&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sample_size_per_branch&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;plots the outputs of the sampling methods</span>
 
 <span class="sd">        Args:</span>
@@ -211,12 +211,12 @@
 
 <div class="viewcode-block" id="EmpiricalEffectSizeResultsHolder">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.EmpiricalEffectSizeResultsHolder">[docs]</a>
-<span class="k">class</span> <span class="nc">EmpiricalEffectSizeResultsHolder</span><span class="p">(</span><span class="n">ResultsHolder</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EmpiricalEffectSizeResultsHolder</span><span class="p">(</span><span class="n">ResultsHolder</span><span class="p">):</span>
     <span class="s2">&quot;ResultsHolder for empirical_effect_size_sample_size_calc&quot;</span>
 
 <div class="viewcode-block" id="EmpiricalEffectSizeResultsHolder.style_empirical_sizing_result">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.EmpiricalEffectSizeResultsHolder.style_empirical_sizing_result">[docs]</a>
-    <span class="k">def</span> <span class="nf">style_empirical_sizing_result</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">style_empirical_sizing_result</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">empirical_sizing_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Styler</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Pretty-print the DF returned by `empirical_sizing()`.</span>
@@ -249,7 +249,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;dataframe property</span>
 
 <span class="sd">        returns results consolidated into a dataframe&quot;&quot;&quot;</span>
@@ -285,7 +285,7 @@
 
 <div class="viewcode-block" id="EmpiricalEffectSizeResultsHolder.get_styled_dataframe">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.EmpiricalEffectSizeResultsHolder.get_styled_dataframe">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_styled_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Styler</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_styled_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Styler</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;returns styled dataframe for results from</span>
 <span class="sd">        empirical_effect_size_sample_size_calc</span>
 
@@ -303,8 +303,8 @@
 
 <div class="viewcode-block" id="SampleSizeCurveResultHolder">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.SampleSizeCurveResultHolder">[docs]</a>
-<span class="k">class</span> <span class="nc">SampleSizeCurveResultHolder</span><span class="p">(</span><span class="n">ResultsHolder</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SampleSizeCurveResultHolder</span><span class="p">(</span><span class="n">ResultsHolder</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># uses the __init__ method for ResultsHolder</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="c1"># need to modify results so it matches the old format</span>
@@ -318,7 +318,7 @@
             <span class="n">results_dict</span><span class="p">[</span><span class="n">el</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">el</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">results_dict</span>
 
-    <span class="k">def</span> <span class="nf">set_raw_data_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_raw_data_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="n">outlier_percentile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="s2">&quot;outlier_percentile&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">100</span>
         <span class="n">overall_stats</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">input_data</span><span class="p">[[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">]]</span>
@@ -342,13 +342,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_raw_data_stats</span> <span class="o">=</span> <span class="n">overall_stats</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;dataframe property&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_df</span>
 
 <div class="viewcode-block" id="SampleSizeCurveResultHolder.get_styled_dataframe">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.SampleSizeCurveResultHolder.get_styled_dataframe">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_styled_dataframe</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_styled_dataframe</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">show_population_pct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -457,7 +457,7 @@
 
 <div class="viewcode-block" id="sample_size_curves">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.sample_size_curves">[docs]</a>
-<span class="k">def</span> <span class="nf">sample_size_curves</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sample_size_curves</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">metrics_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
     <span class="n">solver</span><span class="p">,</span>
@@ -528,7 +528,7 @@
 
 <div class="viewcode-block" id="difference_of_proportions_sample_size_calc">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.difference_of_proportions_sample_size_calc">[docs]</a>
-<span class="k">def</span> <span class="nf">difference_of_proportions_sample_size_calc</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">difference_of_proportions_sample_size_calc</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">metrics_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
     <span class="n">effect_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
@@ -563,7 +563,7 @@
 <span class="sd">        are documented in the class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">q</span><span class="o">=</span><span class="p">[</span><span class="n">outlier_percentile</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">mean</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
         <span class="n">p2</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="n">effect_size</span>
@@ -595,7 +595,7 @@
 
 <div class="viewcode-block" id="z_or_t_ind_sample_size_calc">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.z_or_t_ind_sample_size_calc">[docs]</a>
-<span class="k">def</span> <span class="nf">z_or_t_ind_sample_size_calc</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">z_or_t_ind_sample_size_calc</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">metrics_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
     <span class="n">test</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span>
@@ -637,7 +637,7 @@
     <span class="p">}</span>
     <span class="n">solver</span> <span class="o">=</span> <span class="n">tests</span><span class="p">[</span><span class="n">test</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">q</span><span class="o">=</span><span class="p">[</span><span class="n">outlier_percentile</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">sd</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
         <span class="n">mean</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
@@ -670,7 +670,7 @@
 
 <div class="viewcode-block" id="empirical_effect_size_sample_size_calc">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.empirical_effect_size_sample_size_calc">[docs]</a>
-<span class="k">def</span> <span class="nf">empirical_effect_size_sample_size_calc</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">empirical_effect_size_sample_size_calc</span><span class="p">(</span>
     <span class="n">res</span><span class="p">:</span> <span class="n">TimeSeriesResult</span><span class="p">,</span>
     <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">,</span>
     <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
@@ -720,7 +720,7 @@
 <span class="sd">        are documented in the class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_mann_whitney_solve_sample_size_approximation</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_mann_whitney_solve_sample_size_approximation</span><span class="p">(</span>
         <span class="n">effect_size</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">parent_distribution</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -818,7 +818,7 @@
 
 <div class="viewcode-block" id="poisson_diff_solve_sample_size">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.poisson_diff_solve_sample_size">[docs]</a>
-<span class="k">def</span> <span class="nf">poisson_diff_solve_sample_size</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">poisson_diff_solve_sample_size</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">metrics_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
     <span class="n">effect_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
@@ -853,7 +853,7 @@
 <span class="sd">        are documented in the class</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_sample_size_col</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">q</span><span class="o">=</span><span class="p">[</span><span class="n">outlier_percentile</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">sd</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
         <span class="n">mean</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
@@ -889,7 +889,7 @@
 
 <div class="viewcode-block" id="variable_enrollment_length_sample_size_calc">
 <a class="viewcode-back" href="../../../api/frequentist_stats/sample_size.html#mozanalysis.frequentist_stats.sample_size.variable_enrollment_length_sample_size_calc">[docs]</a>
-<span class="k">def</span> <span class="nf">variable_enrollment_length_sample_size_calc</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">variable_enrollment_length_sample_size_calc</span><span class="p">(</span>
     <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">,</span>
     <span class="n">start_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">datetime</span><span class="p">,</span>
     <span class="n">max_enrollment_days</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -964,7 +964,7 @@
         <span class="n">max_enrollment_days</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_for_interval_sample_size_calculation</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_for_interval_sample_size_calculation</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
         <span class="n">df_interval</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;enrollment_date&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">interval_end_dates</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">z_or_t_ind_sample_size_calc</span><span class="p">(</span>
             <span class="n">df</span><span class="o">=</span><span class="n">df_interval</span><span class="p">,</span> <span class="n">metrics_list</span><span class="o">=</span><span class="n">metric_list</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">sizing_kwargs</span>
