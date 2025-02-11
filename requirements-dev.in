@@ -93,7 +93,7 @@ formulaic==1.1.1
     # via
     #   -c requirements.txt
     #   mozanalysis
-gitdb==4.0.11
+gitdb==4.0.12
     # via
     #   -c requirements.txt
     #   gitpython
