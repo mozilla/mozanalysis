@@ -480,7 +480,7 @@ urllib3==2.3.0
     #   -c requirements.txt
     #   requests
     #   twine
-virtualenv==20.28.0
+virtualenv==20.29.1
     # via tox
 wheel==0.45.1
     # via pip-tools
