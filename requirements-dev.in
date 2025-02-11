@@ -97,7 +97,7 @@ gitdb==4.0.12
     # via
     #   -c requirements.txt
     #   gitpython
-gitpython==3.1.43
+gitpython==3.1.44
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
