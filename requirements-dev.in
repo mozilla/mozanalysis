@@ -340,7 +340,7 @@ pygments==2.19.1
     # via
     #   readme-renderer
     #   rich
-pyparsing==3.2.0
+pyparsing==3.2.1
     # via
     #   -c requirements.txt
     #   matplotlib
