@@ -17,7 +17,7 @@ cachetools==5.5.1
     # via google-auth
 cattrs==24.1.2
     # via mozilla-metric-config-parser
-certifi==2024.12.14
+certifi==2025.1.31
     # via requests
 cffi==1.17.1
     # via cryptography
