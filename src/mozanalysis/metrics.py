@@ -275,7 +275,6 @@ class DataSource:
         all_metrics = metric_list + self.get_sanity_metrics(experiment_slug)
         metric_names = [m.name for m in all_metrics]
         for metric in all_metrics:
-            # TODO: should we cast the metric_value to string or float?
             query_parts.append(f"""
                 SELECT
                     * EXCEPT ({", ".join(metric_names)}),

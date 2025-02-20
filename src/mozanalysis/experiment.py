@@ -756,7 +756,7 @@ class Experiment:
                 raise IncompatibleAnalysisUnit(
                     "Glean enrollments currently only support client_id analysis units"
                 )
-            return self._build_enrollments_query_glean_event(
+            return self._build_enrollments_query_glean_events_stream(
                 time_limits, self.app_id, sample_size
             )
         elif enrollments_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
@@ -896,14 +896,10 @@ class Experiment:
     def _build_enrollments_query_glean_event(
         self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
     ) -> str:
-        """Return SQL to query enrollments for a Glean no-event experiment
+        """Deprecated; see _build_enrollments_query_glean_events_stream below
 
-        If enrollment events are available for this experiment, then you
-        can take a better approach than this method. But in the absence
-        of enrollment events (e.g. in a Mako-based experiment, which
-        does not send enrollment events), you need to fall back to using
-        ``ping_info.experiments`` to get a list of who is in what branch
-        and when they enrolled.
+        Return SQL to query enrollments for a Glean experiment from the
+        events table for the application or dataset.
         """
 
         return f"""
@@ -925,6 +921,31 @@ class Experiment:
                 AND e.name = 'enrollment'
                 AND sample_id < {sample_size}
             GROUP BY events.client_info.client_id, branch
+            """  # noqa:E501
+
+    def _build_enrollments_query_glean_events_stream(
+        self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
+    ) -> str:
+        """Return SQL to query enrollments for a Glean experiment from the
+        events_stream table for the application or dataset.
+        """
+
+        return f"""
+            SELECT
+                client_id AS analysis_id,
+                JSON_VALUE(event_extra, '$.branch') AS branch,
+                DATE(MIN(submission_timestamp)) AS enrollment_date,
+                COUNT(submission_timestamp) AS num_enrollment_events
+            FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.events_stream`
+            WHERE
+                client_id IS NOT NULL
+                AND DATE(submission_timestamp)
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                AND event_category = "nimbus_events"
+                AND JSON_VALUE(event_extra, "$.experiment") = "{self.experiment_slug}"
+                AND event_name = "enrollment"
+                AND sample_id < {sample_size}
+            GROUP BY client_id, branch
             """  # noqa:E501
 
     def _build_enrollments_query_cirrus(
