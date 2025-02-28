@@ -1,8 +1,10 @@
+from textwrap import dedent
+
 import pytest
 from metric_config_parser import AnalysisUnit
 
 from mozanalysis.experiment import TimeLimits
-from mozanalysis.metrics import AnalysisBasis, DataSource
+from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 
 
 @pytest.mark.parametrize("experiments_column_type", [None, "simple", "native", "glean"])
@@ -60,6 +62,38 @@ def test_datasource_build_query_analysis_units(analysis_unit):
     query = ds.build_query([], tl, "", None, AnalysisBasis.ENROLLMENTS, analysis_unit)
 
     assert query == expected_query
+
+
+def test_datasource_build_query_union_metric_rows():
+    ds = DataSource(
+        name="foo",
+        from_expr="my_table.name",
+        experiments_column_type=None,
+    )
+
+    metrics_list = []
+    for i in range(2):
+        m = Metric(name=f"test_metric_{i}", data_source=ds, select_expr=f"SELECT {i}")
+        metrics_list.append(m)
+
+    expected_query = """
+                SELECT
+                    * EXCEPT (test_metric_0, test_metric_1),
+                    'test_metric_0' AS metric_slug,
+                    SAFE_CAST(test_metric_0 AS STRING) AS metric_value
+                FROM metrics
+
+UNION ALL
+
+                SELECT
+                    * EXCEPT (test_metric_0, test_metric_1),
+                    'test_metric_1' AS metric_slug,
+                    SAFE_CAST(test_metric_1 AS STRING) AS metric_value
+                FROM metrics"""
+
+    query = ds.build_query_union_metric_rows(metrics_list, "test-experiment")
+
+    assert expected_query == dedent(query.rstrip())
 
 
 @pytest.mark.parametrize(
