@@ -665,29 +665,27 @@ class Experiment:
         metrics_columns_str = ",\n        ".join(metrics_columns)
         metrics_joins_str = "\n".join(metrics_joins)
 
-        query_base = f"""
-            WITH analysis_windows AS (
-                {analysis_windows_query}
-            ),
-            raw_enrollments AS (
-                -- needed by "exposures" sub query
-                SELECT
-                    e.*,
-                    aw.*
-                FROM `{enrollments_table}` e
-                CROSS JOIN analysis_windows aw
-            ),
-            exposures AS ({exposure_query}),
-            enrollments AS (
-                SELECT
-                    e.* EXCEPT (exposure_date, num_exposure_events),
-                    x.exposure_date,
-                    x.num_exposure_events
-                FROM exposures x
-                    RIGHT JOIN raw_enrollments e
-                    USING (analysis_id, branch)
-            )
-        """
+        query_base = f"""WITH analysis_windows AS (
+            {analysis_windows_query}
+        ),
+        raw_enrollments AS (
+            -- needed by "exposures" sub query
+            SELECT
+                e.*,
+                aw.*
+            FROM `{enrollments_table}` e
+            CROSS JOIN analysis_windows aw
+        ),
+        exposures AS ({exposure_query}),
+        enrollments AS (
+            SELECT
+                e.* EXCEPT (exposure_date, num_exposure_events),
+                x.exposure_date,
+                x.num_exposure_events
+            FROM exposures x
+                RIGHT JOIN raw_enrollments e
+                USING (analysis_id, branch)
+        )"""
 
         if discrete_metrics:
             metrics_by_ds = partition_metrics_by_data_source(metric_list)
