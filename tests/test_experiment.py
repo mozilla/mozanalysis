@@ -1304,6 +1304,28 @@ GROUP BY
     assert expected == dedent(metrics_sql.rstrip())
 
 
+def test_build_metrics_query_discrete_metrics_invalid():
+    exp = Experiment("slug", "2019-01-01", 8)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Cannot compute discrete metrics for multiple datasources at once",
+    ):
+        exp.build_metrics_query(
+            metric_list=desktop_metrics,
+            time_limits=tl,
+            enrollments_table="enrollments",
+            discrete_metrics=True,
+        )
+
+
 def test_glean_group_id_incompatible():
     exp = Experiment(
         "slug",
