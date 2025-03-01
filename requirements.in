@@ -60,7 +60,7 @@ google-auth==2.37.0
     #   google-cloud-core
 google-cloud-bigquery==3.27.0
     # via mozanalysis
-google-cloud-bigquery-storage==2.27.0
+google-cloud-bigquery-storage==2.28.0
     # via mozanalysis
 google-cloud-core==2.4.1
     # via google-cloud-bigquery
