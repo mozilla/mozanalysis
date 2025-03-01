@@ -258,5 +258,5 @@ tzdata==2025.1
     # via pandas
 urllib3==2.3.0
     # via requests
-wrapt==1.17.0
+wrapt==1.17.2
     # via formulaic
