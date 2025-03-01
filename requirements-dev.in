@@ -227,7 +227,7 @@ mozilla-nimbus-schemas==2024.12.2
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-nh3==0.2.20
+nh3==0.2.21
     # via readme-renderer
 numpy==1.26.4
     # via
