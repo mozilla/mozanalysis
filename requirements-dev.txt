@@ -429,9 +429,9 @@ exceptiongroup==1.2.2 \
     #   -r requirements-dev.in
     #   cattrs
     #   pytest
-faker==35.2.0 \
-    --hash=sha256:28c24061780f83b45d9cb15a72b8f143b09d276c9ff52eb557744b7a89e8ba19 \
-    --hash=sha256:609abe555761ff31b0e5e16f958696e9b65c9224a7ac612ac96bfc2b8f09fe35
+faker==36.1.1 \
+    --hash=sha256:7cb2bbd4c8f040e4a340ae4019e9a48b6cf1db6a71bda4e5a61d8d13b7bef28d \
+    --hash=sha256:ad1f1be7fd692ec0256517404a9d7f007ab36ac5d4674082fa72404049725eaa
     # via
     #   -r requirements-dev.in
     #   polyfactory
@@ -1510,7 +1510,6 @@ python-dateutil==2.9.0.post0 \
     --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
     # via
     #   -r requirements-dev.in
-    #   faker
     #   google-cloud-bigquery
     #   matplotlib
     #   pandas
@@ -1860,7 +1859,6 @@ typing-extensions==4.12.2 \
     # via
     #   -r requirements-dev.in
     #   cattrs
-    #   faker
     #   formulaic
     #   mozilla-nimbus-schemas
     #   polyfactory
@@ -1874,6 +1872,7 @@ tzdata==2025.1 \
     --hash=sha256:7e127113816800496f027041c570f50bcd464a020098a3b6b199517772303639
     # via
     #   -r requirements-dev.in
+    #   faker
     #   pandas
 urllib3==2.3.0 \
     --hash=sha256:1cee9ad369867bfdbbb48b7dd50374c0967a0bb7710050facf0dd6911440e3df \
