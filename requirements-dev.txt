@@ -1882,9 +1882,9 @@ urllib3==2.3.0 \
     #   -r requirements-dev.in
     #   requests
     #   twine
-virtualenv==20.29.1 \
-    --hash=sha256:4e4cb403c0b0da39e13b46b1b2476e505cb0046b25f242bee80f62bf990b2779 \
-    --hash=sha256:b8b8970138d32fb606192cb97f6cd4bb644fa486be9308fb9b63f81091b5dc35
+virtualenv==20.29.2 \
+    --hash=sha256:fdaabebf6d03b5ba83ae0a02cfe96f48a716f4fae556461d180825866f75b728 \
+    --hash=sha256:febddfc3d1ea571bdb1dc0f98d7b45d24def7428214d4fb73cc486c9568cce6a
     # via
     #   -r requirements-dev.in
     #   tox
