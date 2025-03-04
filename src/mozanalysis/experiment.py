@@ -685,6 +685,13 @@ class Experiment:
             FROM exposures x
                 RIGHT JOIN raw_enrollments e
                 USING (analysis_id, branch)
+        ),
+        metrics AS (
+            SELECT
+                enrollments.*,
+                {metrics_columns_str}
+            FROM enrollments
+            {metrics_joins_str}
         )"""
 
         if discrete_metrics:
@@ -698,24 +705,13 @@ class Experiment:
                 ds_metrics, self.experiment_slug
             )
             return f"""
-            {query_base},
-            metrics AS (
-                SELECT
-                    enrollments.*,
-                    {metrics_columns_str}
-                FROM enrollments
-                {metrics_joins_str}
-            )
+            {query_base}
             {metrics_as_rows}
             """
 
         return f"""
         {query_base}
-        SELECT
-            enrollments.*,
-            {metrics_columns_str}
-        FROM enrollments
-        {metrics_joins_str}
+        SELECT * FROM metrics
         """
 
     @staticmethod

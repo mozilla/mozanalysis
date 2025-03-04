@@ -1169,12 +1169,13 @@ enrollments AS (
     FROM exposures x
         RIGHT JOIN raw_enrollments e
         USING (analysis_id, branch)
-)
-SELECT
-    enrollments.*,
-    ds_0.active_hours
-FROM enrollments
-    LEFT JOIN (
+),
+metrics AS (
+    SELECT
+        enrollments.*,
+        ds_0.active_hours
+    FROM enrollments
+        LEFT JOIN (
     SELECT
     e.analysis_id,
     e.branch,
@@ -1198,7 +1199,10 @@ GROUP BY
     e.exposure_date,
     e.analysis_window_start,
     e.analysis_window_end
-    ) ds_0 USING (analysis_id, branch, analysis_window_start, analysis_window_end)"""
+    ) ds_0 USING (analysis_id, branch, analysis_window_start, analysis_window_end)
+
+)
+SELECT * FROM metrics"""
 
     assert expected == dedent(metrics_sql.rstrip())
 
@@ -1262,12 +1266,12 @@ enrollments AS (
         RIGHT JOIN raw_enrollments e
         USING (analysis_id, branch)
 ),
-    metrics AS (
-        SELECT
-            enrollments.*,
-            ds_0.active_hours
-        FROM enrollments
-            LEFT JOIN (
+metrics AS (
+    SELECT
+        enrollments.*,
+        ds_0.active_hours
+    FROM enrollments
+        LEFT JOIN (
     SELECT
     e.analysis_id,
     e.branch,
@@ -1293,7 +1297,7 @@ GROUP BY
     e.analysis_window_end
     ) ds_0 USING (analysis_id, branch, analysis_window_start, analysis_window_end)
 
-    )
+)
 
         SELECT
             * EXCEPT (active_hours),
