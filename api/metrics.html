@@ -63,6 +63,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#mozanalysis.metrics.DataSource"><code class="docutils literal notranslate"><span class="pre">DataSource</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#mozanalysis.metrics.DataSource.from_expr_for"><code class="docutils literal notranslate"><span class="pre">DataSource.from_expr_for()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mozanalysis.metrics.DataSource.build_query"><code class="docutils literal notranslate"><span class="pre">DataSource.build_query()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mozanalysis.metrics.DataSource.build_query_union_metric_rows"><code class="docutils literal notranslate"><span class="pre">DataSource.build_query_union_metric_rows()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mozanalysis.metrics.DataSource.build_query_targets"><code class="docutils literal notranslate"><span class="pre">DataSource.build_query_targets()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mozanalysis.metrics.DataSource.from_mcp_data_source"><code class="docutils literal notranslate"><span class="pre">DataSource.from_mcp_data_source()</span></code></a></li>
 </ul>
@@ -175,6 +176,26 @@ into the from expression.</p>
 <dd><p>Return a nearly-self contained SQL query.</p>
 <p>This query does not define <code class="docutils literal notranslate"><span class="pre">enrollments</span></code> but otherwise could
 be executed to query all metrics from this data source.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mozanalysis.metrics.DataSource.build_query_union_metric_rows">
+<span class="sig-name descname"><span class="pre">build_query_union_metric_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#mozanalysis.metrics.Metric" title="mozanalysis.metrics.Metric"><span class="pre">Metric</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiment_slug</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_query_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'metrics'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/mozanalysis/metrics.html#DataSource.build_query_union_metric_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mozanalysis.metrics.DataSource.build_query_union_metric_rows" title="Link to this definition"></a></dt>
+<dd><p>Return a query that produces a unioned and pivoted row-per-metric
+version of the <cite>build_query</cite> results.</p>
+<p>The <cite>metrics_query_table</cite> parameter specifies where the results to be
+pivoted exist. This is expected to be of the format that is returned by
+the query in <cite>build_query</cite>, and can either be a CTE or table/view.</p>
+<section id="example">
+<h2>EXAMPLE:<a class="headerlink" href="#example" title="Link to this heading"></a></h2>
+<p>client_id   | enrollment_date   | metric_1  | metric_2
+asdf1234    | 2024-01-01        | True      | 12</p>
+<p>—- becomes —-</p>
+<p>client_id   | enrollment_date   | metric_slug   | metric_value
+asdf1234    | 2024-01-01        | metric_1      | True
+asdf1234    | 2024-01-01        | metric_2      | 12
+————————————————————–</p>
+</section>
 </dd></dl>
 
 <dl class="py method">

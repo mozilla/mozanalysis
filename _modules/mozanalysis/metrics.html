@@ -330,6 +330,49 @@
         <span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="DataSource.build_query_union_metric_rows">
+<a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.build_query_union_metric_rows">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_query_union_metric_rows</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
+        <span class="n">experiment_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">metrics_query_table</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;metrics&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a query that produces a unioned and pivoted row-per-metric</span>
+<span class="sd">        version of the `build_query` results.</span>
+
+<span class="sd">        The `metrics_query_table` parameter specifies where the results to be</span>
+<span class="sd">        pivoted exist. This is expected to be of the format that is returned by</span>
+<span class="sd">        the query in `build_query`, and can either be a CTE or table/view.</span>
+
+<span class="sd">        EXAMPLE:</span>
+<span class="sd">        --------------------------------------------------------------</span>
+<span class="sd">        client_id   | enrollment_date   | metric_1  | metric_2</span>
+<span class="sd">        asdf1234    | 2024-01-01        | True      | 12</span>
+
+<span class="sd">        ---- becomes ----</span>
+
+<span class="sd">        client_id   | enrollment_date   | metric_slug   | metric_value</span>
+<span class="sd">        asdf1234    | 2024-01-01        | metric_1      | True</span>
+<span class="sd">        asdf1234    | 2024-01-01        | metric_2      | 12</span>
+<span class="sd">        --------------------------------------------------------------</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">query_parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">all_metrics</span> <span class="o">=</span> <span class="n">metric_list</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sanity_metrics</span><span class="p">(</span><span class="n">experiment_slug</span><span class="p">)</span>
+        <span class="n">metric_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_metrics</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">all_metrics</span><span class="p">:</span>
+            <span class="n">query_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT</span>
+<span class="s2">                    * EXCEPT (</span><span class="si">{</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metric_names</span><span class="p">)</span><span class="si">}</span><span class="s2">),</span>
+<span class="s2">                    &#39;</span><span class="si">{</span><span class="n">metric</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; AS metric_slug,</span>
+<span class="s2">                    SAFE_CAST(</span><span class="si">{</span><span class="n">metric</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> AS STRING) AS metric_value</span>
+<span class="s2">                FROM </span><span class="si">{</span><span class="n">metrics_query_table</span><span class="si">}</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">UNION ALL</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">query_parts</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="DataSource.build_query_targets">
 <a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.DataSource.build_query_targets">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_query_targets</span><span class="p">(</span>
