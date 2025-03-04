@@ -34,6 +34,24 @@ class EnrollmentsQueryType(str, Enum):
     GLEAN_EVENT = "glean-event"
 
 
+def partition_segments_by_data_source(
+    segment_list: list[Segment],
+) -> dict[SegmentDataSource, list[Segment]]:
+    """Return a dict mapping segment data sources to segment lists."""
+    data_sources = {s.data_source for s in segment_list}
+
+    return {ds: [s for s in segment_list if s.data_source == ds] for ds in data_sources}
+
+
+def partition_metrics_by_data_source(
+    metric_list: list[Metric],
+) -> dict[DataSource, list[Metric]]:
+    """Return a dict mapping data sources to metric/segment lists."""
+    data_sources = {m.data_source for m in metric_list}
+
+    return {ds: [m for m in metric_list if m.data_source == ds] for ds in data_sources}
+
+
 @attr.s(frozen=True, slots=True)
 class Experiment:
     """Query experiment data; store experiment metadata.
@@ -589,6 +607,7 @@ class Experiment:
         enrollments_table: str,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal: ExposureSignal | None = None,
+        discrete_metrics: bool = False,
     ) -> str:
         """Return a SQL query for querying metric data.
 
@@ -613,6 +632,8 @@ class Experiment:
             exposure_signal (Optional[ExposureSignal]): Optional exposure
                 signal parameter that will be used for computing metrics
                 for certain analysis bases (such as exposures).
+            discrete_metrics (bool): Whether to compute metrics independently.
+                Defaults to False.
 
         Returns:
             A string containing a BigQuery SQL expression.
@@ -641,8 +662,10 @@ class Experiment:
                 FROM raw_enrollments e
             """
 
-        return """
-        WITH analysis_windows AS (
+        metrics_columns_str = ",\n        ".join(metrics_columns)
+        metrics_joins_str = "\n".join(metrics_joins)
+
+        query_base = f"""WITH analysis_windows AS (
             {analysis_windows_query}
         ),
         raw_enrollments AS (
@@ -662,19 +685,34 @@ class Experiment:
             FROM exposures x
                 RIGHT JOIN raw_enrollments e
                 USING (analysis_id, branch)
-        )
-        SELECT
-            enrollments.*,
-            {metrics_columns}
-        FROM enrollments
-        {metrics_joins}
-        """.format(
-            analysis_windows_query=analysis_windows_query,
-            exposure_query=exposure_query,
-            metrics_columns=",\n        ".join(metrics_columns),
-            metrics_joins="\n".join(metrics_joins),
-            enrollments_table=enrollments_table,
-        )
+        ),
+        metrics AS (
+            SELECT
+                enrollments.*,
+                {metrics_columns_str}
+            FROM enrollments
+            {metrics_joins_str}
+        )"""
+
+        if discrete_metrics:
+            metrics_by_ds = partition_metrics_by_data_source(metric_list)
+            if len(metrics_by_ds.keys()) > 1:
+                raise ValueError(
+                    "Cannot compute discrete metrics for multiple datasources at once"
+                )
+            metric_ds, ds_metrics = next(iter(metrics_by_ds.items()))
+            metrics_as_rows = metric_ds.build_query_union_metric_rows(
+                ds_metrics, self.experiment_slug
+            )
+            return f"""
+            {query_base}
+            {metrics_as_rows}
+            """
+
+        return f"""
+        {query_base}
+        SELECT * FROM metrics
+        """
 
     @staticmethod
     def _build_analysis_windows_query(analysis_windows) -> str:
@@ -1021,7 +1059,7 @@ class Experiment:
             else:
                 metrics.append(metric)
 
-        ds_metrics = self._partition_metrics_by_data_source(metrics)
+        ds_metrics = partition_metrics_by_data_source(metrics)
         ds_metrics = cast(dict[DataSource, list[Metric]], ds_metrics)
         ds_metrics = {
             ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
@@ -1053,26 +1091,6 @@ class Experiment:
                 metrics_columns.append(f"ds_{i}.{m.name}")
 
         return metrics_columns, metrics_joins
-
-    def _partition_segments_by_data_source(
-        self, segment_list: list[Segment]
-    ) -> dict[SegmentDataSource, list[Segment]]:
-        """Return a dict mapping segment data sources to segment lists."""
-        data_sources = {s.data_source for s in segment_list}
-
-        return {
-            ds: [s for s in segment_list if s.data_source == ds] for ds in data_sources
-        }
-
-    def _partition_metrics_by_data_source(
-        self, metric_list: list[Metric]
-    ) -> dict[DataSource, list[Metric]]:
-        """Return a dict mapping data sources to metric/segment lists."""
-        data_sources = {m.data_source for m in metric_list}
-
-        return {
-            ds: [m for m in metric_list if m.data_source == ds] for ds in data_sources
-        }
 
     def _build_segments_query(
         self,
@@ -1121,7 +1139,7 @@ class Experiment:
             else:
                 segments.append(segment)
 
-        ds_segments = self._partition_segments_by_data_source(segments)
+        ds_segments = partition_segments_by_data_source(segments)
 
         segments_columns = []
         segments_joins = []

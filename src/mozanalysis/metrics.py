@@ -245,6 +245,46 @@ class DataSource:
             ),
         )
 
+    def build_query_union_metric_rows(
+        self,
+        metric_list: list[Metric],
+        experiment_slug: str,
+        metrics_query_table: str = "metrics",
+    ) -> str:
+        """Return a query that produces a unioned and pivoted row-per-metric
+        version of the `build_query` results.
+
+        The `metrics_query_table` parameter specifies where the results to be
+        pivoted exist. This is expected to be of the format that is returned by
+        the query in `build_query`, and can either be a CTE or table/view.
+
+        EXAMPLE:
+        --------------------------------------------------------------
+        client_id   | enrollment_date   | metric_1  | metric_2
+        asdf1234    | 2024-01-01        | True      | 12
+
+        ---- becomes ----
+
+        client_id   | enrollment_date   | metric_slug   | metric_value
+        asdf1234    | 2024-01-01        | metric_1      | True
+        asdf1234    | 2024-01-01        | metric_2      | 12
+        --------------------------------------------------------------
+        """
+
+        query_parts = []
+        all_metrics = metric_list + self.get_sanity_metrics(experiment_slug)
+        metric_names = [m.name for m in all_metrics]
+        for metric in all_metrics:
+            query_parts.append(f"""
+                SELECT
+                    * EXCEPT ({", ".join(metric_names)}),
+                    '{metric.name}' AS metric_slug,
+                    SAFE_CAST({metric.name} AS STRING) AS metric_value
+                FROM {metrics_query_table}
+            """)
+
+        return "\nUNION ALL\n".join(query_parts)
+
     def build_query_targets(
         self,
         metric_list: list[Metric],
