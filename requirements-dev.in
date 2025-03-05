@@ -200,7 +200,7 @@ markupsafe==3.0.2
     # via
     #   -c requirements.txt
     #   jinja2
-matplotlib==3.10.0
+matplotlib==3.10.1
     # via
     #   -c requirements.txt
     #   mozanalysis
