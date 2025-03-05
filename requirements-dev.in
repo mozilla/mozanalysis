@@ -223,7 +223,7 @@ mozilla-metric-config-parser==2024.11.1
     # via
     #   -c requirements.txt
     #   mozanalysis
-mozilla-nimbus-schemas==2024.12.2
+mozilla-nimbus-schemas==2025.1.1
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
