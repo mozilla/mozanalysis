@@ -327,7 +327,7 @@ class SampleSizeCurveResultHolder(ResultsHolder):
                 )
                 .format("{:.2%}", subset=["trim_change_mean", "trim_change_std"])
                 # highlight large changes in mean because of trimming
-                .applymap(
+                .map(
                     lambda x: (
                         large_change_format_str if x > trim_highlight_threshold else ""
                     ),
