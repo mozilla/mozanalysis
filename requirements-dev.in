@@ -402,7 +402,7 @@ rfc3986==2.0.0
     # via twine
 rich==13.9.4
     # via twine
-rpds-py==0.22.3
+rpds-py==0.23.1
     # via
     #   -c requirements.txt
     #   jsonschema
