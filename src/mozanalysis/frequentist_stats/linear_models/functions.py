@@ -733,7 +733,7 @@ def compare_branches_lm(
             alphas,
         )
 
-        logger.warn(
+        logger.warning(
             f"Covariate {initial_covariate_col_label} not found, falling back to unadjusted inferences"  # noqa: E501
         )
     except UnableToAnalyze:

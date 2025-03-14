@@ -6,14 +6,14 @@
 #
 annotated-types==0.7.0
     # via pydantic
-attrs==25.1.0
+attrs==25.3.0
     # via
     #   cattrs
     #   jsonschema
     #   mozanalysis
     #   mozilla-metric-config-parser
     #   referencing
-cachetools==5.5.1
+cachetools==5.5.2
     # via google-auth
 cattrs==24.1.2
     # via mozilla-metric-config-parser
@@ -21,15 +21,15 @@ certifi==2025.1.31
     # via requests
 cffi==1.17.1
     # via cryptography
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via requests
 click==8.1.8
     # via mozilla-metric-config-parser
 contourpy==1.3.1
     # via matplotlib
-coverage[toml]==7.6.10
+coverage[toml]==7.6.12
     # via pytest-cov
-cryptography==44.0.0
+cryptography==44.0.2
     # via secretstorage
 cycler==0.12.1
     # via matplotlib
@@ -37,9 +37,9 @@ exceptiongroup==1.2.2
     # via
     #   cattrs
     #   pytest
-faker==35.2.0
+faker==37.0.0
     # via polyfactory
-fonttools==4.55.3
+fonttools==4.56.0
     # via matplotlib
 formulaic==1.1.1
     # via mozanalysis
@@ -47,36 +47,36 @@ gitdb==4.0.12
     # via gitpython
 gitpython==3.1.44
     # via mozilla-metric-config-parser
-google-api-core[grpc]==2.24.1
+google-api-core[grpc]==2.24.2
     # via
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-auth==2.37.0
+google-auth==2.38.0
     # via
     #   google-api-core
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-cloud-bigquery==3.27.0
+google-cloud-bigquery==3.30.0
     # via mozanalysis
-google-cloud-bigquery-storage==2.27.0
+google-cloud-bigquery-storage==2.29.1
     # via mozanalysis
-google-cloud-core==2.4.1
+google-cloud-core==2.4.3
     # via google-cloud-bigquery
 google-crc32c==1.6.0
     # via google-resumable-media
 google-resumable-media==2.7.2
     # via google-cloud-bigquery
-googleapis-common-protos==1.66.0
+googleapis-common-protos==1.69.1
     # via
     #   google-api-core
     #   grpcio-status
-grpcio==1.70.0
+grpcio==1.71.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio-status==1.68.1
+grpcio-status==1.71.0
     # via google-api-core
 idna==3.10
     # via requests
@@ -84,31 +84,32 @@ iniconfig==2.0.0
     # via pytest
 interface-meta==1.3.0
     # via formulaic
-jeepney==0.8.0
+jeepney==0.9.0
     # via secretstorage
-jinja2==3.1.5
+jinja2==3.1.6
     # via mozilla-metric-config-parser
 jsonschema==4.23.0
     # via mozilla-nimbus-schemas
 jsonschema-specifications==2024.10.1
     # via jsonschema
-kiwisolver==1.4.7
+kiwisolver==1.4.8
     # via matplotlib
 marginaleffects==0.0.12
     # via mozanalysis
 markupsafe==3.0.2
     # via jinja2
-matplotlib==3.10.0
+matplotlib==3.10.1
     # via
     #   mozanalysis
     #   plotnine
 mizani==0.13.1
     # via plotnine
-mock==5.1.0
+mock==5.2.0
     # via mozanalysis
+    # via -r -
 mozilla-metric-config-parser==2024.11.1
     # via mozanalysis
-mozilla-nimbus-schemas==2024.12.2
+mozilla-nimbus-schemas==2025.1.1
     # via mozilla-metric-config-parser
 numpy==1.26.4
     # via
@@ -141,17 +142,17 @@ patsy==1.0.1
     # via
     #   marginaleffects
     #   statsmodels
-pillow==11.0.0
+pillow==11.1.0
     # via matplotlib
 plotnine==0.14.5
     # via marginaleffects
 pluggy==1.5.0
     # via pytest
-polars==1.21.0
+polars==1.24.0
     # via marginaleffects
-polyfactory==2.18.1
+polyfactory==2.19.0
     # via mozilla-nimbus-schemas
-proto-plus==1.26.0
+proto-plus==1.26.1
     # via
     #   google-api-core
     #   google-cloud-bigquery-storage
@@ -180,7 +181,7 @@ pydantic-core==2.27.2
     # via pydantic
 pyparsing==3.2.1
     # via matplotlib
-pytest==8.3.4
+pytest==8.3.5
     # via
     #   mozanalysis
     #   pytest-cov
@@ -194,7 +195,6 @@ pytest-timeout==2.3.1
     # via mozanalysis
 python-dateutil==2.9.0.post0
     # via
-    #   faker
     #   google-cloud-bigquery
     #   matplotlib
     #   pandas
@@ -211,7 +211,7 @@ requests==2.32.3
     #   google-api-core
     #   google-cloud-bigquery
     #   mozilla-metric-config-parser
-rpds-py==0.22.3
+rpds-py==0.23.1
     # via
     #   jsonschema
     #   referencing
@@ -221,7 +221,7 @@ ruff==0.11.0
     # via
     #   mozanalysis
     #   pytest-ruff
-scipy==1.15.1
+scipy==1.15.2
     # via
     #   formulaic
     #   marginaleffects
@@ -248,15 +248,17 @@ tomli==2.2.1
 typing-extensions==4.12.2
     # via
     #   cattrs
-    #   faker
     #   formulaic
     #   mozilla-nimbus-schemas
     #   polyfactory
     #   pydantic
     #   pydantic-core
+    #   referencing
 tzdata==2025.1
-    # via pandas
+    # via
+    #   faker
+    #   pandas
 urllib3==2.3.0
     # via requests
-wrapt==1.17.0
+wrapt==1.17.2
     # via formulaic
