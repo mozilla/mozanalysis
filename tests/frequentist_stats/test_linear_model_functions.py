@@ -692,9 +692,13 @@ def test_fit_model_covariate_fails_on_bad_data():
     model_df = test_model_covariate.model_df.copy()
     model_df.loc[:, test_model_covariate.target] = [0] * model_df.shape[0]
 
-    with pytest.raises(
-        FailedToFitModel,
-        match="Failed to fit model for target search_count using covariate search_count_pre",  # noqa: E501
+    with (
+        pytest.raises(
+            FailedToFitModel,
+            match="Failed to fit model for target search_count using "
+            "covariate search_count_pre",
+        ),
+        pytest.warns(RuntimeWarning, match="divide by zero encountered in log"),
     ):
         mafslm.fit_model(
             model_df,

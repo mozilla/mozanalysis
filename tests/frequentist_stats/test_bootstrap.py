@@ -107,10 +107,8 @@ def test_bootstrap_one_branch_multistat():
 
 
 def test_compare_branches():
-    data = pd.DataFrame(
-        index=range(60000),
-        columns=["branch", "val"],
-        dtype="float",
+    data = pd.DataFrame(index=range(60000), columns=["branch", "val"]).astype(
+        dtype={"branch": "string", "val": "float"}
     )
     data.iloc[::3, 0] = "control"
     data.iloc[1::3, 0] = "same"
@@ -146,10 +144,8 @@ def test_compare_branches():
 
 
 def test_compare_branches_multistat():
-    data = pd.DataFrame(
-        index=range(60000),
-        columns=["branch", "val"],
-        dtype="float",
+    data = pd.DataFrame(index=range(60000), columns=["branch", "val"]).astype(
+        dtype={"branch": "string", "val": "float"}
     )
     data.iloc[::3, 0] = "control"
     data.iloc[1::3, 0] = "same"

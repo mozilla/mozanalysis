@@ -52,12 +52,27 @@ def test_mixed_metric():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.warns(match="metric_list contains multiple metric-hub apps"):
+    with pytest.warns(UserWarning) as warns:
         _ = ht.get_single_window_data(
             bq_context,
             metric_list=[active_hours, baseline_ping_count],
             target_list=[allweek_regular_v1],
         )
+
+    warning_messages = [str(m.message) for m in warns]
+    assert len(warns) == 4
+    assert "metric_list contains multiple metric-hub apps" in warning_messages
+    assert (
+        "metric_list and target_list metric-hub apps do not match" in warning_messages
+    )
+    assert (
+        "Metric active_hours is all 0, which may indicate segments and metric "
+        "do not have a common app" in warning_messages
+    )
+    assert (
+        "Metric baseline_ping_count is all 0, which may indicate segments "
+        "and metric do not have a common app" in warning_messages
+    )
 
 
 def test_target_metric_mismatch():
@@ -78,12 +93,22 @@ def test_target_metric_mismatch():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.warns(match="metric_list and target_list metric-hub apps do not match"):
+    with pytest.warns(UserWarning) as warns:
         _ = ht.get_single_window_data(
             bq_context,
             metric_list=[baseline_ping_count],
             target_list=[allweek_regular_v1],
         )
+
+    warning_messages = [str(m.message) for m in warns]
+    assert len(warns) == 2
+    assert (
+        "metric_list and target_list metric-hub apps do not match" in warning_messages
+    )
+    assert (
+        "Metric baseline_ping_count is all 0, which may indicate segments and metric "
+        "do not have a common app" in warning_messages
+    )
 
 
 def test_target_metric_mismatch_with_custom():
@@ -117,12 +142,26 @@ def test_target_metric_mismatch_with_custom():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.warns(match="metric_list and target_list metric-hub apps do not match"):
+    with pytest.warns(UserWarning) as warns:
         _ = ht.get_single_window_data(
             bq_context,
             metric_list=[baseline_ping_count, qcdou],
             target_list=[allweek_regular_v1],
         )
+
+    warning_messages = [str(m.message) for m in warns]
+    assert len(warns) == 3
+    assert (
+        "metric_list and target_list metric-hub apps do not match" in warning_messages
+    )
+    assert (
+        "Metric qcdou is all 0, which may indicate segments and metric "
+        "do not have a common app" in warning_messages
+    )
+    assert (
+        "Metric baseline_ping_count is all 0, which may indicate segments "
+        "and metric do not have a common app" in warning_messages
+    )
 
 
 def test_multiple_datasource():

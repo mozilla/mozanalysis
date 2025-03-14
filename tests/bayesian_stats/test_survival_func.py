@@ -34,7 +34,9 @@ def test_get_thresholds_2():
 
 
 def test_one_thresh():
-    df = pd.DataFrame(columns=["branch", "val"], index=range(1000))
+    df = pd.DataFrame(columns=["branch", "val"], index=range(1000)).astype(
+        dtype={"branch": "string", "val": "float"}
+    )
     df.iloc[::2, 0] = "control"
     df.iloc[1::2, 0] = "test"
     df.fillna(0, inplace=True)
@@ -84,7 +86,9 @@ def test_one_thresh():
 
 
 def test_compare_branches():
-    df = pd.DataFrame(columns=["branch", "val"], index=range(1000), dtype="float")
+    df = pd.DataFrame(columns=["branch", "val"], index=range(1000)).astype(
+        dtype={"branch": "string", "val": "float"}
+    )
     df.iloc[::2, 0] = "control"
     df.iloc[1::2, 0] = "test"
     df.iloc[:300, 1] = range(300)
@@ -111,12 +115,14 @@ def test_compare_branches():
 
 
 def test_few_auto_thresholds():
-    df = pd.DataFrame(columns=["branch", "val"], index=range(1000))
+    df = pd.DataFrame(columns=["branch", "val"], index=range(1000)).astype(
+        dtype={"branch": "string", "val": "float"}
+    )
     df.iloc[::2, 0] = "control"
     df.iloc[1::2, 0] = "test"
     df.fillna(0, inplace=True)
-    df.iloc[20:30] = 1
-    df.iloc[405] = 100
+    df.iloc[20:30, 1] = 1
+    df.iloc[405, 1] = 100
 
     res = mabssf.compare_branches(df, "val")
     assert set(res["individual"]["test"].index) == {0, 1}
