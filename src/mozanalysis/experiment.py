@@ -15,7 +15,6 @@ from mozanalysis import APPS
 from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
-from mozanalysis.segments import Segment, SegmentDataSource
 from mozanalysis.types import IncompatibleAnalysisUnit
 from mozanalysis.utils import add_days, date_sub, hash_ish
 
@@ -23,6 +22,7 @@ if TYPE_CHECKING:
     from pandas import DataFrame
 
     from mozanalysis.exposure import ExposureSignal
+    from mozanalysis.segments import Segment, SegmentDataSource
 
 logger = logging.getLogger(__name__)
 
@@ -1060,7 +1060,7 @@ class Experiment:
                 metrics.append(metric)
 
         ds_metrics = partition_metrics_by_data_source(metrics)
-        ds_metrics = cast(dict[DataSource, list[Metric]], ds_metrics)
+        ds_metrics = cast("dict[DataSource, list[Metric]]", ds_metrics)
         ds_metrics = {
             ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
             for ds, metrics in ds_metrics.items()
@@ -1110,7 +1110,7 @@ class Experiment:
         # arrive with "how segments work" as their first question.
 
         segments_columns, segments_joins = self._build_segments_query_bits(
-            cast(list[Segment | str], segment_list) or [], time_limits
+            cast("list[Segment | str]", segment_list) or [], time_limits
         )
 
         return """

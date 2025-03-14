@@ -37,9 +37,9 @@ class MozOLS(OLS):
 
         mm = PandasMaterializer(data).get_model_matrix(Formula(formula))
 
-        assert isinstance(
-            mm, ModelMatrices
-        ), "Expected to create multiple matrices, is the formula correct?"
+        assert isinstance(mm, ModelMatrices), (
+            "Expected to create multiple matrices, is the formula correct?"
+        )
 
         kwargs.update(
             {

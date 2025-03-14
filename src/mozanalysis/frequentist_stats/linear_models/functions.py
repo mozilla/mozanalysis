@@ -58,7 +58,7 @@ def _stringify_alpha(alpha: float) -> tuple[str, str]:
     E.g., 0.05 -> '0.025', '0.975'"""
     if alpha < 0.002 or alpha >= 1:
         raise ValueError("alpha must be in (0.002,1)")
-    return f"{alpha/2:0.3f}", f"{1-alpha/2:0.3f}"
+    return f"{alpha / 2:0.3f}", f"{1 - alpha / 2:0.3f}"
 
 
 def _make_univariate_output(alphas: list[float]) -> Estimates:
@@ -411,8 +411,7 @@ def fit_model(
 
     if lin_alg_error:
         msg = (
-            "Encountered a linear algebra error when fitting"
-            f" model for target {target}"
+            f"Encountered a linear algebra error when fitting model for target {target}"
         )
         if covariate is not None:
             msg += " even when falling back to unadjusted inferences"
