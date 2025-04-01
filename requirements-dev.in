@@ -474,7 +474,7 @@ typing-extensions==4.12.2
     #   referencing
     #   rich
     #   tox
-tzdata==2025.1
+tzdata==2025.2
     # via
     #   -c requirements.txt
     #   faker
