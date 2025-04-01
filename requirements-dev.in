@@ -413,7 +413,7 @@ rsa==4.9
     # via
     #   -c requirements.txt
     #   google-auth
-ruff==0.11.0
+ruff==0.11.2
     # via
     #   -c requirements.txt
     #   mozanalysis

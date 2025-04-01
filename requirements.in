@@ -217,7 +217,7 @@ rpds-py==0.23.1
     #   referencing
 rsa==4.9
     # via google-auth
-ruff==0.11.0
+ruff==0.11.2
     # via
     #   mozanalysis
     #   pytest-ruff
