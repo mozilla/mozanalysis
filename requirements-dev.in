@@ -291,7 +291,7 @@ pluggy==1.5.0
     #   -c requirements.txt
     #   pytest
     #   tox
-polars==1.24.0
+polars==1.26.0
     # via
     #   -c requirements.txt
     #   marginaleffects
