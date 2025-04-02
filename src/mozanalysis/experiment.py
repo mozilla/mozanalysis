@@ -812,7 +812,7 @@ class Experiment:
             return self._build_exposure_query_glean_event(
                 time_limits,
                 self.app_id,
-                client_id_field='mozfun.map.get_key(event.extra, "user_id")',
+                client_id_field='mozfun.map.get_key(event.extra, "nimbus_user_id")',
                 event_category="cirrus_events",
             )
         else:
@@ -957,7 +957,7 @@ class Experiment:
 
         return f"""
             SELECT
-                mozfun.map.get_key(e.extra, "user_id") AS analysis_id,
+                mozfun.map.get_key(e.extra, "nimbus_user_id") AS analysis_id,
                 mozfun.map.get_key(
                     e.extra,
                     'branch'
@@ -967,14 +967,14 @@ class Experiment:
             FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.enrollment` events,
             UNNEST(events.events) AS e
             WHERE
-                mozfun.map.get_key(e.extra, "user_id") IS NOT NULL AND
+                mozfun.map.get_key(e.extra, "nimbus_user_id") IS NOT NULL AND
                 DATE(events.submission_timestamp)
                 BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                 AND e.category = "cirrus_events"
                 AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND client_info.app_channel = 'production'
-            GROUP BY mozfun.map.get_key(e.extra, "user_id"), branch
+            GROUP BY mozfun.map.get_key(e.extra, "nimbus_user_id"), branch
             """  # noqa:E501
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:

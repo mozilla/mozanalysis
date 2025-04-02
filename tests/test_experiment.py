@@ -604,9 +604,9 @@ def test_enrollments_query_cirrus():
     sql_lint(enrollment_sql)
 
     assert "exposures" in enrollment_sql
-    assert 'mozfun.map.get_key(e.extra, "user_id")' in enrollment_sql
+    assert 'mozfun.map.get_key(e.extra, "nimbus_user_id")' in enrollment_sql
     assert "cirrus_events" in enrollment_sql
-    assert 'mozfun.map.get_key(event.extra, "user_id")' in enrollment_sql
+    assert 'mozfun.map.get_key(event.extra, "nimbus_user_id")' in enrollment_sql
 
 
 def test_exposure_query():
