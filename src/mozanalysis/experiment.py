@@ -645,7 +645,7 @@ class Experiment:
         )
 
         metrics_columns, metrics_joins = self._build_metrics_query_bits(
-            metric_list, time_limits, analysis_basis, exposure_signal
+            metric_list, time_limits, analysis_basis, exposure_signal, discrete_metrics
         )
 
         if exposure_signal and analysis_basis != AnalysisBasis.ENROLLMENTS:
@@ -693,21 +693,6 @@ class Experiment:
             FROM enrollments
             {metrics_joins_str}
         )"""
-
-        if discrete_metrics:
-            metrics_by_ds = partition_metrics_by_data_source(metric_list)
-            if len(metrics_by_ds.keys()) > 1:
-                raise ValueError(
-                    "Cannot compute discrete metrics for multiple datasources at once"
-                )
-            metric_ds, ds_metrics = next(iter(metrics_by_ds.items()))
-            metrics_as_rows = metric_ds.build_query_union_metric_rows(
-                ds_metrics, self.experiment_slug
-            )
-            return f"""
-            {query_base}
-            {metrics_as_rows}
-            """
 
         return f"""
         {query_base}
@@ -1050,6 +1035,7 @@ class Experiment:
         time_limits: TimeLimits,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal: ExposureSignal | None = None,
+        discrete_metrics: bool | None = False,
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
         metrics: list[Metric] = []
@@ -1061,10 +1047,11 @@ class Experiment:
 
         ds_metrics = partition_metrics_by_data_source(metrics)
         ds_metrics = cast("dict[DataSource, list[Metric]]", ds_metrics)
-        ds_metrics = {
-            ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
-            for ds, metrics in ds_metrics.items()
-        }
+        if not discrete_metrics:
+            ds_metrics = {
+                ds: metrics + ds.get_sanity_metrics(self.experiment_slug)
+                for ds, metrics in ds_metrics.items()
+            }
 
         metrics_columns = []
         metrics_joins = []
