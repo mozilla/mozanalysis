@@ -529,9 +529,9 @@ google-cloud-bigquery==3.30.0 \
     --hash=sha256:7e27fbafc8ed33cc200fe05af12ecd74d279fe3da6692585a3cef7aee90575b6 \
     --hash=sha256:f4d28d846a727f20569c9b2d2f4fa703242daadcb2ec4240905aa485ba461877
     # via -r requirements-dev.in
-google-cloud-bigquery-storage==2.29.1 \
-    --hash=sha256:4b917a79d239eecaa738fa02ed942dbeb877ecc99f207d96fa02e8889ef2b64d \
-    --hash=sha256:94e6ed2eb4015373f12c96c559044ba222625886e8525936188fc1b826010eb3
+google-cloud-bigquery-storage==2.31.0 \
+    --hash=sha256:1721792f39f5ecb49b8503cf197ee8ab79f7deebf17fc4a4a44585959336365b \
+    --hash=sha256:e4b42df3374dbc9575268c89d5dec47fced075c44904c463b12aed2b01be6790
     # via -r requirements-dev.in
 google-cloud-core==2.4.3 \
     --hash=sha256:1fab62d7102844b278fe6dead3af32408b1df3eb06f5c7e8634cbd40edc4da53 \
