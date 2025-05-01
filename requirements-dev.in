@@ -218,7 +218,7 @@ mock==5.2.0
     # via
     #   -c requirements.txt
     #   mozanalysis
-more-itertools==10.6.0
+more-itertools==10.7.0
     # via
     #   jaraco-classes
     #   jaraco-functools
