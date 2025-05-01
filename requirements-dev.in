@@ -462,7 +462,7 @@ tox==4.24.2
     # via mozanalysis
 twine==6.1.0
     # via mozanalysis
-typing-extensions==4.12.2
+typing-extensions==4.13.2
     # via
     #   -c requirements.txt
     #   cattrs
