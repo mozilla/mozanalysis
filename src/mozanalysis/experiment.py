@@ -942,6 +942,34 @@ class Experiment:
             GROUP BY client_id, branch
             """  # noqa:E501
 
+    def _build_enrollments_query_glean_events_stream_status(
+        self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
+    ) -> str:
+        """Return SQL to query enrollments for a Glean experiment from the
+        events_stream table for the application or dataset. Determines
+        enrollments from the enrollment_status event.
+        """
+
+        return f"""
+            SELECT
+                client_id AS analysis_id,
+                JSON_VALUE(event_extra, '$.branch') AS branch,
+                DATE(MIN(submission_timestamp)) AS enrollment_date,
+                COUNT(submission_timestamp) AS num_enrollment_events
+            FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.events_stream`
+            WHERE
+                client_id IS NOT NULL
+                AND DATE(submission_timestamp)
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                AND event_category = "nimbus_events"
+                AND JSON_VALUE(event_extra, "$.slug") = "{self.experiment_slug}"
+                AND event_name = "enrollment_status"
+                AND JSON_VALUE(event_extra, "$.status") = "Enrolled"
+                AND JSON_VALUE(event_extra, "$.reason") = "Qualified"
+                AND sample_id < {sample_size}
+            GROUP BY client_id, branch
+            """  # noqa:E501
+
     def _build_enrollments_query_cirrus(
         self, time_limits: TimeLimits, dataset: str
     ) -> str:
@@ -1037,6 +1065,41 @@ class Experiment:
                         event.extra,
                         "experiment") = '{self.experiment_slug}'
                     AND (event.name = 'expose' OR event.name = 'exposure')
+            ) exposures
+            ON re.analysis_id = exposures.analysis_id AND
+                re.branch = exposures.branch AND
+                exposures.submission_date >= re.enrollment_date
+            GROUP BY analysis_id, branch
+            """  # noqa: E501
+
+    def _build_exposure_query_glean_events_stream(
+        self,
+        time_limits: TimeLimits,
+        dataset: str,
+        client_id_field: str = "client_info.client_id",
+        event_category: str = "nimbus_events",
+    ) -> str:
+        """Return SQL to query exposures for a Glean no-event experiment"""
+        return f"""
+            SELECT
+                exposures.analysis_id AS analysis_id,
+                exposures.branch,
+                DATE(MIN(exposures.submission_date)) AS exposure_date,
+                COUNT(exposures.submission_date) AS num_exposure_events
+            FROM raw_enrollments re
+            LEFT JOIN (
+                SELECT
+                    {client_id_field} AS analysis_id,
+                    JSON_VALUE(event_extra, '$.branch') AS branch,
+                    DATE(submission_timestamp) AS submission_date
+                FROM
+                    `moz-fx-data-shared-prod.{self.app_id or dataset}.events_stream`
+                WHERE
+                    DATE(submission_timestamp)
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                    AND event_category = '{event_category}'
+                    AND JSON_VALUE(event_extra, "$.experiment") = '{self.experiment_slug}'
+                    AND (event_name = 'expose' OR event_name = 'exposure')
             ) exposures
             ON re.analysis_id = exposures.analysis_id AND
                 re.branch = exposures.branch AND
