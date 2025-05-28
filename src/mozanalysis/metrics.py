@@ -116,7 +116,7 @@ class DataSource:
         converter=group_id_column_converter,
     )
 
-    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean")
+    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean", "events_stream")
 
     @experiments_column_type.validator
     def _check_experiments_column_type(self, attribute, value):
@@ -176,6 +176,16 @@ class DataSource:
                         ds.ping_info.experiments, '{experiment_slug}'
                     ).branch IS NOT NULL
                 )"""
+
+        elif self.experiments_column_type == "events_stream":
+            return """AND (
+                    ds.{submission_date} != e.enrollment_date
+                    OR IF(
+                        JSON_VALUE(ds.event_extra, '$.experiment') = '{experiment_slug}',
+                        JSON_VALUE(ds.event_extra, '$.branch'),
+                        NULL
+                    ) IS NOT NULL
+                )"""  # noqa:E501
 
         else:
             raise ValueError
@@ -409,6 +419,32 @@ class DataSource:
                         f"""`mozfun.map.get_key`(
                 ds.ping_info.experiments, '{experiment_slug}'
             ).branch IS NULL"""
+                    ),
+                ),
+            ]
+
+        elif self.experiments_column_type == "events_stream":
+            return [
+                Metric(
+                    name=self.name + "_has_contradictory_branch",
+                    data_source=self,
+                    select_expr=agg_any(
+                        """IF(
+                JSON_VALUE(ds.event_extra, '$.experiment') = '{experiment_slug}',
+                JSON_VALUE(ds.event_extra, '$.branch'),
+                NULL
+            ) != e.branch """
+                    ),
+                ),
+                Metric(
+                    name=self.name + "_has_non_enrolled_data",
+                    data_source=self,
+                    select_expr=agg_any(
+                        f"""IF(
+                JSON_VALUE(ds.event_extra, '$.experiment') = '{experiment_slug}',
+                JSON_VALUE(ds.event_extra, '$.branch'),
+                NULL
+            ) IS NULL"""
                     ),
                 ),
             ]

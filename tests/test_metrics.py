@@ -7,7 +7,9 @@ from mozanalysis.experiment import TimeLimits
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 
 
-@pytest.mark.parametrize("experiments_column_type", [None, "simple", "native", "glean"])
+@pytest.mark.parametrize(
+    "experiments_column_type", [None, "simple", "native", "glean", "events_stream"]
+)
 def test_datasource_constructor_succeeds(experiments_column_type):
     DataSource(
         name="foo",
