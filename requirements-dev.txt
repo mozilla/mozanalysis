@@ -944,8 +944,8 @@ more-itertools==10.6.0 \
     #   -r requirements-dev.in
     #   jaraco-classes
     #   jaraco-functools
-mozilla-metric-config-parser==2024.11.1 \
-    --hash=sha256:4f972b669cdaefc1ff5e7372a93bbd23151d7bbdf8f3dbe2b4c3ff4ab61b33bb
+mozilla-metric-config-parser==2025.5.2 \
+    --hash=sha256:6af4e72ab8fe8c43e333d2787e3eb4b375fd7d34fcf6c98d5119751d5499f903
     # via -r requirements-dev.in
 mozilla-nimbus-schemas==2025.1.1 \
     --hash=sha256:05e3300a2d9dc507b96bac586b089dba551ab77c82053776148f41b8536802cf \
