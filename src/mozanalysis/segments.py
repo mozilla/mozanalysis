@@ -46,6 +46,12 @@ class SegmentDataSource:
         group_id_column (str, optional): Name of the column that
             contains the ``group_id`` (join key). Defaults to
             'profile_group_id'.
+        glean_client_id_column (str, optional): Name of the column that
+            contains the *glean* telemetry ``client_id`` (join key).
+            This is also used to specify that the data source supports glean.
+        legacy_client_id_column (str, optional): Name of the column that
+            contains the *legacy* telemetry ``client_id`` (join key).
+            This is also used to specify that the data source supports legacy.
     """
 
     name = attr.ib(validator=attr.validators.instance_of(str))
@@ -57,6 +63,8 @@ class SegmentDataSource:
     default_dataset = attr.ib(default=None, type=str | None)
     app_name = attr.ib(default=None, type=str | None)
     group_id_column = attr.ib(default=AnalysisUnit.PROFILE_GROUP.value, type=str)
+    glean_client_id_column = attr.ib(default=None, type=str)
+    legacy_client_id_column = attr.ib(default=None, type=str)
 
     @default_dataset.validator
     def _check_default_dataset_provided_if_needed(self, attribute, value):

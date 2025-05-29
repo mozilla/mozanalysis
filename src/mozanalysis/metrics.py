@@ -74,6 +74,12 @@ class DataSource:
               (experiment_slug:str -> struct) map, where the struct
               contains a ``branch`` field, which is the branch as a
               string.
+            * 'glean': There is an ``experiments`` column inside ping_info,
+              which is an (experiment_slug:str -> struct) map, where the 
+              struct contains a ``branch`` field, which is the branch as a
+              string.
+            * 'events_stream': There is an ``experiment`` within a JSON
+              column ``event_extra``. ``branch`` is in the same column.
             * None: There is no ``experiments`` column, so skip the
               sanity checks that rely on it. We'll also be unable to
               filter out pre-enrollment data from day 0 in the
@@ -90,6 +96,15 @@ class DataSource:
             `{dataset}` parameter.
         app_name: (str, optional): app_name used with metric-hub,
             used for validation
+        group_id_column (str, optional): Name of the column that
+            contains the ``profile_group_id`` (join key). Defaults to
+            'profile_group_id'.
+        glean_client_id_column (str, optional): Name of the column that
+            contains the *glean* telemetry ``client_id`` (join key).
+            This is also used to specify that the data source supports glean.
+        legacy_client_id_column (str, optional): Name of the column that
+            contains the *legacy* telemetry ``client_id`` (join key).
+            This is also used to specify that the data source supports legacy.
     """
 
     name = attr.ib(validator=attr.validators.instance_of(str))
@@ -115,6 +130,8 @@ class DataSource:
         validator=[attr.validators.instance_of(str), attr.validators.min_len(1)],
         converter=group_id_column_converter,
     )
+    glean_client_id_column = attr.ib(default=None, type=str)
+    legacy_client_id_column = attr.ib(default=None, type=str)
 
     EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean", "events_stream")
 
@@ -457,10 +474,8 @@ class DataSource:
         cls,
         parser_data_source: ParserDataSource,
         app_name: str | None = None,
-        group_id_column: str | None = AnalysisUnit.PROFILE_GROUP.value,
     ) -> DataSource:
-        """metric-config-parser DataSource objects do not have an `app_name`
-        and do not, yet, have a group_id_column"""
+        """metric-config-parser DataSource objects do not have an `app_name`"""
         return cls(
             name=parser_data_source.name,
             from_expr=parser_data_source.from_expression,
@@ -473,7 +488,9 @@ class DataSource:
             ),
             default_dataset=parser_data_source.default_dataset,
             app_name=app_name,
-            group_id_column=group_id_column,
+            group_id_column=parser_data_source.group_id_column,
+            glean_client_id_column=parser_data_source.glean_client_id_column,
+            legacy_client_id_column=parser_data_source.legacy_client_id_column,
         )
 
 
