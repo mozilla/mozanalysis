@@ -122,6 +122,12 @@
 <span class="sd">        group_id_column (str, optional): Name of the column that</span>
 <span class="sd">            contains the ``group_id`` (join key). Defaults to</span>
 <span class="sd">            &#39;profile_group_id&#39;.</span>
+<span class="sd">        glean_client_id_column (str, optional): Name of the column that</span>
+<span class="sd">            contains the *glean* telemetry ``client_id`` (join key).</span>
+<span class="sd">            This is also used to specify that the data source supports glean.</span>
+<span class="sd">        legacy_client_id_column (str, optional): Name of the column that</span>
+<span class="sd">            contains the *legacy* telemetry ``client_id`` (join key).</span>
+<span class="sd">            This is also used to specify that the data source supports legacy.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
@@ -133,6 +139,8 @@
     <span class="n">default_dataset</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">app_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">group_id_column</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">PROFILE_GROUP</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">glean_client_id_column</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">legacy_client_id_column</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
 
     <span class="nd">@default_dataset</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_default_dataset_provided_if_needed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
