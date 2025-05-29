@@ -75,7 +75,7 @@ class DataSource:
               contains a ``branch`` field, which is the branch as a
               string.
             * 'glean': There is an ``experiments`` column inside ping_info,
-              which is an (experiment_slug:str -> struct) map, where the 
+              which is an (experiment_slug:str -> struct) map, where the
               struct contains a ``branch`` field, which is the branch as a
               string.
             * 'events_stream': There is an ``experiment`` within a JSON
