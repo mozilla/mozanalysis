@@ -380,7 +380,7 @@ class DataSource:
                     name=self.name + "_has_contradictory_branch",
                     data_source=self,
                     select_expr=agg_any(
-                        f"""`mozfun.map.get_key`(
+                        """`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
             ) != e.branch"""
                     ),
@@ -402,7 +402,7 @@ class DataSource:
                     name=self.name + "_has_contradictory_branch",
                     data_source=self,
                     select_expr=agg_any(
-                        f"""`mozfun.map.get_key`(
+                        """`mozfun.map.get_key`(
                 ds.experiments, '{experiment_slug}'
             ).branch != e.branch"""
                     ),
@@ -424,7 +424,7 @@ class DataSource:
                     name=self.name + "_has_contradictory_branch",
                     data_source=self,
                     select_expr=agg_any(
-                        f"""`mozfun.map.get_key`(
+                        """`mozfun.map.get_key`(
                 ds.ping_info.experiments, '{experiment_slug}'
             ).branch != e.branch"""
                     ),
@@ -446,7 +446,7 @@ class DataSource:
                     name=self.name + "_has_contradictory_branch",
                     data_source=self,
                     select_expr=agg_any(
-                        f"""IF(
+                        """IF(
                 JSON_VALUE(ds.event_extra, '$.experiment') = '{experiment_slug}',
                 JSON_VALUE(ds.event_extra, '$.branch'),
                 NULL
