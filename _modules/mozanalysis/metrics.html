@@ -471,9 +471,9 @@
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_has_contradictory_branch&quot;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
-<span class="s2">                ds.experiments, &#39;</span><span class="si">{</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
-<span class="s2">            ) != e.branch&quot;&quot;&quot;</span>
+<span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
+<span class="sd">                ds.experiments, &#39;{experiment_slug}&#39;</span>
+<span class="sd">            ) != e.branch&quot;&quot;&quot;</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
                 <span class="n">Metric</span><span class="p">(</span>
@@ -493,9 +493,9 @@
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_has_contradictory_branch&quot;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
-<span class="s2">                ds.experiments, &#39;</span><span class="si">{</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
-<span class="s2">            ).branch != e.branch&quot;&quot;&quot;</span>
+<span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
+<span class="sd">                ds.experiments, &#39;{experiment_slug}&#39;</span>
+<span class="sd">            ).branch != e.branch&quot;&quot;&quot;</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
                 <span class="n">Metric</span><span class="p">(</span>
@@ -515,9 +515,9 @@
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_has_contradictory_branch&quot;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
-<span class="s2">                ds.ping_info.experiments, &#39;</span><span class="si">{</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
-<span class="s2">            ).branch != e.branch&quot;&quot;&quot;</span>
+<span class="w">                        </span><span class="sd">&quot;&quot;&quot;`mozfun.map.get_key`(</span>
+<span class="sd">                ds.ping_info.experiments, &#39;{experiment_slug}&#39;</span>
+<span class="sd">            ).branch != e.branch&quot;&quot;&quot;</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
                 <span class="n">Metric</span><span class="p">(</span>
@@ -537,11 +537,11 @@
                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_has_contradictory_branch&quot;</span><span class="p">,</span>
                     <span class="n">data_source</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">select_expr</span><span class="o">=</span><span class="n">agg_any</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;IF(</span>
-<span class="s2">                JSON_VALUE(ds.event_extra, &#39;$.experiment&#39;) = &#39;</span><span class="si">{</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;,</span>
-<span class="s2">                JSON_VALUE(ds.event_extra, &#39;$.branch&#39;),</span>
-<span class="s2">                NULL</span>
-<span class="s2">            ) != e.branch &quot;&quot;&quot;</span>
+<span class="w">                        </span><span class="sd">&quot;&quot;&quot;IF(</span>
+<span class="sd">                JSON_VALUE(ds.event_extra, &#39;$.experiment&#39;) = &#39;{experiment_slug}&#39;,</span>
+<span class="sd">                JSON_VALUE(ds.event_extra, &#39;$.branch&#39;),</span>
+<span class="sd">                NULL</span>
+<span class="sd">            ) != e.branch &quot;&quot;&quot;</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
                 <span class="n">Metric</span><span class="p">(</span>
