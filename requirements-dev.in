@@ -479,7 +479,7 @@ tzdata==2025.1
     #   -c requirements.txt
     #   faker
     #   pandas
-urllib3==2.3.0
+urllib3==2.4.0
     # via
     #   -c requirements.txt
     #   requests
