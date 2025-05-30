@@ -102,7 +102,7 @@ matplotlib==3.10.1
     # via
     #   mozanalysis
     #   plotnine
-mizani==0.13.1
+mizani==0.13.5
     # via plotnine
 mock==5.2.0
     # via mozanalysis

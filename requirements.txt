@@ -833,9 +833,9 @@ matplotlib==3.10.1 \
     # via
     #   -r requirements.in
     #   plotnine
-mizani==0.13.1 \
-    --hash=sha256:7da0dcacd43fbcc01c279ea06a76f1f064ae90dbb387c4a985ba24a92d3c7d7a \
-    --hash=sha256:e3247ea12c746c8104767d7e42a2d16473173c7bc314f298d8294a58f4653353
+mizani==0.13.5 \
+    --hash=sha256:99c3306fc3217d3840dfd3468feadd9a7664935a07ae4f7e8b3889e46b48ac73 \
+    --hash=sha256:f6024cf3b5780457d7aa56725946857fd9908215efcd5460399d2bc3267ac329
     # via
     #   -r requirements.in
     #   plotnine
