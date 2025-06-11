@@ -466,6 +466,7 @@ class Experiment:
         segment_list=None,
         sample_size: int = 100,
         suppress_custom_query_validation: bool = False,
+        glean_ids: bool = False,
     ) -> str:
         """Return a SQL query for querying enrollment and exposure data.
 
@@ -502,6 +503,9 @@ class Experiment:
 
             sample_size (int): Optional integer percentage of clients, used for
                 downsampling enrollments. Default 100.
+
+            glean_ids (bool): Enforce Glean IDs instead of legacy IDs (for desktop).
+                Default False.
 
         Returns:
             A string containing a BigQuery SQL expression.
@@ -570,6 +574,7 @@ class Experiment:
             time_limits,
             enrollments_query_type,
             sample_size,
+            glean_ids,
         )
 
         if exposure_signal:
@@ -734,13 +739,19 @@ class Experiment:
         time_limits: TimeLimits,
         enrollments_query_type: EnrollmentsQueryType,
         sample_size: int = 100,
+        glean_ids: bool = False,
     ) -> str:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == EnrollmentsQueryType.NORMANDY:
-            return self._build_enrollments_query_normandy(
-                time_limits,
-                sample_size,
-            )
+            if glean_ids:
+                return self._build_enrollments_query_glean_events_stream(
+                    time_limits, self.app_id, sample_size
+                )
+            else:
+                return self._build_enrollments_query_normandy(
+                    time_limits,
+                    sample_size,
+                )
         elif enrollments_query_type == EnrollmentsQueryType.GLEAN_EVENT:
             if not self.app_id:
                 raise ValueError(
@@ -778,10 +789,16 @@ class Experiment:
         self,
         time_limits: TimeLimits,
         exposure_query_type: EnrollmentsQueryType,
+        glean_ids: bool = False,
     ) -> str:
         """Return SQL to query a list of exposures and their branches"""
         if exposure_query_type == EnrollmentsQueryType.NORMANDY:
-            return self._build_exposure_query_normandy(time_limits)
+            if glean_ids:
+                return self._build_exposure_query_glean_events_stream(
+                    time_limits,
+                )
+            else:
+                return self._build_exposure_query_normandy(time_limits)
         elif exposure_query_type == EnrollmentsQueryType.GLEAN_EVENT:
             if not self.app_id:
                 raise ValueError(
@@ -918,7 +935,11 @@ class Experiment:
             """  # noqa:E501
 
     def _build_enrollments_query_glean_events_stream(
-        self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
+        self,
+        time_limits: TimeLimits,
+        dataset: str,
+        sample_size: int = 100,
+        analysis_id: str = "client_id",
     ) -> str:
         """Return SQL to query enrollments for a Glean experiment from the
         events_stream table for the application or dataset.
@@ -926,7 +947,7 @@ class Experiment:
 
         return f"""
             SELECT
-                client_id AS analysis_id,
+                {analysis_id} AS analysis_id,
                 JSON_VALUE(event_extra, '$.branch') AS branch,
                 DATE(MIN(submission_timestamp)) AS enrollment_date,
                 COUNT(submission_timestamp) AS num_enrollment_events
@@ -942,7 +963,7 @@ class Experiment:
             GROUP BY client_id, branch
             """  # noqa:E501
 
-    def _build_enrollments_query_glean_events_stream_status(
+    def _build_enrollments_query_glean_events_stream_enrollment_status(
         self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
     ) -> str:
         """Return SQL to query enrollments for a Glean experiment from the
@@ -1076,7 +1097,7 @@ class Experiment:
         self,
         time_limits: TimeLimits,
         dataset: str,
-        client_id_field: str = "client_info.client_id",
+        client_id_field: str = "client_id",
         event_category: str = "nimbus_events",
     ) -> str:
         """Return SQL to query exposures for a Glean no-event experiment"""
