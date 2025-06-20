@@ -2,11 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import logging
+
 import attr
 from metric_config_parser import AnalysisUnit
 from typing_extensions import assert_never
 
 from mozanalysis.metrics import DataSource
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(frozen=True, slots=True)
@@ -47,6 +51,7 @@ class ExposureSignal:
         self,
         time_limits,
         analysis_unit: AnalysisUnit = AnalysisUnit.CLIENT,
+        glean_ids: bool | None = None,
     ):
         """Return a nearly self-contained query for determining exposures.
 
@@ -55,11 +60,27 @@ class ExposureSignal:
         from this data source.
         """
         if analysis_unit == AnalysisUnit.CLIENT:
-            ds_id = self.data_source.client_id_column
+            if glean_ids:
+                ds_id = self.data_source.glean_client_id_column
+            elif glean_ids is not None:
+                ds_id = self.data_source.legacy_client_id_column
+            else:
+                ds_id = self.data_source.client_id_column
         elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
             ds_id = self.data_source.group_id_column
         else:
             assert_never(analysis_unit)
+
+        if glean_ids is not None and not ds_id:
+            chosen_id = (
+                "glean_client_id_column" if glean_ids else "legacy_client_id_column"
+            )
+            logger.warning(
+                f"glean_ids set to {glean_ids} but {chosen_id} not set."
+                f"Falling back to client_id_column {self.data_source.client_id_column}"
+            )
+            ds_id = self.data_source.client_id_column
+
         return """SELECT
             e.analysis_id,
             e.branch,

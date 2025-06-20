@@ -216,6 +216,7 @@ class DataSource:
         analysis_basis: AnalysisBasis = AnalysisBasis.ENROLLMENTS,
         analysis_unit: AnalysisUnit = AnalysisUnit.CLIENT,
         exposure_signal=None,
+        glean_ids: bool | None = None,
     ) -> str:
         """Return a nearly-self contained SQL query.
 
@@ -223,11 +224,26 @@ class DataSource:
         be executed to query all metrics from this data source.
         """
         if analysis_unit == AnalysisUnit.CLIENT:
-            ds_id = self.client_id_column
+            if glean_ids:
+                ds_id = self.glean_client_id_column
+            elif glean_ids is not None:
+                ds_id = self.legacy_client_id_column
+            else:
+                ds_id = self.client_id_column
         elif analysis_unit == AnalysisUnit.PROFILE_GROUP:
             ds_id = self.group_id_column
         else:
             assert_never(analysis_unit)
+
+        if glean_ids is not None and not ds_id:
+            chosen_id = (
+                "glean_client_id_column" if glean_ids else "legacy_client_id_column"
+            )
+            logger.warning(
+                f"glean_ids set to {glean_ids} but {chosen_id} not set."
+                f"Falling back to client_id_column {self.client_id_column}"
+            )
+            ds_id = self.client_id_column
 
         return """SELECT
             e.analysis_id,
