@@ -99,7 +99,7 @@ class SegmentDataSource:
         experiment_slug,
         from_expr_dataset=None,
         analysis_unit: AnalysisUnit = AnalysisUnit.CLIENT,
-        glean_ids: bool | None = None,
+        use_glean_ids: bool | None = None,
     ):
         """Return a nearly self contained SQL query.
 
@@ -108,9 +108,9 @@ class SegmentDataSource:
         segment: True if the client is in the segment, False otherwise.
         """
         if analysis_unit == AnalysisUnit.CLIENT:
-            if glean_ids:
+            if use_glean_ids:
                 ds_id = self.glean_client_id_column
-            elif glean_ids is not None:
+            elif use_glean_ids is not None:
                 ds_id = self.legacy_client_id_column
             else:
                 ds_id = self.client_id_column
@@ -119,12 +119,12 @@ class SegmentDataSource:
         else:
             assert_never(analysis_unit)
 
-        if glean_ids is not None and not ds_id:
+        if use_glean_ids is not None and not ds_id:
             chosen_id = (
-                "glean_client_id_column" if glean_ids else "legacy_client_id_column"
+                "glean_client_id_column" if use_glean_ids else "legacy_client_id_column"
             )
             logger.warning(
-                f"glean_ids set to {glean_ids} but {chosen_id} not set."
+                f"use_glean_ids set to {use_glean_ids} but {chosen_id} not set."
                 f"Falling back to client_id_column {self.client_id_column}"
             )
             ds_id = self.client_id_column

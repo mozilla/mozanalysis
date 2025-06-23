@@ -67,14 +67,14 @@ def test_datasource_build_query_analysis_units(analysis_unit):
 
 
 @pytest.mark.parametrize(
-    ("glean_ids", "expected_id"),
+    ("use_glean_ids", "expected_id"),
     [
         (True, "glean_client_id"),
         (False, "legacy_telemetry_client_id"),
         (None, "client_id"),
     ],
 )
-def test_datasource_build_query_glean_ids(glean_ids, expected_id):
+def test_datasource_build_query_glean_ids(use_glean_ids, expected_id):
     ds = DataSource(
         name="foo",
         from_expr="my_table.name",
@@ -124,7 +124,7 @@ def test_datasource_build_query_glean_ids(glean_ids, expected_id):
         None,
         AnalysisBasis.ENROLLMENTS,
         AnalysisUnit.CLIENT,
-        glean_ids=glean_ids,
+        use_glean_ids=use_glean_ids,
     )
 
     assert query == expected_query

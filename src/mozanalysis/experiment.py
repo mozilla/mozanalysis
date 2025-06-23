@@ -466,7 +466,7 @@ class Experiment:
         segment_list=None,
         sample_size: int = 100,
         suppress_custom_query_validation: bool = False,
-        glean_ids: bool = False,
+        use_glean_ids: bool = False,
     ) -> str:
         """Return a SQL query for querying enrollment and exposure data.
 
@@ -504,7 +504,7 @@ class Experiment:
             sample_size (int): Optional integer percentage of clients, used for
                 downsampling enrollments. Default 100.
 
-            glean_ids (bool): Enforce Glean IDs instead of legacy IDs. For
+            use_glean_ids (bool): Enforce Glean IDs instead of legacy IDs. For
                 desktop, does nothing for other apps. Default False.
 
         Returns:
@@ -574,26 +574,26 @@ class Experiment:
             time_limits,
             enrollments_query_type,
             sample_size,
-            glean_ids,
+            use_glean_ids,
         )
 
         if exposure_signal:
             exposure_query = custom_exposure_query or exposure_signal.build_query(
                 time_limits,
                 self.analysis_unit,
-                glean_ids,
+                use_glean_ids,
             )
         else:
             exposure_query = custom_exposure_query or self._build_exposure_query(
                 time_limits,
                 enrollments_query_type,
-                glean_ids,
+                use_glean_ids,
             )
 
         segments_query = self._build_segments_query(
             segment_list,
             time_limits,
-            glean_ids,
+            use_glean_ids,
         )
 
         return f"""
@@ -617,7 +617,7 @@ class Experiment:
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal: ExposureSignal | None = None,
         discrete_metrics: bool = False,
-        glean_ids: bool = False,
+        use_glean_ids: bool = False,
     ) -> str:
         """Return a SQL query for querying metric data.
 
@@ -644,7 +644,7 @@ class Experiment:
                 for certain analysis bases (such as exposures).
             discrete_metrics (bool): Whether to compute metrics independently.
                 Defaults to False.
-            glean_ids (bool): Enforce Glean IDs instead of legacy IDs. For
+            use_glean_ids (bool): Enforce Glean IDs instead of legacy IDs. For
                 desktop, does nothing for other apps. Default False.
 
         Returns:
@@ -657,14 +657,16 @@ class Experiment:
         )
 
         metrics_columns, metrics_joins = self._build_metrics_query_bits(
-            metric_list, time_limits, analysis_basis, exposure_signal, glean_ids
+            metric_list, time_limits, analysis_basis, exposure_signal, use_glean_ids
         )
 
         if exposure_signal and analysis_basis != AnalysisBasis.ENROLLMENTS:
             exposure_query = f"""
             SELECT * FROM (
                 {
-                exposure_signal.build_query(time_limits, self.analysis_unit, glean_ids)
+                exposure_signal.build_query(
+                    time_limits, self.analysis_unit, use_glean_ids
+                )
             }
             )
             WHERE num_exposure_events > 0
@@ -748,11 +750,11 @@ class Experiment:
         time_limits: TimeLimits,
         enrollments_query_type: EnrollmentsQueryType,
         sample_size: int = 100,
-        glean_ids: bool = False,
+        use_glean_ids: bool = False,
     ) -> str:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == EnrollmentsQueryType.NORMANDY:
-            if glean_ids:
+            if use_glean_ids:
                 return self._build_enrollments_query_glean_events_stream(
                     time_limits, self.app_id, sample_size
                 )
@@ -798,11 +800,11 @@ class Experiment:
         self,
         time_limits: TimeLimits,
         exposure_query_type: EnrollmentsQueryType,
-        glean_ids: bool = False,
+        use_glean_ids: bool = False,
     ) -> str:
         """Return SQL to query a list of exposures and their branches"""
         if exposure_query_type == EnrollmentsQueryType.NORMANDY:
-            if glean_ids:
+            if use_glean_ids:
                 return self._build_exposure_query_glean_events_stream(
                     time_limits,
                 )
@@ -1143,7 +1145,7 @@ class Experiment:
         time_limits: TimeLimits,
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal: ExposureSignal | None = None,
-        glean_ids: bool | None = None,
+        use_glean_ids: bool | None = None,
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
         metrics: list[Metric] = []
@@ -1172,7 +1174,7 @@ class Experiment:
                 analysis_basis,
                 self.analysis_unit,
                 exposure_signal,
-                glean_ids,
+                use_glean_ids,
             )
 
             metrics_joins.append(
@@ -1191,7 +1193,7 @@ class Experiment:
         self,
         segment_list: list[Segment],
         time_limits: TimeLimits,
-        glean_ids: bool = False,
+        use_glean_ids: bool = False,
     ) -> str:
         """Build a query adding segment columns to the enrollments view.
 
@@ -1206,7 +1208,7 @@ class Experiment:
         # arrive with "how segments work" as their first question.
 
         segments_columns, segments_joins = self._build_segments_query_bits(
-            cast("list[Segment | str]", segment_list) or [], time_limits, glean_ids
+            cast("list[Segment | str]", segment_list) or [], time_limits, use_glean_ids
         )
 
         return """
@@ -1224,7 +1226,7 @@ class Experiment:
         self,
         segment_list: list[Segment | str],
         time_limits: TimeLimits,
-        glean_ids: bool = False,
+        use_glean_ids: bool = False,
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to segments."""
 
@@ -1248,7 +1250,7 @@ class Experiment:
                 self.experiment_slug,
                 self.app_id,
                 self.analysis_unit,
-                glean_ids,
+                use_glean_ids,
             )
             segments_joins.append(
                 f"""    LEFT JOIN (
