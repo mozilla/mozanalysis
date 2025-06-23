@@ -295,7 +295,7 @@ polars==1.24.0
     # via
     #   -c requirements.txt
     #   marginaleffects
-polyfactory==2.19.0
+polyfactory==2.21.0
     # via
     #   -c requirements.txt
     #   mozilla-nimbus-schemas
