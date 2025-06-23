@@ -210,7 +210,7 @@ matplotlib==3.10.1
     #   plotnine
 mdurl==0.1.2
     # via markdown-it-py
-mizani==0.13.1
+mizani==0.13.5
     # via
     #   -c requirements.txt
     #   plotnine
