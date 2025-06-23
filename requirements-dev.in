@@ -409,7 +409,7 @@ rpds-py==0.23.1
     #   -c requirements.txt
     #   jsonschema
     #   referencing
-rsa==4.9
+rsa==4.9.1
     # via
     #   -c requirements.txt
     #   google-auth
