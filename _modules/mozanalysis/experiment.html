@@ -562,6 +562,7 @@
         <span class="n">segment_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
         <span class="n">suppress_custom_query_validation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_glean_ids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a SQL query for querying enrollment and exposure data.</span>
 
@@ -598,6 +599,9 @@
 
 <span class="sd">            sample_size (int): Optional integer percentage of clients, used for</span>
 <span class="sd">                downsampling enrollments. Default 100.</span>
+
+<span class="sd">            use_glean_ids (bool): Enforce Glean IDs instead of legacy IDs. For</span>
+<span class="sd">                desktop, does nothing for other apps. Default False.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A string containing a BigQuery SQL expression.</span>
@@ -666,21 +670,26 @@
             <span class="n">time_limits</span><span class="p">,</span>
             <span class="n">enrollments_query_type</span><span class="p">,</span>
             <span class="n">sample_size</span><span class="p">,</span>
+            <span class="n">use_glean_ids</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">exposure_signal</span><span class="p">:</span>
             <span class="n">exposure_query</span> <span class="o">=</span> <span class="n">custom_exposure_query</span> <span class="ow">or</span> <span class="n">exposure_signal</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
-                <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span>
+                <span class="n">time_limits</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="p">,</span>
+                <span class="n">use_glean_ids</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">exposure_query</span> <span class="o">=</span> <span class="n">custom_exposure_query</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query</span><span class="p">(</span>
                 <span class="n">time_limits</span><span class="p">,</span>
                 <span class="n">enrollments_query_type</span><span class="p">,</span>
+                <span class="n">use_glean_ids</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="n">segments_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_segments_query</span><span class="p">(</span>
             <span class="n">segment_list</span><span class="p">,</span>
             <span class="n">time_limits</span><span class="p">,</span>
+            <span class="n">use_glean_ids</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
@@ -707,6 +716,7 @@
         <span class="n">analysis_basis</span><span class="o">=</span><span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">,</span>
         <span class="n">exposure_signal</span><span class="p">:</span> <span class="n">ExposureSignal</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">discrete_metrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_glean_ids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a SQL query for querying metric data.</span>
 
@@ -733,6 +743,8 @@
 <span class="sd">                for certain analysis bases (such as exposures).</span>
 <span class="sd">            discrete_metrics (bool): Whether to compute metrics independently.</span>
 <span class="sd">                Defaults to False.</span>
+<span class="sd">            use_glean_ids (bool): Enforce Glean IDs instead of legacy IDs. For</span>
+<span class="sd">                desktop, does nothing for other apps. Default False.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A string containing a BigQuery SQL expression.</span>
@@ -744,13 +756,17 @@
         <span class="p">)</span>
 
         <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_metrics_query_bits</span><span class="p">(</span>
-            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">analysis_basis</span><span class="p">,</span> <span class="n">exposure_signal</span>
+            <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">analysis_basis</span><span class="p">,</span> <span class="n">exposure_signal</span><span class="p">,</span> <span class="n">use_glean_ids</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">exposure_signal</span> <span class="ow">and</span> <span class="n">analysis_basis</span> <span class="o">!=</span> <span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">:</span>
             <span class="n">exposure_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT * FROM (</span>
-<span class="s2">                </span><span class="si">{</span><span class="n">exposure_signal</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span><span class="n">time_limits</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span>
+<span class="w">                </span><span class="n">exposure_signal</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
+<span class="w">                    </span><span class="n">time_limits</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="p">,</span><span class="w"> </span><span class="n">use_glean_ids</span>
+<span class="w">                </span><span class="p">)</span>
+<span class="w">            </span><span class="si">}</span>
 <span class="s2">            )</span>
 <span class="s2">            WHERE num_exposure_events &gt; 0</span>
 <span class="s2">            &quot;&quot;&quot;</span>
@@ -834,13 +850,19 @@
         <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
         <span class="n">enrollments_query_type</span><span class="p">:</span> <span class="n">EnrollmentsQueryType</span><span class="p">,</span>
         <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">use_glean_ids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query a list of enrollments and their branches&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">NORMANDY</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_normandy</span><span class="p">(</span>
-                <span class="n">time_limits</span><span class="p">,</span>
-                <span class="n">sample_size</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_glean_ids</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_glean_events_stream</span><span class="p">(</span>
+                    <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">,</span> <span class="n">sample_size</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_normandy</span><span class="p">(</span>
+                    <span class="n">time_limits</span><span class="p">,</span>
+                    <span class="n">sample_size</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="k">elif</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">GLEAN_EVENT</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -878,10 +900,16 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
         <span class="n">exposure_query_type</span><span class="p">:</span> <span class="n">EnrollmentsQueryType</span><span class="p">,</span>
+        <span class="n">use_glean_ids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query a list of exposures and their branches&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">NORMANDY</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_normandy</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_glean_ids</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_glean_events_stream</span><span class="p">(</span>
+                    <span class="n">time_limits</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_normandy</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">GLEAN_EVENT</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1018,10 +1046,40 @@
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_enrollments_query_glean_events_stream</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">analysis_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;client_id&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a Glean experiment from the</span>
 <span class="sd">        events_stream table for the application or dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">analysis_id</span><span class="si">}</span><span class="s2"> AS analysis_id,</span>
+<span class="s2">                JSON_VALUE(event_extra, &#39;$.branch&#39;) AS branch,</span>
+<span class="s2">                DATE(MIN(submission_timestamp)) AS enrollment_date,</span>
+<span class="s2">                COUNT(submission_timestamp) AS num_enrollment_events</span>
+<span class="s2">            FROM `moz-fx-data-shared-prod.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">dataset</span><span class="si">}</span><span class="s2">.events_stream`</span>
+<span class="s2">            WHERE</span>
+<span class="s2">                client_id IS NOT NULL</span>
+<span class="s2">                AND DATE(submission_timestamp)</span>
+<span class="s2">                    BETWEEN &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2">&#39; AND &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                AND event_category = &quot;nimbus_events&quot;</span>
+<span class="s2">                AND JSON_VALUE(event_extra, &quot;$.experiment&quot;) = &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">                AND event_name = &quot;enrollment&quot;</span>
+<span class="s2">                AND sample_id &lt; </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span>
+<span class="s2">            GROUP BY client_id, branch</span>
+<span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_enrollments_query_glean_events_stream_enrollment_status</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for a Glean experiment from the</span>
+<span class="sd">        events_stream table for the application or dataset. Determines</span>
+<span class="sd">        enrollments from the enrollment_status event.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
@@ -1036,8 +1094,10 @@
 <span class="s2">                AND DATE(submission_timestamp)</span>
 <span class="s2">                    BETWEEN &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2">&#39; AND &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">                AND event_category = &quot;nimbus_events&quot;</span>
-<span class="s2">                AND JSON_VALUE(event_extra, &quot;$.experiment&quot;) = &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="s2">                AND event_name = &quot;enrollment&quot;</span>
+<span class="s2">                AND JSON_VALUE(event_extra, &quot;$.slug&quot;) = &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">                AND event_name = &quot;enrollment_status&quot;</span>
+<span class="s2">                AND JSON_VALUE(event_extra, &quot;$.status&quot;) = &quot;Enrolled&quot;</span>
+<span class="s2">                AND JSON_VALUE(event_extra, &quot;$.reason&quot;) = &quot;Qualified&quot;</span>
 <span class="s2">                AND sample_id &lt; </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span>
 <span class="s2">            GROUP BY client_id, branch</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
@@ -1144,12 +1204,48 @@
 <span class="s2">            GROUP BY analysis_id, branch</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_exposure_query_glean_events_stream</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">client_id_field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;client_id&quot;</span><span class="p">,</span>
+        <span class="n">event_category</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;nimbus_events&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query exposures for a Glean no-event experiment&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                exposures.analysis_id AS analysis_id,</span>
+<span class="s2">                exposures.branch,</span>
+<span class="s2">                DATE(MIN(exposures.submission_date)) AS exposure_date,</span>
+<span class="s2">                COUNT(exposures.submission_date) AS num_exposure_events</span>
+<span class="s2">            FROM raw_enrollments re</span>
+<span class="s2">            LEFT JOIN (</span>
+<span class="s2">                SELECT</span>
+<span class="s2">                    </span><span class="si">{</span><span class="n">client_id_field</span><span class="si">}</span><span class="s2"> AS analysis_id,</span>
+<span class="s2">                    JSON_VALUE(event_extra, &#39;$.branch&#39;) AS branch,</span>
+<span class="s2">                    DATE(submission_timestamp) AS submission_date</span>
+<span class="s2">                FROM</span>
+<span class="s2">                    `moz-fx-data-shared-prod.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">dataset</span><span class="si">}</span><span class="s2">.events_stream`</span>
+<span class="s2">                WHERE</span>
+<span class="s2">                    DATE(submission_timestamp)</span>
+<span class="s2">                    BETWEEN &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2">&#39; AND &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                    AND event_category = &#39;</span><span class="si">{</span><span class="n">event_category</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                    AND JSON_VALUE(event_extra, &quot;$.experiment&quot;) = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                    AND (event_name = &#39;expose&#39; OR event_name = &#39;exposure&#39;)</span>
+<span class="s2">            ) exposures</span>
+<span class="s2">            ON re.analysis_id = exposures.analysis_id AND</span>
+<span class="s2">                re.branch = exposures.branch AND</span>
+<span class="s2">                exposures.submission_date &gt;= re.enrollment_date</span>
+<span class="s2">            GROUP BY analysis_id, branch</span>
+<span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_metrics_query_bits</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
         <span class="n">analysis_basis</span><span class="o">=</span><span class="n">AnalysisBasis</span><span class="o">.</span><span class="n">ENROLLMENTS</span><span class="p">,</span>
         <span class="n">exposure_signal</span><span class="p">:</span> <span class="n">ExposureSignal</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_glean_ids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to metrics.&quot;&quot;&quot;</span>
         <span class="n">metrics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1178,6 +1274,7 @@
                 <span class="n">analysis_basis</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="p">,</span>
                 <span class="n">exposure_signal</span><span class="p">,</span>
+                <span class="n">use_glean_ids</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="n">metrics_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -1196,6 +1293,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Segment</span><span class="p">],</span>
         <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
+        <span class="n">use_glean_ids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a query adding segment columns to the enrollments view.</span>
 
@@ -1210,7 +1308,7 @@
         <span class="c1"># arrive with &quot;how segments work&quot; as their first question.</span>
 
         <span class="n">segments_columns</span><span class="p">,</span> <span class="n">segments_joins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_segments_query_bits</span><span class="p">(</span>
-            <span class="n">cast</span><span class="p">(</span><span class="s2">&quot;list[Segment | str]&quot;</span><span class="p">,</span> <span class="n">segment_list</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[],</span> <span class="n">time_limits</span>
+            <span class="n">cast</span><span class="p">(</span><span class="s2">&quot;list[Segment | str]&quot;</span><span class="p">,</span> <span class="n">segment_list</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[],</span> <span class="n">time_limits</span><span class="p">,</span> <span class="n">use_glean_ids</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
@@ -1228,6 +1326,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">segment_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Segment</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
+        <span class="n">use_glean_ids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to segments.&quot;&quot;&quot;</span>
 
@@ -1251,6 +1350,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="p">,</span>
+                <span class="n">use_glean_ids</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">segments_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;&quot;&quot;    LEFT JOIN (</span>

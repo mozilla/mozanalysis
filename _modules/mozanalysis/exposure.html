@@ -76,11 +76,15 @@
 <span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">attr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">metric_config_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalysisUnit</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">assert_never</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataSource</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ExposureSignal">
@@ -125,6 +129,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time_limits</span><span class="p">,</span>
         <span class="n">analysis_unit</span><span class="p">:</span> <span class="n">AnalysisUnit</span> <span class="o">=</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">CLIENT</span><span class="p">,</span>
+        <span class="n">use_glean_ids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a nearly self-contained query for determining exposures.</span>
 
@@ -133,11 +138,27 @@
 <span class="sd">        from this data source.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">analysis_unit</span> <span class="o">==</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">CLIENT</span><span class="p">:</span>
-            <span class="n">ds_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">client_id_column</span>
+            <span class="k">if</span> <span class="n">use_glean_ids</span><span class="p">:</span>
+                <span class="n">ds_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">glean_client_id_column</span>
+            <span class="k">elif</span> <span class="n">use_glean_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ds_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">legacy_client_id_column</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ds_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">client_id_column</span>
         <span class="k">elif</span> <span class="n">analysis_unit</span> <span class="o">==</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">PROFILE_GROUP</span><span class="p">:</span>
             <span class="n">ds_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">group_id_column</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">assert_never</span><span class="p">(</span><span class="n">analysis_unit</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_glean_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ds_id</span><span class="p">:</span>
+            <span class="n">chosen_id</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;glean_client_id_column&quot;</span> <span class="k">if</span> <span class="n">use_glean_ids</span> <span class="k">else</span> <span class="s2">&quot;legacy_client_id_column&quot;</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;use_glean_ids set to </span><span class="si">{</span><span class="n">use_glean_ids</span><span class="si">}</span><span class="s2"> but </span><span class="si">{</span><span class="n">chosen_id</span><span class="si">}</span><span class="s2"> not set.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Falling back to client_id_column </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">client_id_column</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">ds_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">client_id_column</span>
+
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;SELECT</span>
 <span class="s2">            e.analysis_id,</span>
 <span class="s2">            e.branch,</span>
