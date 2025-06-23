@@ -248,7 +248,7 @@ numpy==1.26.4
     #   pyarrow
     #   scipy
     #   statsmodels
-packaging==24.2
+packaging==25.0
     # via
     #   -c requirements.txt
     #   build
