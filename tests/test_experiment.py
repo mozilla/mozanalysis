@@ -319,9 +319,17 @@ def test_query_not_detectably_malformed(analysis_unit: AnalysisUnit):
 
 
 @pytest.mark.parametrize(
-    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+    ("analysis_unit", "discrete_metrics"),
+    [
+        (AnalysisUnit.CLIENT, True),
+        (AnalysisUnit.CLIENT, False),
+        (AnalysisUnit.PROFILE_GROUP, True),
+        (AnalysisUnit.PROFILE_GROUP, False),
+    ],
 )
-def test_megaquery_not_detectably_malformed(analysis_unit: AnalysisUnit):
+def test_megaquery_not_detectably_malformed(
+    analysis_unit: AnalysisUnit, discrete_metrics
+):
     exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
 
     tl = TimeLimits.for_ts(
@@ -343,12 +351,17 @@ def test_megaquery_not_detectably_malformed(analysis_unit: AnalysisUnit):
         metric_list=desktop_metrics,
         time_limits=tl,
         enrollments_table="enrollments",
+        discrete_metrics=discrete_metrics,
     )
 
     sql_lint(metrics_sql)
 
     assert metrics_sql.count(analysis_unit.value) == 5
     assert metrics_sql.count("analysis_id") == 21
+    if discrete_metrics:
+        assert "_has_contradictory_branch" not in metrics_sql
+    else:
+        assert "_has_contradictory_branch" in metrics_sql
 
 
 @pytest.mark.parametrize(
@@ -1229,7 +1242,7 @@ def test_metrics_query_discrete_metrics():
     sql_lint(metrics_sql)
 
     expected = """
-    WITH analysis_windows AS (
+WITH analysis_windows AS (
     (SELECT 0 AS analysis_window_start, 6 AS analysis_window_end)
 UNION ALL
 (SELECT 7 AS analysis_window_start, 13 AS analysis_window_end)
@@ -1298,36 +1311,9 @@ GROUP BY
     ) ds_0 USING (analysis_id, branch, analysis_window_start, analysis_window_end)
 
 )
-
-        SELECT
-            * EXCEPT (active_hours),
-            'active_hours' AS metric_slug,
-            SAFE_CAST(active_hours AS STRING) AS metric_value
-        FROM metrics"""
+SELECT * FROM metrics"""
 
     assert expected == dedent(metrics_sql.rstrip())
-
-
-def test_build_metrics_query_discrete_metrics_invalid():
-    exp = Experiment("slug", "2019-01-01", 8)
-
-    tl = TimeLimits.for_ts(
-        first_enrollment_date="2019-01-01",
-        last_date_full_data="2019-03-01",
-        time_series_period="weekly",
-        num_dates_enrollment=8,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="Cannot compute discrete metrics for multiple datasources at once",
-    ):
-        exp.build_metrics_query(
-            metric_list=desktop_metrics,
-            time_limits=tl,
-            enrollments_table="enrollments",
-            discrete_metrics=True,
-        )
 
 
 def test_glean_group_id_incompatible():
