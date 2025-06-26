@@ -466,6 +466,7 @@ class Experiment:
         segment_list=None,
         sample_size: int = 100,
         suppress_custom_query_validation: bool = False,
+        use_glean_ids: bool = False,
     ) -> str:
         """Return a SQL query for querying enrollment and exposure data.
 
@@ -502,6 +503,9 @@ class Experiment:
 
             sample_size (int): Optional integer percentage of clients, used for
                 downsampling enrollments. Default 100.
+
+            use_glean_ids (bool): Enforce Glean IDs instead of legacy IDs. For
+                desktop, does nothing for other apps. Default False.
 
         Returns:
             A string containing a BigQuery SQL expression.
@@ -570,21 +574,26 @@ class Experiment:
             time_limits,
             enrollments_query_type,
             sample_size,
+            use_glean_ids,
         )
 
         if exposure_signal:
             exposure_query = custom_exposure_query or exposure_signal.build_query(
-                time_limits, self.analysis_unit
+                time_limits,
+                self.analysis_unit,
+                use_glean_ids,
             )
         else:
             exposure_query = custom_exposure_query or self._build_exposure_query(
                 time_limits,
                 enrollments_query_type,
+                use_glean_ids,
             )
 
         segments_query = self._build_segments_query(
             segment_list,
             time_limits,
+            use_glean_ids,
         )
 
         return f"""
@@ -608,6 +617,7 @@ class Experiment:
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal: ExposureSignal | None = None,
         discrete_metrics: bool = False,
+        use_glean_ids: bool = False,
     ) -> str:
         """Return a SQL query for querying metric data.
 
@@ -634,6 +644,8 @@ class Experiment:
                 for certain analysis bases (such as exposures).
             discrete_metrics (bool): Whether to compute metrics independently.
                 Defaults to False.
+            use_glean_ids (bool): Enforce Glean IDs instead of legacy IDs. For
+                desktop, does nothing for other apps. Default False.
 
         Returns:
             A string containing a BigQuery SQL expression.
@@ -645,13 +657,22 @@ class Experiment:
         )
 
         metrics_columns, metrics_joins = self._build_metrics_query_bits(
-            metric_list, time_limits, analysis_basis, exposure_signal, discrete_metrics
+            metric_list,
+            time_limits,
+            analysis_basis,
+            exposure_signal,
+            discrete_metrics,
+            use_glean_ids,
         )
 
         if exposure_signal and analysis_basis != AnalysisBasis.ENROLLMENTS:
             exposure_query = f"""
             SELECT * FROM (
-                {exposure_signal.build_query(time_limits, self.analysis_unit)}
+                {
+                exposure_signal.build_query(
+                    time_limits, self.analysis_unit, use_glean_ids
+                )
+            }
             )
             WHERE num_exposure_events > 0
             """
@@ -719,13 +740,19 @@ class Experiment:
         time_limits: TimeLimits,
         enrollments_query_type: EnrollmentsQueryType,
         sample_size: int = 100,
+        use_glean_ids: bool = False,
     ) -> str:
         """Return SQL to query a list of enrollments and their branches"""
         if enrollments_query_type == EnrollmentsQueryType.NORMANDY:
-            return self._build_enrollments_query_normandy(
-                time_limits,
-                sample_size,
-            )
+            if use_glean_ids:
+                return self._build_enrollments_query_glean_events_stream(
+                    time_limits, self.app_id, sample_size
+                )
+            else:
+                return self._build_enrollments_query_normandy(
+                    time_limits,
+                    sample_size,
+                )
         elif enrollments_query_type == EnrollmentsQueryType.GLEAN_EVENT:
             if not self.app_id:
                 raise ValueError(
@@ -763,10 +790,16 @@ class Experiment:
         self,
         time_limits: TimeLimits,
         exposure_query_type: EnrollmentsQueryType,
+        use_glean_ids: bool = False,
     ) -> str:
         """Return SQL to query a list of exposures and their branches"""
         if exposure_query_type == EnrollmentsQueryType.NORMANDY:
-            return self._build_exposure_query_normandy(time_limits)
+            if use_glean_ids:
+                return self._build_exposure_query_glean_events_stream(
+                    time_limits,
+                )
+            else:
+                return self._build_exposure_query_normandy(time_limits)
         elif exposure_query_type == EnrollmentsQueryType.GLEAN_EVENT:
             if not self.app_id:
                 raise ValueError(
@@ -797,7 +830,7 @@ class Experiment:
             return self._build_exposure_query_glean_event(
                 time_limits,
                 self.app_id,
-                client_id_field='mozfun.map.get_key(event.extra, "user_id")',
+                client_id_field='mozfun.map.get_key(event.extra, "nimbus_user_id")',
                 event_category="cirrus_events",
             )
         else:
@@ -903,10 +936,40 @@ class Experiment:
             """  # noqa:E501
 
     def _build_enrollments_query_glean_events_stream(
-        self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
+        self,
+        time_limits: TimeLimits,
+        dataset: str,
+        sample_size: int = 100,
+        analysis_id: str = "client_id",
     ) -> str:
         """Return SQL to query enrollments for a Glean experiment from the
         events_stream table for the application or dataset.
+        """
+
+        return f"""
+            SELECT
+                {analysis_id} AS analysis_id,
+                JSON_VALUE(event_extra, '$.branch') AS branch,
+                DATE(MIN(submission_timestamp)) AS enrollment_date,
+                COUNT(submission_timestamp) AS num_enrollment_events
+            FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.events_stream`
+            WHERE
+                client_id IS NOT NULL
+                AND DATE(submission_timestamp)
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                AND event_category = "nimbus_events"
+                AND JSON_VALUE(event_extra, "$.experiment") = "{self.experiment_slug}"
+                AND event_name = "enrollment"
+                AND sample_id < {sample_size}
+            GROUP BY client_id, branch
+            """  # noqa:E501
+
+    def _build_enrollments_query_glean_events_stream_enrollment_status(
+        self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
+    ) -> str:
+        """Return SQL to query enrollments for a Glean experiment from the
+        events_stream table for the application or dataset. Determines
+        enrollments from the enrollment_status event.
         """
 
         return f"""
@@ -921,8 +984,10 @@ class Experiment:
                 AND DATE(submission_timestamp)
                     BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                 AND event_category = "nimbus_events"
-                AND JSON_VALUE(event_extra, "$.experiment") = "{self.experiment_slug}"
-                AND event_name = "enrollment"
+                AND JSON_VALUE(event_extra, "$.slug") = "{self.experiment_slug}"
+                AND event_name = "enrollment_status"
+                AND JSON_VALUE(event_extra, "$.status") = "Enrolled"
+                AND JSON_VALUE(event_extra, "$.reason") = "Qualified"
                 AND sample_id < {sample_size}
             GROUP BY client_id, branch
             """  # noqa:E501
@@ -942,7 +1007,7 @@ class Experiment:
 
         return f"""
             SELECT
-                mozfun.map.get_key(e.extra, "user_id") AS analysis_id,
+                mozfun.map.get_key(e.extra, "nimbus_user_id") AS analysis_id,
                 mozfun.map.get_key(
                     e.extra,
                     'branch'
@@ -952,14 +1017,14 @@ class Experiment:
             FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.enrollment` events,
             UNNEST(events.events) AS e
             WHERE
-                mozfun.map.get_key(e.extra, "user_id") IS NOT NULL AND
+                mozfun.map.get_key(e.extra, "nimbus_user_id") IS NOT NULL AND
                 DATE(events.submission_timestamp)
                 BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                 AND e.category = "cirrus_events"
                 AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND client_info.app_channel = 'production'
-            GROUP BY mozfun.map.get_key(e.extra, "user_id"), branch
+            GROUP BY mozfun.map.get_key(e.extra, "nimbus_user_id"), branch
             """  # noqa:E501
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
@@ -1029,6 +1094,41 @@ class Experiment:
             GROUP BY analysis_id, branch
             """  # noqa: E501
 
+    def _build_exposure_query_glean_events_stream(
+        self,
+        time_limits: TimeLimits,
+        dataset: str,
+        client_id_field: str = "client_id",
+        event_category: str = "nimbus_events",
+    ) -> str:
+        """Return SQL to query exposures for a Glean no-event experiment"""
+        return f"""
+            SELECT
+                exposures.analysis_id AS analysis_id,
+                exposures.branch,
+                DATE(MIN(exposures.submission_date)) AS exposure_date,
+                COUNT(exposures.submission_date) AS num_exposure_events
+            FROM raw_enrollments re
+            LEFT JOIN (
+                SELECT
+                    {client_id_field} AS analysis_id,
+                    JSON_VALUE(event_extra, '$.branch') AS branch,
+                    DATE(submission_timestamp) AS submission_date
+                FROM
+                    `moz-fx-data-shared-prod.{self.app_id or dataset}.events_stream`
+                WHERE
+                    DATE(submission_timestamp)
+                    BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
+                    AND event_category = '{event_category}'
+                    AND JSON_VALUE(event_extra, "$.experiment") = '{self.experiment_slug}'
+                    AND (event_name = 'expose' OR event_name = 'exposure')
+            ) exposures
+            ON re.analysis_id = exposures.analysis_id AND
+                re.branch = exposures.branch AND
+                exposures.submission_date >= re.enrollment_date
+            GROUP BY analysis_id, branch
+            """  # noqa: E501
+
     def _build_metrics_query_bits(
         self,
         metric_list: list[Metric | str],
@@ -1036,6 +1136,7 @@ class Experiment:
         analysis_basis=AnalysisBasis.ENROLLMENTS,
         exposure_signal: ExposureSignal | None = None,
         discrete_metrics: bool | None = False,
+        use_glean_ids: bool | None = None,
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to metrics."""
         metrics: list[Metric] = []
@@ -1065,6 +1166,7 @@ class Experiment:
                 analysis_basis,
                 self.analysis_unit,
                 exposure_signal,
+                use_glean_ids,
             )
 
             metrics_joins.append(
@@ -1083,6 +1185,7 @@ class Experiment:
         self,
         segment_list: list[Segment],
         time_limits: TimeLimits,
+        use_glean_ids: bool = False,
     ) -> str:
         """Build a query adding segment columns to the enrollments view.
 
@@ -1097,7 +1200,7 @@ class Experiment:
         # arrive with "how segments work" as their first question.
 
         segments_columns, segments_joins = self._build_segments_query_bits(
-            cast("list[Segment | str]", segment_list) or [], time_limits
+            cast("list[Segment | str]", segment_list) or [], time_limits, use_glean_ids
         )
 
         return """
@@ -1115,6 +1218,7 @@ class Experiment:
         self,
         segment_list: list[Segment | str],
         time_limits: TimeLimits,
+        use_glean_ids: bool = False,
     ) -> tuple[list[str], list[str]]:
         """Return lists of SQL fragments corresponding to segments."""
 
@@ -1138,6 +1242,7 @@ class Experiment:
                 self.experiment_slug,
                 self.app_id,
                 self.analysis_unit,
+                use_glean_ids,
             )
             segments_joins.append(
                 f"""    LEFT JOIN (

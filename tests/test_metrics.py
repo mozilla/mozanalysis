@@ -7,7 +7,9 @@ from mozanalysis.experiment import TimeLimits
 from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 
 
-@pytest.mark.parametrize("experiments_column_type", [None, "simple", "native", "glean"])
+@pytest.mark.parametrize(
+    "experiments_column_type", [None, "simple", "native", "glean", "events_stream"]
+)
 def test_datasource_constructor_succeeds(experiments_column_type):
     DataSource(
         name="foo",
@@ -60,6 +62,70 @@ def test_datasource_build_query_analysis_units(analysis_unit):
             e.analysis_window_end"""
 
     query = ds.build_query([], tl, "", None, AnalysisBasis.ENROLLMENTS, analysis_unit)
+
+    assert query == expected_query
+
+
+@pytest.mark.parametrize(
+    ("use_glean_ids", "expected_id"),
+    [
+        (True, "glean_client_id"),
+        (False, "legacy_telemetry_client_id"),
+        (None, "client_id"),
+    ],
+)
+def test_datasource_build_query_glean_ids(use_glean_ids, expected_id):
+    ds = DataSource(
+        name="foo",
+        from_expr="my_table.name",
+        experiments_column_type=None,
+        client_id_column="client_id",
+        glean_client_id_column="glean_client_id",
+        legacy_client_id_column="legacy_telemetry_client_id",
+    )
+    tl = TimeLimits.for_single_analysis_window(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-01-14",
+        analysis_start_days=0,
+        analysis_length_dates=14,
+    )
+    empty_str = ""
+    fddr = tl.first_date_data_required
+    lddr = tl.last_date_data_required
+
+    expected_query = f"""SELECT
+            e.analysis_id,
+            e.branch,
+            e.analysis_window_start,
+            e.analysis_window_end,
+            e.num_exposure_events,
+            e.exposure_date,
+            {empty_str}
+        FROM enrollments e
+            LEFT JOIN my_table.name ds
+                ON ds.{expected_id} = e.analysis_id
+                AND ds.submission_date BETWEEN '{fddr}' AND '{lddr}'
+                AND ds.submission_date BETWEEN
+                    DATE_ADD(e.enrollment_date, interval e.analysis_window_start day)
+                    AND DATE_ADD(e.enrollment_date, interval e.analysis_window_end day)
+                {empty_str}
+        GROUP BY
+            e.analysis_id,
+            e.branch,
+            e.num_exposure_events,
+            e.exposure_date,
+            e.analysis_window_start,
+            e.analysis_window_end"""
+
+    query = ds.build_query(
+        [],
+        tl,
+        "",
+        None,
+        AnalysisBasis.ENROLLMENTS,
+        AnalysisUnit.CLIENT,
+        use_glean_ids=use_glean_ids,
+    )
 
     assert query == expected_query
 
