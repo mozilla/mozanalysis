@@ -14,29 +14,33 @@ def test_resample_and_agg_once():
     ) == pytest.approx(3.0)
 
 
-def test_resample_and_agg_once_multistat(stack_depth):
-    data_values = np.array([0, 1])
-    data_counts = np.array([10000, 10000])
-    res = mabsbb._resample_and_agg_once(
-        data_values,
-        data_counts,
-        lambda x, y: {
-            "min": np.min(x),
-            "max": np.max(x),
-            "mean": np.dot(x, y),
-        },
-    )
+def test_resample_and_agg_once_multistat():
+    def _test_run():
+        data_values = np.array([0, 1])
+        data_counts = np.array([10000, 10000])
+        res = mabsbb._resample_and_agg_once(
+            data_values,
+            data_counts,
+            lambda x, y: {
+                "min": np.min(x),
+                "max": np.max(x),
+                "mean": np.dot(x, y),
+            },
+        )
+        return res
 
-    assert res["min"] == 0
-    assert res["max"] == 1
-    assert res["mean"] == pytest.approx(0.5, rel=1e-1)
+    for stack_depth in range(4):
+        res = _test_run()
+        assert res["min"] == 0
+        assert res["max"] == 1
+        assert res["mean"] == pytest.approx(0.5, rel=1e-1)
 
-    if stack_depth >= 3:
-        assert res["mean"] != 0.5  # Extremely unlikely
-    elif res["mean"] == 0.5:
-        # This is a 0.5% event - implausible but not impossible.
-        # Re-roll the dice a few times to make sure this was a fluke.
-        test_resample_and_agg_once_multistat(stack_depth + 1)
+        if stack_depth >= 3:
+            assert res["mean"] != 0.5  # Extremely unlikely
+        elif res["mean"] == 0.5:
+            # This is a 0.5% event - implausible but not impossible.
+            # Re-roll the dice a few times to make sure this was a fluke.
+            continue
 
 
 def test_get_bootstrap_samples():
@@ -46,33 +50,37 @@ def test_get_bootstrap_samples():
     assert res[1] == pytest.approx(3.0)
 
 
-def test_get_bootstrap_samples_multistat(stack_depth):
-    data = np.concatenate([np.zeros(10000), np.ones(10000)])
-    res = mabsbb.get_bootstrap_samples(
-        data,
-        lambda x, y: {
-            "min": np.min(x),
-            "max": np.max(x),
-            "mean": np.dot(x, y),
-        },
-        num_samples=2,
-    )
+def test_get_bootstrap_samples_multistat():
+    def _test_run():
+        data = np.concatenate([np.zeros(10000), np.ones(10000)])
+        res = mabsbb.get_bootstrap_samples(
+            data,
+            lambda x, y: {
+                "min": np.min(x),
+                "max": np.max(x),
+                "mean": np.dot(x, y),
+            },
+            num_samples=2,
+        )
+        return data, res
 
-    assert res.shape == (2, 3)
+    for stack_depth in range(4):
+        data, res = _test_run()
+        assert res.shape == (2, 3)
 
-    assert (res["min"] == 0).all()
-    assert (res["max"] == 1).all()
-    assert res["mean"].iloc[0] == pytest.approx(np.mean(data), rel=1e-1)
-    assert res["mean"].iloc[1] == pytest.approx(np.mean(data), rel=1e-1)
+        assert (res["min"] == 0).all()
+        assert (res["max"] == 1).all()
+        assert res["mean"].iloc[0] == pytest.approx(np.mean(data), rel=1e-1)
+        assert res["mean"].iloc[1] == pytest.approx(np.mean(data), rel=1e-1)
 
-    # If we stuff up (duplicate) the seeds then things aren't random
-    assert res["mean"].iloc[0] != res["mean"].iloc[1]
+        # If we stuff up (duplicate) the seeds then things aren't random
+        assert res["mean"].iloc[0] != res["mean"].iloc[1]
 
-    if stack_depth >= 3:
-        assert (res["mean"] != np.mean(data)).any()  # Extremely unlikely
-    elif (res["mean"] == np.mean(data)).any():
-        # Re-roll the dice a few times to make sure this was a fluke.
-        test_get_bootstrap_samples_multistat(stack_depth + 1)
+        if stack_depth >= 3:
+            assert (res["mean"] != np.mean(data)).any()  # Extremely unlikely
+        elif (res["mean"] == np.mean(data)).any():
+            # Re-roll the dice a few times to make sure this was a fluke.
+            continue
 
 
 def test_bootstrap_one_branch():

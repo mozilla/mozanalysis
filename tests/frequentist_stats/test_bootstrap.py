@@ -12,27 +12,31 @@ def test_resample_and_agg_once():
     assert mafsb._resample_and_agg_once(np.array([3.0, 3.0, 3.0]), np.mean) == 3.0
 
 
-def test_resample_and_agg_once_multistat(stack_depth):
-    data = np.concatenate([np.zeros(10000), np.ones(10000)])
-    res = mafsb._resample_and_agg_once(
-        data,
-        lambda x: {
-            "min": np.min(x),
-            "max": np.max(x),
-            "mean": np.mean(x),
-        },
-    )
+def test_resample_and_agg_once_multistat():
+    def _test_run():
+        data = np.concatenate([np.zeros(10000), np.ones(10000)])
+        res = mafsb._resample_and_agg_once(
+            data,
+            lambda x: {
+                "min": np.min(x),
+                "max": np.max(x),
+                "mean": np.mean(x),
+            },
+        )
+        return data, res
 
-    assert res["min"] == 0
-    assert res["max"] == 1
-    assert res["mean"] == pytest.approx(np.mean(data), rel=1e-1)
+    for stack_depth in range(4):
+        data, res = _test_run()
+        assert res["min"] == 0
+        assert res["max"] == 1
+        assert res["mean"] == pytest.approx(np.mean(data), rel=1e-1)
 
-    if stack_depth >= 3:
-        assert res["mean"] != np.mean(data)  # Extremely unlikely
-    elif res["mean"] == np.mean(data):
-        # This is a 0.5% event - implausible but not impossible.
-        # Re-roll the dice a few times to make sure this was a fluke.
-        test_resample_and_agg_once_multistat(stack_depth + 1)
+        if stack_depth >= 3:
+            assert res["mean"] != np.mean(data)  # Extremely unlikely
+        elif res["mean"] == np.mean(data):
+            # This is a 0.5% event - implausible but not impossible.
+            # Re-roll the dice a few times to make sure this was a fluke.
+            continue
 
 
 def test_get_bootstrap_samples():
@@ -43,33 +47,37 @@ def test_get_bootstrap_samples():
     assert res[1] == 3.0
 
 
-def test_get_bootstrap_samples_multistat(stack_depth):
-    data = np.concatenate([np.zeros(10000), np.ones(10000)])
-    res = mafsb.get_bootstrap_samples(
-        data,
-        lambda x: {
-            "min": np.min(x),
-            "max": np.max(x),
-            "mean": np.mean(x),
-        },
-        num_samples=2,
-    )
+def test_get_bootstrap_samples_multistat():
+    def _test_run():
+        data = np.concatenate([np.zeros(10000), np.ones(10000)])
+        res = mafsb.get_bootstrap_samples(
+            data,
+            lambda x: {
+                "min": np.min(x),
+                "max": np.max(x),
+                "mean": np.mean(x),
+            },
+            num_samples=2,
+        )
+        return data, res
 
-    assert res.shape == (2, 3)
+    for stack_depth in range(4):
+        data, res = _test_run()
+        assert res.shape == (2, 3)
 
-    assert (res["min"] == 0).all()
-    assert (res["max"] == 1).all()
-    assert res["mean"].iloc[0] == pytest.approx(np.mean(data), rel=1e-1)
-    assert res["mean"].iloc[1] == pytest.approx(np.mean(data), rel=1e-1)
+        assert (res["min"] == 0).all()
+        assert (res["max"] == 1).all()
+        assert res["mean"].iloc[0] == pytest.approx(np.mean(data), rel=1e-1)
+        assert res["mean"].iloc[1] == pytest.approx(np.mean(data), rel=1e-1)
 
-    # If we stuff up (duplicate) the seeds then things aren't random
-    assert res["mean"].iloc[0] != res["mean"].iloc[1]
+        # If we stuff up (duplicate) the seeds then things aren't random
+        assert res["mean"].iloc[0] != res["mean"].iloc[1]
 
-    if stack_depth >= 3:
-        assert (res["mean"] != np.mean(data)).any()  # Extremely unlikely
-    elif (res["mean"] == np.mean(data)).any():
-        # Re-roll the dice a few times to make sure this was a fluke.
-        test_get_bootstrap_samples_multistat(stack_depth + 1)
+        if stack_depth >= 3:
+            assert (res["mean"] != np.mean(data)).any()  # Extremely unlikely
+        elif (res["mean"] == np.mean(data)).any():
+            # Re-roll the dice a few times to make sure this was a fluke.
+            continue
 
 
 def test_bootstrap_one_branch():
