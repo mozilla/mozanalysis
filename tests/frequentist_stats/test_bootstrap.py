@@ -12,7 +12,7 @@ def test_resample_and_agg_once():
     assert mafsb._resample_and_agg_once(np.array([3.0, 3.0, 3.0]), np.mean) == 3.0
 
 
-def test_resample_and_agg_once_multistat(stack_depth=0):
+def test_resample_and_agg_once_multistat(stack_depth):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
     res = mafsb._resample_and_agg_once(
         data,
@@ -43,7 +43,7 @@ def test_get_bootstrap_samples():
     assert res[1] == 3.0
 
 
-def test_get_bootstrap_samples_multistat(stack_depth=0):
+def test_get_bootstrap_samples_multistat(stack_depth):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
     res = mafsb.get_bootstrap_samples(
         data,

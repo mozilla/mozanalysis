@@ -14,7 +14,7 @@ def test_resample_and_agg_once():
     ) == pytest.approx(3.0)
 
 
-def test_resample_and_agg_once_multistat(stack_depth=0):
+def test_resample_and_agg_once_multistat(stack_depth):
     data_values = np.array([0, 1])
     data_counts = np.array([10000, 10000])
     res = mabsbb._resample_and_agg_once(
@@ -46,7 +46,7 @@ def test_get_bootstrap_samples():
     assert res[1] == pytest.approx(3.0)
 
 
-def test_get_bootstrap_samples_multistat(stack_depth=0):
+def test_get_bootstrap_samples_multistat(stack_depth):
     data = np.concatenate([np.zeros(10000), np.ones(10000)])
     res = mabsbb.get_bootstrap_samples(
         data,
