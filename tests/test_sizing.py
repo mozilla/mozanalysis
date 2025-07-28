@@ -52,7 +52,7 @@ def test_mixed_metric():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.warns(UserWarning) as warns:
+    with pytest.warns(UserWarning) as warns:  # noqa: PT030
         _ = ht.get_single_window_data(
             bq_context,
             metric_list=[active_hours, baseline_ping_count],
@@ -93,7 +93,7 @@ def test_target_metric_mismatch():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.warns(UserWarning) as warns:
+    with pytest.warns(UserWarning) as warns:  # noqa: PT030
         _ = ht.get_single_window_data(
             bq_context,
             metric_list=[baseline_ping_count],
@@ -142,7 +142,7 @@ def test_target_metric_mismatch_with_custom():
         "allweek_regular_v1", "firefox_desktop"
     )
 
-    with pytest.warns(UserWarning) as warns:
+    with pytest.warns(UserWarning) as warns:  # noqa: PT030
         _ = ht.get_single_window_data(
             bq_context,
             metric_list=[baseline_ping_count, qcdou],
