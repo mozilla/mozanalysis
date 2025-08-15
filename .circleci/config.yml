@@ -43,18 +43,18 @@ jobs:
     steps:
       - checkout
       - run:
-        name: Install dependencies
-        command: |
-          pip install -r requirements-dev.txt
+          name: Install dependencies
+          command: |
+            pip install -r requirements-dev.txt
       - run:
-        name: Run linting
-        command: |
-          ruff check src/ tests/
-          ruff format --check src/ tests/
+          name: Run linting
+          command: |
+            ruff check src/ tests/
+            ruff format --check src/ tests/
       - run:
-        name: MyPy
-        command: |
-          mypy src/
+          name: MyPy
+          command: |
+            mypy src/
 
   # Runs when the repository is tagged for release; see the workflows section
   # below for trigger logic.
