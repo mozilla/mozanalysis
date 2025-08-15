@@ -33,10 +33,13 @@ Documentation = "https://mozilla.github.io/mozanalysis/"
 docs = ["Sphinx", "sphinx-autobuild", "sphinx-rtd-theme"]
 testing = [
     "mock",
+    "mypy",
+    "pandas-stubs",
     "pytest",
     "pytest-cov",
     "pytest-ruff",
     "pytest-timeout",
+    "scipy-stubs",
     "ruff",
 ]
 dev = ["build", "mozanalysis[testing]", "pip-tools", "tox", "twine"]
@@ -68,3 +71,20 @@ select = [
 
 [tool.pytest.ini_options]
 norecursedirs = "tests/helpers"
+
+[[tool.mypy.overrides]]
+module = [
+    "formulaic.*",
+    "marginaleffects.*",
+    "metric_config_parser.*",
+    "statsmodels.*",
+    "mozanalysis.*"
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "mozanalysis.sizing.*",
+    "mozanalysis.frequentist_stats.sample_size.*",
+]
+ignore_errors = true

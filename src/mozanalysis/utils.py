@@ -90,7 +90,7 @@ def get_time_intervals(
     start_date: str | datetime.datetime,
     interval: int,
     max_num_dates_enrollment: int,
-) -> list[datetime.datetime]:
+) -> list[datetime.date]:
     """Use a start date and create end dates for enrollment intervals.
     Used to generate intervals of enrollment to calculate metrics over
     variable enrollment lengths.
