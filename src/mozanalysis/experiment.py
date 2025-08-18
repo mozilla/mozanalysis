@@ -1097,7 +1097,7 @@ class Experiment:
     def _build_exposure_query_glean_events_stream(
         self,
         time_limits: TimeLimits,
-        dataset: str,
+        dataset: str = "",
         client_id_field: str = "client_id",
         event_category: str = "nimbus_events",
     ) -> str:

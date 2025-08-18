@@ -13,6 +13,9 @@ from statsmodels.regression.linear_model import (
 
 
 class MozOLS(OLS):
+    rank: list
+    _df_model: float
+
     @classmethod
     def from_formula(
         cls, formula: str, data: pd.DataFrame, *args, **kwargs
