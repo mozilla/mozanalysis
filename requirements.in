@@ -94,7 +94,7 @@ jsonschema-specifications==2025.4.1
     # via jsonschema
 kiwisolver==1.4.9
     # via matplotlib
-marginaleffects==0.0.12
+marginaleffects==0.1.2
     # via mozanalysis
 markupsafe==3.0.2
     # via jinja2
