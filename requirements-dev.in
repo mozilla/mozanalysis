@@ -56,7 +56,7 @@ contourpy==1.3.2
     # via
     #   -c requirements.txt
     #   matplotlib
-coverage[toml]==7.10.3
+coverage[toml]==7.10.4
     # via
     #   -c requirements.txt
     #   pytest-cov
@@ -114,7 +114,7 @@ google-auth==2.40.3
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-cloud-bigquery==3.35.1
+google-cloud-bigquery==3.36.0
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -168,7 +168,7 @@ jaraco-classes==3.4.0
     # via keyring
 jaraco-context==6.0.1
     # via keyring
-jaraco-functools==4.2.1
+jaraco-functools==4.3.0
     # via keyring
 jeepney==0.9.0
     # via
@@ -179,7 +179,7 @@ jinja2==3.1.6
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-jsonschema==4.25.0
+jsonschema==4.25.1
     # via
     #   -c requirements.txt
     #   mozilla-nimbus-schemas
@@ -276,7 +276,7 @@ packaging==25.0
     #   statsmodels
     #   tox
     #   twine
-pandas==2.3.1
+pandas==2.3.2
     # via
     #   -c requirements.txt
     #   formulaic
@@ -417,7 +417,7 @@ referencing==0.36.2
     #   -c requirements.txt
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.4
+requests==2.32.5
     # via
     #   -c requirements.txt
     #   google-api-core
@@ -441,7 +441,7 @@ rsa==4.9.1
     # via
     #   -c requirements.txt
     #   google-auth
-ruff==0.12.9
+ruff==0.12.10
     # via
     #   -c requirements.txt
     #   mozanalysis
