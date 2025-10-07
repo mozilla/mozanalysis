@@ -8,7 +8,7 @@ annotated-types==0.7.0
     # via
     #   -c requirements.txt
     #   pydantic
-attrs==25.3.0
+attrs==25.4.0
     # via
     #   -c requirements.txt
     #   cattrs
@@ -22,20 +22,20 @@ build==1.3.0
     # via
     #   mozanalysis
     #   pip-tools
-cachetools==5.5.2
+cachetools==6.2.0
     # via
     #   -c requirements.txt
     #   google-auth
     #   tox
-cattrs==25.2.0
+cattrs==25.3.0
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-certifi==2025.8.3
+certifi==2025.10.5
     # via
     #   -c requirements.txt
     #   requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   -c requirements.txt
     #   cryptography
@@ -45,7 +45,7 @@ charset-normalizer==3.4.3
     # via
     #   -c requirements.txt
     #   requests
-click==8.2.1
+click==8.3.0
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
@@ -56,11 +56,11 @@ contourpy==1.3.2
     # via
     #   -c requirements.txt
     #   matplotlib
-coverage[toml]==7.10.6
+coverage[toml]==7.10.7
     # via
     #   -c requirements.txt
     #   pytest-cov
-cryptography==45.0.7
+cryptography==46.0.2
     # via
     #   -c requirements.txt
     #   secretstorage
@@ -70,14 +70,14 @@ cycler==0.12.1
     #   matplotlib
 distlib==0.4.0
     # via virtualenv
-docutils==0.22
+docutils==0.22.2
     # via readme-renderer
 exceptiongroup==1.3.0
     # via
     #   -c requirements.txt
     #   cattrs
     #   pytest
-faker==37.6.0
+faker==37.11.0
     # via
     #   -c requirements.txt
     #   polyfactory
@@ -85,11 +85,11 @@ filelock==3.19.1
     # via
     #   tox
     #   virtualenv
-fonttools==4.59.2
+fonttools==4.60.1
     # via
     #   -c requirements.txt
     #   matplotlib
-formulaic==1.2.0
+formulaic==1.2.1
     # via
     #   -c requirements.txt
     #   marginaleffects
@@ -102,24 +102,24 @@ gitpython==3.1.45
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-google-api-core[grpc]==2.25.1
+google-api-core[grpc]==2.25.2
     # via
     #   -c requirements.txt
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-auth==2.40.3
+google-auth==2.41.1
     # via
     #   -c requirements.txt
     #   google-api-core
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-cloud-bigquery==3.36.0
+google-cloud-bigquery==3.38.0
     # via
     #   -c requirements.txt
     #   mozanalysis
-google-cloud-bigquery-storage==2.32.0
+google-cloud-bigquery-storage==2.33.1
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -140,12 +140,12 @@ googleapis-common-protos==1.70.0
     #   -c requirements.txt
     #   google-api-core
     #   grpcio-status
-grpcio==1.74.0
+grpcio==1.75.1
     # via
     #   -c requirements.txt
     #   google-api-core
     #   grpcio-status
-grpcio-status==1.74.0
+grpcio-status==1.75.1
     # via
     #   -c requirements.txt
     #   google-api-core
@@ -174,6 +174,7 @@ jaraco-functools==4.3.0
 jeepney==0.9.0
     # via
     #   -c requirements.txt
+    #   keyring
     #   secretstorage
 jinja2==3.1.6
     # via
@@ -183,7 +184,7 @@ jsonschema==4.25.1
     # via
     #   -c requirements.txt
     #   mozilla-nimbus-schemas
-jsonschema-specifications==2025.4.1
+jsonschema-specifications==2025.9.1
     # via
     #   -c requirements.txt
     #   jsonschema
@@ -199,7 +200,7 @@ marginaleffects==0.1.4
     #   mozanalysis
 markdown-it-py==4.0.0
     # via rich
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via
     #   -c requirements.txt
     #   jinja2
@@ -231,7 +232,7 @@ mozilla-nimbus-schemas==3001.0.0
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-mypy==1.17.1
+mypy==1.18.2
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -239,12 +240,12 @@ mypy-extensions==1.1.0
     # via
     #   -c requirements.txt
     #   mypy
-narwhals==2.3.0
+narwhals==2.7.0
     # via
     #   -c requirements.txt
     #   formulaic
     #   marginaleffects
-nh3==0.3.0
+nh3==0.3.1
     # via readme-renderer
 numpy==2.2.6
     # via
@@ -276,7 +277,7 @@ packaging==25.0
     #   statsmodels
     #   tox
     #   twine
-pandas==2.3.2
+pandas==2.3.3
     # via
     #   -c requirements.txt
     #   formulaic
@@ -284,7 +285,7 @@ pandas==2.3.2
     #   mozanalysis
     #   plotnine
     #   statsmodels
-pandas-stubs==2.3.2.250827
+pandas-stubs==2.3.2.250926
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -301,7 +302,7 @@ pillow==11.3.0
     # via
     #   -c requirements.txt
     #   matplotlib
-pip-tools==7.5.0
+pip-tools==7.5.1
     # via mozanalysis
 platformdirs==4.4.0
     # via
@@ -317,10 +318,14 @@ pluggy==1.6.0
     #   pytest
     #   pytest-cov
     #   tox
-polars==1.33.0
+polars==1.34.0
     # via
     #   -c requirements.txt
     #   marginaleffects
+polars-runtime-32==1.34.0
+    # via
+    #   -c requirements.txt
+    #   polars
 polyfactory==2.22.2
     # via
     #   -c requirements.txt
@@ -330,7 +335,7 @@ proto-plus==1.26.1
     #   -c requirements.txt
     #   google-api-core
     #   google-cloud-bigquery-storage
-protobuf==6.32.0
+protobuf==6.32.1
     # via
     #   -c requirements.txt
     #   google-api-core
@@ -352,16 +357,16 @@ pyasn1-modules==0.4.2
     # via
     #   -c requirements.txt
     #   google-auth
-pycparser==2.22
+pycparser==2.23
     # via
     #   -c requirements.txt
     #   cffi
-pydantic==2.11.7
+pydantic==2.12.0
     # via
     #   -c requirements.txt
     #   marginaleffects
     #   mozilla-nimbus-schemas
-pydantic-core==2.33.2
+pydantic-core==2.41.1
     # via
     #   -c requirements.txt
     #   pydantic
@@ -371,7 +376,7 @@ pygments==2.19.2
     #   pytest
     #   readme-renderer
     #   rich
-pyparsing==3.2.3
+pyparsing==3.2.5
     # via
     #   -c requirements.txt
     #   matplotlib
@@ -381,14 +386,14 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==8.4.1
+pytest==8.4.2
     # via
     #   -c requirements.txt
     #   mozanalysis
     #   pytest-cov
     #   pytest-ruff
     #   pytest-timeout
-pytest-cov==6.2.1
+pytest-cov==7.0.0
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -442,7 +447,7 @@ rsa==4.9.1
     # via
     #   -c requirements.txt
     #   google-auth
-ruff==0.12.11
+ruff==0.13.3
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -460,9 +465,10 @@ scipy-stubs==1.15.3.0
     # via
     #   -c requirements.txt
     #   mozanalysis
-secretstorage==3.3.3
+secretstorage==3.4.0
     # via
     #   -c requirements.txt
+    #   keyring
     #   mozanalysis
 six==1.17.0
     # via
@@ -491,9 +497,9 @@ tomli==2.2.1
     #   pyproject-api
     #   pytest
     #   tox
-tox==4.27.0
+tox==4.30.3
     # via mozanalysis
-twine==6.1.0
+twine==6.2.0
     # via mozanalysis
 types-pytz==2025.2.0.20250809
     # via
@@ -503,8 +509,10 @@ typing-extensions==4.15.0
     # via
     #   -c requirements.txt
     #   cattrs
+    #   cryptography
     #   exceptiongroup
     #   formulaic
+    #   grpcio
     #   mozilla-nimbus-schemas
     #   mypy
     #   optype
@@ -515,7 +523,7 @@ typing-extensions==4.15.0
     #   tox
     #   typing-inspection
     #   virtualenv
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via
     #   -c requirements.txt
     #   pydantic

@@ -1,3 +1,4 @@
+import re
 from textwrap import dedent
 
 import pytest
@@ -182,7 +183,9 @@ def test_datasource_constructor_fails(name, from_expr, experiments_column_type, 
 def test_complains_about_template_without_default():
     with pytest.raises(
         ValueError,
-        match="foo: from_expr contains a dataset template but no value was provided.",
+        match=re.escape(
+            "foo: from_expr contains a dataset template but no value was provided."
+        ),
     ):
         DataSource(
             name="foo",
