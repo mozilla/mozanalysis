@@ -1,0 +1,26 @@
+name: Tagged Deploy
+
+on:
+  push:
+    tags:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/python:3.10
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deployment tools
+        run: |
+          pip install -r requirements-dev.txt
+      - name: Create the distribution files
+        run: |
+          python3 -m build --sdist
+      - name: Upload to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
