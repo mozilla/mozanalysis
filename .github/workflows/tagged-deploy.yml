@@ -1,30 +1,35 @@
-name: Tagged Deploy
+name: PyPI Release
 
 on:
   push:
     tags:
+      - '[0-9][0-9][0-9][0-9].[0-9]{1,2}.[0-9]+' # Calver: YYYY.M.MINOR
 
 jobs:
   deploy:
+    if: github.ref_name == 'main' || github.event.base_ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
     permissions:
-      contents: read
       id-token: write
+      contents: read
     environment:
       name: pypi
       url: https://pypi.org/p/mozanalysis
-    if: github.ref_name == 'main' || github.event.base_ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    container:
-      image: cimg/python:3.10
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - name: Install deployment tools
-        run: pip install --upgrade build setuptools wheel
-      - name: Create the distribution files
-        run: python -m build --sdist
-      - name: Publish distribution 📦 to PyPI
+
+      - name: Install build dependencies
+        run: pip install --upgrade build
+
+      - name: Build source distribution
+        run: python3 -m build --sdist
+
+      - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

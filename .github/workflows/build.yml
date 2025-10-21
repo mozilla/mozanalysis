@@ -1,90 +1,88 @@
-name: Build
-
+name: Build, Test, and Deploy
 on:
   push:
     branches:
-      - main
-    tags:
-      - '[0-9][0-9][0-9][0-9].[0-9]{1,2}.[0-9]+'
   pull_request:
-    branches:
-      - main
 
 jobs:
-  py310:
-    runs-on: ubuntu-latest
-    container:
-      image: cimg/python:3.10
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tox job
-        run: |
-          pip install tox
-          tox -e py310
-      - name: Submit code coverage data
-        run: |
-          curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
-          curl -Os https://uploader.codecov.io/latest/linux/codecov
-          curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
-          curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
-          gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-          shasum -a 256 -c codecov.SHA256SUM
-          chmod +x codecov
-          ./codecov -F "$(basename $PWD | sed s/[^a-z]/_/g)"
-
   lint:
+    name: Lint
     runs-on: ubuntu-latest
-    container:
-      image: cimg/python:3.10
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
       - name: Install dependencies
-        run: |
-          pip install -r requirements-dev.txt
+        run: pip install -r requirements-dev.txt
       - name: Run linting
         run: |
           ruff check src/ tests/
           ruff format --check src/ tests/
       - name: MyPy
+        run: mypy src/
+
+  py310:
+    name: Test (Python 3.10)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Run tox job
         run: |
-          mypy src/
+          pip install tox
+          tox -e py310
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ github.event.repository.name }}
 
   docs:
+    name: Build Docs
     runs-on: ubuntu-latest
-    container:
-      image: cimg/python:3.10
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
       - name: Run tox job
         run: |
           pip install tox
           tox -e docs
-      - uses: actions/upload-artifact@v4
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: docs
+          name: docs-html
           path: docs/_build/html
 
   docs-deploy:
-    needs: docs
+    name: Deploy Docs
     runs-on: ubuntu-latest
+    needs: docs
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: write
-    container:
-      image: node:22
-    if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
+      - name: Download docs artifact
+        uses: actions/download-artifact@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/download-artifact@v4
+          name: docs-html
+          path: ./docs-html
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          name: docs
-          path: docs/_build/html
-      - name: Disable jekyll builds
-        run: touch docs/_build/html/.nojekyll
-      - name: Deploy docs to gh-pages branch
-        run: |
-          git config user.email "fx-data-platform@mozilla.com"
-          git config user.name "GitHub Actions docs-deploy job"
-          npm install -g --silent gh-pages@^2.0.0
-          gh-pages --dotfiles --message "[skip ci] Updates" --dist docs/_build/html
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs-html
+          commit_message: '[skip ci] Updates'
