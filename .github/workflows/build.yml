@@ -86,7 +86,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@v4
         with:
-          name: docs
+          name: docs-html
           path: docs/_build/html
       - name: Disable jekyll builds
         run: touch docs/_build/html/.nojekyll
