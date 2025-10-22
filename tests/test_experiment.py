@@ -304,7 +304,7 @@ def test_query_not_detectably_malformed(analysis_unit: AnalysisUnit):
     sql_lint(enrollments_sql)
     assert "sample_id < None" not in enrollments_sql
 
-    assert enrollments_sql.count(analysis_unit.value) == 3
+    assert enrollments_sql.count(analysis_unit.value) == 2
 
     metrics_sql = exp.build_metrics_query(
         metric_list=[],
@@ -345,7 +345,7 @@ def test_megaquery_not_detectably_malformed(
 
     sql_lint(enrollments_sql)
 
-    assert enrollments_sql.count(analysis_unit.value) == 3
+    assert enrollments_sql.count(analysis_unit.value) == 2
 
     metrics_sql = exp.build_metrics_query(
         metric_list=desktop_metrics,
@@ -1069,7 +1069,7 @@ WHERE
         BETWEEN '2019-01-01' AND '2019-01-08'
     AND e.event_string_value = 'slug'
     AND e.sample_id < 100
-GROUP BY e.{analysis_unit.value}, branch
+GROUP BY ALL
     ),
     segmented_enrollments AS (
 SELECT
@@ -1102,7 +1102,7 @@ LEFT JOIN (
 ON re.analysis_id = e.analysis_id AND
     re.branch = e.branch AND
     e.submission_date >= re.enrollment_date
-GROUP BY e.analysis_id, e.branch
+GROUP BY ALL
     )
 
     SELECT
