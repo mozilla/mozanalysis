@@ -958,7 +958,7 @@
 <span class="s2">                BETWEEN &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2">&#39; AND &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">            AND e.event_string_value = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">            AND e.sample_id &lt; </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span>
-<span class="s2">        GROUP BY e.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, branch</span>
+<span class="s2">        GROUP BY ALL</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_enrollments_query_fenix_baseline</span><span class="p">(</span>
@@ -995,7 +995,7 @@
 <span class="s2">                &#39;</span><span class="si">{experiment_slug}</span><span class="s2">&#39;</span>
 <span class="s2">            ).branch IS NOT NULL</span>
 <span class="s2">            AND b.sample_id &lt; </span><span class="si">{sample_size}</span>
-<span class="s2">        GROUP BY b.client_info.client_id, branch</span>
+<span class="s2">        GROUP BY ALL</span>
 <span class="s2">        HAVING enrollment_date &gt;= &#39;</span><span class="si">{first_enrollment_date}</span><span class="s2">&#39;</span>
 <span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">experiment_slug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="p">,</span>
@@ -1004,36 +1004,6 @@
             <span class="n">dataset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span> <span class="ow">or</span> <span class="s2">&quot;org_mozilla_firefox&quot;</span><span class="p">,</span>
             <span class="n">sample_size</span><span class="o">=</span><span class="n">sample_size</span><span class="p">,</span>
         <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_build_enrollments_query_glean_event</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deprecated; see _build_enrollments_query_glean_events_stream below</span>
-
-<span class="sd">        Return SQL to query enrollments for a Glean experiment from the</span>
-<span class="sd">        events table for the application or dataset.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">            SELECT events.client_info.client_id AS analysis_id,</span>
-<span class="s2">                mozfun.map.get_key(</span>
-<span class="s2">                    e.extra,</span>
-<span class="s2">                    &#39;branch&#39;</span>
-<span class="s2">                ) AS branch,</span>
-<span class="s2">                DATE(MIN(events.submission_timestamp)) AS enrollment_date,</span>
-<span class="s2">                COUNT(events.submission_timestamp) AS num_enrollment_events</span>
-<span class="s2">            FROM `moz-fx-data-shared-prod.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">dataset</span><span class="si">}</span><span class="s2">.events` events,</span>
-<span class="s2">            UNNEST(events.events) AS e</span>
-<span class="s2">            WHERE</span>
-<span class="s2">                events.client_info.client_id IS NOT NULL AND</span>
-<span class="s2">                DATE(events.submission_timestamp)</span>
-<span class="s2">                BETWEEN &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2">&#39; AND &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
-<span class="s2">                AND e.category = &quot;nimbus_events&quot;</span>
-<span class="s2">                AND mozfun.map.get_key(e.extra, &quot;experiment&quot;) = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
-<span class="s2">                AND e.name = &#39;enrollment&#39;</span>
-<span class="s2">                AND sample_id &lt; </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span>
-<span class="s2">            GROUP BY events.client_info.client_id, branch</span>
-<span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_enrollments_query_glean_events_stream</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1061,7 +1031,7 @@
 <span class="s2">                AND JSON_VALUE(event_extra, &quot;$.experiment&quot;) = &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&quot;</span>
 <span class="s2">                AND event_name = &quot;enrollment&quot;</span>
 <span class="s2">                AND sample_id &lt; </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span>
-<span class="s2">            GROUP BY client_id, branch</span>
+<span class="s2">            GROUP BY ALL</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_enrollments_query_glean_events_stream_enrollment_status</span><span class="p">(</span>
@@ -1071,6 +1041,9 @@
 <span class="sd">        events_stream table for the application or dataset. Determines</span>
 <span class="sd">        enrollments from the enrollment_status event.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;enrollment_status is not ready for production use.&quot;</span><span class="p">)</span>
+        <span class="c1"># TODO: dynamic analysis_id</span>
 
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT</span>
@@ -1089,7 +1062,7 @@
 <span class="s2">                AND JSON_VALUE(event_extra, &quot;$.status&quot;) = &quot;Enrolled&quot;</span>
 <span class="s2">                AND JSON_VALUE(event_extra, &quot;$.reason&quot;) = &quot;Qualified&quot;</span>
 <span class="s2">                AND sample_id &lt; </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span>
-<span class="s2">            GROUP BY client_id, branch</span>
+<span class="s2">            GROUP BY ALL</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_enrollments_query_cirrus</span><span class="p">(</span>
@@ -1124,7 +1097,7 @@
 <span class="s2">                AND mozfun.map.get_key(e.extra, &quot;experiment&quot;) = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">                AND e.name = &#39;enrollment&#39;</span>
 <span class="s2">                AND client_info.app_channel = &#39;production&#39;</span>
-<span class="s2">            GROUP BY mozfun.map.get_key(e.extra, &quot;nimbus_user_id&quot;), branch</span>
+<span class="s2">            GROUP BY ALL</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_exposure_query_normandy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1153,7 +1126,7 @@
 <span class="s2">        ON re.analysis_id = e.analysis_id AND</span>
 <span class="s2">            re.branch = e.branch AND</span>
 <span class="s2">            e.submission_date &gt;= re.enrollment_date</span>
-<span class="s2">        GROUP BY e.analysis_id, e.branch</span>
+<span class="s2">        GROUP BY ALL</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_exposure_query_glean_event</span><span class="p">(</span>
@@ -1191,7 +1164,7 @@
 <span class="s2">            ON re.analysis_id = exposures.analysis_id AND</span>
 <span class="s2">                re.branch = exposures.branch AND</span>
 <span class="s2">                exposures.submission_date &gt;= re.enrollment_date</span>
-<span class="s2">            GROUP BY analysis_id, branch</span>
+<span class="s2">            GROUP BY ALL</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_exposure_query_glean_events_stream</span><span class="p">(</span>
@@ -1226,7 +1199,7 @@
 <span class="s2">            ON re.analysis_id = exposures.analysis_id AND</span>
 <span class="s2">                re.branch = exposures.branch AND</span>
 <span class="s2">                exposures.submission_date &gt;= re.enrollment_date</span>
-<span class="s2">            GROUP BY analysis_id, branch</span>
+<span class="s2">            GROUP BY ALL</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_metrics_query_bits</span><span class="p">(</span>
