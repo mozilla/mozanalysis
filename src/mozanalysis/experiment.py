@@ -858,7 +858,7 @@ class Experiment:
                 BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
             AND e.event_string_value = '{self.experiment_slug}'
             AND e.sample_id < {sample_size}
-        GROUP BY e.{self.analysis_unit.value}, branch
+        GROUP BY ALL
             """  # noqa:E501
 
     def _build_enrollments_query_fenix_baseline(
@@ -895,7 +895,7 @@ class Experiment:
                 '{experiment_slug}'
             ).branch IS NOT NULL
             AND b.sample_id < {sample_size}
-        GROUP BY b.client_info.client_id, branch
+        GROUP BY ALL
         HAVING enrollment_date >= '{first_enrollment_date}'
             """.format(
             experiment_slug=self.experiment_slug,
@@ -904,36 +904,6 @@ class Experiment:
             dataset=self.app_id or "org_mozilla_firefox",
             sample_size=sample_size,
         )
-
-    def _build_enrollments_query_glean_event(
-        self, time_limits: TimeLimits, dataset: str, sample_size: int = 100
-    ) -> str:
-        """Deprecated; see _build_enrollments_query_glean_events_stream below
-
-        Return SQL to query enrollments for a Glean experiment from the
-        events table for the application or dataset.
-        """
-
-        return f"""
-            SELECT events.client_info.client_id AS analysis_id,
-                mozfun.map.get_key(
-                    e.extra,
-                    'branch'
-                ) AS branch,
-                DATE(MIN(events.submission_timestamp)) AS enrollment_date,
-                COUNT(events.submission_timestamp) AS num_enrollment_events
-            FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.events` events,
-            UNNEST(events.events) AS e
-            WHERE
-                events.client_info.client_id IS NOT NULL AND
-                DATE(events.submission_timestamp)
-                BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
-                AND e.category = "nimbus_events"
-                AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
-                AND e.name = 'enrollment'
-                AND sample_id < {sample_size}
-            GROUP BY events.client_info.client_id, branch
-            """  # noqa:E501
 
     def _build_enrollments_query_glean_events_stream(
         self,
@@ -961,7 +931,7 @@ class Experiment:
                 AND JSON_VALUE(event_extra, "$.experiment") = "{self.experiment_slug}"
                 AND event_name = "enrollment"
                 AND sample_id < {sample_size}
-            GROUP BY client_id, branch
+            GROUP BY ALL
             """  # noqa:E501
 
     def _build_enrollments_query_glean_events_stream_enrollment_status(
@@ -971,6 +941,9 @@ class Experiment:
         events_stream table for the application or dataset. Determines
         enrollments from the enrollment_status event.
         """
+
+        logger.warning("enrollment_status is not ready for production use.")
+        # TODO: dynamic analysis_id
 
         return f"""
             SELECT
@@ -989,7 +962,7 @@ class Experiment:
                 AND JSON_VALUE(event_extra, "$.status") = "Enrolled"
                 AND JSON_VALUE(event_extra, "$.reason") = "Qualified"
                 AND sample_id < {sample_size}
-            GROUP BY client_id, branch
+            GROUP BY ALL
             """  # noqa:E501
 
     def _build_enrollments_query_cirrus(
@@ -1024,7 +997,7 @@ class Experiment:
                 AND mozfun.map.get_key(e.extra, "experiment") = '{self.experiment_slug}'
                 AND e.name = 'enrollment'
                 AND client_info.app_channel = 'production'
-            GROUP BY mozfun.map.get_key(e.extra, "nimbus_user_id"), branch
+            GROUP BY ALL
             """  # noqa:E501
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
@@ -1053,7 +1026,7 @@ class Experiment:
         ON re.analysis_id = e.analysis_id AND
             re.branch = e.branch AND
             e.submission_date >= re.enrollment_date
-        GROUP BY e.analysis_id, e.branch
+        GROUP BY ALL
             """  # noqa: E501
 
     def _build_exposure_query_glean_event(
@@ -1091,7 +1064,7 @@ class Experiment:
             ON re.analysis_id = exposures.analysis_id AND
                 re.branch = exposures.branch AND
                 exposures.submission_date >= re.enrollment_date
-            GROUP BY analysis_id, branch
+            GROUP BY ALL
             """  # noqa: E501
 
     def _build_exposure_query_glean_events_stream(
@@ -1126,7 +1099,7 @@ class Experiment:
             ON re.analysis_id = exposures.analysis_id AND
                 re.branch = exposures.branch AND
                 exposures.submission_date >= re.enrollment_date
-            GROUP BY analysis_id, branch
+            GROUP BY ALL
             """  # noqa: E501
 
     def _build_metrics_query_bits(
