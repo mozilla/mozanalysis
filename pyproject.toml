@@ -7,7 +7,7 @@ name = "mozanalysis"
 dynamic = ["version"]
 authors = [{ name = "Mozilla Corporation", email = "fx-data-dev@mozilla.org" }]
 description = "A library for Mozilla experiments analysis"
-requires-python = ">=3.11,<=3.12"
+requires-python = ">=3.11"
 dependencies = [
     "attrs",
     "formulaic",
