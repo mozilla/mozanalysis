@@ -527,9 +527,9 @@ faker==40.1.0 \
     # via
     #   -r requirements-dev.in
     #   polyfactory
-filelock==3.20.2 \
-    --hash=sha256:a2241ff4ddde2a7cebddf78e39832509cb045d18ec1a09d7248d6bfc6bfbbe64 \
-    --hash=sha256:fbba7237d6ea277175a32c54bb71ef814a8546d8601269e1bfc388de333974e8
+filelock==3.20.3 \
+    --hash=sha256:18c57ee915c7ec61cff0ecf7f0f869936c7c30191bb0cf406f1341778d0834e1 \
+    --hash=sha256:4b0dda527ee31078689fc205ec4f1c1bf7d56cf88b6dc9426c4f230e46c2dce1
     # via
     #   -r requirements-dev.in
     #   tox
@@ -1209,8 +1209,8 @@ more-itertools==10.8.0 \
     #   -r requirements-dev.in
     #   jaraco-classes
     #   jaraco-functools
-mozilla-metric-config-parser==2025.12.1 \
-    --hash=sha256:0998e40963060928ce96921b8f52d30fb1300c465c04eb0d1d2725d4a416a544
+mozilla-metric-config-parser==2026.1.1 \
+    --hash=sha256:0e74d8a453a839cd5eb82799655ddc1d2c79c461ce099375749c23b6ffdb4903
     # via -r requirements-dev.in
 mozilla-nimbus-schemas==3001.0.0 \
     --hash=sha256:25b89f8ce1e547b383e067023027b84bdbd01cc32b0375dcc5446df737ded533 \
@@ -2258,9 +2258,9 @@ toml==0.10.2 \
     # via
     #   -r requirements-dev.in
     #   mozilla-metric-config-parser
-tox==4.34.0 \
-    --hash=sha256:18f27e064aec1af6fec47f391e39d60974af0a1dc2c6da5030d9c710f4ee95b7 \
-    --hash=sha256:dccfb69c60fd32d5d0fee862bb4596b7ccee013b4b6fc4b8ea7a6a1fcf165384
+tox==4.34.1 \
+    --hash=sha256:5610d69708bab578d618959b023f8d7d5d3386ed14a2392aeebf9c583615af60 \
+    --hash=sha256:ef1e82974c2f5ea02954d590ee0b967fad500c3879b264ea19efb9a554f3cc60
     # via -r requirements-dev.in
 twine==6.2.0 \
     --hash=sha256:418ebf08ccda9a8caaebe414433b0ba5e25eb5e4a927667122fbe8f829f985d8 \

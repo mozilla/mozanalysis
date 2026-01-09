@@ -73,7 +73,7 @@ faker==40.1.0
     # via
     #   -c requirements.txt
     #   polyfactory
-filelock==3.20.2
+filelock==3.20.3
     # via
     #   tox
     #   virtualenv
@@ -220,7 +220,7 @@ more-itertools==10.8.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-mozilla-metric-config-parser==2025.12.1
+mozilla-metric-config-parser==2026.1.1
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -489,7 +489,7 @@ toml==0.10.2
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-tox==4.34.0
+tox==4.34.1
     # via mozanalysis
 twine==6.2.0
     # via mozanalysis
