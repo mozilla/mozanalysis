@@ -291,7 +291,7 @@ pandas-stubs==2.3.3.251219
     # via
     #   -c requirements.txt
     #   mozanalysis
-pathspec==1.0.2
+pathspec==1.0.3
     # via
     #   -c requirements.txt
     #   mypy

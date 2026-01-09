@@ -152,7 +152,7 @@ pandas==2.3.3
     #   statsmodels
 pandas-stubs==2.3.3.251219
     # via mozanalysis
-pathspec==1.0.2
+pathspec==1.0.3
     # via mypy
 patsy==1.0.2
     # via

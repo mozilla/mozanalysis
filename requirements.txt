@@ -1342,9 +1342,9 @@ pandas-stubs==2.3.3.251219 \
     --hash=sha256:ccc6337febb51d6d8a08e4c96b479478a0da0ef704b5e08bd212423fe1cb549c \
     --hash=sha256:dc2883e6daff49d380d1b5a2e864983ab9be8cd9a661fa861e3dea37559a5af4
     # via -r requirements.in
-pathspec==1.0.2 \
-    --hash=sha256:62f8558917908d237d399b9b338ef455a814801a4688bc41074b25feefd93472 \
-    --hash=sha256:fa32b1eb775ed9ba8d599b22c5f906dc098113989da2c00bf8b210078ca7fb92
+pathspec==1.0.3 \
+    --hash=sha256:bac5cf97ae2c2876e2d25ebb15078eb04d76e4b98921ee31c6f85ade8b59444d \
+    --hash=sha256:e80767021c1cc524aa3fb14bedda9c34406591343cc42797b386ce7b9354fb6c
     # via
     #   -r requirements.in
     #   mypy
