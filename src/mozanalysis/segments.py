@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
+from typing import assert_never
 
 import attr
 from metric_config_parser import AnalysisUnit
-from typing_extensions import assert_never
 
 from mozanalysis.types import IncompatibleAnalysisUnit
 

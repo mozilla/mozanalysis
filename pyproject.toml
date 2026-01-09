@@ -7,7 +7,7 @@ name = "mozanalysis"
 dynamic = ["version"]
 authors = [{ name = "Mozilla Corporation", email = "fx-data-dev@mozilla.org" }]
 description = "A library for Mozilla experiments analysis"
-requires-python = ">=3.10,<=3.11"
+requires-python = ">=3.11"
 dependencies = [
     "attrs",
     "formulaic",
@@ -49,7 +49,7 @@ dev = ["build", "mozanalysis[testing]", "pip-tools", "tox", "twine"]
 [tool.ruff]
 line-length = 88
 exclude = [".git", "__pycache__"]
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 ignore = ["E741", "RUF005"]

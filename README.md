@@ -47,23 +47,9 @@ For example, you can run:
 
 * `tox -e lint` to lint
 
-* `tox -e py310 -- -k utils` to only run tests with "utils" somewhere in the name, on Python 3.10
+* `tox -e py311 -- -k utils` to only run tests with "utils" somewhere in the name, on Python 3.11
 
 * `tox tests/test_utils.py` to run tests in a specific file
-
-### With the CircleCI utilities
-
-To test/debug this package locally, you can run exactly the job that
-CircleCI runs for continuous integration by
-[installing the CircleCI local CLI](https://circleci.com/docs/2.0/local-cli/#installing-the-circleci-local-cli-on-macos-and-linux-distros)
-and invoking:
-
-```bash
-circleci build --job py310
-```
-
-See [.circleci/config.yml](https://github.com/mozilla/mozanalysis/blob/main/.circleci/config.yml)
-for the other configured job names (for running tests on different python versions).
 
 ## Deploying a new release
 
