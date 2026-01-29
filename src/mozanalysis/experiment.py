@@ -1458,12 +1458,20 @@ class AnalysisWindow:
 
     @start.validator
     def _validate_start(self, attribute, value):
-        assert (value >= 0 and self.end >= 0) or (value < 0 and self.end < 0)
+        assert (value >= 0 and self.end >= 0) or (value < 0 and self.end < 0), (
+            f"AnalysisWindow `start` invalid: {value} and {self.end} must share a sign",
+            "(either both positive/zero, or both negative)",
+        )
 
     @end.validator
     def _validate_end(self, attribute, value):
-        assert value >= self.start
-        assert (value >= 0 and self.start >= 0) or (value < 0 and self.start < 0)
+        assert value >= self.start, (
+            f"AnalysisWindow `end` invalid: {value} must be >= {self.start}"
+        )
+        assert (value >= 0 and self.start >= 0) or (value < 0 and self.start < 0), (
+            f"AnalysisWindow `end` invalid: {value} and {self.start} must share a sign",
+            "(either both positive/zero, or both negative)",
+        )
 
 
 @attr.s(frozen=True, slots=True)

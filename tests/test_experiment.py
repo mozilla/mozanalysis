@@ -25,6 +25,12 @@ from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
 
 
+@pytest.mark.parametrize(("start", "end", "invalid"), [(-1, 1, "start"), (3, 1, "end")])
+def test_analysis_window_validation(start, end, invalid):
+    with pytest.raises(AssertionError, match=f"AnalysisWindow `{invalid}` invalid"):
+        AnalysisWindow(start, end)
+
+
 def test_time_limits_validates():
     # Mainly check that the validation is running at all
     # No need to specify the same checks twice(?)
