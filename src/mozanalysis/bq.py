@@ -84,3 +84,11 @@ class BigQueryContext:
     def fully_qualify_table_name(self, table_name):
         """Given a table name, return it fully qualified."""
         return f"{self.project_id}.{self.dataset_id}.{table_name}"
+
+    def create_view(self, view_name: str, sql: str, replace_view=False) -> None:
+        view_id = self.fully_qualify_table_name(view_name)
+        view = bigquery.Table(view_id)
+        if replace_view:
+            self.client.delete_table(view, not_found_ok=True)
+        view.view_query = sql
+        self.client.create_table(view)
