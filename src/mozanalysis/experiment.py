@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, assert_never, cast
 
 import attr
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class EnrollmentsQueryType(str, Enum):
+class EnrollmentsQueryType(StrEnum):
     CIRRUS = "cirrus"
     FENIX_FALLBACK = "fenix-fallback"
     NORMANDY = "normandy"
