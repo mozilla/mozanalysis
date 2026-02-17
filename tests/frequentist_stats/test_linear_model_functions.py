@@ -60,7 +60,6 @@ def test_summarize_one_branch():
     assert np.isclose(actuals["0.975"], high)
 
     index_values = actuals.index.values
-    index_values.sort()
     assert list(index_values) == ["0.025", "0.5", "0.975", "mean"]
 
 
@@ -76,7 +75,6 @@ def test_summarize_univariate():
     assert sorted(result.keys()) == branch_list
     for branch in branch_list:
         index_values = result[branch].index.values
-        index_values.sort()
         assert list(index_values) == ["0.025", "0.5", "0.975", "mean"]
 
     # control
