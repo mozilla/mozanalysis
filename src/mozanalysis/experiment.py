@@ -4,11 +4,11 @@
 from __future__ import annotations
 
 import logging
-from enum import StrEnum
 from typing import TYPE_CHECKING, assert_never, cast
 
 import attr
 from metric_config_parser import AnalysisUnit
+from metric_config_parser.experiment import EnrollmentsQueryType
 
 from mozanalysis import APPS
 from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
@@ -24,13 +24,6 @@ if TYPE_CHECKING:
     from mozanalysis.segments import Segment, SegmentDataSource
 
 logger = logging.getLogger(__name__)
-
-
-class EnrollmentsQueryType(StrEnum):
-    CIRRUS = "cirrus"
-    FENIX_FALLBACK = "fenix-fallback"
-    NORMANDY = "normandy"
-    GLEAN_EVENT = "glean-event"
 
 
 def partition_segments_by_data_source(
@@ -782,6 +775,10 @@ class Experiment:
                     "Cirrus enrollments currently only support client_id analysis units"
                 )
             return self._build_enrollments_query_cirrus(time_limits, self.app_id)
+        elif enrollments_query_type == EnrollmentsQueryType.BACKGROUND_UPDATE:
+            return self._build_enrollments_query_background_update(
+                time_limits, sample_size
+            )
         else:
             assert_never(enrollments_query_type)
 
@@ -792,7 +789,12 @@ class Experiment:
         use_glean_ids: bool = False,
     ) -> str:
         """Return SQL to query a list of exposures and their branches"""
-        if exposure_query_type == EnrollmentsQueryType.NORMANDY:
+        # try to get exposure events from typical normandy sources
+        # even for background-update
+        if (
+            exposure_query_type == EnrollmentsQueryType.NORMANDY
+            or exposure_query_type == EnrollmentsQueryType.BACKGROUND_UPDATE
+        ):
             if use_glean_ids:
                 return self._build_exposure_query_glean_events_stream(
                     time_limits,
@@ -998,6 +1000,109 @@ class Experiment:
                 AND client_info.app_channel = 'production'
             GROUP BY ALL
             """  # noqa:E501
+
+    def _build_enrollments_query_background_update(
+        self, time_limits: TimeLimits, sample_size: int = 100
+    ) -> str:
+        """Return SQL to query enrollments for background-update experiments.
+
+        These experiments do not send enrollment events in the normal telemetry,
+        rather they have their own datasets.
+        """
+        return f"""
+        SELECT * FROM (
+        (
+            SELECT
+                JSON_VALUE(
+                    metrics, '$.uuid.background_update_client_id'
+                ) AS analysis_id,
+                JSON_VALUE(event_extra, '$.branch') AS branch,
+                MIN(DATE(events.submission_timestamp)) AS enrollment_date,
+                COUNT(events.submission_timestamp) AS num_enrollment_events
+            FROM
+                `moz-fx-data-shared-prod.firefox_desktop_background_update.events_stream`
+                events
+            WHERE
+                DATE(submission_timestamp) BETWEEN
+                    '{time_limits.first_enrollment_date}'
+                    AND '{time_limits.last_enrollment_date}'
+                AND event_category = 'nimbus_events'
+                AND event_name = 'enrollment'
+                -- The background update experiment slug is exact.
+                AND JSON_VALUE(event_extra, '$.experiment') = '{self.experiment_slug}'
+                -- This should never happen, but belt-and-braces.
+                AND JSON_VALUE(
+                    metrics, '$.uuid.background_update_client_id'
+                ) IS NOT NULL
+                AND sample_id < {sample_size}
+            GROUP BY analysis_id, branch
+        )
+
+        UNION ALL
+
+        (
+            SELECT
+                m.metrics.uuid.background_update_client_id AS analysis_id,
+                experiment.value.branch AS branch,
+                MIN(DATE(submission_timestamp)) AS enrollment_date,
+                -- These are not discrete events, it makes no sense to count them.
+                1 AS num_enrollment_events
+            -- We need to query from the Glean `background_update` table because
+            -- pre-[Bug 1794053](https://bugzilla.mozilla.org/show_bug.cgi?id=1794053)
+            -- (scheduled for Firefox 109) we do not have the legacy client ID in
+            -- `mozdata.firefox_desktop_background_update.events`.
+            FROM `mozdata.firefox_desktop_background_update.background_update` AS m
+            CROSS JOIN
+                UNNEST(ping_info.experiments) AS experiment
+            WHERE
+                -- Background update telemetry can be delayed, so we accept enrollment
+                -- _submission_ dates during the elongated enrollment period.  It is
+                -- safer to compare submission dates generated server-side than internal
+                -- ping dates generated client-side.
+                DATE(submission_timestamp) BETWEEN
+                    '{time_limits.first_enrollment_date}'
+                    AND '{time_limits.last_enrollment_date}'
+                -- The background update experiment slug is exact.
+                AND experiment.key = '{self.experiment_slug}'
+                AND sample_id < {sample_size}
+            GROUP BY analysis_id, branch
+        )
+
+        UNION ALL
+
+        (
+            SELECT
+                client_id AS analysis_id,
+                SPLIT(
+                    mozfun.map.get_key(event_map_values, 'name'), ':'
+                )[SAFE_OFFSET(1)] AS branch,
+                MIN(submission_date) AS enrollment_date,
+                COUNT(submission_date) AS num_enrollment_events
+            FROM
+                `mozdata.telemetry.events`
+            WHERE
+                submission_date BETWEEN
+                    '{time_limits.first_enrollment_date}'
+                    AND '{time_limits.last_enrollment_date}'
+                AND event_category = 'browser.launched_to_handle'
+                AND event_method = 'system_notification'
+                AND event_object = 'toast'
+                -- Post [Bug 1804988](https://bugzilla.mozilla.org/show_bug.cgi?id=1804988),
+                -- this name looks like 'slug:branch'.
+                AND STARTS_WITH(
+                    mozfun.map.get_key(event_map_values, 'name'),
+                    '{self.experiment_slug}:'
+                )
+                AND sample_id < {sample_size}
+            GROUP BY
+                analysis_id, branch
+        )
+
+        )
+        QUALIFY ROW_NUMBER() OVER (
+            PARTITION BY analysis_id ORDER BY enrollment_date ASC
+        ) = 1
+        """
 
     def _build_exposure_query_normandy(self, time_limits: TimeLimits) -> str:
         """Return SQL to query exposures for a normandy experiment"""

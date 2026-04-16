@@ -107,7 +107,7 @@ mizani==0.14.4
     # via plotnine
 mock==5.2.0
     # via mozanalysis
-mozilla-metric-config-parser==2026.1.1
+mozilla-metric-config-parser==2026.4.1
     # via mozanalysis
 mozilla-nimbus-schemas==3001.0.0
     # via mozilla-metric-config-parser
