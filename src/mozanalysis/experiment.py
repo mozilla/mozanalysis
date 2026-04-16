@@ -1009,7 +1009,6 @@ class Experiment:
         return f"""
         SELECT
             e.analysis_id,
-            udf.safe_sample_id(e.analysis_id) AS sample_id,
             e.branch,
             min(e.submission_date) AS exposure_date,
             COUNT(e.submission_date) AS num_exposure_events
@@ -1045,7 +1044,6 @@ class Experiment:
         return f"""
             SELECT
                 exposures.analysis_id AS analysis_id,
-                udf.safe_sample_id(exposures.analysis_id) AS sample_id,
                 exposures.branch,
                 DATE(MIN(exposures.submission_date)) AS exposure_date,
                 COUNT(exposures.submission_date) AS num_exposure_events
@@ -1084,7 +1082,6 @@ class Experiment:
         return f"""
             SELECT
                 exposures.analysis_id AS analysis_id,
-                udf.safe_sample_id(exposures.analysis_id) AS sample_id,
                 exposures.branch,
                 DATE(MIN(exposures.submission_date)) AS exposure_date,
                 COUNT(exposures.submission_date) AS num_exposure_events
