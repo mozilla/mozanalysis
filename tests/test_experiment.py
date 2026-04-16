@@ -1062,6 +1062,7 @@ def test_enrollments_query_analysis_unit(analysis_unit):
     WITH raw_enrollments AS (
 SELECT
     e.{analysis_unit.value} AS analysis_id,
+    udf.safe_sample_id({analysis_unit.value}) AS sample_id,
     `mozfun.map.get_key`(e.event_map_values, 'branch')
         AS branch,
     MIN(e.submission_date) AS enrollment_date,
