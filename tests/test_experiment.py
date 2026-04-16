@@ -11,11 +11,11 @@ from helpers.config_loader_lists import (
     klar_ios_metrics,
 )
 from metric_config_parser import AnalysisUnit
+from metric_config_parser.experiment import EnrollmentsQueryType
 
 from mozanalysis.config import ApplicationNotFound, ConfigLoader
 from mozanalysis.experiment import (
     AnalysisWindow,
-    EnrollmentsQueryType,
     Experiment,
     IncompatibleAnalysisUnit,
     TimeLimits,
@@ -289,10 +289,18 @@ def test_analysis_window_validates_end():
 
 
 @pytest.mark.parametrize(
-    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+    ("analysis_unit", "enrollments_query_type"),
+    [
+        (AnalysisUnit.CLIENT, EnrollmentsQueryType.BACKGROUND_UPDATE),
+        (AnalysisUnit.PROFILE_GROUP, EnrollmentsQueryType.NORMANDY),
+    ],
 )
-def test_query_not_detectably_malformed(analysis_unit: AnalysisUnit):
-    exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
+def test_query_not_detectably_malformed(
+    analysis_unit: AnalysisUnit, enrollments_query_type: EnrollmentsQueryType
+):
+    exp = Experiment(
+        "experiment-test-slug", "2019-01-01", 8, analysis_unit=analysis_unit
+    )
 
     tl = TimeLimits.for_ts(
         first_enrollment_date="2019-01-01",
@@ -303,14 +311,21 @@ def test_query_not_detectably_malformed(analysis_unit: AnalysisUnit):
 
     enrollments_sql = exp.build_enrollments_query(
         time_limits=tl,
-        enrollments_query_type=EnrollmentsQueryType.NORMANDY,
+        enrollments_query_type=enrollments_query_type,
         sample_size=None,
     )
 
     sql_lint(enrollments_sql)
     assert "sample_id < None" not in enrollments_sql
 
-    assert enrollments_sql.count(analysis_unit.value) == 2
+    if enrollments_query_type == EnrollmentsQueryType.BACKGROUND_UPDATE:
+        assert enrollments_sql.count(analysis_unit.value) == 5
+        assert enrollments_sql.count("experiment-test-slug") == 4
+        assert enrollments_sql.count("sample_id <") == 3
+    else:
+        assert enrollments_sql.count(analysis_unit.value) == 2
+        assert enrollments_sql.count("experiment-test-slug") == 2
+        assert enrollments_sql.count("sample_id <") == 1
 
     metrics_sql = exp.build_metrics_query(
         metric_list=[],
