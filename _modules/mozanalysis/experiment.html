@@ -78,11 +78,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">StrEnum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">assert_never</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">attr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">metric_config_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalysisUnit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">metric_config_parser.experiment</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnrollmentsQueryType</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">APPS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.bq</span><span class="w"> </span><span class="kn">import</span> <span class="n">BigQueryContext</span><span class="p">,</span> <span class="n">sanitize_table_name_for_bq</span>
@@ -98,16 +98,6 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.segments</span><span class="w"> </span><span class="kn">import</span> <span class="n">Segment</span><span class="p">,</span> <span class="n">SegmentDataSource</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="EnrollmentsQueryType">
-<a class="viewcode-back" href="../../api/experiment.html#mozanalysis.experiment.EnrollmentsQueryType">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">EnrollmentsQueryType</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
-    <span class="n">CIRRUS</span> <span class="o">=</span> <span class="s2">&quot;cirrus&quot;</span>
-    <span class="n">FENIX_FALLBACK</span> <span class="o">=</span> <span class="s2">&quot;fenix-fallback&quot;</span>
-    <span class="n">NORMANDY</span> <span class="o">=</span> <span class="s2">&quot;normandy&quot;</span>
-    <span class="n">GLEAN_EVENT</span> <span class="o">=</span> <span class="s2">&quot;glean-event&quot;</span></div>
-
 
 
 <div class="viewcode-block" id="partition_segments_by_data_source">
@@ -882,6 +872,10 @@
                     <span class="s2">&quot;Cirrus enrollments currently only support client_id analysis units&quot;</span>
                 <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_cirrus</span><span class="p">(</span><span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">BACKGROUND_UPDATE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_background_update</span><span class="p">(</span>
+                <span class="n">time_limits</span><span class="p">,</span> <span class="n">sample_size</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">assert_never</span><span class="p">(</span><span class="n">enrollments_query_type</span><span class="p">)</span>
 
@@ -892,7 +886,12 @@
         <span class="n">use_glean_ids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query a list of exposures and their branches&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">NORMANDY</span><span class="p">:</span>
+        <span class="c1"># try to get exposure events from typical normandy sources</span>
+        <span class="c1"># even for background-update</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">NORMANDY</span>
+            <span class="ow">or</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">BACKGROUND_UPDATE</span>
+        <span class="p">):</span>
             <span class="k">if</span> <span class="n">use_glean_ids</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_glean_events_stream</span><span class="p">(</span>
                     <span class="n">time_limits</span><span class="p">,</span>
@@ -1098,6 +1097,109 @@
 <span class="s2">                AND client_info.app_channel = &#39;production&#39;</span>
 <span class="s2">            GROUP BY ALL</span>
 <span class="s2">            &quot;&quot;&quot;</span>  <span class="c1"># noqa:E501</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_enrollments_query_background_update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query enrollments for background-update experiments.</span>
+
+<span class="sd">        These experiments do not send enrollment events in the normal telemetry,</span>
+<span class="sd">        rather they have their own datasets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT * FROM (</span>
+<span class="s2">        (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                JSON_VALUE(</span>
+<span class="s2">                    metrics, &#39;$.uuid.background_update_client_id&#39;</span>
+<span class="s2">                ) AS analysis_id,</span>
+<span class="s2">                JSON_VALUE(event_extra, &#39;$.branch&#39;) AS branch,</span>
+<span class="s2">                MIN(DATE(events.submission_timestamp)) AS enrollment_date,</span>
+<span class="s2">                COUNT(events.submission_timestamp) AS num_enrollment_events</span>
+<span class="s2">            FROM</span>
+<span class="s2">                `moz-fx-data-shared-prod.firefox_desktop_background_update.events_stream`</span>
+<span class="s2">                events</span>
+<span class="s2">            WHERE</span>
+<span class="s2">                DATE(submission_timestamp) BETWEEN</span>
+<span class="s2">                    &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                    AND &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                AND event_category = &#39;nimbus_events&#39;</span>
+<span class="s2">                AND event_name = &#39;enrollment&#39;</span>
+<span class="s2">                -- The background update experiment slug is exact.</span>
+<span class="s2">                AND JSON_VALUE(event_extra, &#39;$.experiment&#39;) = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                -- This should never happen, but belt-and-braces.</span>
+<span class="s2">                AND JSON_VALUE(</span>
+<span class="s2">                    metrics, &#39;$.uuid.background_update_client_id&#39;</span>
+<span class="s2">                ) IS NOT NULL</span>
+<span class="s2">                AND sample_id &lt; </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span>
+<span class="s2">            GROUP BY analysis_id, branch</span>
+<span class="s2">        )</span>
+
+<span class="s2">        UNION ALL</span>
+
+<span class="s2">        (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                m.metrics.uuid.background_update_client_id AS analysis_id,</span>
+<span class="s2">                experiment.value.branch AS branch,</span>
+<span class="s2">                MIN(DATE(submission_timestamp)) AS enrollment_date,</span>
+<span class="s2">                -- These are not discrete events, it makes no sense to count them.</span>
+<span class="s2">                1 AS num_enrollment_events</span>
+<span class="s2">            -- We need to query from the Glean `background_update` table because</span>
+<span class="s2">            -- pre-[Bug 1794053](https://bugzilla.mozilla.org/show_bug.cgi?id=1794053)</span>
+<span class="s2">            -- (scheduled for Firefox 109) we do not have the legacy client ID in</span>
+<span class="s2">            -- `mozdata.firefox_desktop_background_update.events`.</span>
+<span class="s2">            FROM `mozdata.firefox_desktop_background_update.background_update` AS m</span>
+<span class="s2">            CROSS JOIN</span>
+<span class="s2">                UNNEST(ping_info.experiments) AS experiment</span>
+<span class="s2">            WHERE</span>
+<span class="s2">                -- Background update telemetry can be delayed, so we accept enrollment</span>
+<span class="s2">                -- _submission_ dates during the elongated enrollment period.  It is</span>
+<span class="s2">                -- safer to compare submission dates generated server-side than internal</span>
+<span class="s2">                -- ping dates generated client-side.</span>
+<span class="s2">                DATE(submission_timestamp) BETWEEN</span>
+<span class="s2">                    &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                    AND &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                -- The background update experiment slug is exact.</span>
+<span class="s2">                AND experiment.key = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                AND sample_id &lt; </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span>
+<span class="s2">            GROUP BY analysis_id, branch</span>
+<span class="s2">        )</span>
+
+<span class="s2">        UNION ALL</span>
+
+<span class="s2">        (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                client_id AS analysis_id,</span>
+<span class="s2">                SPLIT(</span>
+<span class="s2">                    mozfun.map.get_key(event_map_values, &#39;name&#39;), &#39;:&#39;</span>
+<span class="s2">                )[SAFE_OFFSET(1)] AS branch,</span>
+<span class="s2">                MIN(submission_date) AS enrollment_date,</span>
+<span class="s2">                COUNT(submission_date) AS num_enrollment_events</span>
+<span class="s2">            FROM</span>
+<span class="s2">                `mozdata.telemetry.events`</span>
+<span class="s2">            WHERE</span>
+<span class="s2">                submission_date BETWEEN</span>
+<span class="s2">                    &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                    AND &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                AND event_category = &#39;browser.launched_to_handle&#39;</span>
+<span class="s2">                AND event_method = &#39;system_notification&#39;</span>
+<span class="s2">                AND event_object = &#39;toast&#39;</span>
+<span class="s2">                -- Post [Bug 1804988](https://bugzilla.mozilla.org/show_bug.cgi?id=1804988),</span>
+<span class="s2">                -- this name looks like &#39;slug:branch&#39;.</span>
+<span class="s2">                AND STARTS_WITH(</span>
+<span class="s2">                    mozfun.map.get_key(event_map_values, &#39;name&#39;),</span>
+<span class="s2">                    &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_slug</span><span class="si">}</span><span class="s2">:&#39;</span>
+<span class="s2">                )</span>
+<span class="s2">                AND sample_id &lt; </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span>
+<span class="s2">            GROUP BY</span>
+<span class="s2">                analysis_id, branch</span>
+<span class="s2">        )</span>
+
+<span class="s2">        )</span>
+<span class="s2">        QUALIFY ROW_NUMBER() OVER (</span>
+<span class="s2">            PARTITION BY analysis_id ORDER BY enrollment_date ASC</span>
+<span class="s2">        ) = 1</span>
+<span class="s2">        &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_exposure_query_normandy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to query exposures for a normandy experiment&quot;&quot;&quot;</span>
