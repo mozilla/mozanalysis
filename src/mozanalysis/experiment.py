@@ -132,7 +132,7 @@ class Experiment:
             which defines an experimental unit. For example: `CLIENT`
             for mobile experiments or `GROUP` for desktop experiments.  Is used
             as the join key when building queries and sub-unit level data is
-            aggregated up to that level. Defaults to `AnalysisUnit.CLIENT`
+            aggregated up to that level. Defaults to `AnalysisUnit.PROFILE_GROUP`
             unless specified
 
     Attributes:
