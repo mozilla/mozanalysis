@@ -51,7 +51,7 @@ class Experiment:
     The methods here query data in a way compatible with the following
     principles, which are important for experiment analysis:
 
-    * The population of clients in each branch must have the same
+    * The population of clients/profiles in each branch must have the same
       properties, aside from the intervention itself and its
       consequences; i.e. there must be no underlying bias in the
       branch populations.
@@ -61,8 +61,8 @@ class Experiment:
     So that our analyses follow these abstract principles, we follow
     these rules:
 
-    * Start with a list of all clients who enrolled.
-    * We can filter this list of clients only based on information known
+    * Start with a list of all clients/profiles who enrolled.
+    * We can filter this list of clients/profiles only based on information known
       to us at or before the time that they enrolled, because later
       information might be causally connected to the intervention.
     * For any given metric, every client gets a non-null value; we don't
@@ -71,7 +71,7 @@ class Experiment:
     * Typically if an enrolled client no longer qualifies for enrollment,
       we'll still want to include their data in the analysis, unless
       we're explicitly using stats methods that handle censored data.
-    * We define a "analysis window" with respect to clients'
+    * We define a "analysis window" with respect to clients/profiles'
       enrollment dates. Each metric only uses data collected inside
       this analysis window. We can only analyze data for a client
       if we have data covering their entire analysis window.
@@ -156,7 +156,7 @@ class Experiment:
     app_name = attr.ib(default=None)
     analysis_unit = attr.ib(
         type=AnalysisUnit,
-        default=AnalysisUnit.CLIENT,
+        default=AnalysisUnit.PROFILE_GROUP,
         validator=attr.validators.instance_of(AnalysisUnit),
     )
 
@@ -493,7 +493,7 @@ class Experiment:
             segment_list (list of mozanalysis.segment.Segment or str): The user
                 segments to study.
 
-            sample_size (int): Optional integer percentage of clients, used for
+            sample_size (int): Optional integer percentage of clients/profiles, used for
                 downsampling enrollments. Default 100.
 
             use_glean_ids (bool): Enforce Glean IDs instead of legacy IDs. For
@@ -619,9 +619,9 @@ class Experiment:
         dataframe.
 
         The optional ``exposure_signal`` parameter allows to check if
-        clients have received the exposure signal during enrollment or
+        clients/profiles have received the exposure signal during enrollment or
         after. When using the exposures analysis basis, metrics will
-        be computed for these clients.
+        be computed for these clients/profiles.
 
         Args:
             metric_list (list of mozanalysis.metric.Metric or str):
