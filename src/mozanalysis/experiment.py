@@ -810,13 +810,15 @@ class Experiment:
                 raise IncompatibleAnalysisUnit(
                     "Glean exposures currently only support client_id analysis units"
                 )
-            return self._build_exposure_query_glean_event(time_limits, self.app_id)
+            return self._build_exposure_query_glean_events_stream(
+                time_limits, self.app_id
+            )
         elif exposure_query_type == EnrollmentsQueryType.FENIX_FALLBACK:
             if not self.analysis_unit == AnalysisUnit.CLIENT:
                 raise IncompatibleAnalysisUnit(
                     "Fenix fallback exposures currently only support client_id analysis units"  # noqa: E501
                 )
-            return self._build_exposure_query_glean_event(
+            return self._build_exposure_query_glean_events_stream(
                 time_limits, "org_mozilla_firefox"
             )
         elif exposure_query_type == EnrollmentsQueryType.CIRRUS:
