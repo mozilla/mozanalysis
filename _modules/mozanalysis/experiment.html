@@ -907,13 +907,15 @@
                 <span class="k">raise</span> <span class="n">IncompatibleAnalysisUnit</span><span class="p">(</span>
                     <span class="s2">&quot;Glean exposures currently only support client_id analysis units&quot;</span>
                 <span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_glean_event</span><span class="p">(</span><span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_glean_events_stream</span><span class="p">(</span>
+                <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">FENIX_FALLBACK</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span> <span class="o">==</span> <span class="n">AnalysisUnit</span><span class="o">.</span><span class="n">CLIENT</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">IncompatibleAnalysisUnit</span><span class="p">(</span>
                     <span class="s2">&quot;Fenix fallback exposures currently only support client_id analysis units&quot;</span>  <span class="c1"># noqa: E501</span>
                 <span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_glean_event</span><span class="p">(</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_glean_events_stream</span><span class="p">(</span>
                 <span class="n">time_limits</span><span class="p">,</span> <span class="s2">&quot;org_mozilla_firefox&quot;</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="n">exposure_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">CIRRUS</span><span class="p">:</span>
