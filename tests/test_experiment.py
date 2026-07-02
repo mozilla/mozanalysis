@@ -1140,6 +1140,92 @@ GROUP BY ALL
 @pytest.mark.parametrize(
     "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
 )
+def test_enrollments_query_glean_ids_analysis_unit(analysis_unit):
+    exp = Experiment(
+        "slug", "2019-01-01", 8, analysis_unit=analysis_unit, app_id="my_cool_app"
+    )
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl,
+        enrollments_query_type=EnrollmentsQueryType.NORMANDY,
+        use_glean_ids=True,
+    )
+
+    sql_lint(enrollments_sql)
+
+    expected = f"""
+    WITH raw_enrollments AS (
+    SELECT
+        {analysis_unit.value} AS analysis_id,
+        JSON_VALUE(event_extra, '$.branch') AS branch,
+        DATE(MIN(submission_timestamp)) AS enrollment_date,
+        COUNT(submission_timestamp) AS num_enrollment_events
+    FROM `moz-fx-data-shared-prod.my_cool_app.events_stream`
+    WHERE
+        {analysis_unit.value} IS NOT NULL
+        AND DATE(submission_timestamp)
+            BETWEEN '2019-01-01' AND '2019-01-08'
+        AND event_category = "nimbus_events"
+        AND JSON_VALUE(event_extra, "$.experiment") = "slug"
+        AND event_name = "enrollment"
+        AND sample_id < 100
+    GROUP BY ALL
+    ),
+    segmented_enrollments AS (
+SELECT
+    raw_enrollments.*,
+
+FROM raw_enrollments
+
+),
+    exposures AS (
+    SELECT
+        exposures.analysis_id AS analysis_id,
+        exposures.branch,
+        DATE(MIN(exposures.submission_date)) AS exposure_date,
+        COUNT(exposures.submission_date) AS num_exposure_events
+    FROM raw_enrollments re
+    LEFT JOIN (
+        SELECT
+            {analysis_unit.value} AS analysis_id,
+            JSON_VALUE(event_extra, '$.branch') AS branch,
+            DATE(submission_timestamp) AS submission_date
+        FROM
+            `moz-fx-data-shared-prod.my_cool_app.events_stream`
+        WHERE
+            DATE(submission_timestamp)
+            BETWEEN '2019-01-01' AND '2019-01-08'
+            AND event_category = 'nimbus_events'
+            AND JSON_VALUE(event_extra, "$.experiment") = 'slug'
+            AND (event_name = 'expose' OR event_name = 'exposure')
+    ) exposures
+    ON re.analysis_id = exposures.analysis_id AND
+        re.branch = exposures.branch AND
+        exposures.submission_date >= re.enrollment_date
+    GROUP BY ALL
+    )
+
+    SELECT
+        se.*,
+        e.* EXCEPT (analysis_id, branch)
+    FROM segmented_enrollments se
+    LEFT JOIN exposures e
+    USING (analysis_id, branch)
+"""
+
+    assert dedent(enrollments_sql) == expected
+
+
+@pytest.mark.parametrize(
+    "analysis_unit", [AnalysisUnit.CLIENT, AnalysisUnit.PROFILE_GROUP]
+)
 def test_metrics_query_explicit_analysis_id(analysis_unit):
     exp = Experiment("slug", "2019-01-01", 8, analysis_unit=analysis_unit)
 

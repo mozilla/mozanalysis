@@ -738,7 +738,7 @@ class Experiment:
         if enrollments_query_type == EnrollmentsQueryType.NORMANDY:
             if use_glean_ids:
                 return self._build_enrollments_query_glean_events_stream(
-                    time_limits, self.app_id, sample_size
+                    time_limits, self.app_id, sample_size, self.analysis_unit.value
                 )
             else:
                 return self._build_enrollments_query_normandy(
@@ -798,6 +798,7 @@ class Experiment:
             if use_glean_ids:
                 return self._build_exposure_query_glean_events_stream(
                     time_limits,
+                    client_id_field=self.analysis_unit.value,
                 )
             else:
                 return self._build_exposure_query_normandy(time_limits)
@@ -927,7 +928,7 @@ class Experiment:
                 COUNT(submission_timestamp) AS num_enrollment_events
             FROM `moz-fx-data-shared-prod.{self.app_id or dataset}.events_stream`
             WHERE
-                client_id IS NOT NULL
+                {analysis_id} IS NOT NULL
                 AND DATE(submission_timestamp)
                     BETWEEN '{time_limits.first_enrollment_date}' AND '{time_limits.last_enrollment_date}'
                 AND event_category = "nimbus_events"
