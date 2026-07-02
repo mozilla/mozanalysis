@@ -835,7 +835,7 @@
         <span class="k">if</span> <span class="n">enrollments_query_type</span> <span class="o">==</span> <span class="n">EnrollmentsQueryType</span><span class="o">.</span><span class="n">NORMANDY</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">use_glean_ids</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_glean_events_stream</span><span class="p">(</span>
-                    <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">,</span> <span class="n">sample_size</span>
+                    <span class="n">time_limits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_enrollments_query_normandy</span><span class="p">(</span>
@@ -895,6 +895,7 @@
             <span class="k">if</span> <span class="n">use_glean_ids</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_glean_events_stream</span><span class="p">(</span>
                     <span class="n">time_limits</span><span class="p">,</span>
+                    <span class="n">client_id_field</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_unit</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_exposure_query_normandy</span><span class="p">(</span><span class="n">time_limits</span><span class="p">)</span>
@@ -1024,7 +1025,7 @@
 <span class="s2">                COUNT(submission_timestamp) AS num_enrollment_events</span>
 <span class="s2">            FROM `moz-fx-data-shared-prod.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">dataset</span><span class="si">}</span><span class="s2">.events_stream`</span>
 <span class="s2">            WHERE</span>
-<span class="s2">                client_id IS NOT NULL</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">analysis_id</span><span class="si">}</span><span class="s2"> IS NOT NULL</span>
 <span class="s2">                AND DATE(submission_timestamp)</span>
 <span class="s2">                    BETWEEN &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">first_enrollment_date</span><span class="si">}</span><span class="s2">&#39; AND &#39;</span><span class="si">{</span><span class="n">time_limits</span><span class="o">.</span><span class="n">last_enrollment_date</span><span class="si">}</span><span class="s2">&#39;</span>
 <span class="s2">                AND event_category = &quot;nimbus_events&quot;</span>
