@@ -79,6 +79,18 @@ class DataSource:
               string.
             * 'events_stream': There is an ``experiment`` within a JSON
               column ``event_extra``. ``branch`` is in the same column.
+              Note that ``event_extra`` only carries the experiment/branch
+              on nimbus event rows (enrollment/exposure/etc.), so this type
+              cannot attribute non-nimbus metric events on the enrollment
+              day. Prefer 'json' when the table exposes a client-level
+              ``experiments`` column.
+            * 'json': There is a top-level ``experiments`` column of
+              BigQuery ``JSON`` type, which is an
+              (experiment_slug:str -> struct) map, where the struct contains
+              a ``branch`` field. This is the client-level experiments map
+              carried on every row of ``*.events_stream`` tables, so unlike
+              'events_stream' it attributes metric events on the enrollment
+              day correctly.
             * None: There is no ``experiments`` column, so skip the
               sanity checks that rely on it. We'll also be unable to
               filter out pre-enrollment data from day 0 in the
@@ -132,7 +144,14 @@ class DataSource:
     glean_client_id_column = attr.ib(default=None, type=str)
     legacy_client_id_column = attr.ib(default=None, type=str)
 
-    EXPERIMENT_COLUMN_TYPES = (None, "simple", "native", "glean", "events_stream")
+    EXPERIMENT_COLUMN_TYPES = (
+        None,
+        "simple",
+        "native",
+        "glean",
+        "events_stream",
+        "json",
+    )
 
     @experiments_column_type.validator
     def _check_experiments_column_type(self, attribute, value):
@@ -202,6 +221,14 @@ class DataSource:
                         NULL
                     ) IS NOT NULL
                 )"""  # noqa:E501
+
+        elif self.experiments_column_type == "json":
+            return """AND (
+                    ds.{submission_date} != e.enrollment_date
+                    OR JSON_VALUE(
+                        ds.experiments, '$."{experiment_slug}".branch'
+                    ) IS NOT NULL
+                )"""
 
         else:
             raise ValueError
@@ -476,6 +503,28 @@ class DataSource:
                 JSON_VALUE(ds.event_extra, '$.experiment') = '{experiment_slug}',
                 JSON_VALUE(ds.event_extra, '$.branch'),
                 NULL
+            ) IS NULL"""
+                    ),
+                ),
+            ]
+
+        elif self.experiments_column_type == "json":
+            return [
+                Metric(
+                    name=self.name + "_has_contradictory_branch",
+                    data_source=self,
+                    select_expr=agg_any(
+                        f"""JSON_VALUE(
+                ds.experiments, '$."{experiment_slug}".branch'
+            ) != e.branch"""
+                    ),
+                ),
+                Metric(
+                    name=self.name + "_has_non_enrolled_data",
+                    data_source=self,
+                    select_expr=agg_any(
+                        f"""JSON_VALUE(
+                ds.experiments, '$."{experiment_slug}".branch'
             ) IS NULL"""
                     ),
                 ),
