@@ -306,7 +306,7 @@ patsy==1.0.2
     #   -c requirements.txt
     #   marginaleffects
     #   statsmodels
-pillow==12.2.0
+pillow==12.3.0
     # via
     #   -c requirements.txt
     #   matplotlib
