@@ -357,7 +357,7 @@ pyarrow==24.0.0
     #   -c requirements.txt
     #   marginaleffects
     #   mozanalysis
-pyasn1==0.6.3
+pyasn1==0.6.4
     # via
     #   -c requirements.txt
     #   pyasn1-modules
