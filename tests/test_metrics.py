@@ -3,9 +3,10 @@ from textwrap import dedent
 
 import pytest
 from metric_config_parser import AnalysisUnit
+from mozilla_nimbus_schemas import AnalysisBasis
 
 from mozanalysis.experiment import TimeLimits
-from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
+from mozanalysis.metrics import DataSource, Metric
 
 
 @pytest.mark.parametrize(

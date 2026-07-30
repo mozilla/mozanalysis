@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING, assert_never, cast
 import attr
 from metric_config_parser import AnalysisUnit
 from metric_config_parser.experiment import EnrollmentsQueryType
+from mozilla_nimbus_schemas import AnalysisBasis
 
 from mozanalysis import APPS
 from mozanalysis.bq import BigQueryContext, sanitize_table_name_for_bq
 from mozanalysis.config import ConfigLoader
-from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
 from mozanalysis.types import IncompatibleAnalysisUnit
 from mozanalysis.utils import add_days, date_sub, hash_ish
 
@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from pandas import DataFrame
 
     from mozanalysis.exposure import ExposureSignal
+    from mozanalysis.metrics import DataSource, Metric
     from mozanalysis.segments import Segment, SegmentDataSource
 
 logger = logging.getLogger(__name__)

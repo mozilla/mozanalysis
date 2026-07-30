@@ -12,6 +12,7 @@ from helpers.config_loader_lists import (
 )
 from metric_config_parser import AnalysisUnit
 from metric_config_parser.experiment import EnrollmentsQueryType
+from mozilla_nimbus_schemas import AnalysisBasis
 
 from mozanalysis.config import ApplicationNotFound, ConfigLoader
 from mozanalysis.experiment import (
@@ -21,7 +22,7 @@ from mozanalysis.experiment import (
     TimeLimits,
 )
 from mozanalysis.exposure import ExposureSignal
-from mozanalysis.metrics import AnalysisBasis, DataSource, Metric
+from mozanalysis.metrics import DataSource, Metric
 from mozanalysis.segments import Segment, SegmentDataSource
 
 
@@ -823,6 +824,46 @@ def test_metrics_query_with_exposure_signal():
 
     assert "DATE_ADD('2019-01-01', INTERVAL 0 DAY)" in metrics_sql
     assert "DATE_ADD('2019-01-08', INTERVAL 0 DAY)" in metrics_sql
+    assert metrics_sql.count("org_mozilla_firefox.baseline") == 2
+    assert "metrics.counter.events_total_uri_count > 0" in metrics_sql
+
+
+def test_metrics_query_with_exposure_signal_enrollments_basis():
+    exp = Experiment("slug", "2019-01-01", 8)
+
+    tl = TimeLimits.for_ts(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-03-01",
+        time_series_period="weekly",
+        num_dates_enrollment=8,
+    )
+
+    enrollments_sql = exp.build_enrollments_query(
+        time_limits=tl, enrollments_query_type=EnrollmentsQueryType.FENIX_FALLBACK
+    )
+
+    sql_lint(enrollments_sql)
+
+    metrics_sql = exp.build_metrics_query(
+        metric_list=fenix_metrics,
+        time_limits=tl,
+        enrollments_table="enrollments",
+        analysis_basis=AnalysisBasis.ENROLLMENTS,
+        exposure_signal=ExposureSignal(
+            name="exposures",
+            data_source=ConfigLoader.get_data_source("baseline", "fenix"),
+            select_expr="metrics.counter.events_total_uri_count > 0",
+            friendly_name="URI visited exposure",
+            description="Exposed when URI visited",
+        ),
+    )
+
+    sql_lint(metrics_sql)
+
+    assert "DATE_ADD('2019-01-01', INTERVAL 0 DAY)" not in metrics_sql
+    assert "DATE_ADD('2019-01-08', INTERVAL 0 DAY)" not in metrics_sql
+    assert metrics_sql.count("org_mozilla_firefox.baseline") == 1
+    assert "metrics.counter.events_total_uri_count > 0" not in metrics_sql
 
 
 def test_resolve_metric_slugs():

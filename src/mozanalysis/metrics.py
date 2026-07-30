@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import annotations
 
-from enum import Enum
 from typing import TYPE_CHECKING, assert_never
 
 from metric_config_parser import AnalysisUnit
+from mozilla_nimbus_schemas import AnalysisBasis
 
 from mozanalysis.types import IncompatibleAnalysisUnit
 
@@ -20,13 +20,6 @@ import logging
 import attr
 
 logger = logging.getLogger(__name__)
-
-
-class AnalysisBasis(Enum):
-    """Determines what the population used for the analysis will be based on."""
-
-    ENROLLMENTS = "enrollments"
-    EXPOSURES = "exposures"
 
 
 # attr.s converters aren't compatible with mypy, define our own
