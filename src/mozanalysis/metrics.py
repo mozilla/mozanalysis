@@ -269,11 +269,15 @@ class DataSource:
                 f"{m.select_expr.format(experiment_slug=experiment_slug)} AS {m.name}"
                 for m in metric_list
             ),
-            date=(
-                "exposure_date"
-                if analysis_basis == AnalysisBasis.EXPOSURES and exposure_signal is None
-                else "enrollment_date"
-            ),
+            # NOTE: a bug elsewhere meant we were always basing exposures off of
+            #       enrollment_date and so for now we will explicitly continue doing
+            #       that until a decision is made otherwise.
+            # date=(
+            #   "exposure_date"
+            #   if analysis_basis == AnalysisBasis.EXPOSURES and exposure_signal is None
+            #   else "enrollment_date"
+            # ),
+            date="enrollment_date",
             ignore_pre_enroll_first_day=self.experiments_column_expr.format(
                 submission_date=self.submission_date_column,
                 experiment_slug=experiment_slug,
