@@ -77,10 +77,10 @@
 <span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">assert_never</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">metric_config_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalysisUnit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mozilla_nimbus_schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalysisBasis</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">IncompatibleAnalysisUnit</span>
 
@@ -94,16 +94,6 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">attr</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="AnalysisBasis">
-<a class="viewcode-back" href="../../api/metrics.html#mozanalysis.metrics.AnalysisBasis">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">AnalysisBasis</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines what the population used for the analysis will be based on.&quot;&quot;&quot;</span>
-
-    <span class="n">ENROLLMENTS</span> <span class="o">=</span> <span class="s2">&quot;enrollments&quot;</span>
-    <span class="n">EXPOSURES</span> <span class="o">=</span> <span class="s2">&quot;exposures&quot;</span></div>
-
 
 
 <span class="c1"># attr.s converters aren&#39;t compatible with mypy, define our own</span>
