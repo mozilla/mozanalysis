@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8", "pytest-runner"]
+requires = ["pytest-runner", "setuptools>=64", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,6 +9,7 @@ authors = [{ name = "Mozilla Corporation", email = "fx-data-dev@mozilla.org" }]
 description = "A library for Mozilla experiments analysis"
 requires-python = ">=3.11"
 dependencies = [
+    "SecretStorage",
     "attrs",
     "formulaic",
     "google-cloud-bigquery",
@@ -20,7 +21,6 @@ dependencies = [
     "pandas",
     "pyarrow",
     "scipy",
-    "SecretStorage",
     "statsmodels",
 ]
 readme = "README.md"
@@ -39,8 +39,8 @@ testing = [
     "pytest-cov",
     "pytest-ruff",
     "pytest-timeout",
-    "scipy-stubs",
     "ruff",
+    "scipy-stubs",
 ]
 dev = ["build", "mozanalysis[testing]", "pip-tools", "tox", "twine"]
 
@@ -77,11 +77,15 @@ module = [
     "formulaic.*",
     "marginaleffects.*",
     "metric_config_parser.*",
-    "statsmodels.*",
     "mozanalysis.*",
+    "statsmodels.*",
 ]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["mozanalysis.sizing.*", "mozanalysis.frequentist_stats.sample_size.*"]
+module = ["mozilla_nimbus_schemas.*"]
+follow_untyped_imports = true
+
+[[tool.mypy.overrides]]
+module = ["mozanalysis.frequentist_stats.sample_size.*", "mozanalysis.sizing.*"]
 ignore_errors = true
