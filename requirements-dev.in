@@ -501,7 +501,7 @@ tomli-w==1.2.0
     # via tox
 tox==4.56.1
     # via mozanalysis
-twine==6.2.0
+twine==7.0.0
     # via mozanalysis
 typing-extensions==4.15.0
     # via
