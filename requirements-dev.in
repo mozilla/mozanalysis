@@ -241,7 +241,7 @@ mypy-extensions==1.1.0
     # via
     #   -c requirements.txt
     #   mypy
-narwhals==2.22.1
+narwhals==2.24.0
     # via
     #   -c requirements.txt
     #   formulaic
