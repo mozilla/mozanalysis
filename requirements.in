@@ -286,5 +286,5 @@ typing-inspection==0.4.2
     # via pydantic
 urllib3==2.7.0
     # via requests
-wrapt==2.2.2
+wrapt==2.3.0
     # via formulaic
