@@ -73,7 +73,7 @@ distlib==0.4.3
     # via virtualenv
 docutils==0.23
     # via readme-renderer
-faker==40.27.0
+faker==40.36.0
     # via
     #   -c requirements.txt
     #   polyfactory
