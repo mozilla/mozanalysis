@@ -310,7 +310,7 @@ pillow==12.2.0
     # via
     #   -c requirements.txt
     #   matplotlib
-pip-tools==7.5.3
+pip-tools==7.6.0
     # via mozanalysis
 platformdirs==4.10.0
     # via
