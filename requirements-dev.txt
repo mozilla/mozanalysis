@@ -1266,9 +1266,9 @@ more-itertools==11.1.0 \
 mozilla-metric-config-parser==2026.6.1 \
     --hash=sha256:9ab77d6d5556fe31fd1f897a922d24c41306cd25d98d2168b99d667b93157fa5
     # via -r requirements-dev.in
-mozilla-nimbus-schemas==3003.1.0 \
-    --hash=sha256:4093a9564df2f513302d6ed14a8e94e45137d47e29fea0f33884cdb1b97278bf \
-    --hash=sha256:efef62b6598af6fea7872e8cfdcaa2c40a15ba91b86d36fd444924707bfb4740
+mozilla-nimbus-schemas==3004.0.0 \
+    --hash=sha256:54f121bf756459caccffb16fa99e7f885680c2151d33cf86d666986f7f6c046e \
+    --hash=sha256:5abc1dac2536ae45ecc7b97c8b21bf7aec882fa97f80acf9d6a695a04e69d59d
     # via
     #   -r requirements-dev.in
     #   mozilla-metric-config-parser

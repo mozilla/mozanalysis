@@ -112,7 +112,7 @@ mock==5.2.0
     # via mozanalysis
 mozilla-metric-config-parser==2026.6.1
     # via mozanalysis
-mozilla-nimbus-schemas==3003.1.0
+mozilla-nimbus-schemas==3004.0.0
     # via mozilla-metric-config-parser
 mypy==2.1.0
     # via mozanalysis
