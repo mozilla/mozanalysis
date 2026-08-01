@@ -68,9 +68,9 @@ build==1.5.0 \
     # via
     #   -r requirements-dev.in
     #   pip-tools
-cachetools==7.1.4 \
-    --hash=sha256:323dc4127934744db5b54eb4924482d7edafbf9554e820d1531c2e08c0e4ef54 \
-    --hash=sha256:437f55a4e0c1b01a4f3077cc470e6991d47430970e36fbcb77e2be0df4fc1cd6
+cachetools==7.1.6 \
+    --hash=sha256:2c12e255780330af28b91bb7fb96cce4c766f04e38396b9a24510190a5827096 \
+    --hash=sha256:c7a79e7f30ba9943c1cefd08cc36f006aaae086e017af9166f1d59d6170c47e1
     # via
     #   -r requirements-dev.in
     #   tox

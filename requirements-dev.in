@@ -26,7 +26,7 @@ build==1.5.0
     # via
     #   mozanalysis
     #   pip-tools
-cachetools==7.1.4
+cachetools==7.1.6
     # via tox
 cattrs==26.1.0
     # via
