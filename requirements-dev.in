@@ -503,7 +503,7 @@ tox==4.56.1
     # via mozanalysis
 twine==6.2.0
     # via mozanalysis
-typing-extensions==4.15.0
+typing-extensions==4.16.0
     # via
     #   -c requirements.txt
     #   cattrs

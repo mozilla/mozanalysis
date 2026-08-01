@@ -268,7 +268,7 @@ statsmodels==0.14.6
     #   plotnine
 toml==0.10.2
     # via mozilla-metric-config-parser
-typing-extensions==4.15.0
+typing-extensions==4.16.0
     # via
     #   cattrs
     #   formulaic
