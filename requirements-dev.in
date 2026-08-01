@@ -192,7 +192,7 @@ kiwisolver==1.5.0
     # via
     #   -c requirements.txt
     #   matplotlib
-librt==0.12.0
+librt==0.13.0
     # via
     #   -c requirements.txt
     #   mypy
