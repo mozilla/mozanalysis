@@ -528,7 +528,7 @@ urllib3==2.7.0
     #   id
     #   requests
     #   twine
-virtualenv==21.5.1
+virtualenv==21.7.0
     # via tox
 wheel==0.47.0
     # via pip-tools
