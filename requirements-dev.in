@@ -32,7 +32,7 @@ cattrs==26.1.0
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-certifi==2026.6.17
+certifi==2026.7.22
     # via
     #   -c requirements.txt
     #   requests
