@@ -119,7 +119,7 @@ google-cloud-bigquery-storage==2.39.0
     # via
     #   -c requirements.txt
     #   mozanalysis
-google-cloud-core==2.6.0
+google-cloud-core==2.7.0
     # via
     #   -c requirements.txt
     #   google-cloud-bigquery
