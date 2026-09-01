@@ -245,7 +245,7 @@ narwhals==2.24.0
     #   -c requirements.txt
     #   formulaic
     #   marginaleffects
-nh3==0.3.6
+nh3==0.3.7
     # via readme-renderer
 numpy==2.4.6
     # via
