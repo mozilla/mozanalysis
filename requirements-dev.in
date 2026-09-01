@@ -315,7 +315,7 @@ platformdirs==4.11.0
     # via
     #   tox
     #   virtualenv
-plotnine==0.15.7
+plotnine==0.15.8
     # via
     #   -c requirements.txt
     #   marginaleffects
