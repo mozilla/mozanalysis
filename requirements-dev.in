@@ -187,7 +187,7 @@ jsonschema-specifications==2025.9.1
     #   jsonschema
 keyring==25.7.0
     # via twine
-kiwisolver==1.5.0
+kiwisolver==1.5.1
     # via
     #   -c requirements.txt
     #   matplotlib
