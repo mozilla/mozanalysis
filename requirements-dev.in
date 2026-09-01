@@ -44,7 +44,7 @@ charset-normalizer==3.4.9
     # via
     #   -c requirements.txt
     #   requests
-click==8.4.2
+click==8.5.0
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
