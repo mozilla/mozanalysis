@@ -22,7 +22,7 @@ attrs==26.1.0
     #   referencing
 backports-tarfile==1.2.0
     # via jaraco-context
-build==1.5.0
+build==1.6.0
     # via
     #   mozanalysis
     #   pip-tools
