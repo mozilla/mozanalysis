@@ -60,7 +60,7 @@ google-auth[pyopenssl]==2.56.2
     #   google-cloud-core
 google-cloud-bigquery==3.42.3
     # via mozanalysis
-google-cloud-bigquery-storage==2.39.0
+google-cloud-bigquery-storage==2.41.0
     # via mozanalysis
 google-cloud-core==2.6.0
     # via google-cloud-bigquery
