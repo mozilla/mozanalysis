@@ -187,7 +187,7 @@ protobuf==7.35.1
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
-pyarrow==25.0.0
+pyarrow==25.0.1
     # via
     #   marginaleffects
     #   mozanalysis
