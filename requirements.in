@@ -52,7 +52,7 @@ google-api-core[grpc]==2.33.0
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-auth[pyopenssl]==2.56.2
+google-auth[pyopenssl]==2.57.0
     # via
     #   google-api-core
     #   google-cloud-bigquery
