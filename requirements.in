@@ -259,7 +259,7 @@ six==1.17.0
     # via python-dateutil
 smmap==5.0.3
     # via gitdb
-statsmodels==0.14.6
+statsmodels==0.15.0
     # via
     #   mozanalysis
     #   plotnine
