@@ -311,7 +311,7 @@ pillow==12.3.0
     #   matplotlib
 pip-tools==7.6.0
     # via mozanalysis
-platformdirs==4.11.0
+platformdirs==4.11.5
     # via
     #   tox
     #   virtualenv
