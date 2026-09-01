@@ -152,7 +152,7 @@ idna==3.18
     # via
     #   -c requirements.txt
     #   requests
-importlib-metadata==9.0.0
+importlib-metadata==9.0.1
     # via keyring
 iniconfig==2.3.0
     # via
