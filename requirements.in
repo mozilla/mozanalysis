@@ -35,7 +35,7 @@ cryptography==50.0.0
     #   secretstorage
 cycler==0.12.1
     # via matplotlib
-faker==40.36.0
+faker==40.37.0
     # via polyfactory
 fonttools==4.63.0
     # via matplotlib
