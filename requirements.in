@@ -203,7 +203,7 @@ pydantic==2.13.4
     #   mozilla-nimbus-schemas
 pydantic-core==2.46.4
     # via pydantic
-pygments==2.20.0
+pygments==2.21.0
     # via pytest
 pyparsing==3.3.2
     # via matplotlib
