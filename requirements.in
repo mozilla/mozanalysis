@@ -176,7 +176,7 @@ polars-runtime-32==1.43.2
     # via polars
 polyfactory==2.22.5
     # via mozilla-nimbus-schemas
-proto-plus==1.28.2
+proto-plus==1.28.4
     # via
     #   google-api-core
     #   google-cloud-bigquery-storage
