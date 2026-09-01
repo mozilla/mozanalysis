@@ -547,9 +547,9 @@ faker==40.36.0 \
     # via
     #   -r requirements-dev.in
     #   polyfactory
-filelock==3.32.2 \
-    --hash=sha256:87dd94cf281e586d135fa51132b8e3d9a598b316e90377a288663c9321036c82 \
-    --hash=sha256:c33351e1f49cae33414acbc6d56784e6ecee82514ec90795da1161fc4836b5b8
+filelock==3.32.4 \
+    --hash=sha256:22e58ca3b1ae3b98993b762d7338367ae64fe50252bf78d59da3bfebcdf1cedd \
+    --hash=sha256:2bde2e4cf732e0153406d8a7bc80620ecf5e621fe0d25e41143c4e3b4733ff30
     # via
     #   -r requirements-dev.in
     #   python-discovery
