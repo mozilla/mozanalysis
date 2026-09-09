@@ -196,7 +196,7 @@ librt==0.15.0
     # via
     #   -c requirements.txt
     #   mypy
-marginaleffects==0.1.4
+marginaleffects==0.6.0
     # via
     #   -c requirements.txt
     #   mozanalysis
