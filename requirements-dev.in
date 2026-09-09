@@ -8,7 +8,7 @@ annotated-types==0.8.0
     # via
     #   -c requirements.txt
     #   pydantic
-ast-serialize==0.6.0
+ast-serialize==0.11.1
     # via
     #   -c requirements.txt
     #   mypy
@@ -22,13 +22,13 @@ attrs==26.1.0
     #   referencing
 backports-tarfile==1.2.0
     # via jaraco-context
-build==1.5.0
+build==1.6.0
     # via
     #   mozanalysis
     #   pip-tools
-cachetools==7.1.7
+cachetools==7.1.8
     # via tox
-cattrs==26.1.0
+cattrs==26.2.0
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
@@ -40,11 +40,11 @@ cffi==2.1.1
     # via
     #   -c requirements.txt
     #   cryptography
-charset-normalizer==3.4.9
+charset-normalizer==3.5.1
     # via
     #   -c requirements.txt
     #   requests
-click==8.4.2
+click==8.5.0
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
@@ -55,11 +55,11 @@ contourpy==1.3.3
     # via
     #   -c requirements.txt
     #   matplotlib
-coverage[toml]==7.15.3
+coverage[toml]==7.16.0
     # via
     #   -c requirements.txt
     #   pytest-cov
-cryptography==50.0.0
+cryptography==50.0.1
     # via
     #   -c requirements.txt
     #   google-auth
@@ -72,16 +72,16 @@ distlib==0.4.3
     # via virtualenv
 docutils==0.23
     # via readme-renderer
-faker==40.36.0
+faker==40.38.0
     # via
     #   -c requirements.txt
     #   polyfactory
-filelock==3.32.2
+filelock==3.32.6
     # via
     #   python-discovery
     #   tox
     #   virtualenv
-fonttools==4.63.0
+fonttools==4.64.0
     # via
     #   -c requirements.txt
     #   matplotlib
@@ -90,36 +90,37 @@ formulaic==1.2.2
     #   -c requirements.txt
     #   marginaleffects
     #   mozanalysis
+    #   statsmodels
 gitdb==4.0.12
     # via
     #   -c requirements.txt
     #   gitpython
-gitpython==3.1.58
+gitpython==3.1.62
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-google-api-core[grpc]==2.33.0
+google-api-core[grpc]==2.36.0
     # via
     #   -c requirements.txt
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-auth[pyopenssl]==2.56.2
+google-auth[pyopenssl]==2.58.0
     # via
     #   -c requirements.txt
     #   google-api-core
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-cloud-bigquery==3.42.3
+google-cloud-bigquery==3.45.0
     # via
     #   -c requirements.txt
     #   mozanalysis
-google-cloud-bigquery-storage==2.39.0
+google-cloud-bigquery-storage==2.41.0
     # via
     #   -c requirements.txt
     #   mozanalysis
-google-cloud-core==2.6.0
+google-cloud-core==2.7.0
     # via
     #   -c requirements.txt
     #   google-cloud-bigquery
@@ -127,32 +128,32 @@ google-crc32c==1.8.0
     # via
     #   -c requirements.txt
     #   google-resumable-media
-google-resumable-media==2.10.0
+google-resumable-media==2.10.2
     # via
     #   -c requirements.txt
     #   google-cloud-bigquery
-googleapis-common-protos==1.75.0
+googleapis-common-protos==1.75.3
     # via
     #   -c requirements.txt
     #   google-api-core
     #   grpcio-status
-grpcio==1.83.0
+grpcio==1.83.1
     # via
     #   -c requirements.txt
     #   google-api-core
     #   google-cloud-bigquery-storage
     #   grpcio-status
-grpcio-status==1.83.0
+grpcio-status==1.83.1
     # via
     #   -c requirements.txt
     #   google-api-core
 id==1.6.1
     # via twine
-idna==3.18
+idna==3.19
     # via
     #   -c requirements.txt
     #   requests
-importlib-metadata==9.0.0
+importlib-metadata==9.0.1
     # via keyring
 iniconfig==2.3.0
     # via
@@ -187,11 +188,11 @@ jsonschema-specifications==2025.9.1
     #   jsonschema
 keyring==25.7.0
     # via twine
-kiwisolver==1.5.0
+kiwisolver==1.5.1
     # via
     #   -c requirements.txt
     #   matplotlib
-librt==0.13.0
+librt==0.15.0
     # via
     #   -c requirements.txt
     #   mypy
@@ -212,7 +213,7 @@ matplotlib==3.11.1
     #   plotnine
 mdurl==0.1.2
     # via markdown-it-py
-mizani==0.14.4
+mizani==0.14.6
     # via
     #   -c requirements.txt
     #   plotnine
@@ -224,15 +225,15 @@ more-itertools==11.1.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-mozilla-metric-config-parser==2026.7.1
+mozilla-metric-config-parser==2026.9.2
     # via
     #   -c requirements.txt
     #   mozanalysis
-mozilla-nimbus-schemas==3004.0.0
+mozilla-nimbus-schemas==3005.0.0
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-mypy==2.3.0
+mypy==2.3.1
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -240,12 +241,12 @@ mypy-extensions==1.1.0
     # via
     #   -c requirements.txt
     #   mypy
-narwhals==2.24.0
+narwhals==2.26.0
     # via
     #   -c requirements.txt
     #   formulaic
     #   marginaleffects
-nh3==0.3.6
+nh3==0.3.7
     # via readme-renderer
 numpy==2.4.6
     # via
@@ -268,6 +269,10 @@ numpy-typing-compat==20251206.2.4
     # via
     #   -c requirements.txt
     #   optype
+opentelemetry-api==1.44.0
+    # via
+    #   -c requirements.txt
+    #   google-api-core
 optype[numpy]==0.17.1
     # via
     #   -c requirements.txt
@@ -278,6 +283,7 @@ packaging==26.3
     #   build
     #   google-cloud-bigquery
     #   matplotlib
+    #   patsy
     #   pyproject-api
     #   pytest
     #   statsmodels
@@ -300,7 +306,7 @@ pathspec==1.1.1
     # via
     #   -c requirements.txt
     #   mypy
-patsy==1.0.2
+patsy==1.0.3
     # via
     #   -c requirements.txt
     #   marginaleffects
@@ -309,13 +315,13 @@ pillow==12.3.0
     # via
     #   -c requirements.txt
     #   matplotlib
-pip-tools==7.6.0
+pip-tools==7.6.1
     # via mozanalysis
-platformdirs==4.11.0
+platformdirs==4.11.8
     # via
     #   tox
     #   virtualenv
-plotnine==0.15.7
+plotnine==0.15.8
     # via
     #   -c requirements.txt
     #   marginaleffects
@@ -325,11 +331,11 @@ pluggy==1.6.0
     #   pytest
     #   pytest-cov
     #   tox
-polars==1.43.2
+polars==1.44.2
     # via
     #   -c requirements.txt
     #   marginaleffects
-polars-runtime-32==1.43.2
+polars-runtime-32==1.44.2
     # via
     #   -c requirements.txt
     #   polars
@@ -337,12 +343,12 @@ polyfactory==2.22.5
     # via
     #   -c requirements.txt
     #   mozilla-nimbus-schemas
-proto-plus==1.28.2
+proto-plus==1.28.4
     # via
     #   -c requirements.txt
     #   google-api-core
     #   google-cloud-bigquery-storage
-protobuf==7.35.1
+protobuf==7.36.1
     # via
     #   -c requirements.txt
     #   google-api-core
@@ -350,7 +356,7 @@ protobuf==7.35.1
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
-pyarrow==25.0.0
+pyarrow==25.0.1
     # via
     #   -c requirements.txt
     #   marginaleffects
@@ -367,16 +373,16 @@ pycparser==3.0
     # via
     #   -c requirements.txt
     #   cffi
-pydantic==2.13.4
+pydantic==2.13.5
     # via
     #   -c requirements.txt
     #   marginaleffects
     #   mozilla-nimbus-schemas
-pydantic-core==2.46.4
+pydantic-core==2.46.5
     # via
     #   -c requirements.txt
     #   pydantic
-pygments==2.20.0
+pygments==2.21.0
     # via
     #   -c requirements.txt
     #   pytest
@@ -417,7 +423,7 @@ python-dateutil==2.9.0.post0
     #   google-cloud-bigquery
     #   matplotlib
     #   pandas
-python-discovery==1.5.1
+python-discovery==1.6.0
     # via
     #   tox
     #   virtualenv
@@ -425,7 +431,7 @@ pytz==2026.3.post1
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-readme-renderer==45.0
+readme-renderer==46.0
     # via twine
 referencing==0.37.0
     # via
@@ -451,7 +457,7 @@ rpds-py==2026.6.3
     #   -c requirements.txt
     #   jsonschema
     #   referencing
-ruff==0.16.1
+ruff==0.16.6
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -482,7 +488,7 @@ smmap==5.0.3
     # via
     #   -c requirements.txt
     #   gitdb
-statsmodels==0.14.6
+statsmodels==0.15.0
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -493,7 +499,7 @@ toml==0.10.2
     #   mozilla-metric-config-parser
 tomli-w==1.2.0
     # via tox
-tox==4.58.0
+tox==4.61.4
     # via mozanalysis
 twine==7.0.0
     # via mozanalysis
@@ -505,13 +511,15 @@ typing-extensions==4.16.0
     #   grpcio
     #   mozilla-nimbus-schemas
     #   mypy
+    #   opentelemetry-api
     #   optype
     #   polyfactory
     #   pydantic
     #   pydantic-core
     #   referencing
+    #   tox
     #   typing-inspection
-typing-inspection==0.4.2
+typing-inspection==0.4.4
     # via
     #   -c requirements.txt
     #   pydantic
@@ -521,11 +529,11 @@ urllib3==2.7.0
     #   id
     #   requests
     #   twine
-virtualenv==21.7.1
+virtualenv==21.7.9
     # via tox
-wheel==0.47.0
+wheel==0.48.0
     # via pip-tools
-wrapt==2.3.0
+wrapt==2.4.0
     # via
     #   -c requirements.txt
     #   formulaic
