@@ -83,7 +83,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataSource</span><span class="p">,</span> <span class="n">Metric</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.segments</span><span class="w"> </span><span class="kn">import</span> <span class="n">Segment</span><span class="p">,</span> <span class="n">SegmentDataSource</span>
 
-<span class="n">METRIC_HUB_JETSTREAM_REPO</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/mozilla/metric-hub/tree/main/jetstream&quot;</span>
+<span class="n">METRIC_HUB_JETSTREAM_REPO</span> <span class="o">=</span> <span class="s2">"https://github.com/mozilla/metric-hub/tree/main/jetstream"</span>
 
 
 <div class="viewcode-block" id="ApplicationNotFound">
@@ -124,17 +124,17 @@
 <div class="viewcode-block" id="_ConfigLoader">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">_ConfigLoader</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Loads config files from an external repository.</span>
 
 <span class="sd">    Config objects are converted into mozanalysis native types.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">config_collection</span><span class="p">:</span> <span class="n">ConfigCollection</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">configs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConfigCollection</span><span class="p">:</span>
-        <span class="n">configs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_configs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">configs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_configs"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">configs</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">configs</span>
 
@@ -147,8 +147,8 @@
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.with_configs_from">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">with_configs_from</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">repo_urls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_private</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_ConfigLoader&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load configs from another repository and merge with default configs.&quot;&quot;&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"_ConfigLoader"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Load configs from another repository and merge with default configs."""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">repo_urls</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
 
@@ -168,20 +168,20 @@
 <div class="viewcode-block" id="_ConfigLoader.get_metric">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_metric">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a metric definition for the given app.</span>
+<span class="w">        </span><span class="sd">"""Load a metric definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.Metric` instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">metric_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get_metric_definition</span><span class="p">(</span><span class="n">metric_slug</span><span class="p">,</span> <span class="n">app_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">metric_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_configs_for_app</span><span class="p">(</span><span class="n">app_name</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">MetricNotFound</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Could not find definition for metric </span><span class="si">{</span><span class="n">metric_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa:E501</span>
+                    <span class="sa">f</span><span class="s2">"Could not find definition for metric </span><span class="si">{</span><span class="n">metric_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># noqa:E501</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">ApplicationNotFound</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so metric </span><span class="si">{</span><span class="n">metric_slug</span><span class="si">}</span><span class="s2"> could not be resolved&quot;</span>  <span class="c1"># noqa:E501</span>
+                    <span class="sa">f</span><span class="s2">"Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so metric </span><span class="si">{</span><span class="n">metric_slug</span><span class="si">}</span><span class="s2"> could not be resolved"</span>  <span class="c1"># noqa:E501</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Metric</span><span class="p">(</span>
@@ -202,10 +202,10 @@
 <div class="viewcode-block" id="_ConfigLoader.get_data_source">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_data_source">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSource</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a data source definition for the given app.</span>
+<span class="w">        </span><span class="sd">"""Load a data source definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.DataSource` instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">data_source_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get_data_source_definition</span><span class="p">(</span>
             <span class="n">data_source_slug</span><span class="p">,</span> <span class="n">app_name</span>
@@ -213,11 +213,11 @@
         <span class="k">if</span> <span class="n">data_source_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_configs_for_app</span><span class="p">(</span><span class="n">app_name</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">DataSourceNotFound</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Could not find definition for data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa:E501</span>
+                    <span class="sa">f</span><span class="s2">"Could not find definition for data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># noqa:E501</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">ApplicationNotFound</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> could not be resolved&quot;</span>  <span class="c1"># noqa:E501</span>
+                    <span class="sa">f</span><span class="s2">"Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> could not be resolved"</span>  <span class="c1"># noqa:E501</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">DataSource</span><span class="o">.</span><span class="n">from_mcp_data_source</span><span class="p">(</span><span class="n">data_source_definition</span><span class="p">,</span> <span class="n">app_name</span><span class="p">)</span></div>
@@ -226,20 +226,20 @@
 <div class="viewcode-block" id="_ConfigLoader.get_segment">
 <a class="viewcode-back" href="../../api/config.html#mozanalysis.config._ConfigLoader.get_segment">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Segment</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a segment definition for the given app.</span>
+<span class="w">        </span><span class="sd">"""Load a segment definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.segments.Segment` instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">segment_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get_segment_definition</span><span class="p">(</span><span class="n">segment_slug</span><span class="p">,</span> <span class="n">app_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">segment_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_configs_for_app</span><span class="p">(</span><span class="n">app_name</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">SegmentNotFound</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Could not find definition for segment </span><span class="si">{</span><span class="n">segment_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa:E501</span>
+                    <span class="sa">f</span><span class="s2">"Could not find definition for segment </span><span class="si">{</span><span class="n">segment_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># noqa:E501</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">ApplicationNotFound</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so segment </span><span class="si">{</span><span class="n">segment_slug</span><span class="si">}</span><span class="s2"> could not be resolved&quot;</span>  <span class="c1"># noqa:E501</span>
+                    <span class="sa">f</span><span class="s2">"Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so segment </span><span class="si">{</span><span class="n">segment_slug</span><span class="si">}</span><span class="s2"> could not be resolved"</span>  <span class="c1"># noqa:E501</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Segment</span><span class="p">(</span>
@@ -261,10 +261,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_segment_data_source</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SegmentDataSource</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a segment data source definition for the given app.</span>
+<span class="w">        </span><span class="sd">"""Load a segment data source definition for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.segments.SegmentDataSource` instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">data_source_definition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get_segment_data_source_definition</span><span class="p">(</span>
             <span class="n">data_source_slug</span><span class="p">,</span> <span class="n">app_name</span>
@@ -272,11 +272,11 @@
         <span class="k">if</span> <span class="n">data_source_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_configs_for_app</span><span class="p">(</span><span class="n">app_name</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">SegmentDataSourceNotFound</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Could not find definition for segment data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa:E501</span>
+                    <span class="sa">f</span><span class="s2">"Could not find definition for segment data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> in application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># noqa:E501</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">ApplicationNotFound</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so segment data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> could not be resolved&quot;</span>  <span class="c1"># noqa:E501</span>
+                    <span class="sa">f</span><span class="s2">"Could not find application </span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">, so segment data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2"> could not be resolved"</span>  <span class="c1"># noqa:E501</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">SegmentDataSource</span><span class="p">(</span>
@@ -296,13 +296,13 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_outcome_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">metric_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a metric definition from an outcome defined for the given app.</span>
+<span class="w">        </span><span class="sd">"""Load a metric definition from an outcome defined for the given app.</span>
 
 <span class="sd">        Parametrized metrics are not supported, since they may not be defined outside</span>
 <span class="sd">        of an experiment.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.Metric` instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metric</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">outcomes</span><span class="p">:</span>
@@ -312,13 +312,13 @@
             <span class="n">slug</span><span class="o">=</span><span class="n">outcome_slug</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">app_name</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">outcome_spec</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find definition for outcome </span><span class="si">{</span><span class="n">outcome_slug</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not find definition for outcome </span><span class="si">{</span><span class="n">outcome_slug</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="n">metric_definition</span> <span class="o">=</span> <span class="n">outcome_spec</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metric_slug</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">metric_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Could not find definition for metric </span><span class="si">{</span><span class="n">metric_slug</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; in outcome </span><span class="si">{</span><span class="n">outcome_slug</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"Could not find definition for metric </span><span class="si">{</span><span class="n">metric_slug</span><span class="si">}</span><span class="s2">"</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">" in outcome </span><span class="si">{</span><span class="n">outcome_slug</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
 
         <span class="nd">@dataclass</span>
@@ -330,7 +330,7 @@
         <span class="n">metric</span> <span class="o">=</span> <span class="n">summaries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">metric</span>
 
         <span class="k">if</span> <span class="n">metric</span><span class="o">.</span><span class="n">data_source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to resolve DataSource for Metric </span><span class="si">{</span><span class="n">metric</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unable to resolve DataSource for Metric </span><span class="si">{</span><span class="n">metric</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Metric</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">metric</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -347,10 +347,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_outcome_data_source</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">data_source_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome_slug</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSource</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a data source definition from an outcome defined for the given app.</span>
+<span class="w">        </span><span class="sd">"""Load a data source definition from an outcome defined for the given app.</span>
 
 <span class="sd">        Returns a :class:`mozanalysis.metrics.DataSource` instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataSource</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">outcomes</span><span class="p">:</span>
@@ -360,15 +360,15 @@
             <span class="n">slug</span><span class="o">=</span><span class="n">outcome_slug</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">app_name</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">outcome_spec</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find definition for outcome </span><span class="si">{</span><span class="n">outcome_slug</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not find definition for outcome </span><span class="si">{</span><span class="n">outcome_slug</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="n">data_source_definition</span> <span class="o">=</span> <span class="n">outcome_spec</span><span class="o">.</span><span class="n">data_sources</span><span class="o">.</span><span class="n">definitions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="n">data_source_slug</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">data_source_definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Could not find definition for data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; in outcome </span><span class="si">{</span><span class="n">outcome_slug</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"Could not find definition for data source </span><span class="si">{</span><span class="n">data_source_slug</span><span class="si">}</span><span class="s2">"</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">" in outcome </span><span class="si">{</span><span class="n">outcome_slug</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">DataSource</span><span class="o">.</span><span class="n">from_mcp_data_source</span><span class="p">(</span>

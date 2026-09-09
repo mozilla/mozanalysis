@@ -166,23 +166,23 @@ if we have data covering their entire analysis window.</p></li>
 <p>Example usage (in a colab notebook):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">google.colab</span><span class="w"> </span><span class="kn">import</span> <span class="n">auth</span>
 <span class="n">auth</span><span class="o">.</span><span class="n">authenticate_user</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Authenticated&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'Authenticated'</span><span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.experiment</span><span class="w"> </span><span class="kn">import</span> <span class="n">Experiment</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.bq</span><span class="w"> </span><span class="kn">import</span> <span class="n">BigQueryContext</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mozanalysis.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigLoader</span>
 
-<span class="n">active_hours</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="s2">&quot;active_hours&quot;</span><span class="p">,</span> <span class="s2">&quot;firefox_desktop&quot;</span><span class="p">)</span>
-<span class="n">uri_count</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="s2">&quot;uri_count&quot;</span><span class="p">,</span> <span class="s2">&quot;firefox_desktop&quot;</span><span class="p">)</span>
+<span class="n">active_hours</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="s2">"active_hours"</span><span class="p">,</span> <span class="s2">"firefox_desktop"</span><span class="p">)</span>
+<span class="n">uri_count</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="s2">"uri_count"</span><span class="p">,</span> <span class="s2">"firefox_desktop"</span><span class="p">)</span>
 
 <span class="n">bq_context</span> <span class="o">=</span> <span class="n">BigQueryContext</span><span class="p">(</span>
-    <span class="n">dataset_id</span><span class="o">=</span><span class="s1">&#39;your-dataset-id&#39;</span><span class="p">,</span>  <span class="c1"># e.g. mine&#39;s flawrence</span>
-    <span class="n">project_id</span><span class="o">=</span><span class="s1">&#39;moz-fx-data-bq-data-science&#39;</span>  <span class="c1"># this is the default anyway</span>
+    <span class="n">dataset_id</span><span class="o">=</span><span class="s1">'your-dataset-id'</span><span class="p">,</span>  <span class="c1"># e.g. mine's flawrence</span>
+    <span class="n">project_id</span><span class="o">=</span><span class="s1">'moz-fx-data-bq-data-science'</span>  <span class="c1"># this is the default anyway</span>
 <span class="p">)</span>
 
 <span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span>
-    <span class="n">experiment_slug</span><span class="o">=</span><span class="s1">&#39;pref-fingerprinting-protections-retention-study-release-70&#39;</span><span class="p">,</span>
-    <span class="n">start_date</span><span class="o">=</span><span class="s1">&#39;2019-10-29&#39;</span><span class="p">,</span>
+    <span class="n">experiment_slug</span><span class="o">=</span><span class="s1">'pref-fingerprinting-protections-retention-study-release-70'</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="s1">'2019-10-29'</span><span class="p">,</span>
     <span class="n">num_dates_enrollment</span><span class="o">=</span><span class="mi">8</span>
 <span class="p">)</span>
 
@@ -193,7 +193,7 @@ if we have data covering their entire analysis window.</p></li>
         <span class="n">active_hours</span><span class="p">,</span>
         <span class="n">uri_count</span>
     <span class="p">],</span>
-    <span class="n">last_date_full_data</span><span class="o">=</span><span class="s1">&#39;2019-12-01&#39;</span><span class="p">,</span>
+    <span class="n">last_date_full_data</span><span class="o">=</span><span class="s1">'2019-12-01'</span><span class="p">,</span>
     <span class="n">analysis_start_days</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="n">analysis_length_days</span><span class="o">=</span><span class="mi">7</span>
 <span class="p">)</span>

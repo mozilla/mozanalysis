@@ -103,7 +103,7 @@
 <a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.HistoricalTarget">[docs]</a>
 <span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">HistoricalTarget</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Query historical data.</span>
+<span class="w">    </span><span class="sd">"""Query historical data.</span>
 
 <span class="sd">    The methods here query data in a way compatible with the following</span>
 <span class="sd">    principles, which are important for experiment analysis:</span>
@@ -112,26 +112,26 @@
 
 <span class="sd">        from google.colab import auth</span>
 <span class="sd">        auth.authenticate_user()</span>
-<span class="sd">        print(&#39;Authenticated&#39;)</span>
+<span class="sd">        print('Authenticated')</span>
 
 <span class="sd">        from mozanalysis.config import ConfigLoader</span>
 
-<span class="sd">        active_hours = ConfigLoader.get_metric(&quot;active_hours&quot;, &quot;firefox_desktop&quot;)</span>
-<span class="sd">        uri_count = ConfigLoader.get_metric(&quot;uri_count&quot;, &quot;firefox_desktop&quot;)</span>
+<span class="sd">        active_hours = ConfigLoader.get_metric("active_hours", "firefox_desktop")</span>
+<span class="sd">        uri_count = ConfigLoader.get_metric("uri_count", "firefox_desktop")</span>
 
-<span class="sd">        new_or_resurrected_v3 = ConfigLoader.get_segment(&quot;new_or_resurrected_v3&quot;,</span>
-<span class="sd">                                                            &quot;firefox_desktop&quot;)</span>
-<span class="sd">        allweek_regular_v1 = ConfigLoader.get_segment(&quot;allweek_regular_v1&quot;,</span>
-<span class="sd">                                                            &quot;firefox_desktop&quot;)</span>
+<span class="sd">        new_or_resurrected_v3 = ConfigLoader.get_segment("new_or_resurrected_v3",</span>
+<span class="sd">                                                            "firefox_desktop")</span>
+<span class="sd">        allweek_regular_v1 = ConfigLoader.get_segment("allweek_regular_v1",</span>
+<span class="sd">                                                            "firefox_desktop")</span>
 
 <span class="sd">        bq_context = BigQueryContext(</span>
-<span class="sd">            dataset_id=&#39;mbowerman&#39;,  # e.g. mine&#39;s mbowerman</span>
-<span class="sd">            project_id=&#39;moz-fx-data-bq-data-science&#39;  # this is the default anyway</span>
+<span class="sd">            dataset_id='mbowerman',  # e.g. mine's mbowerman</span>
+<span class="sd">            project_id='moz-fx-data-bq-data-science'  # this is the default anyway</span>
 <span class="sd">        )</span>
 
 <span class="sd">        ht = HistoricalTarget(</span>
-<span class="sd">            experiment_name=&#39;my_test_name&#39;,</span>
-<span class="sd">            start_date=&#39;2021-01-01&#39;,</span>
+<span class="sd">            experiment_name='my_test_name',</span>
+<span class="sd">            start_date='2021-01-01',</span>
 <span class="sd">            num_dates_enrollment=2,</span>
 <span class="sd">            analysis_length=4</span>
 <span class="sd">        )</span>
@@ -156,7 +156,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        experiment_name (str): A simple name of this analysis, which is used</span>
 <span class="sd">            to create table names when saving results in BigQuery.</span>
-<span class="sd">        start_date (str): e.g. &#39;2019-01-01&#39;. First date for historical data to be</span>
+<span class="sd">        start_date (str): e.g. '2019-01-01'. First date for historical data to be</span>
 <span class="sd">            retrieved.</span>
 <span class="sd">        analysis_length (int): Number of days to include for analysis</span>
 <span class="sd">        num_dates_enrollment (int, default 7): Number of days to consider to</span>
@@ -171,12 +171,12 @@
 <span class="sd">    Attributes:</span>
 <span class="sd">        experiment_name (str): Name of the study, used in naming tables</span>
 <span class="sd">            related to this analysis.</span>
-<span class="sd">        start_date (str): e.g. &#39;2019-01-01&#39;. First date on which enrollment</span>
+<span class="sd">        start_date (str): e.g. '2019-01-01'. First date on which enrollment</span>
 <span class="sd">            events were received.</span>
 <span class="sd">        num_dates_enrollment (int): Number of days to consider to enroll clients</span>
 <span class="sd">            in the analysis.</span>
 <span class="sd">        analysis_length (int, optional): Number of days to include for analysis</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">experiment_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
     <span class="n">start_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
@@ -198,7 +198,7 @@
         <span class="n">custom_targets_query</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">replace_tables</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a DataFrame containing per-client metric values.</span>
+<span class="w">        </span><span class="sd">"""Return a DataFrame containing per-client metric values.</span>
 
 <span class="sd">        Also store them in a permanent table in BigQuery. The name of</span>
 <span class="sd">        this table will be printed. Subsequent calls to this function</span>
@@ -220,7 +220,7 @@
 <span class="sd">                in the main query; must include a client_id column</span>
 <span class="sd">                to join to metrics tables and an enrollment_date:</span>
 
-<span class="sd">                N.B. this query&#39;s results must be uniquely keyed by</span>
+<span class="sd">                N.B. this query's results must be uniquely keyed by</span>
 <span class="sd">                (client_id, enrollment_date), or else your results will be</span>
 <span class="sd">                subtly wrong.</span>
 <span class="sd">            replace_tables (bool): If True, delete tables that exist in</span>
@@ -233,31 +233,31 @@
 <span class="sd">            ``metric_list``, and one column per sanity-check metric.</span>
 <span class="sd">            Columns (not necessarily in order):</span>
 
-<span class="sd">                * client_id (str): Not necessary for &quot;happy path&quot; analyses.</span>
+<span class="sd">                * client_id (str): Not necessary for "happy path" analyses.</span>
 <span class="sd">                * Analysis window (int): Start and end of analysis window, in</span>
 <span class="sd">                  days of entire analysis included in the window</span>
-<span class="sd">                * [metric 1]: The client&#39;s value for the first metric in</span>
+<span class="sd">                * [metric 1]: The client's value for the first metric in</span>
 <span class="sd">                  ``metric_list``.</span>
 <span class="sd">                * ...</span>
-<span class="sd">                * [metric n]: The client&#39;s value for the nth (final)</span>
+<span class="sd">                * [metric n]: The client's value for the nth (final)</span>
 <span class="sd">                  metric in ``metric_list``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">custom_targets_query</span> <span class="ow">or</span> <span class="n">target_list</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Either custom_target_query or target_list must be provided&quot;</span>
+                <span class="s2">"Either custom_target_query or target_list must be provided"</span>
             <span class="p">)</span>
 
         <span class="c1"># validate metric_list and target_list are from the same source</span>
         <span class="c1"># filter out el.app_name is None, there are cases where metric-hub</span>
-        <span class="c1"># was not used and it&#39;s up to users to ensure the sources match</span>
+        <span class="c1"># was not used and it's up to users to ensure the sources match</span>
         <span class="n">metric_list_sources</span> <span class="o">=</span> <span class="p">{</span><span class="n">el</span><span class="o">.</span><span class="n">app_name</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">metric_list</span> <span class="k">if</span> <span class="n">el</span><span class="o">.</span><span class="n">app_name</span><span class="p">}</span>
         <span class="n">target_list_sources</span> <span class="o">=</span> <span class="p">{</span><span class="n">el</span><span class="o">.</span><span class="n">app_name</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">target_list</span> <span class="k">if</span> <span class="n">el</span><span class="o">.</span><span class="n">app_name</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metric_list_sources</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;metric_list contains multiple metric-hub apps&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">"metric_list contains multiple metric-hub apps"</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_list_sources</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;target_list contains multiple metric-hub apps&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">"target_list contains multiple metric-hub apps"</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">metric_list_sources</span>
@@ -265,7 +265,7 @@
             <span class="ow">and</span> <span class="n">metric_list_sources</span> <span class="o">!=</span> <span class="n">target_list_sources</span>
         <span class="p">):</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;metric_list and target_list metric-hub apps do not match&quot;</span><span class="p">,</span>
+                <span class="s2">"metric_list and target_list metric-hub apps do not match"</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -273,14 +273,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="p">)</span>
 
-        <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">last_date_full_data</span> <span class="o">&gt;=</span> <span class="n">today</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Based on the start date, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;, with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="si">}</span><span class="s2"> days of enrollment &quot;</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;and analysis of length </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span><span class="si">}</span><span class="s2"> days, &quot;</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;the last day of analysis is </span><span class="si">{</span><span class="n">last_date_full_data</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;, which is in the future.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Based on the start date, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="si">}</span><span class="s2">"</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">", with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="si">}</span><span class="s2"> days of enrollment "</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">"and analysis of length </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span><span class="si">}</span><span class="s2"> days, "</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">"the last day of analysis is </span><span class="si">{</span><span class="n">last_date_full_data</span><span class="si">}</span><span class="s2">"</span>
+                <span class="o">+</span> <span class="s2">", which is in the future."</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">continuous_enrollment</span><span class="p">:</span>
@@ -305,10 +305,10 @@
         <span class="p">)</span>
 
         <span class="n">targets_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
-            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s2">"_"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="p">,</span>
-                    <span class="s2">&quot;targets&quot;</span><span class="p">,</span>
+                    <span class="s2">"targets"</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">experiment_name</span><span class="p">,</span>
                     <span class="n">hash_ish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span><span class="p">),</span>
                 <span class="p">]</span>
@@ -324,7 +324,7 @@
         <span class="p">)</span>
 
         <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
-            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s2">"_"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">experiment_name</span><span class="p">,</span>
@@ -341,8 +341,8 @@
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="n">metric_obj</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                     <span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Metric </span><span class="si">{</span><span class="n">metric_obj</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is all 0, which may indicate&quot;</span>
-                        <span class="o">+</span> <span class="s2">&quot; segments and metric do not have a common app&quot;</span>
+                        <span class="sa">f</span><span class="s2">"Metric </span><span class="si">{</span><span class="n">metric_obj</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is all 0, which may indicate"</span>
+                        <span class="o">+</span> <span class="s2">" segments and metric do not have a common app"</span>
                     <span class="p">),</span>
                     <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -355,12 +355,12 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">bq_context</span><span class="p">:</span> <span class="n">BigQueryContext</span><span class="p">,</span>
         <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
-        <span class="n">time_series_period</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;weekly&quot;</span><span class="p">,</span>
+        <span class="n">time_series_period</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"weekly"</span><span class="p">,</span>
         <span class="n">custom_targets_query</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">target_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">HistoricalTarget</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">replace_tables</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeSeriesResult</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a TimeSeriesResult with per-client metric values.</span>
+<span class="w">        </span><span class="sd">"""Return a TimeSeriesResult with per-client metric values.</span>
 
 <span class="sd">        Roughly equivalent to looping over :meth:`.get_single_window_data`</span>
 <span class="sd">        with different analysis windows, and reorganising the results.</span>
@@ -383,7 +383,7 @@
 <span class="sd">                in the main query; must include a client_id column</span>
 <span class="sd">                to join to metrics tables and an enrollment_date:</span>
 
-<span class="sd">                N.B. this query&#39;s results must be uniquely keyed by</span>
+<span class="sd">                N.B. this query's results must be uniquely keyed by</span>
 <span class="sd">                (client_id, enrollment_date), or else your results will be</span>
 <span class="sd">                subtly wrong.</span>
 <span class="sd">            replace_tables (bool): If True, delete tables that exist in</span>
@@ -395,29 +395,29 @@
 <span class="sd">            which may be used to obtain a</span>
 <span class="sd">            pandas DataFrame of per-client metric data, for each</span>
 <span class="sd">            analysis window. Each DataFrame is a pandas DataFrame in</span>
-<span class="sd">            &quot;the standard format&quot;: one row per client, some metadata</span>
+<span class="sd">            "the standard format": one row per client, some metadata</span>
 <span class="sd">            columns, plus one column per metric and sanity-check metric.</span>
 <span class="sd">            Its columns (not necessarily in order):</span>
 
 <span class="sd">                * enrollment date and client_id</span>
-<span class="sd">                * [metric 1]: The client&#39;s value for the first metric in</span>
+<span class="sd">                * [metric 1]: The client's value for the first metric in</span>
 <span class="sd">                  ``metric_list``.</span>
 <span class="sd">                * ...</span>
-<span class="sd">                * [metric n]: The client&#39;s value for the nth (final)</span>
+<span class="sd">                * [metric n]: The client's value for the nth (final)</span>
 <span class="sd">                  metric in ``metric_list``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">last_date_full_data</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="p">)</span>
 
-        <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">last_date_full_data</span> <span class="o">&gt;=</span> <span class="n">today</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Based on the start date, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;, with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="si">}</span><span class="s2"> days of enrollment &quot;</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;and analysis of length </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span><span class="si">}</span><span class="s2"> days, &quot;</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;the last day of analysis is </span><span class="si">{</span><span class="n">last_date_full_data</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;, which is in the future.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Based on the start date, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="si">}</span><span class="s2">"</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">", with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_dates_enrollment</span><span class="si">}</span><span class="s2"> days of enrollment "</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">"and analysis of length </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_length</span><span class="si">}</span><span class="s2"> days, "</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">"the last day of analysis is </span><span class="si">{</span><span class="n">last_date_full_data</span><span class="si">}</span><span class="s2">"</span>
+                <span class="o">+</span> <span class="s2">", which is in the future."</span>
             <span class="p">)</span>
 
         <span class="n">time_limits</span> <span class="o">=</span> <span class="n">TimeLimits</span><span class="o">.</span><span class="n">for_ts</span><span class="p">(</span>
@@ -434,10 +434,10 @@
         <span class="p">)</span>
 
         <span class="n">targets_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
-            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s2">"_"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="p">,</span>
-                    <span class="s2">&quot;targets&quot;</span><span class="p">,</span>
+                    <span class="s2">"targets"</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">experiment_name</span><span class="p">,</span>
                     <span class="n">hash_ish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span><span class="p">),</span>
                 <span class="p">]</span>
@@ -453,7 +453,7 @@
         <span class="p">)</span>
 
         <span class="n">full_res_table_name</span> <span class="o">=</span> <span class="n">sanitize_table_name_for_bq</span><span class="p">(</span>
-            <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s2">"_"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="n">time_limits</span><span class="o">.</span><span class="n">last_date_data_required</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">experiment_name</span><span class="p">,</span>
@@ -478,9 +478,9 @@
         <span class="n">target_list</span><span class="p">:</span> <span class="n">Segment</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">custom_targets_query</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">"""</span>
 <span class="s2">        </span><span class="si">{targets_query}</span>
-<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+<span class="s2">        """</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">targets_query</span><span class="o">=</span><span class="n">custom_targets_query</span>
             <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_targets_query</span><span class="p">(</span><span class="n">target_list</span><span class="p">,</span> <span class="n">time_limits</span><span class="p">)</span>
         <span class="p">)</span>
@@ -493,7 +493,7 @@
         <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span><span class="p">,</span>
         <span class="n">targets_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a SQL query for querying metric data.</span>
+<span class="w">        </span><span class="sd">"""Return a SQL query for querying metric data.</span>
 
 <span class="sd">        For interactive use, prefer :meth:`.get_single_window_data`</span>
 <span class="sd">        or TODO :meth:`.get_time_series_data`, according to your use case,</span>
@@ -511,7 +511,7 @@
 <span class="sd">            A string containing a BigQuery SQL expression.</span>
 
 <span class="sd">        Building this query is the main goal of this module.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">analysis_windows_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_analysis_windows_query</span><span class="p">(</span>
             <span class="n">time_limits</span><span class="o">.</span><span class="n">analysis_windows</span>
         <span class="p">)</span>
@@ -520,7 +520,7 @@
             <span class="n">metric_list</span><span class="p">,</span> <span class="n">time_limits</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">"""</span>
 <span class="s2">        WITH analysis_windows AS (</span>
 <span class="s2">            </span><span class="si">{analysis_windows_query}</span>
 <span class="s2">        ),</span>
@@ -536,34 +536,34 @@
 <span class="s2">            </span><span class="si">{metrics_columns}</span>
 <span class="s2">        FROM targets</span>
 <span class="s2">        </span><span class="si">{metrics_joins}</span>
-<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+<span class="s2">        """</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">analysis_windows_query</span><span class="o">=</span><span class="n">analysis_windows_query</span><span class="p">,</span>
-            <span class="n">metrics_columns</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_columns</span><span class="p">),</span>
-            <span class="n">metrics_joins</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">),</span>
+            <span class="n">metrics_columns</span><span class="o">=</span><span class="s2">",</span><span class="se">\n</span><span class="s2">        "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_columns</span><span class="p">),</span>
+            <span class="n">metrics_joins</span><span class="o">=</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics_joins</span><span class="p">),</span>
             <span class="n">targets_table</span><span class="o">=</span><span class="n">targets_table</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_analysis_windows_query</span><span class="p">(</span><span class="n">analysis_windows</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">AnalysisWindow</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return SQL to construct a table of analysis windows.</span>
+<span class="w">        </span><span class="sd">"""Return SQL to construct a table of analysis windows.</span>
 
 <span class="sd">        To query a time series, we construct a table of analysis windows</span>
 <span class="sd">        and cross join it with the targets table to get one row per</span>
 <span class="sd">        pair of client and analysis window.</span>
 
 <span class="sd">        This method writes the SQL to define the analysis window table.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        UNION ALL</span><span class="se">\n</span><span class="s2">        &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;(SELECT </span><span class="si">{</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="si">}</span><span class="s2"> AS analysis_window_start,</span>
-<span class="s2">                </span><span class="si">{</span><span class="n">aw</span><span class="o">.</span><span class="n">end</span><span class="si">}</span><span class="s2"> AS analysis_window_end)&quot;&quot;&quot;</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">        UNION ALL</span><span class="se">\n</span><span class="s2">        "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"""(SELECT </span><span class="si">{</span><span class="n">aw</span><span class="o">.</span><span class="n">start</span><span class="si">}</span><span class="s2"> AS analysis_window_start,</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">aw</span><span class="o">.</span><span class="n">end</span><span class="si">}</span><span class="s2"> AS analysis_window_end)"""</span>
             <span class="k">for</span> <span class="n">aw</span> <span class="ow">in</span> <span class="n">analysis_windows</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_partition_by_data_source</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">DataSource</span> <span class="o">|</span> <span class="n">SegmentDataSource</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span> <span class="o">|</span> <span class="n">Segment</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a dict mapping data sources to target/metric lists.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return a dict mapping data sources to target/metric lists."""</span>
         <span class="n">data_sources</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">data_source</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metric_list</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="p">{</span>
@@ -584,34 +584,34 @@
             <span class="p">)</span>
 
             <span class="n">target_queries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+                <span class="sa">f</span><span class="s2">"""</span>
 <span class="s2">        ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> AS (</span>
 <span class="s2">                </span><span class="si">{</span><span class="n">query_for_target</span><span class="si">}</span>
-<span class="s2">            ),&quot;&quot;&quot;</span>
+<span class="s2">            ),"""</span>
             <span class="p">)</span>
 
             <span class="n">target_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+                <span class="sa">f</span><span class="s2">"""</span>
 <span class="s2">                    ,ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="si">}</span>
 <span class="s2">                    ,ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.target_first_date as </span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_first_date</span>
-<span class="s2">                &quot;&quot;&quot;</span>
+<span class="s2">                """</span>
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">target_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+                    <span class="sa">f</span><span class="s2">"""</span>
 <span class="s2">                    INNER JOIN ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span>
 <span class="s2">                        ON ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.client_id = ds_0.client_id</span>
 <span class="s2">                        AND ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.target_first_date &lt;= ds_0.target_last_date</span>
 <span class="s2">                        AND ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.target_last_date &gt;= ds_0.target_first_date</span>
-<span class="s2">                        &quot;&quot;&quot;</span>
+<span class="s2">                        """</span>
                 <span class="p">)</span>
 
-            <span class="n">dates_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_first_date&quot;</span><span class="p">)</span>
+            <span class="n">dates_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_first_date"</span><span class="p">)</span>
 
-        <span class="n">target_def</span> <span class="o">=</span> <span class="s2">&quot;WITH&quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">target_queries</span><span class="p">)</span>
+        <span class="n">target_def</span> <span class="o">=</span> <span class="s2">"WITH"</span> <span class="o">+</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">target_queries</span><span class="p">)</span>
 
-        <span class="n">joined_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+        <span class="n">joined_query</span> <span class="o">=</span> <span class="s2">"""</span>
 <span class="s2">        joined AS (</span>
 <span class="s2">            SELECT</span>
 <span class="s2">                ds_0.client_id</span>
@@ -619,19 +619,19 @@
 <span class="s2">            FROM</span>
 <span class="s2">                ds_0</span>
 <span class="s2">                </span><span class="si">{target_joins}</span>
-<span class="s2">            ),&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">target_columns</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">target_columns</span><span class="p">),</span>
-            <span class="n">target_joins</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">target_joins</span><span class="p">),</span>
+<span class="s2">            ),"""</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">target_columns</span><span class="o">=</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">target_columns</span><span class="p">),</span>
+            <span class="n">target_joins</span><span class="o">=</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">target_joins</span><span class="p">),</span>
         <span class="p">)</span>
 
-        <span class="n">unpivot_join</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+        <span class="n">unpivot_join</span> <span class="o">=</span> <span class="s2">"""</span>
 <span class="s2">         unpivoted AS (</span>
 <span class="s2">                SELECT * FROM joined</span>
 <span class="s2">                UNPIVOT(min_dates for target_date in (</span><span class="si">{target_first_dates}</span><span class="s2">))</span>
 <span class="s2">            )</span>
-<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_first_dates</span><span class="o">=</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dates_columns</span><span class="p">))</span>
+<span class="s2">        """</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_first_dates</span><span class="o">=</span><span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dates_columns</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"""</span>
 <span class="s2">        </span><span class="si">{</span><span class="n">target_def</span><span class="si">}</span>
 <span class="s2">        </span><span class="si">{</span><span class="n">joined_query</span><span class="si">}</span>
 <span class="s2">        </span><span class="si">{</span><span class="n">unpivot_join</span><span class="si">}</span>
@@ -640,12 +640,12 @@
 <span class="s2">            max(min_dates) as enrollment_date</span>
 <span class="s2">        FROM unpivoted</span>
 <span class="s2">        GROUP BY client_id</span>
-<span class="s2">        &quot;&quot;&quot;</span>
+<span class="s2">        """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_metrics_query_bits</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">metric_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span> <span class="n">time_limits</span><span class="p">:</span> <span class="n">TimeLimits</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return lists of SQL fragments corresponding to metrics.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return lists of SQL fragments corresponding to metrics."""</span>
         <span class="n">ds_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_by_data_source</span><span class="p">(</span><span class="n">metric_list</span><span class="p">)</span>
         <span class="n">ds_metrics</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ds_metrics</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
 
@@ -662,28 +662,28 @@
                 <span class="n">from_expr_dataset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">metrics_joins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;    LEFT JOIN (</span>
+                <span class="sa">f</span><span class="s2">"""    LEFT JOIN (</span>
 <span class="s2">        </span><span class="si">{</span><span class="n">query_for_metrics</span><span class="si">}</span>
 <span class="s2">        ) ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> USING (client_id, analysis_window_start, analysis_window_end)</span>
-<span class="s2">                &quot;&quot;&quot;</span>
+<span class="s2">                """</span>
             <span class="p">)</span>
 
             <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ds_metrics</span><span class="p">[</span><span class="n">ds</span><span class="p">]:</span>
-                <span class="n">metrics_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">metrics_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ds_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">metrics_columns</span><span class="p">,</span> <span class="n">metrics_joins</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_targets_sql</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Target SQL not available; call `get_single_window_data` first&quot;</span>
+                <span class="s2">"Target SQL not available; call `get_single_window_data` first"</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_targets_sql</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metrics_sql</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Metric SQL not available; call `get_single_window_data` first&quot;</span>
+                <span class="s2">"Metric SQL not available; call `get_single_window_data` first"</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_sql</span></div>
 
@@ -693,7 +693,7 @@
 <a class="viewcode-back" href="../../api/sizing.html#mozanalysis.sizing.ContinuousEnrollmentTimeLimits">[docs]</a>
 <span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ContinuousEnrollmentTimeLimits</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Expresses time limits for different kinds of analysis windows.</span>
+<span class="w">    </span><span class="sd">"""Expresses time limits for different kinds of analysis windows.</span>
 
 <span class="sd">    Instantiated and used by the :class:`Experiment` class; end users</span>
 <span class="sd">    should not need to interact with it.</span>
@@ -722,11 +722,11 @@
 <span class="sd">          source?</span>
 
 <span class="sd">    Instances of this class store all these quantities and do validation</span>
-<span class="sd">    to make sure that they&#39;re consistent. The &quot;store lots of overlapping</span>
-<span class="sd">    state and validate&quot; strategy was chosen over &quot;store minimal state</span>
-<span class="sd">    and compute on the fly&quot; because different state is supplied in</span>
+<span class="sd">    to make sure that they're consistent. The "store lots of overlapping</span>
+<span class="sd">    state and validate" strategy was chosen over "store minimal state</span>
+<span class="sd">    and compute on the fly" because different state is supplied in</span>
 <span class="sd">    different contexts.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">first_enrollment_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">last_enrollment_date</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
@@ -744,29 +744,29 @@
         <span class="n">first_date_full_data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">analysis_length_dates</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ContinuousEnrollmentTimeLimits</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a ``ContinuousEnrollmentTimeLimits`` instance with the following</span>
+<span class="w">        </span><span class="sd">"""Return a ``ContinuousEnrollmentTimeLimits`` instance with the following</span>
 <span class="sd">        parameters:</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            first_enrollment_date (str): First date on which enrollment</span>
 <span class="sd">                events were received; the start date of the experiment.</span>
 <span class="sd">            last_date_full_data (str): The most recent date for which we</span>
-<span class="sd">                have complete data, e.g. &#39;2019-03-22&#39;. If you want to ignore</span>
+<span class="sd">                have complete data, e.g. '2019-03-22'. If you want to ignore</span>
 <span class="sd">                all data collected after a certain date (e.g. when the</span>
 <span class="sd">                experiment recipe was deactivated), then do that here.</span>
 <span class="sd">            analysis_start_days (int): the start of the analysis window,</span>
-<span class="sd">                measured in &#39;days since the client enrolled&#39;. We ignore data</span>
+<span class="sd">                measured in 'days since the client enrolled'. We ignore data</span>
 <span class="sd">                collected outside this analysis window.</span>
 <span class="sd">            analysis_length_days (int): the length of the analysis window,</span>
 <span class="sd">                measured in days.</span>
 <span class="sd">            num_dates_enrollment (int, optional): Only include this many days</span>
 <span class="sd">                of enrollments. If ``None`` then use the maximum number of days</span>
-<span class="sd">                as determined by the metric&#39;s analysis window and</span>
+<span class="sd">                as determined by the metric's analysis window and</span>
 <span class="sd">                ``last_date_full_data``. Typically ``7n+1``, e.g. ``8``. The</span>
 <span class="sd">                factor ``7`` removes weekly seasonality, and the ``+1``</span>
 <span class="sd">                accounts for the fact that enrollment typically starts a few</span>
 <span class="sd">                hours before UTC midnight.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">analysis_window</span> <span class="o">=</span> <span class="n">AnalysisWindow</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">analysis_length_dates</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="n">last_date_data_required</span> <span class="o">=</span> <span class="n">add_days</span><span class="p">(</span><span class="n">first_date_full_data</span><span class="p">,</span> <span class="n">analysis_length_dates</span><span class="p">)</span>

@@ -89,14 +89,14 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">compare_branches</span><span class="p">(</span>
     <span class="n">df</span><span class="p">,</span>
     <span class="n">col_label</span><span class="p">,</span>
-    <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span>
+    <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">"control"</span><span class="p">,</span>
     <span class="n">stat_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
     <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
     <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
     <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Jointly sample bootstrapped statistics then compare them.</span>
+<span class="w">    </span><span class="sd">"""Jointly sample bootstrapped statistics then compare them.</span>
 
 <span class="sd">    Performs a percentile bootstrap, which, according to Efron,</span>
 <span class="sd">    is not significantly more distasteful than a basic bootstrap,</span>
@@ -107,7 +107,7 @@
 <span class="sd">            standard format (see ``mozanalysis.experiment``).</span>
 <span class="sd">        col_label (str or list): Label for the df column contaning the metric</span>
 <span class="sd">            to be analyzed. If a list, labels for the multiple metrics to be analyzed.</span>
-<span class="sd">        ref_branch_label (str, optional): String in ``df[&#39;branch&#39;]`` that</span>
+<span class="sd">        ref_branch_label (str, optional): String in ``df['branch']`` that</span>
 <span class="sd">            identifies the branch with respect to which we want to</span>
 <span class="sd">            calculate uplifts - usually the control branch.</span>
 <span class="sd">        stat_fn (func, optional): A function that either:</span>
@@ -137,10 +137,10 @@
 <span class="sd">        this function returns a dictionary has the following keys and</span>
 <span class="sd">        values:</span>
 
-<span class="sd">            &#39;individual&#39;: dictionary mapping each branch name to a pandas</span>
+<span class="sd">            'individual': dictionary mapping each branch name to a pandas</span>
 <span class="sd">                Series that holds the expected value for the bootstrapped</span>
 <span class="sd">                ``stat_fn``, and confidence intervals.</span>
-<span class="sd">            &#39;comparative&#39;: dictionary mapping each branch name to a pandas</span>
+<span class="sd">            'comparative': dictionary mapping each branch name to a pandas</span>
 <span class="sd">                Series of summary statistics for the possible uplifts of</span>
 <span class="sd">                the bootstrapped ``stat_fn`` relative to the reference branch.</span>
 
@@ -149,12 +149,12 @@
 <span class="sd">        DataFrames. Each row in each DataFrame corresponds to one output</span>
 <span class="sd">        of `stat_fn`, and is the Series that would be returned if ``stat_fn``</span>
 <span class="sd">        computed only this statistic.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">branch_list</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">ref_branch_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">branch_list</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Branch label &#39;</span><span class="si">{</span><span class="n">ref_branch_label</span><span class="si">}</span><span class="s2">&#39; not in branch list &#39;</span><span class="si">{</span><span class="n">branch_list</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"Branch label '</span><span class="si">{</span><span class="n">ref_branch_label</span><span class="si">}</span><span class="s2">' not in branch list '</span><span class="si">{</span><span class="n">branch_list</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 
     <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span>
@@ -187,7 +187,7 @@
     <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a bootstrap for one branch on its own.</span>
+<span class="w">    </span><span class="sd">"""Run a bootstrap for one branch on its own.</span>
 
 <span class="sd">    Resamples the data ``num_samples`` times, computes ``stat_fn`` for</span>
 <span class="sd">    each sample, then returns summary statistics for the distribution</span>
@@ -202,14 +202,14 @@
 <span class="sd">            cases, this function must accept a one-dimensional ndarray</span>
 <span class="sd">            as its input.</span>
 <span class="sd">        num_samples: The number of bootstrap iterations to perform</span>
-<span class="sd">        seed_start: An int with which to seed numpy&#39;s RNG. It must</span>
+<span class="sd">        seed_start: An int with which to seed numpy's RNG. It must</span>
 <span class="sd">            be unique within this set of calculations.</span>
 <span class="sd">        threshold_quantile (float, optional): An optional threshold</span>
 <span class="sd">            quantile, above which to discard outliers. E.g. ``0.9999``.</span>
 <span class="sd">        summary_quantiles (list, optional): Quantiles to determine the</span>
 <span class="sd">            confidence bands on the branch statistics. Change these</span>
 <span class="sd">            when making Bonferroni corrections.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">samples</span> <span class="o">=</span> <span class="n">get_bootstrap_samples</span><span class="p">(</span>
         <span class="n">data</span><span class="p">,</span> <span class="n">stat_fn</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">seed_start</span><span class="p">,</span> <span class="n">threshold_quantile</span>
     <span class="p">)</span>
@@ -227,7 +227,7 @@
     <span class="n">seed_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``stat_fn`` evaluated on resampled and original data.</span>
+<span class="w">    </span><span class="sd">"""Return ``stat_fn`` evaluated on resampled and original data.</span>
 
 <span class="sd">    Do the resampling in parallel over the cluster.</span>
 
@@ -257,12 +257,12 @@
 <span class="sd">            * if ``stat_fn`` returns a scalar, a pandas Series</span>
 <span class="sd">            * if ``stat_fn`` returns a dict, a pandas DataFrame</span>
 <span class="sd">              with columns set to the dict keys.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="n">na_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">"float"</span><span class="p">,</span> <span class="n">na_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; contains null values&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"'data' contains null values"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">threshold_quantile</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">filter_outliers</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="p">)</span>
@@ -270,7 +270,7 @@
     <span class="k">if</span> <span class="n">seed_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">seed_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
 
-    <span class="c1"># Deterministic &quot;randomness&quot; requires careful state handling :(</span>
+    <span class="c1"># Deterministic "randomness" requires careful state handling :(</span>
     <span class="c1"># Need to ensure every call has a unique, deterministic seed.</span>
     <span class="n">seed_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">seed_start</span><span class="p">,</span> <span class="n">seed_start</span> <span class="o">+</span> <span class="n">num_samples</span><span class="p">)</span>
 
@@ -292,8 +292,8 @@
     <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">unique_seed</span><span class="p">)</span>
 
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="c1"># TODO: can&#39;t we just use random_state.choice? Wouldn&#39;t that be faster?</span>
-    <span class="c1"># There&#39;s not thaaat much difference in RAM requirements?</span>
+    <span class="c1"># TODO: can't we just use random_state.choice? Wouldn't that be faster?</span>
+    <span class="c1"># There's not thaaat much difference in RAM requirements?</span>
     <span class="n">randints</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
     <span class="n">resampled_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">randints</span><span class="p">]</span>
 
@@ -305,16 +305,16 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">compare_branches_quantiles</span><span class="p">(</span>
     <span class="n">df</span><span class="p">,</span>
     <span class="n">col_label</span><span class="p">,</span>
-    <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">&quot;control&quot;</span><span class="p">,</span>
+    <span class="n">ref_branch_label</span><span class="o">=</span><span class="s2">"control"</span><span class="p">,</span>
     <span class="n">quantiles_of_interest</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
     <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">individual_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
     <span class="n">comparative_summary_quantiles</span><span class="o">=</span><span class="n">mabs</span><span class="o">.</span><span class="n">DEFAULT_QUANTILES</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Performs inferences on the metric quantiles inspired by Spotify&#39;s</span>
-<span class="sd">    &quot;Resampling-free bootstrap inference for quantiles&quot; approach</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Performs inferences on the metric quantiles inspired by Spotify's</span>
+<span class="sd">    "Resampling-free bootstrap inference for quantiles" approach</span>
 <span class="sd">    https://arxiv.org/pdf/2202.10992.pdf.</span>
 
 <span class="sd">    Parameters are similar to `compare_branches` except for:</span>
@@ -322,7 +322,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        quantiles (List[float]): a list of quantiles upon which inferences are desired.</span>
 <span class="sd">        Ex: 0.2 is the 20th percentile, 0.5 is the median, etc.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">if</span> <span class="n">quantiles_of_interest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">quantiles_of_interest</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">]</span>
@@ -330,7 +330,7 @@
 
     <span class="k">if</span> <span class="n">ref_branch_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">branch_list</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Branch label &#39;</span><span class="si">{</span><span class="n">ref_branch_label</span><span class="si">}</span><span class="s2">&#39; not in branch list &#39;</span><span class="si">{</span><span class="n">branch_list</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"Branch label '</span><span class="si">{</span><span class="n">ref_branch_label</span><span class="si">}</span><span class="s2">' not in branch list '</span><span class="si">{</span><span class="n">branch_list</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 
     <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span>
@@ -357,12 +357,12 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">get_quantile_bootstrap_samples</span><span class="p">(</span>
     <span class="n">data</span><span class="p">,</span> <span class="n">quantiles_of_interest</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Params are similar to `get_bootstrap_samples`&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Params are similar to `get_bootstrap_samples`"""</span>
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="n">na_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">"float"</span><span class="p">,</span> <span class="n">na_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; contains null values&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"'data' contains null values"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">threshold_quantile</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">filter_outliers</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">threshold_quantile</span><span class="p">)</span>
@@ -371,7 +371,7 @@
 
     <span class="n">sample_size</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">quantile</span><span class="si">:</span><span class="s2">.1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">quantile</span><span class="si">:</span><span class="s2">.1</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span>
             <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">sample_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">quantile</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="k">for</span> <span class="n">quantile</span> <span class="ow">in</span> <span class="n">quantiles_of_interest</span>
