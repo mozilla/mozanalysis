@@ -158,7 +158,7 @@ pandas==3.0.5
     #   mozanalysis
     #   plotnine
     #   statsmodels
-pandas-stubs==3.0.5.260730
+pandas-stubs==3.0.5.260914
     # via mozanalysis
 pathspec==1.1.1
     # via mypy
