@@ -149,7 +149,7 @@ grpcio-status==1.83.1
     #   google-api-core
 id==1.6.1
     # via twine
-idna==3.19
+idna==3.20
     # via
     #   -c requirements.txt
     #   requests
