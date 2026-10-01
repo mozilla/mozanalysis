@@ -388,7 +388,7 @@ pygments==2.21.0
     #   pytest
     #   readme-renderer
     #   rich
-pyparsing==3.3.2
+pyparsing==3.3.3
     # via
     #   -c requirements.txt
     #   matplotlib
