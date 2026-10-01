@@ -140,7 +140,7 @@ numpy==2.4.6
     #   statsmodels
 numpy-typing-compat==20251206.2.4
     # via optype
-opentelemetry-api==1.44.0
+opentelemetry-api==1.45.0
     # via google-api-core
 optype[numpy]==0.17.1
     # via scipy-stubs
