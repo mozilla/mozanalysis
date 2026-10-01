@@ -81,7 +81,7 @@ filelock==3.32.6
     #   python-discovery
     #   tox
     #   virtualenv
-fonttools==4.64.0
+fonttools==4.66.0
     # via
     #   -c requirements.txt
     #   matplotlib
