@@ -28,7 +28,7 @@ build==1.6.0
     #   pip-tools
 cachetools==7.1.8
     # via tox
-cattrs==26.2.0
+cattrs==26.2.1
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
