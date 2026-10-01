@@ -533,7 +533,7 @@ virtualenv==21.7.9
     # via tox
 wheel==0.48.0
     # via pip-tools
-wrapt==2.4.0
+wrapt==2.5.0
     # via
     #   -c requirements.txt
     #   formulaic
