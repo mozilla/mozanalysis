@@ -457,7 +457,7 @@ rpds-py==2026.6.3
     #   -c requirements.txt
     #   jsonschema
     #   referencing
-ruff==0.16.6
+ruff==0.16.9
     # via
     #   -c requirements.txt
     #   mozanalysis
