@@ -1738,9 +1738,9 @@ pandas==3.0.5 \
     #   mizani
     #   plotnine
     #   statsmodels
-pandas-stubs==3.0.5.260730 \
-    --hash=sha256:60e90e3e1eda6937e337e243cbe6217e151c11137cd7eddf832af537c7310bfd \
-    --hash=sha256:f70a232c57d93a5a2c81f8a53953e10891a5374bc92652277deb325e2e4d0ff3
+pandas-stubs==3.0.5.260914 \
+    --hash=sha256:39a1300c5c5c55fdf609e3476805decce5d5015539a4dcb683449f8feaeee2fb \
+    --hash=sha256:3f6fc1f147f68fd89c007105e7c94a948acb4ecd7eb20dc1c02e153c4ed5c250
     # via -r requirements-dev.in
 pathspec==1.1.1 \
     --hash=sha256:17db5ecd524104a120e173814c90367a96a98d07c45b2e10c2f3919fff91bf5a \
