@@ -2006,9 +2006,9 @@ python-dateutil==2.9.0.post0 \
     #   google-cloud-bigquery
     #   matplotlib
     #   pandas
-pytz==2026.3.post1 \
-    --hash=sha256:2211d3fcf9a797d3405cac96ac7f61d80e6a644f72a3309607282fe8a2010c5d \
-    --hash=sha256:dd95840dd199baea12d9cc096a1d452caa6596a1c1e4b5f3dbd1541855d5e815
+pytz==2026.4 \
+    --hash=sha256:464303645bafafd72418898368b2429458f709cf1eb6a15372fbcc396b64da63 \
+    --hash=sha256:9d514388fbc89ca0833203464272ac485b8828568ab73532f5020f17e892a0ff
     # via
     #   -r requirements.in
     #   mozilla-metric-config-parser

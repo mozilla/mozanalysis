@@ -427,7 +427,7 @@ python-discovery==1.6.0
     # via
     #   tox
     #   virtualenv
-pytz==2026.3.post1
+pytz==2026.4
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
