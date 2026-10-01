@@ -37,7 +37,7 @@ cycler==0.12.1
     # via matplotlib
 faker==40.38.0
     # via polyfactory
-fonttools==4.64.0
+fonttools==4.66.0
     # via matplotlib
 formulaic==1.2.2
     # via
