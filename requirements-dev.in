@@ -499,7 +499,7 @@ toml==0.10.2
     #   mozilla-metric-config-parser
 tomli-w==1.2.0
     # via tox
-tox==4.61.4
+tox==4.64.4
     # via mozanalysis
 twine==7.0.0
     # via mozanalysis

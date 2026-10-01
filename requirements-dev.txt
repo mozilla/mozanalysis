@@ -2529,9 +2529,9 @@ tomli-w==1.2.0 \
     # via
     #   -r requirements-dev.in
     #   tox
-tox==4.61.4 \
-    --hash=sha256:1ec27a26f485c408a3f128722959086099894955d1eb74ab973e233bd362e99e \
-    --hash=sha256:d3fa82dc2fe847fe45b576ed0614e850a674aadec3a664f409e2bf295c473e20
+tox==4.64.4 \
+    --hash=sha256:7158441d235d9e1b588f0e9f0547c07a45b3bd2f31530adb14ff5b3c1e84daeb \
+    --hash=sha256:99e2a36e75202bd468f68126be25f72b8d8483e4a27b65252d6f019e856e62fd
     # via -r requirements-dev.in
 twine==7.0.0 \
     --hash=sha256:85cdb29c518efef867360ae4acd4b0dfd61c8654a22fca08e6f8539f05022177 \
