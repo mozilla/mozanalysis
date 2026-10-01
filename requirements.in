@@ -65,7 +65,7 @@ google-cloud-bigquery-storage==2.41.0
     # via mozanalysis
 google-cloud-core==2.7.0
     # via google-cloud-bigquery
-google-crc32c==1.8.0
+google-crc32c==1.9.0
     # via google-resumable-media
 google-resumable-media==2.10.2
     # via google-cloud-bigquery
