@@ -8,7 +8,7 @@ annotated-types==0.8.0
     # via
     #   -c requirements.txt
     #   pydantic
-ast-serialize==0.11.1
+ast-serialize==0.11.2
     # via
     #   -c requirements.txt
     #   mypy
