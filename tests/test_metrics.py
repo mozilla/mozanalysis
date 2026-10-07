@@ -10,7 +10,8 @@ from mozanalysis.metrics import DataSource, Metric
 
 
 @pytest.mark.parametrize(
-    "experiments_column_type", [None, "simple", "native", "glean", "events_stream"]
+    "experiments_column_type",
+    [None, "simple", "native", "glean", "events_stream", "json"],
 )
 def test_datasource_constructor_succeeds(experiments_column_type):
     DataSource(
@@ -179,6 +180,57 @@ def test_datasource_constructor_fails(name, from_expr, experiments_column_type, 
             from_expr=from_expr,
             experiments_column_type=experiments_column_type,
         )
+
+
+def test_json_experiments_column_day0_guard():
+    """The 'json' type must gate day-0 events on the client-level JSON
+    ``experiments`` map (JSON_VALUE), not on per-event ``event_extra``.
+    Regression test for the events_stream day-0 undercount."""
+    ds = DataSource(
+        name="foo",
+        from_expr="my_table.name",
+        experiments_column_type="json",
+    )
+    tl = TimeLimits.for_single_analysis_window(
+        first_enrollment_date="2019-01-01",
+        last_date_full_data="2019-01-14",
+        analysis_start_days=0,
+        analysis_length_dates=14,
+    )
+    metric = Metric(name="m", data_source=ds, select_expr="COUNTIF(TRUE)")
+
+    query = ds.build_query(
+        [metric],
+        tl,
+        "my-experiment",
+        None,
+        AnalysisBasis.ENROLLMENTS,
+        AnalysisUnit.CLIENT,
+    )
+
+    # day-0 rows are kept when the client-level JSON experiments map names the slug
+    assert "JSON_VALUE(" in query
+    assert "ds.experiments, '$.\"my-experiment\".branch'" in query
+    assert "IS NOT NULL" in query
+    # must NOT fall back to the per-event event_extra field
+    assert "event_extra" not in query
+
+
+def test_json_experiments_column_sanity_metrics():
+    ds = DataSource(
+        name="foo",
+        from_expr="my_table.name",
+        experiments_column_type="json",
+    )
+
+    sanity = {m.name: m.select_expr for m in ds.get_sanity_metrics("my-experiment")}
+
+    assert set(sanity) == {"foo_has_contradictory_branch", "foo_has_non_enrolled_data"}
+    for expr in sanity.values():
+        assert "ds.experiments, '$.\"my-experiment\".branch'" in expr
+        assert "event_extra" not in expr
+    assert "!= e.branch" in sanity["foo_has_contradictory_branch"]
+    assert "IS NULL" in sanity["foo_has_non_enrolled_data"]
 
 
 def test_complains_about_template_without_default():
