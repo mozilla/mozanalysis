@@ -850,6 +850,7 @@ class Experiment:
         return f"""
         SELECT
             e.{self.analysis_unit.value} AS analysis_id,
+            udf.safe_sample_id({self.analysis_unit.value}) AS sample_id,
             `mozfun.map.get_key`(e.event_map_values, 'branch')
                 AS branch,
             MIN(e.submission_date) AS enrollment_date,
@@ -883,6 +884,7 @@ class Experiment:
         return """
         SELECT
             b.client_info.client_id AS analysis_id,
+            udf.safe_sample_id(b.client_info.client_id) AS sample_id,
             mozfun.map.get_key(
                 b.ping_info.experiments,
                 '{experiment_slug}'
@@ -924,6 +926,7 @@ class Experiment:
         return f"""
             SELECT
                 {analysis_id} AS analysis_id,
+                udf.safe_sample_id({analysis_id}) AS sample_id,
                 JSON_VALUE(event_extra, '$.branch') AS branch,
                 DATE(MIN(submission_timestamp)) AS enrollment_date,
                 COUNT(submission_timestamp) AS num_enrollment_events
@@ -953,6 +956,7 @@ class Experiment:
         return f"""
             SELECT
                 client_id AS analysis_id,
+                udf.safe_sample_id(analysis_id) AS sample_id,
                 JSON_VALUE(event_extra, '$.branch') AS branch,
                 DATE(MIN(submission_timestamp)) AS enrollment_date,
                 COUNT(submission_timestamp) AS num_enrollment_events
@@ -986,6 +990,7 @@ class Experiment:
         return f"""
             SELECT
                 mozfun.map.get_key(e.extra, "nimbus_user_id") AS analysis_id,
+                0 AS sample_id,
                 mozfun.map.get_key(
                     e.extra,
                     'branch'
