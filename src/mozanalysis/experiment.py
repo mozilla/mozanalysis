@@ -457,7 +457,7 @@ class Experiment:
         custom_exposure_query: str | None = None,
         exposure_signal: ExposureSignal | None = None,
         segment_list=None,
-        sample_size: int = 100,
+        sample_size: int | None = 100,
         suppress_custom_query_validation: bool = False,
         use_glean_ids: bool = False,
     ) -> str:
