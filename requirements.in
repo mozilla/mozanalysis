@@ -98,7 +98,7 @@ kiwisolver==1.5.1
     # via matplotlib
 librt==0.16.0
     # via mypy
-marginaleffects==0.1.4
+marginaleffects==0.6.0
     # via mozanalysis
 markupsafe==3.0.4
     # via jinja2
