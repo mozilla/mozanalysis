@@ -562,14 +562,14 @@ def prepare_df_for_modeling(
         df = df.copy()
 
     if threshold_quantile is not None:
-        threshold = df[target_col].quantile(threshold_quantile)
+        threshold: float = float(df[target_col].quantile(threshold_quantile))
         if is_integer_dtype(df[target_col].dtype):
             threshold = int(np.ceil(threshold))
 
         df[target_col] = df[target_col].clip(upper=threshold)
 
     if (covariate_col is not None) and (threshold_quantile is not None):
-        threshold = df[covariate_col].quantile(threshold_quantile)
+        threshold = float(df[covariate_col].quantile(threshold_quantile))
         if is_integer_dtype(df[covariate_col].dtype):
             threshold = int(np.ceil(threshold))
 
