@@ -19,6 +19,8 @@ dependencies = [
     "mozilla-metric-config-parser>=2024.4.1",
     "numpy",
     "pandas",
+    # marginaleffects 0.1.4 breaks on polars 2.0 (is_in no longer coerces Float64/Int64)
+    "polars<2",
     "pyarrow",
     "scipy",
     "statsmodels",
