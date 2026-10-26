@@ -8,7 +8,7 @@ annotated-types==0.8.0
     # via
     #   -c requirements.txt
     #   pydantic
-ast-serialize==0.13.0
+ast-serialize==0.13.1
     # via
     #   -c requirements.txt
     #   mypy
@@ -26,13 +26,13 @@ build==1.6.1
     # via
     #   mozanalysis
     #   pip-tools
-cachetools==7.2.1
+cachetools==7.2.4
     # via tox
 cattrs==26.2.1
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-certifi==2026.7.22
+certifi==2026.10.23
     # via
     #   -c requirements.txt
     #   requests
@@ -55,7 +55,7 @@ contourpy==1.3.3
     # via
     #   -c requirements.txt
     #   matplotlib
-coverage[toml]==7.16.2
+coverage[toml]==7.17.0
     # via
     #   -c requirements.txt
     #   pytest-cov
@@ -68,7 +68,7 @@ cycler==0.12.1
     # via
     #   -c requirements.txt
     #   matplotlib
-distlib==0.4.3
+distlib==0.4.4
     # via virtualenv
 docutils==0.23
     # via readme-renderer
@@ -76,7 +76,7 @@ faker==40.43.0
     # via
     #   -c requirements.txt
     #   polyfactory
-filelock==4.2.0
+filelock==4.2.4
     # via
     #   python-discovery
     #   tox
@@ -99,7 +99,7 @@ gitpython==3.2.1
     # via
     #   -c requirements.txt
     #   mozilla-metric-config-parser
-google-api-core[grpc]==2.42.0
+google-api-core[grpc]==2.43.0
     # via
     #   -c requirements.txt
     #   google-cloud-bigquery
@@ -112,11 +112,11 @@ google-auth[pyopenssl]==2.62.0
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-cloud-bigquery==3.46.1
+google-cloud-bigquery==3.46.2
     # via
     #   -c requirements.txt
     #   mozanalysis
-google-cloud-bigquery-storage==2.42.0
+google-cloud-bigquery-storage==2.43.0
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -132,18 +132,18 @@ google-resumable-media==2.11.0
     # via
     #   -c requirements.txt
     #   google-cloud-bigquery
-googleapis-common-protos==1.75.5
+googleapis-common-protos==1.76.0
     # via
     #   -c requirements.txt
     #   google-api-core
     #   grpcio-status
-grpcio==1.84.0
+grpcio==1.84.1
     # via
     #   -c requirements.txt
     #   google-api-core
     #   google-cloud-bigquery-storage
     #   grpcio-status
-grpcio-status==1.84.0
+grpcio-status==1.84.1
     # via
     #   -c requirements.txt
     #   google-api-core
@@ -153,7 +153,7 @@ idna==3.20
     # via
     #   -c requirements.txt
     #   requests
-importlib-metadata==9.0.1
+importlib-metadata==9.1.0
     # via keyring
 iniconfig==2.3.1
     # via
@@ -196,7 +196,7 @@ librt==0.16.0
     # via
     #   -c requirements.txt
     #   mypy
-marginaleffects==0.1.4
+marginaleffects==0.6.0
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -291,7 +291,7 @@ packaging==26.3
     #   twine
     #   virtualenv
     #   wheel
-pandas==3.0.6
+pandas==3.1.0
     # via
     #   -c requirements.txt
     #   formulaic
@@ -318,7 +318,7 @@ pillow==12.3.0
     #   matplotlib
 pip-tools==7.6.2
     # via mozanalysis
-platformdirs==4.13.0
+platformdirs==4.13.5
     # via
     #   tox
     #   virtualenv
@@ -326,7 +326,7 @@ plotnine==0.15.8
     # via
     #   -c requirements.txt
     #   marginaleffects
-pluggy==1.6.0
+pluggy==1.7.0
     # via
     #   -c requirements.txt
     #   pytest
@@ -370,7 +370,7 @@ pyasn1-modules==0.4.2
     # via
     #   -c requirements.txt
     #   google-auth
-pycparser==3.11
+pycparser==3.12
     # via
     #   -c requirements.txt
     #   cffi
@@ -393,7 +393,7 @@ pyparsing==3.3.3
     # via
     #   -c requirements.txt
     #   matplotlib
-pyproject-api==1.11.6
+pyproject-api==1.12.0
     # via tox
 pyproject-hooks==1.3.3
     # via
@@ -424,7 +424,7 @@ python-dateutil==2.9.0.post0
     #   google-cloud-bigquery
     #   matplotlib
     #   pandas
-python-discovery==1.6.2
+python-discovery==1.6.4
     # via
     #   tox
     #   virtualenv
@@ -458,7 +458,7 @@ rpds-py==2026.9.1
     #   -c requirements.txt
     #   jsonschema
     #   referencing
-ruff==0.17.0
+ruff==0.17.2
     # via
     #   -c requirements.txt
     #   mozanalysis
@@ -500,7 +500,7 @@ toml==0.10.2
     #   mozilla-metric-config-parser
 tomli-w==1.2.0
     # via tox
-tox==4.65.5
+tox==4.67.1
     # via mozanalysis
 twine==7.0.0
     # via mozanalysis
@@ -530,7 +530,7 @@ urllib3==2.8.0
     #   id
     #   requests
     #   twine
-virtualenv==21.14.7
+virtualenv==21.14.13
     # via tox
 wheel==0.48.0
     # via pip-tools
@@ -538,7 +538,7 @@ wrapt==2.5.1
     # via
     #   -c requirements.txt
     #   formulaic
-zipp==4.1.1
+zipp==4.1.2
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
