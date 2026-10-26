@@ -20,7 +20,7 @@ dependencies = [
     "numpy",
     "pandas",
     # marginaleffects 0.1.4 breaks on polars 2.0 (is_in no longer coerces Float64/Int64)
-    "polars<2",
+    "polars<3",
     "pyarrow",
     "scipy",
     "statsmodels",
