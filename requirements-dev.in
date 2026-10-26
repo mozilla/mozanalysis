@@ -332,7 +332,7 @@ pluggy==1.6.0
     #   pytest
     #   pytest-cov
     #   tox
-polars==1.42.1
+polars==2.0.0
     # via
     #   -c requirements.txt
     #   marginaleffects
