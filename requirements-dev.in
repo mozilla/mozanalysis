@@ -76,7 +76,7 @@ faker==40.43.0
     # via
     #   -c requirements.txt
     #   polyfactory
-filelock==4.2.0
+filelock==4.2.1
     # via
     #   python-discovery
     #   tox
