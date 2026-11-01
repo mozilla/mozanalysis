@@ -14,7 +14,7 @@ dependencies = [
     "formulaic",
     "google-cloud-bigquery",
     "google-cloud-bigquery-storage",
-    "marginaleffects==0.1.4",
+    "marginaleffects==0.6.0",
     "matplotlib",
     "mozilla-metric-config-parser>=2024.4.1",
     "numpy",
